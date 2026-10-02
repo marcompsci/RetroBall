@@ -27,19 +27,40 @@ namespace CallerRetroBall.UI
         /// <summary>Canvas units per art pixel for chunky 9-slice borders.</summary>
         public const float PixelSize = 6f;
 
-        private static Sprite _primary, _secondary, _ghost, _panel;
+        // 8-bit console-style button faces (original colours): red for the main action,
+        // blue for secondary, slate for minor actions.
+        public static readonly Color ButtonRed = new Color32(0xD8, 0x28, 0x00, 255);
+        public static readonly Color ButtonBlue = new Color32(0x20, 0x38, 0xEC, 255);
+        public static readonly Color ButtonSlate = new Color32(0x58, 0x58, 0x68, 255);
+        public static readonly Color ButtonText = new Color32(0xFC, 0xFC, 0xFC, 255);
 
-        public static Sprite ButtonSprite(ButtonStyle style)
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> Buttons =
+            new System.Collections.Generic.Dictionary<string, Sprite>();
+        private static Sprite _panel;
+
+        public static Color ButtonFace(ButtonStyle style) =>
+            style == ButtonStyle.Primary ? ButtonRed : style == ButtonStyle.Secondary ? ButtonBlue : ButtonSlate;
+
+        /// <summary>Raised button face for a style (9-sliced).</summary>
+        public static Sprite ButtonSprite(ButtonStyle style) => ButtonVariant(style, 0);
+
+        /// <summary>Pushed-in face, swapped in while the button is held.</summary>
+        public static Sprite ButtonPressedSprite(ButtonStyle style) => ButtonVariant(style, 1);
+
+        /// <summary>Greyed-out face for buttons that can't be used right now.</summary>
+        public static Sprite ButtonDisabledSprite(ButtonStyle style) => ButtonVariant(style, 2);
+
+        private static Sprite ButtonVariant(ButtonStyle style, int variant)
         {
-            switch (style)
-            {
-                case ButtonStyle.Primary:
-                    return _primary != null ? _primary : (_primary = Chunky("ui.button.primary", Pink.ToRgb32(), Shadow.ToRgb32()));
-                case ButtonStyle.Secondary:
-                    return _secondary != null ? _secondary : (_secondary = Chunky("ui.button.secondary", InkLight.ToRgb32(), Cyan.ToRgb32()));
-                default:
-                    return _ghost != null ? _ghost : (_ghost = Chunky("ui.button.ghost", new RgbColor(0, 0, 0, 90), Cream.ToRgb32()));
-            }
+            string key = style + ":" + variant;
+            if (Buttons.TryGetValue(key, out var cached) && cached != null) return cached;
+            var face = ButtonFace(style).ToRgb32();
+            if (variant == 2) face = RgbColor.Lerp(face, new RgbColor(0x60, 0x60, 0x68), 0.75f).Darken(0.25f);
+            var canvas = UiSkinGenerator.Button(face, pressed: variant == 1);
+            int b = UiSkinGenerator.ButtonBorder;
+            var sprite = TextureFactory.ToSprite(canvas, "ui.button." + key, 100f, new Vector4(b, b, b, b));
+            Buttons[key] = sprite;
+            return sprite;
         }
 
         public static Sprite PanelSprite() =>
@@ -48,28 +69,40 @@ namespace CallerRetroBall.UI
         private static readonly System.Collections.Generic.Dictionary<string, Sprite> Discs =
             new System.Collections.Generic.Dictionary<string, Sprite>();
 
-        /// <summary>Round pixel button face (24x24 art pixels) with a 2px border and top highlight.</summary>
-        public static Sprite DiscSprite(Color fill, Color border)
-        {
-            string key = ColorUtility.ToHtmlStringRGBA(fill) + ColorUtility.ToHtmlStringRGBA(border);
-            if (Discs.TryGetValue(key, out var cached) && cached != null) return cached;
+        /// <summary>
+        /// Round console-style action button face (24x24 art pixels): outline, lip, shine and glint.
+        /// <paramref name="border"/> is kept for callers; the outline is always near-black for contrast.
+        /// </summary>
+        public static Sprite DiscSprite(Color fill, Color border) => Disc(fill, false);
 
-            const int s = 24;
-            var c = new PixelCanvas(s, s);
+        /// <summary>The same disc pushed in (no lip), for while a touch button is held.</summary>
+        public static Sprite DiscPressedSprite(Color fill) => Disc(fill, true);
+
+        private static Sprite Disc(Color fill, bool pressed)
+        {
+            string key = ColorUtility.ToHtmlStringRGBA(fill) + (pressed ? ":p" : "");
+            if (Discs.TryGetValue(key, out var cached) && cached != null) return cached;
             var f = fill.ToRgb32();
-            var b = border.ToRgb32();
+            // Translucent fills (the joystick base) keep the old flat look.
+            var canvas = f.a == 255 ? UiSkinGenerator.Disc(f, pressed) : FlatDisc(f);
+            var sprite = TextureFactory.ToSprite(canvas, "ui.disc." + key);
+            Discs[key] = sprite;
+            return sprite;
+        }
+
+        private static PixelCanvas FlatDisc(RgbColor f)
+        {
+            const int s = UiSkinGenerator.DiscSize;
+            var c = new PixelCanvas(s, s);
             for (int y = 0; y < s; y++)
                 for (int x = 0; x < s; x++)
                 {
                     float dx = x + 0.5f - s / 2f, dy = y + 0.5f - s / 2f;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     if (d > s / 2f) continue;
-                    RgbColor col = d > s / 2f - 2f ? b : (dy > s / 2f - 6f && f.a == 255 ? f.Lighten(0.2f) : f);
-                    c.Set(x, y, col);
+                    c.Set(x, y, d > s / 2f - 2f ? new RgbColor(0xF4, 0xF1, 0xDE, 200) : f);
                 }
-            var sprite = TextureFactory.ToSprite(c, "ui.disc." + key);
-            Discs[key] = sprite;
-            return sprite;
+            return c;
         }
 
         private static RgbColor ToRgb32(this Color c) => ((Color32)c).ToRgb();

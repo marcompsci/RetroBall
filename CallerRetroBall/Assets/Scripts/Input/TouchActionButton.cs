@@ -22,6 +22,7 @@ namespace CallerRetroBall.Controls
         private int _pointerId = int.MinValue;
         private float _hintUntil;
         private Color _baseColor = Color.white;
+        private Sprite _upSprite, _downSprite;
 
         public bool IsHeld => _pointerId != int.MinValue;
         public bool Available { get; set; } = true;
@@ -37,6 +38,13 @@ namespace CallerRetroBall.Controls
             if (_hint != null) _hint.text = "";
         }
 
+        /// <summary>Raised and pushed-in faces; the button sinks while held.</summary>
+        public void SetSprites(Sprite up, Sprite down)
+        {
+            _upSprite = up;
+            _downSprite = down;
+        }
+
         public void SetLabel(string text)
         {
             if (_label != null && _label.text != text) _label.text = text;
@@ -46,7 +54,8 @@ namespace CallerRetroBall.Controls
         {
             if (IsHeld) return;
             _pointerId = e.pointerId;
-            transform.localScale = Vector3.one * 0.92f;
+            transform.localScale = Vector3.one * 0.95f;
+            if (_downSprite != null) _image.sprite = _downSprite;
             if (!Available)
             {
                 _hintUntil = Time.unscaledTime + 0.8f;
@@ -66,6 +75,7 @@ namespace CallerRetroBall.Controls
             bool wasHeld = IsHeld;
             _pointerId = int.MinValue;
             transform.localScale = Vector3.one;
+            if (_upSprite != null && _image != null) _image.sprite = _upSprite;
             if (wasHeld) Released?.Invoke();
         }
 

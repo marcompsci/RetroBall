@@ -74,3 +74,55 @@ namespace CallerRetroBall.Tests
         }
     }
 }
+
+namespace CallerRetroBall.Tests
+{
+    /// <summary>Console-style button skin.</summary>
+    public class UiSkinTests
+    {
+        private static readonly CallerRetroBall.Logic.RgbColor Red = CallerRetroBall.Logic.RgbColor.FromHex("#D82800");
+
+        [Test]
+        public void Button_HasOutlineCutCornersAndGlint()
+        {
+            var b = UiSkinGenerator.Button(Red);
+            Assert.AreEqual(UiSkinGenerator.ButtonSize, b.Width);
+            Assert.AreEqual(0, b.Get(0, 0).a, "cut corner");
+            Assert.AreEqual(0, b.Get(b.Width - 1, b.Height - 1).a, "cut corner");
+            Assert.AreEqual(UiSkinGenerator.Outline, b.Get(b.Width / 2, 0), "outline bottom");
+            Assert.AreEqual(UiSkinGenerator.Outline, b.Get(0, b.Height / 2), "outline left");
+            Assert.AreEqual(UiSkinGenerator.Glint, b.Get(2, b.Height - 3), "glint");
+        }
+
+        [Test]
+        public void Button_ShineIsLighterThanFace_LipIsDarker()
+        {
+            var b = UiSkinGenerator.Button(Red);
+            int mid = b.Width / 2;
+            var shine = b.Get(mid, b.Height - 3);
+            var face = b.Get(mid, b.Height / 2);
+            var lip = b.Get(mid, 1);
+            Assert.Greater(shine.r + shine.g + shine.b, face.r + face.g + face.b);
+            Assert.Less(lip.r + lip.g + lip.b, face.r + face.g + face.b);
+        }
+
+        [Test]
+        public void PressedButton_HasNoLip()
+        {
+            var up = UiSkinGenerator.Button(Red);
+            var down = UiSkinGenerator.Button(Red, pressed: true);
+            Assert.AreNotEqual(up.Get(8, 1), down.Get(8, 1));
+        }
+
+        [Test]
+        public void Disc_IsRoundWithGlint()
+        {
+            var d = UiSkinGenerator.Disc(Red);
+            Assert.AreEqual(0, d.Get(0, 0).a);
+            Assert.AreEqual(0, d.Get(d.Width - 1, d.Height - 1).a);
+            bool glint = false;
+            foreach (var p in d.Pixels) if (p.Equals(UiSkinGenerator.Glint)) glint = true;
+            Assert.IsTrue(glint);
+        }
+    }
+}

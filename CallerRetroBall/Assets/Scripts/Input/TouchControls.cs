@@ -90,6 +90,7 @@ namespace CallerRetroBall.Controls
 
             var button = image.gameObject.AddComponent<TouchActionButton>();
             button.Init(image, label, hint);
+            button.SetSprites(Theme.DiscSprite(color, Theme.Shadow), Theme.DiscPressedSprite(color));
             return button;
         }
 

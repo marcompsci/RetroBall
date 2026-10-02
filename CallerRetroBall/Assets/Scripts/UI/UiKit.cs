@@ -158,16 +158,19 @@ namespace CallerRetroBall.UI
             image.raycastTarget = true;
             var button = image.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = image;
-            var colors = button.colors;
-            colors.highlightedColor = new Color(1f, 1f, 1f, 1f);
-            colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
-            colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.6f);
-            colors.fadeDuration = 0.05f;
-            button.colors = colors;
+            // Console-style press: swap to the pushed-in face instead of tinting.
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.spriteState = new SpriteState
+            {
+                pressedSprite = Theme.ButtonPressedSprite(style),
+                disabledSprite = Theme.ButtonDisabledSprite(style),
+            };
 
-            var textColor = style == ButtonStyle.Primary ? Theme.Cream : (style == ButtonStyle.Secondary ? Theme.Cyan : Theme.Cream);
-            var label = Label(image.transform, text, fontSize, textColor, TextAlignmentOptions.Center, true);
+            var label = Label(image.transform, text, fontSize, Theme.ButtonText, TextAlignmentOptions.Center, true);
             Stretch(label.rectTransform, 12f);
+            // Keep text clear of the bottom lip so it sits on the face.
+            label.rectTransform.offsetMin = new Vector2(12f, 20f);
+            ApplyTextShadow(label);
 
             Size(image, height);
 
@@ -180,6 +183,27 @@ namespace CallerRetroBall.UI
                 onClick?.Invoke();
             });
             return button;
+        }
+
+        private static Material _shadowMaterial;
+
+        /// <summary>
+        /// Hard dark drop shadow behind button text (TMP underlay) for readability on bright faces.
+        /// One shared material for every button.
+        /// </summary>
+        public static void ApplyTextShadow(TextMeshProUGUI label)
+        {
+            if (label == null || label.fontSharedMaterial == null) return;
+            if (_shadowMaterial == null)
+            {
+                _shadowMaterial = new Material(label.fontSharedMaterial) { name = "Button Text Shadow" };
+                _shadowMaterial.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+                _shadowMaterial.SetColor(ShaderUtilities.ID_UnderlayColor, new Color(0.04f, 0.04f, 0.08f, 1f));
+                _shadowMaterial.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, 0.7f);
+                _shadowMaterial.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, -0.7f);
+                _shadowMaterial.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0f);
+            }
+            label.fontSharedMaterial = _shadowMaterial;
         }
 
         // ------------------------------------------------------------------ layout
