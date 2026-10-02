@@ -25,6 +25,8 @@ namespace CallerRetroBall.Logic
     public class MatchSummary
     {
         public string matchId;
+        /// <summary>Local calendar day the game was played (for match history).</summary>
+        public int day;
         public GameMode mode;
         public string teamAId;
         public string teamBId;

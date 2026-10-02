@@ -24,12 +24,13 @@ namespace CallerRetroBall.Gameplay
 
         private readonly List<Object> _owned = new List<Object>();
 
-        public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed, RgbColor? bannerA = null, RgbColor? bannerB = null)
+        public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed, RgbColor? bannerA = null, RgbColor? bannerB = null,
+                                     bool staticCrowd = true)
         {
             var art = new MatchArt();
             const float ppu = CourtSpace.PixelsPerUnit;
 
-            var courtCanvas = CourtGenerator.Generate(court, geometry, seed, bannerA, bannerB);
+            var courtCanvas = CourtGenerator.Generate(court, geometry, seed, bannerA, bannerB, staticCrowd);
             CourtGenerator.OriginPivot(geometry, out float px, out float py);
             art.Court = art.Make(courtCanvas, "court:" + court.id, new Vector2(px, py), ppu);
 
@@ -48,6 +49,10 @@ namespace CallerRetroBall.Gameplay
         }
 
         /// <summary>Slices a generated player sheet into [view, frame] sprites with the pivot at the feet.</summary>
+        /// <summary>A crowd fan sprite (pivot bottom-left, one art pixel = one court pixel).</summary>
+        public Sprite CrowdFan(RgbColor shirt, RgbColor skin, bool armsUp) =>
+            Make(CrowdGenerator.Fan(shirt, skin, armsUp), "fan", Vector2.zero, CourtSpace.PixelsPerUnit);
+
         public Sprite[,] PlayerFrames(PlayerDef player, TeamDef team) => PlayerFrames(player, team.primary, team.secondary, team.accent, null, TeamPattern.Solid);
 
         /// <summary>Sheet with cosmetic overrides (jersey palette, shoes) and optional colourblind pattern.</summary>

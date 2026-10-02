@@ -36,6 +36,8 @@ namespace CallerRetroBall.Logic
         public string ContextId;
         /// <summary>Optional ratings for the human's player (training upgrades applied).</summary>
         public AttributeSet? HumanAttributes;
+        /// <summary>Optional full replacement for the human's player (your created player: look, archetype, number).</summary>
+        public PlayerDef HumanPlayer;
         /// <summary>Starting stamina for the human's team, 0..1 (Rise Mode energy).</summary>
         public float StartingStamina = 1f;
         /// <summary>Teammate release-accuracy bonus from crew chemistry (visible in the Rise hub).</summary>

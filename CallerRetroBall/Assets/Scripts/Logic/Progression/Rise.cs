@@ -205,6 +205,7 @@ namespace CallerRetroBall.Logic
                 if (!won) return RiseOutcome.CircuitLoss;
                 if (!r.circuitBeaten.Contains(opp)) r.circuitBeaten.Add(opp);
                 if (NextCircuitOpponent(r) != null) return RiseOutcome.CircuitWin;
+                Records.SetSeasonResult(career, 0, "Circuit cleared");
                 StartSeason(r, c);
                 return RiseOutcome.EnteredLeague;
             }
@@ -228,6 +229,7 @@ namespace CallerRetroBall.Logic
                     return RiseOutcome.MadePlayoffs;
                 }
                 FinishSeason(r, s, c);
+                Records.SetSeasonResult(career, s.seasonNumber, "Missed playoffs");
                 return RiseOutcome.MissedPlayoffs;
             }
 
@@ -236,6 +238,7 @@ namespace CallerRetroBall.Logic
                 if (!won)
                 {
                     FinishSeason(r, s, c);
+                    Records.SetSeasonResult(career, s.seasonNumber, "Lost semifinal");
                     return RiseOutcome.Eliminated;
                 }
                 SeasonEngine.CreateFinal(s);
@@ -247,6 +250,7 @@ namespace CallerRetroBall.Logic
             r.stage = RiseStage.Complete;
             r.seasonsPlayed++;
             if (won && career != null) career.totals.championships++;
+            Records.SetSeasonResult(career, s.seasonNumber, won ? "CHAMPIONS" : "Lost final");
             return won ? RiseOutcome.Champion : RiseOutcome.Eliminated;
         }
 

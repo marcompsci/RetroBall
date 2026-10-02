@@ -41,6 +41,15 @@ namespace CallerRetroBall.Logic
             if (data.practice == null) data.practice = new PracticeBests();
             if (data.upgrades == null) data.upgrades = new List<UpgradeProgress>();
             if (data.appliedMatchIds == null) data.appliedMatchIds = new List<string>();
+            if (data.classic == null) data.classic = new ClassicSaveData();
+            if (data.daily == null) data.daily = new DailySaveData();
+            if (data.records == null) data.records = new CareerRecords();
+            if (data.history == null) data.history = new List<MatchHistoryEntry>();
+            if (data.seasons == null) data.seasons = new List<SeasonHistoryEntry>();
+            // The creator starts from Rook's look; it only replaces Rook once "created" is set.
+            if (data.customPlayer == null || (!data.customPlayer.created && string.IsNullOrEmpty(data.customPlayer.archetypeId)))
+                data.customPlayer = PlayerCreator.FromRook(c);
+            PlayerCreator.Clamp(data.customPlayer, c);
         }
 
         public static string CleanNickname(string raw)
@@ -71,11 +80,13 @@ namespace CallerRetroBall.Logic
             data.appliedMatchIds.Add(summary.matchId);
             while (data.appliedMatchIds.Count > MaxRememberedMatches) data.appliedMatchIds.RemoveAt(0);
 
+            data.lastNewRecords = new List<string>();
             data.signalPoints += grant.signalPoints;
             data.fans += grant.fans;
             // Practice, tutorial, and local 2-player games don't count toward career stats.
             if (summary.mode == GameMode.Practice || summary.mode == GameMode.Tutorial || summary.mode == GameMode.Versus) return true;
 
+            data.lastNewRecords = Records.Update(data, summary);
             data.gamesSinceUpgrade++;
             var t = data.totals;
             t.games++;

@@ -43,7 +43,11 @@ namespace CallerRetroBall.Logic.PixelArt
         public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed) => Generate(court, g, seed, null, null);
 
         /// <summary>With an optional two-colour court banner (cosmetic) hung over the crowd.</summary>
-        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed, RgbColor? bannerA, RgbColor? bannerB)
+        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed, RgbColor? bannerA, RgbColor? bannerB) =>
+            Generate(court, g, seed, bannerA, bannerB, true);
+
+        /// <param name="drawPeople">False leaves the stands empty for the animated crowd (matches).</param>
+        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed, RgbColor? bannerA, RgbColor? bannerB, bool drawPeople)
         {
             if (court == null) throw new ArgumentNullException(nameof(court));
             int w = TextureWidth(g), h = TextureHeight(g);
@@ -101,7 +105,7 @@ namespace CallerRetroBall.Logic.PixelArt
             // Centre-top logo circle segment (decor, original)
             CourtArc(c, g, new Vec2(0f, g.depth), 1.8f, 90f, 270f, line);
 
-            DrawCrowd(c, g, court, rng);
+            DrawCrowd(c, g, court, rng, drawPeople);
             if (bannerA.HasValue) DrawBanner(c, g, bannerA.Value, bannerB ?? bannerA.Value);
             return c;
         }
@@ -160,7 +164,24 @@ namespace CallerRetroBall.Logic.PixelArt
             }
         }
 
-        private static void DrawCrowd(PixelCanvas c, CourtGeometry g, CourtDef court, SeededRandom rng)
+        /// <summary>Pixel row (texture space) of the bottom of crowd row <paramref name="row"/> (0..2).</summary>
+        public static int CrowdRowBottom(CourtGeometry g, int row)
+        {
+            CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
+            return (int)Math.Round(baselinePy) + 2 + 2 + row * 8;
+        }
+
+        /// <summary>True where the cosmetic court banner hangs (fans there would cover it).</summary>
+        public static bool BannerCovers(CourtGeometry g, int textureWidth, int x, int y, int w, int h)
+        {
+            CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
+            int y0 = (int)Math.Round(baselinePy) + 12;
+            foreach (int x0 in new[] { 20, textureWidth - 20 - 64 })
+                if (x + w > x0 && x < x0 + 64 && y + h > y0 && y < y0 + 10) return true;
+            return false;
+        }
+
+        private static void DrawCrowd(PixelCanvas c, CourtGeometry g, CourtDef court, SeededRandom rng, bool drawPeople = true)
         {
             CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
             int start = (int)Math.Round(baselinePy) + 2;
@@ -170,6 +191,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 for (int x = 0; x < c.Width; x++)
                     c.Set(x, y, (y - start) % 8 == 0 ? wallLight : wall);
 
+            if (!drawPeople) return;
             // Seated silhouettes: heads + shoulders in muted sky colours.
             var person = court.skyBottom.Darken(0.55f);
             var personAlt = court.skyBottom.Darken(0.4f);

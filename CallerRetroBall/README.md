@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–11 implemented.** The engine-free game logic (rules, AI, 2-player, tutorial, daily challenges, progression, save, art and audio generation) compiles on .NET and passes 243 automated tests. The Unity project compiled in Unity 6000.6.3f1 with 0 errors as of Phase 8, after small first-open fixes. Later Unity changes (Phases 9–11) have only been syntax- and name-checked. There has been no full playtest, iOS build, or device run yet. See [Known limitations](#known-limitations).
+> **Status: Phases 1–12 implemented.** The engine-free game logic (rules, AI, 2-player, tutorial, daily challenges, progression, save, art and audio generation) compiles on .NET and passes 262 automated tests. The Unity project compiled in Unity 6000.6.3f1 with 0 errors as of Phase 8, after small first-open fixes. Phase 11 also compiled in Unity with 0 errors. Phase 12 Unity changes have only been syntax- and name-checked so far. There has been no full playtest, iOS build, or device run yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -41,8 +41,8 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
 - **Rise Mode:** play as the First Callers. Beat five street crews in The Blacktop Circuit, join The Caller League for a 10-game season (event cards between games, energy and chemistry), then a four-team bracket for The Gold Signal Cup. Next season starts from the hub.
 - **First Call Classic:** a four-team knockout. Your First Callers (fourth seed) face three league teams drawn at random; win the semi and the final for the title (+200 SP bonus). Enter a new Classic any time it's over.
 - **Practice Lab:** Free Shoot (60 s), Passing Targets (45 s), Dribble Lane (5 cones, timed). Personal bests are saved. No rewards.
-- **Locker Room:** nickname, trained ratings, upgrades (Signal Points + a game played between purchases), cosmetics shop and equip, career stats and practice bests.
-- **Settings:** How to Play, optional Game Center sign-in (see [`docs/GAME_CENTER.md`](docs/GAME_CENTER.md)), music and SFX volume, haptics, screen shake, UI scale, colourblind team patterns, difficulty, reset save (with confirmation), credits and licences.
+- **Locker Room:** nickname, CREATE your own player (look, number, style of play), STATS (records, season history, recent games), trained ratings, upgrades (Signal Points + a game played between purchases), cosmetics shop and equip, career stats and practice bests.
+- **Settings:** How to Play, accessibility (left-handed, large buttons, tap to shoot, reduce motion), optional Game Center sign-in (see [`docs/GAME_CENTER.md`](docs/GAME_CENTER.md)), music and SFX volume, haptics, screen shake, UI scale, colourblind team patterns, difficulty, reset save (with confirmation), credits and licences.
 
 ## Controls
 
@@ -73,7 +73,7 @@ cd ../tools/LogicTests
 dotnet run --project Runner/Runner.csproj
 ```
 
-This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **243 passed, 0 failed**.
+This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **262 passed, 0 failed**.
 
 `tools/SyntaxCheck` parses every C# file under `Assets/`. It does not resolve Unity APIs, so it is not a substitute for compiling in Unity.
 

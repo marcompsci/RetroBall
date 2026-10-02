@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 12 | Create-a-player, accessibility (left-handed, large buttons, tap-to-shoot, reduce motion), dunk/layup leaps, animated crowd, 3 music tracks + stingers, records/history/seasons | **Done** (262 logic tests pass; Unity changes not yet compiled in Unity) |
 | 11 | How to Play tutorial, opt-in Game Center (GameKit bridge), local 2-player, Daily Challenge | **Done** (243 logic tests pass incl. a scripted tutorial run and 2-player sim tests; Unity UI and GameKit not yet run) |
 | 10 | Rename to RetroBall; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
 | 9 | Polish: celebrations, dribble moves, pixel bursts, dunk SLAM + shake, crowd ambience, score bounce, reward count-up | **Done** (207 logic tests pass; not yet seen running) |
@@ -159,6 +160,23 @@
   achievements and leaderboards come from `Achievements`. The post-processor adds GameKit and the capability. The IDs
   to create are in `docs/GAME_CENTER.md`.
 - **Menus:** PLAY now opens Quick Call, Daily Challenge, 2 Player, First Call Classic, and How to Play.
+
+## Phase 12: create-a-player, accessibility, animation & sound, stats
+
+- **Create-a-player** (Locker Room ▸ CREATE): skin tone, hair, hair colour, build, height, number, and style of play
+  (archetype baseline −10, like Rook), with a live sprite preview. `PlayerCreator` builds the human's `PlayerDef`.
+  Training upgrades apply on top. It's used in Rise, the Classic, Practice, and How to Play. "Go back to Rook" is
+  always available.
+- **Accessibility** (Settings): left-handed layout, large buttons (+25%), tap to shoot (`TapShoot`), and reduce
+  motion (no shake, sparks, score bounce, or crowd bob). VoiceOver labels were **not** added: uGUI has no
+  screen-reader support, and Unity's newer accessibility API wasn't verified for this project.
+- **Animation & sound:** dunk and layup leaps (`Flair.Leap`); an animated crowd (`CrowdGenerator`, fans cheer and
+  groan, they skip banner spots, and the court stops drawing static people in matches); three music loops
+  (menus / matches / Rise hub); stingers for HEATING UP (3 makes in a row), ON FIRE (4+), dunks, greens, records,
+  and titles. These are musical stings, not a spoken announcer.
+- **Stats & records** (`Records`): single-game bests with NEW RECORD callouts (announced after the first game),
+  current and best win streak, the last 20 games, and per-season Rise history with the result. All of it is shown
+  in Locker Room ▸ STATS.
 
 ## Deviations from the brief (deliberate)
 

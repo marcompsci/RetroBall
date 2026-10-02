@@ -57,6 +57,10 @@ namespace CallerRetroBall.Logic
                     ["uiScale"] = (double)d.settings.uiScale, ["colorblindContrast"] = d.settings.colorblindContrast,
                     ["difficultyId"] = d.settings.difficultyId,
                     ["gameCenter"] = d.settings.gameCenter,
+                    ["leftHanded"] = d.settings.leftHanded,
+                    ["largeButtons"] = d.settings.largeButtons,
+                    ["tapToShoot"] = d.settings.tapToShoot,
+                    ["reduceMotion"] = d.settings.reduceMotion,
                 },
                 ["rise"] = EncodeRise(d.rise),
                 ["classic"] = EncodeClassic(d.classic),
@@ -68,6 +72,18 @@ namespace CallerRetroBall.Logic
                     ["completed"] = (d.daily ?? new DailySaveData()).completed,
                 },
                 ["tutorialDone"] = d.tutorialDone,
+                ["customPlayer"] = EncodeCustom(d.customPlayer ?? new CustomPlayerData()),
+                ["records"] = EncodeRecords(d.records ?? new CareerRecords()),
+                ["history"] = List(d.history ?? new List<MatchHistoryEntry>(), h => new Dictionary<string, object>
+                {
+                    ["day"] = h.day, ["mode"] = (int)h.mode, ["opp"] = h.opponentId, ["for"] = h.scoreFor,
+                    ["against"] = h.scoreAgainst, ["pts"] = h.points, ["ast"] = h.assists, ["reb"] = h.rebounds,
+                }),
+                ["seasons"] = List(d.seasons ?? new List<SeasonHistoryEntry>(), e => new Dictionary<string, object>
+                {
+                    ["season"] = e.season, ["games"] = e.games, ["wins"] = e.wins, ["losses"] = e.losses,
+                    ["pts"] = e.points, ["ast"] = e.assists, ["reb"] = e.rebounds, ["result"] = e.result,
+                }),
                 ["appliedMatchIds"] = Strings(d.appliedMatchIds),
             };
             return MiniJson.Write(o);
@@ -115,6 +131,19 @@ namespace CallerRetroBall.Logic
             if (t.seeds.Count != 4) { t.seeds.Clear(); t.games.Clear(); t.finished = false; }
             return t;
         }
+
+        private static object EncodeCustom(CustomPlayerData p) => new Dictionary<string, object>
+        {
+            ["created"] = p.created, ["skin"] = p.skinTone, ["hairStyle"] = p.hairStyle, ["hairColor"] = p.hairColor,
+            ["body"] = p.body, ["height"] = p.heightTier, ["jersey"] = p.jerseyNumber, ["archetype"] = p.archetypeId,
+        };
+
+        private static object EncodeRecords(CareerRecords r) => new Dictionary<string, object>
+        {
+            ["points"] = r.points, ["assists"] = r.assists, ["rebounds"] = r.rebounds, ["steals"] = r.steals,
+            ["blocks"] = r.blocks, ["greens"] = r.greens, ["biggestWin"] = r.biggestWin,
+            ["winStreak"] = r.winStreak, ["bestWinStreak"] = r.bestWinStreak,
+        };
 
         private static object EncodeRise(RiseSaveData r)
         {
@@ -205,6 +234,10 @@ namespace CallerRetroBall.Logic
                     colorblindContrast = Bool(st, "colorblindContrast", false),
                     difficultyId = Str(st, "difficultyId", DefaultContent.DefaultDifficultyId),
                     gameCenter = Bool(st, "gameCenter", false),
+                    leftHanded = Bool(st, "leftHanded", false),
+                    largeButtons = Bool(st, "largeButtons", false),
+                    tapToShoot = Bool(st, "tapToShoot", false),
+                    reduceMotion = Bool(st, "reduceMotion", false),
                 };
                 d.rise = DecodeRise(Obj(o, "rise"));
                 d.classic = DecodeClassic(Obj(o, "classic"));
@@ -217,6 +250,44 @@ namespace CallerRetroBall.Logic
                     completed = Math.Max(0, Int(dy, "completed", 0)),
                 };
                 d.tutorialDone = Bool(o, "tutorialDone", false);
+                var cp = Obj(o, "customPlayer");
+                d.customPlayer = new CustomPlayerData
+                {
+                    created = Bool(cp, "created", false),
+                    skinTone = Int(cp, "skin", 0), hairStyle = Int(cp, "hairStyle", 0), hairColor = Int(cp, "hairColor", 0),
+                    body = Int(cp, "body", 1), heightTier = Int(cp, "height", 1), jerseyNumber = Int(cp, "jersey", 1),
+                    archetypeId = Str(cp, "archetype", null),
+                };
+                if (cp == null) d.customPlayer = null; // older save: EnsureDefaults starts it from Rook's look
+                else PlayerCreator.Clamp(d.customPlayer, c);
+                var rc = Obj(o, "records");
+                d.records = new CareerRecords
+                {
+                    points = Int(rc, "points", 0), assists = Int(rc, "assists", 0), rebounds = Int(rc, "rebounds", 0),
+                    steals = Int(rc, "steals", 0), blocks = Int(rc, "blocks", 0), greens = Int(rc, "greens", 0),
+                    biggestWin = Int(rc, "biggestWin", 0), winStreak = Int(rc, "winStreak", 0), bestWinStreak = Int(rc, "bestWinStreak", 0),
+                };
+                foreach (var item in Arr(o, "history"))
+                {
+                    if (!(item is Dictionary<string, object> h)) continue;
+                    int mode = Int(h, "mode", 0);
+                    d.history.Add(new MatchHistoryEntry
+                    {
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Tutorial ? (GameMode)mode : GameMode.QuickCall,
+                        opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
+                        points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
+                    });
+                    if (d.history.Count >= Records.HistoryLength) break;
+                }
+                foreach (var item in Arr(o, "seasons"))
+                {
+                    if (!(item is Dictionary<string, object> e)) continue;
+                    d.seasons.Add(new SeasonHistoryEntry
+                    {
+                        season = Int(e, "season", 0), games = Int(e, "games", 0), wins = Int(e, "wins", 0), losses = Int(e, "losses", 0),
+                        points = Int(e, "pts", 0), assists = Int(e, "ast", 0), rebounds = Int(e, "reb", 0), result = Str(e, "result", null),
+                    });
+                }
 
                 Career.EnsureDefaults(d, c);
                 status = version < CareerSaveData.CurrentVersion ? LoadStatus.Migrated : LoadStatus.Ok;

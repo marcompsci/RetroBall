@@ -1,5 +1,6 @@
 using CallerRetroBall.Core;
 using CallerRetroBall.Logic;
+using CallerRetroBall.Logic.PixelArt;
 using CallerRetroBall.Utilities;
 using TMPro;
 using UnityEngine;
@@ -17,9 +18,17 @@ namespace CallerRetroBall.UI
         protected override string ScreenTitle => "LOCKER ROOM";
         protected override string BackdropCourtId => "court.pier_nine";
 
-        private enum Tab { Player = 0, Training = 1, Style = 2, Career = 3 }
+        private enum Tab { Player = 0, Create = 1, Training = 2, Style = 3, Stats = 4 }
 
-        private static readonly string[] TabNames = { "PLAYER", "TRAINING", "STYLE", "CAREER" };
+        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TRAIN", "STYLE", "STATS" };
+
+        private CustomPlayerData _draft;
+        private Texture2D _previewTex;
+
+        private void OnDestroy()
+        {
+            if (_previewTex != null) Destroy(_previewTex);
+        }
 
         private Tab _tab;
         private RectTransform _content;
@@ -37,7 +46,7 @@ namespace CallerRetroBall.UI
             for (int i = 0; i < TabNames.Length; i++)
             {
                 var t = (Tab)i;
-                var b = UiKit.Button(tabs, TabNames[i], () => Show(t), ButtonStyle.Secondary, 100f, 30f);
+                var b = UiKit.Button(tabs, TabNames[i], () => Show(t), ButtonStyle.Secondary, 100f, 28f);
                 _tabImages[i] = b.GetComponent<UnityEngine.UI.Image>();
             }
 
@@ -63,6 +72,7 @@ namespace CallerRetroBall.UI
             switch (_tab)
             {
                 case Tab.Player: BuildPlayer(); break;
+                case Tab.Create: BuildCreate(); break;
                 case Tab.Training: BuildTraining(); break;
                 case Tab.Style: BuildStyle(); break;
                 default: BuildCareer(); break;
@@ -81,8 +91,9 @@ namespace CallerRetroBall.UI
                 UiKit.Size(UiKit.Label(_content, "Rook's profile is missing from content.", 40f, Theme.Pink), 100f);
                 return;
             }
-            var archetype = c.ArchetypeById(rook.archetypeId);
-            var ratings = Career.EffectiveRatings(rook.attributes, career, c);
+            var me = PlayerCreator.BasePlayer(career, c);
+            var archetype = c.ArchetypeById(me.archetypeId);
+            var ratings = Career.EffectiveRatings(me.attributes, career, c);
 
             UiKit.Size(UiKit.Label(_content, "NICKNAME", 30f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
             UiControls.TextField(_content, career.nickname, 14, value =>
@@ -92,14 +103,14 @@ namespace CallerRetroBall.UI
             });
 
             UiKit.Size(UiKit.Label(_content, (archetype != null ? archetype.displayName.ToUpperInvariant() : "ROOKIE") +
-                                             "  ·  #" + rook.jerseyNumber + "  ·  OVR " + ratings.Overall,
+                                             "  ·  #" + me.jerseyNumber + "  ·  OVR " + ratings.Overall,
                                    44f, Theme.Gold, TextAlignmentOptions.Center, true), 70f);
             if (archetype != null) UiKit.Size(UiKit.Label(_content, archetype.description, 30f, Theme.Muted), 90f);
 
             for (int i = 0; i < RatingScale.AttributeCount; i++)
             {
                 var type = (AttributeType)i;
-                int trained = ratings.Get(type) - rook.attributes.Get(type);
+                int trained = ratings.Get(type) - me.attributes.Get(type);
                 AttributeBar(_content, type.ToString().ToUpperInvariant() + (trained > 0 ? " <color=#4CC9F0>+" + trained + "</color>" : ""),
                              ratings.Get(type), archetype != null && archetype.strengths.Contains(type));
             }
@@ -131,6 +142,123 @@ namespace CallerRetroBall.UI
             value.rectTransform.offsetMin = value.rectTransform.offsetMax = Vector2.zero;
         }
 
+        // ------------------------------------------------------------------ create a player
+
+        private static readonly string[] HairColorNames = { "BLACK", "DARK BROWN", "BROWN", "BLONDE", "RED" };
+        private static readonly string[] BodyNames = { "SLIM", "STANDARD", "BROAD" };
+        private static readonly string[] HeightNames = { "SHORT", "AVERAGE", "TALL" };
+
+        private void BuildCreate()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            if (_draft == null)
+            {
+                var from = career.customPlayer ?? PlayerCreator.FromRook(c);
+                _draft = new CustomPlayerData
+                {
+                    created = from.created, skinTone = from.skinTone, hairStyle = from.hairStyle, hairColor = from.hairColor,
+                    body = from.body, heightTier = from.heightTier, jerseyNumber = from.jerseyNumber, archetypeId = from.archetypeId,
+                };
+            }
+            var d = _draft;
+            PlayerCreator.Clamp(d, c);
+
+            // Live preview: front-facing idle frame in your crew colours (or your equipped jersey palette).
+            var crew = c.Team(DefaultContent.PlayerCrewId);
+            var jersey = c.Find(c.Cosmetics, career.equippedJersey);
+            var shoes = c.Find(c.Cosmetics, career.equippedShoes);
+            var look = new AppearanceDef(d.skinTone, d.hairStyle, d.hairColor, (BodyType)d.body, d.heightTier);
+            var sheet = CharacterSpriteGenerator.GenerateSheet(look, jersey?.colorA ?? crew.primary, jersey?.colorB ?? crew.secondary,
+                                                               crew.accent, shoes?.colorA, TeamPattern.Solid);
+            CharacterSpriteGenerator.FrameOrigin(CharacterView.Front, 0, out int fx, out int fy);
+            var frame = new PixelCanvas(CharacterSpriteGenerator.FrameWidth, CharacterSpriteGenerator.FrameHeight);
+            for (int y = 0; y < frame.Height; y++)
+                for (int x = 0; x < frame.Width; x++)
+                    frame.Pixels[y * frame.Width + x] = sheet.Get(fx + x, fy + y);
+            if (_previewTex != null) Destroy(_previewTex);
+            _previewTex = TextureFactory.ToTexture(frame, "ui.create.preview");
+            var stage = UiKit.Panel(_content, Color.white, Theme.PanelSprite(), true, "Preview");
+            UiKit.Size(stage, 320f);
+            var pic = UiKit.Picture(stage.transform, _previewTex, "Player");
+            UiKit.Place(pic.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(frame.Width * 11f, frame.Height * 11f));
+            var number = UiKit.Label(stage.transform, "#" + d.jerseyNumber, 48f, Theme.Gold, TextAlignmentOptions.Right, true);
+            UiKit.Place(number.rectTransform, new Vector2(0.85f, 0.75f), new Vector2(200f, 70f));
+
+            Choice("SKIN TONE", Numbered(PlayerCreator.SkinToneCount), d.skinTone, i => d.skinTone = i);
+            Choice("HAIR", Numbered(PlayerCreator.HairStyleCount), d.hairStyle, i => d.hairStyle = i);
+            Choice("HAIR COLOUR", HairColorNames, d.hairColor, i => d.hairColor = i);
+            Choice("BUILD", BodyNames, d.body, i => d.body = i);
+            Choice("HEIGHT", HeightNames, d.heightTier, i => d.heightTier = i);
+            Stepper("NUMBER", d.jerseyNumber, v => d.jerseyNumber = v);
+
+            var archetypes = c.Archetypes;
+            int ai = Mathf.Max(0, archetypes.FindIndex(a => a.id == d.archetypeId));
+            Choice("STYLE OF PLAY", archetypes.ConvertAll(a => a.displayName.ToUpperInvariant()).ToArray(), ai, i => d.archetypeId = archetypes[i].id);
+            var arch = archetypes[ai];
+            UiKit.Size(UiKit.Label(_content, arch.description, 30f, Theme.Muted), 90f);
+            var ratings = arch.baseline.Offset(PlayerCreator.RatingOffset);
+            UiKit.Size(UiKit.Label(_content, "STARTING OVR " + ratings.Overall + "  ·  your training upgrades carry over", 30f, Theme.Cyan, TextAlignmentOptions.Center, true), 50f);
+
+            UiKit.Button(_content, career.customPlayer.created ? "SAVE CHANGES" : "CREATE PLAYER", () =>
+            {
+                d.created = true;
+                App.Career.customPlayer = d;
+                _draft = null;
+                App.SaveCareer();
+                Core.Haptics.Success();
+                Refresh();
+            }, ButtonStyle.Primary, 130f);
+            if (career.customPlayer.created)
+                UiKit.Button(_content, "GO BACK TO ROOK", () =>
+                    UiControls.Dialog("USE ROOK?", "Your created player is set aside and Rook takes the court again. Your nickname, stats, and training stay.",
+                        ("USE ROOK", ButtonStyle.Primary, () =>
+                        {
+                            App.Career.customPlayer.created = false;
+                            _draft = null;
+                            App.SaveCareer();
+                            Refresh();
+                        }),
+                        ("CANCEL", ButtonStyle.Ghost, null)),
+                    ButtonStyle.Ghost, 100f, 36f);
+            UiKit.Size(UiKit.Label(_content, "Your player stars in Rise Mode, the First Call Classic, Practice, and How to Play.", 28f, Theme.Muted), 70f);
+        }
+
+        private static string[] Numbered(int count)
+        {
+            var names = new string[count];
+            for (int i = 0; i < count; i++) names[i] = (i + 1).ToString();
+            return names;
+        }
+
+        /// <summary>A choice row that redraws the tab (and the preview) after each change.</summary>
+        private void Choice(string label, string[] options, int index, System.Action<int> set)
+        {
+            UiControls.ChoiceRow(_content, label, options, index, i =>
+            {
+                set(i);
+                Refresh();
+            });
+        }
+
+        private void Stepper(string label, int value, System.Action<int> set)
+        {
+            var row = UiKit.Row(_content, 12f, "Stepper " + label);
+            UiKit.Size(row, 100f);
+            var text = UiKit.Label(row, label, 36f, Theme.Cream, TextAlignmentOptions.Left, true);
+            UiKit.Size(text, -1f, 300f);
+            void Step(int delta)
+            {
+                set((value + delta + PlayerCreator.MaxJersey + 1) % (PlayerCreator.MaxJersey + 1));
+                Refresh();
+            }
+            UiKit.Button(row, "-10", () => Step(-10), ButtonStyle.Ghost, 90f, 32f);
+            UiKit.Button(row, "-1", () => Step(-1), ButtonStyle.Ghost, 90f, 32f);
+            UiKit.Size(UiKit.Label(row, value.ToString(), 44f, Theme.Gold, TextAlignmentOptions.Center, true), -1f, 120f);
+            UiKit.Button(row, "+1", () => Step(1), ButtonStyle.Ghost, 90f, 32f);
+            UiKit.Button(row, "+10", () => Step(10), ButtonStyle.Ghost, 90f, 32f);
+        }
+
         // ------------------------------------------------------------------ training
 
         private void BuildTraining()
@@ -145,7 +273,7 @@ namespace CallerRetroBall.UI
             foreach (var u in c.Upgrades)
             {
                 int level = career.UpgradeLevel(u.id);
-                var check = Career.CanBuy(career, u, rook.attributes);
+                var check = Career.CanBuy(career, u, PlayerCreator.BaseRatings(career, c));
                 string cost = level >= u.maxLevel ? "MAX" : Career.UpgradeCost(u, level) + " SP";
 
                 var card = UiKit.Panel(_content, Color.white, Theme.PanelSprite(), true, "Upgrade " + u.id);
@@ -162,7 +290,7 @@ namespace CallerRetroBall.UI
                 var upgrade = u;
                 var buy = UiKit.Button(card.transform, cost, () =>
                 {
-                    if (Career.Buy(App.Career, upgrade, rook.attributes) == UpgradeCheck.Ok)
+                    if (Career.Buy(App.Career, upgrade, PlayerCreator.BaseRatings(App.Career, App.Catalog)) == UpgradeCheck.Ok)
                     {
                         App.SaveCareer();
                         Haptics.Success();
@@ -275,11 +403,60 @@ namespace CallerRetroBall.UI
             Line("CHAMPIONSHIPS", t.championships.ToString());
             Line("CLASSIC TITLES", career.classic.titles.ToString());
 
-            UiKit.Size(UiKit.Label(_content, "PRACTICE BESTS", 36f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
+            Header("RECORDS (ONE GAME)");
+            var r = career.records;
+            Line("POINTS", r.points.ToString());
+            Line("ASSISTS", r.assists.ToString());
+            Line("REBOUNDS", r.rebounds.ToString());
+            Line("STEALS", r.steals.ToString());
+            Line("BLOCKS", r.blocks.ToString());
+            Line("GREENS", r.greens.ToString());
+            Line("BIGGEST WIN", r.biggestWin > 0 ? "+" + r.biggestWin : "-");
+            Line("WIN STREAK", r.winStreak + "  (best " + r.bestWinStreak + ")");
+
+            if (career.seasons.Count > 0)
+            {
+                Header("RISE SEASONS");
+                foreach (var e in career.seasons)
+                {
+                    string name = e.season == 0 ? "CIRCUIT" : "SEASON " + e.season;
+                    string ppg = e.games > 0 ? (e.points / (float)e.games).ToString("0.0") + " PPG" : "-";
+                    Line(name, e.wins + "-" + e.losses + "  ·  " + ppg + (string.IsNullOrEmpty(e.result) ? "" : "  ·  " + e.result.ToUpperInvariant()));
+                }
+            }
+
+            if (career.history.Count > 0)
+            {
+                Header("RECENT GAMES");
+                int shown = 0;
+                foreach (var h in career.history)
+                {
+                    if (shown++ >= 10) break;
+                    var opp = App.Catalog.Team(h.opponentId);
+                    string result = (h.Won ? "<color=#4CC9F0>W</color> " : "<color=#F72585>L</color> ") + h.scoreFor + "-" + h.scoreAgainst;
+                    Line(ModeName(h.mode) + " vs " + (opp?.abbreviation ?? "?"), result + "  ·  " + h.points + " PTS " + h.assists + " AST " + h.rebounds + " REB");
+                }
+            }
+
+            Header("PRACTICE BESTS");
             var p = career.practice;
             Line("FREE SHOOT", p.freeShootMakes + " makes · streak " + p.freeShootStreak);
             Line("PASSING TARGETS", p.passingScore.ToString());
             Line("DRIBBLE LANE", p.dribbleLaneTime > 0f ? p.dribbleLaneTime.ToString("0.00") + " s" : "-");
+        }
+
+        private void Header(string text) =>
+            UiKit.Size(UiKit.Label(_content, text, 36f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
+
+        private static string ModeName(GameMode m)
+        {
+            switch (m)
+            {
+                case GameMode.Rise: return "RISE";
+                case GameMode.Tournament: return "CLASSIC";
+                case GameMode.Daily: return "DAILY";
+                default: return "QUICK";
+            }
         }
 
         private void Line(string label, string value)

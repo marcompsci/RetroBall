@@ -16,6 +16,7 @@ namespace CallerRetroBall.UI
     {
         protected override string ScreenTitle => "RISE MODE";
         protected override string BackdropCourtId => "court.overpass_park";
+        protected override int MusicTrack => 2;
 
         private RectTransform _content;
 

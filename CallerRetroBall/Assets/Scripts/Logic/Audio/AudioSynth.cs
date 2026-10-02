@@ -16,6 +16,12 @@ namespace CallerRetroBall.Logic
         Steal = 9,
         Block = 10,
         Buzzer = 11,
+        /// <summary>Two-note "announcer" sting for a big play.</summary>
+        Stinger = 12,
+        /// <summary>Rising arpeggio for HEATING UP / ON FIRE.</summary>
+        OnFire = 13,
+        /// <summary>Short fanfare for titles and records.</summary>
+        Fanfare = 14,
     }
 
     /// <summary>
@@ -42,27 +48,42 @@ namespace CallerRetroBall.Logic
                 case SfxId.Click: return Square(0.04f, 880f, 0.25f);
                 case SfxId.Steal: return Chirp(0.14f, 600f, 1200f, 0.35f);
                 case SfxId.Block: return Thump(0.2f, 70f, 40f, 1f, rng, 0.5f);
+                case SfxId.Stinger: return Notes(new[] { 79, 84 }, 0.11f, 0.4f);
+                case SfxId.OnFire: return Notes(new[] { 72, 76, 79, 84, 88 }, 0.06f, 0.35f);
+                case SfxId.Fanfare: return Notes(new[] { 67, 72, 76, 79, 84, 84 }, 0.1f, 0.4f);
                 default: return Square(0.6f, 220f, 0.3f);
             }
         }
 
         public static float Duration(float[] samples) => samples.Length / (float)SampleRate;
 
+        public const int MusicTrackCount = 3;
+
         /// <summary>
-        /// Short original chiptune loop: 8 bars of bass, arpeggio, and a hi-hat, 112 BPM.
-        /// Loops seamlessly (length is an exact number of beats).
+        /// Original chiptune loops, 32 beats each so they loop seamlessly.
+        /// 0 = "Sunset Cage" (menus): C major, 112 BPM. 1 = "Blacktop Bounce" (matches): A minor,
+        /// 126 BPM, with a kick drum. 2 = "Gold Signal" (Rise hub): D major, 100 BPM, bright arpeggio.
         /// </summary>
-        public static float[] MusicLoop()
+        public static float[] MusicLoop(int track = 0)
         {
-            const float bpm = 112f;
+            switch (((track % MusicTrackCount) + MusicTrackCount) % MusicTrackCount)
+            {
+                case 1:
+                    return Loop(126f, new[] { 45, 41, 48, 43 }, new[] { 0, 7, 12, 7, 3, 7, 12, 15 }, 535353, kick: true, arpLevel: 0.06f);
+                case 2:
+                    return Loop(100f, new[] { 50, 45, 47, 43 }, new[] { 0, 4, 7, 11, 12, 11, 7, 4 }, 909090, kick: false, arpLevel: 0.08f);
+                default:
+                    return Loop(112f, new[] { 48, 45, 41, 43 }, new[] { 0, 4, 7, 12, 7, 4, 0, 7 }, 424242, kick: false, arpLevel: 0.07f);
+            }
+        }
+
+        private static float[] Loop(float bpm, int[] roots, int[] arp, uint seed, bool kick, float arpLevel)
+        {
             const int beats = 32;
             float beat = 60f / bpm;
             int n = (int)(beats * beat * SampleRate);
             var s = new float[n];
-            // I – vi – IV – V in C (MIDI roots), two bars each.
-            int[] roots = { 48, 45, 41, 43 };
-            int[] arp = { 0, 4, 7, 12, 7, 4, 0, 7 };
-            var rng = new SeededRandom(424242);
+            var rng = new SeededRandom(seed);
             for (int b = 0; b < beats; b++)
             {
                 int root = roots[(b / 8) % roots.Length];
@@ -74,7 +95,19 @@ namespace CallerRetroBall.Logic
                 for (int e = 0; e < 2; e++)
                 {
                     int note = root + 12 + arp[(b * 2 + e) % arp.Length];
-                    AddTone(s, start + e * len / 2, len / 2 - 200, Midi(note), 0.07f, square: true);
+                    AddTone(s, start + e * len / 2, len / 2 - 200, Midi(note), arpLevel, square: true);
+                }
+                // Kick on the beat (pitch-dropping sine).
+                if (kick)
+                {
+                    double ph = 0;
+                    int kl = Math.Min(len / 3, 3000);
+                    for (int i = 0; i < kl && start + i < n; i++)
+                    {
+                        float t = i / (float)kl;
+                        ph += 2 * Math.PI * (110f - 70f * t) / SampleRate;
+                        s[start + i] += (float)Math.Sin(ph) * 0.22f * (1f - t);
+                    }
                 }
                 // Hi-hat on off-beats.
                 int hat = start + len / 2;
@@ -82,6 +115,21 @@ namespace CallerRetroBall.Logic
                     s[hat + i] += (rng.NextFloat() * 2f - 1f) * 0.05f * (1f - i / 1400f);
             }
             return Normalize(s, 0.8f);
+        }
+
+        /// <summary>A quick square-wave phrase (stingers).</summary>
+        private static float[] Notes(int[] midi, float noteSeconds, float amp)
+        {
+            int noteLen = (int)(noteSeconds * SampleRate);
+            int tail = noteLen * 2;
+            var s = new float[noteLen * midi.Length + tail];
+            for (int i = 0; i < midi.Length; i++)
+            {
+                bool last = i == midi.Length - 1;
+                AddTone(s, i * noteLen, last ? noteLen + tail : noteLen - 100, Midi(midi[i]), 0.5f, square: true);
+                AddTone(s, i * noteLen, last ? noteLen + tail : noteLen - 100, Midi(midi[i] - 12), 0.25f, square: false);
+            }
+            return Normalize(s, amp);
         }
 
         /// <summary>

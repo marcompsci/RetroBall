@@ -53,6 +53,13 @@ namespace CallerRetroBall.UI
             });
             UiControls.ToggleRow(column, "TEAM PATTERNS", s.colorblindContrast, v => { s.colorblindContrast = v; Save(); });
             UiKit.Size(UiKit.Label(column, "Team patterns give each side a distinct jersey pattern, not just a colour.", 28f, Theme.Muted), 70f);
+            UiControls.ToggleRow(column, "LEFT-HANDED", s.leftHanded, v => { s.leftHanded = v; Save(); });
+            UiControls.ToggleRow(column, "LARGE BUTTONS", s.largeButtons, v => { s.largeButtons = v; Save(); });
+            UiControls.ToggleRow(column, "TAP TO SHOOT", s.tapToShoot, v => { s.tapToShoot = v; Save(); });
+            UiControls.ToggleRow(column, "REDUCE MOTION", s.reduceMotion, v => { s.reduceMotion = v; Save(); });
+            UiKit.Size(UiKit.Label(column,
+                "Left-handed puts the stick on the right and buttons on the left. Tap to shoot: tap once to start the meter, tap again to release. " +
+                "Reduce motion turns off screen shake, sparks, the score bounce, and crowd bobbing.", 28f, Theme.Muted), 150f);
 
             Header(column, "GAME");
             var diffs = c.Difficulties;

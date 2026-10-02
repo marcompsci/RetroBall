@@ -141,12 +141,70 @@ namespace CallerRetroBall.Logic
             return angle >= DribbleMoveAngle;
         }
 
+        /// <summary>
+        /// Shooter's leap during a dunk or layup, as a jump fraction for the sprite (1 = a normal
+        /// defensive jump, so dunks rise higher). Zero for jump shots, which use the arms-up pose only.
+        /// </summary>
+        public static float Leap(ShotType type, float t, float duration)
+        {
+            if (duration <= 0f || t < 0f || t >= duration) return 0f;
+            float peak = type == ShotType.Dunk ? 1.8f : type == ShotType.Layup ? 1.0f : 0f;
+            if (peak <= 0f) return 0f;
+            float u = t / duration;
+            return 4f * u * (1f - u) * peak;
+        }
+
         /// <summary>Parabolic hop of <paramref name="height"/> art pixels between start and start+duration.</summary>
         private static int Hop(float t, float start, float duration, int height)
         {
             float u = (t - start) / duration;
             if (u <= 0f || u >= 1f) return 0;
             return (int)Math.Round(4f * u * (1f - u) * height);
+        }
+    }
+
+    /// <summary>
+    /// Tap-to-shoot (accessibility): tap once to start the meter, tap again to release. Turns
+    /// taps into the "held" signal the simulation expects. Pure, so it's unit-tested.
+    /// </summary>
+    public struct TapShoot
+    {
+        public bool Holding;
+        private int _grace;
+
+        /// <summary>Frames to wait for the meter to start after the first tap.</summary>
+        public const int StartGraceFrames = 8;
+
+        /// <param name="tapped">Shoot was tapped this frame.</param>
+        /// <param name="charging">The player's shot meter is running.</param>
+        /// <returns>Whether SHOOT counts as held this frame.</returns>
+        public bool Update(bool tapped, bool charging)
+        {
+            if (!Holding)
+            {
+                if (tapped)
+                {
+                    Holding = true;
+                    _grace = StartGraceFrames;
+                }
+            }
+            else if (tapped && charging)
+            {
+                Holding = false;      // second tap releases
+            }
+            else if (charging)
+            {
+                _grace = 0;           // meter is running: keep holding until the next tap
+            }
+            else if (_grace > 0)
+            {
+                _grace--;             // waiting for the meter to start
+            }
+            else
+            {
+                Holding = false;      // the shot ended some other way (released, blocked, stripped)
+            }
+            return Holding;
         }
     }
 

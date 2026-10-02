@@ -23,12 +23,15 @@ namespace CallerRetroBall.UI
         protected virtual uint BackdropSeed => 11;
         /// <summary>0..1 darkening over the backdrop so text stays readable.</summary>
         protected virtual float ScrimAlpha => 0.55f;
+        /// <summary>Music loop for this screen (0 = menus, 2 = Rise hub).</summary>
+        protected virtual int MusicTrack => 0;
 
         private const float HeaderHeight = 150f;
 
         protected virtual void Start()
         {
             App.EnsureInitialized();
+            Audio.AudioManager.PlayMusic(MusicTrack);
             Canvas = UiKit.CreateScreenCanvas(GetType().Name + "Canvas");
             BuildBackdrop();
             Safe = UiKit.SafeArea(Canvas.transform);

@@ -91,7 +91,13 @@ namespace CallerRetroBall.Logic
 
             FillRoster(setup.RosterA, setup.ArchetypesA, setup.TeamA, c);
             FillRoster(setup.RosterB, setup.ArchetypesB, setup.TeamB, c);
-            if (request.HumanAttributes.HasValue)
+            if (request.HumanPlayer != null)
+            {
+                setup.RosterA[0] = request.HumanPlayer;
+                var archetype = c.ArchetypeById(request.HumanPlayer.archetypeId);
+                if (archetype != null && setup.ArchetypesA.Count > 0) setup.ArchetypesA[0] = archetype;
+            }
+            else if (request.HumanAttributes.HasValue)
             {
                 // Copy so the shared content definition is never modified.
                 var original = setup.RosterA[0];

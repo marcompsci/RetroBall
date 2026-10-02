@@ -1,6 +1,7 @@
 using CallerRetroBall.Controls;
 using CallerRetroBall.Core;
 using CallerRetroBall.Logic;
+using CallerRetroBall.Logic.PixelArt;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -48,6 +49,25 @@ namespace CallerRetroBall.Gameplay
         private DailyChallenge _daily;
         private readonly InputBuffer _buffer2 = new InputBuffer();
         private bool Versus => _request != null && _request.Mode == GameMode.Versus;
+
+        // Phase 12: accessibility, leaps, crowd.
+        private bool _reduceMotion;
+        private bool _tapToShoot;
+        private TapShoot _tap;
+        private bool _shootTapped;
+        private int _leaper = -1;
+        private float _leapStart;
+        private float _leapDuration;
+        private ShotType _leapType;
+        private struct Fan
+        {
+            public SpriteRenderer Renderer;
+            public Sprite Idle, Cheer;
+            public Vector3 Base;
+        }
+        private Fan[] _fans = new Fan[0];
+        private CrowdMood _crowdMood = CrowdMood.Idle;
+        private float _crowdMoodUntil;
         private SpriteRenderer[] _cones;
         private SpriteRenderer _targetArrow;
         private PlayCall _pendingCall;
@@ -89,11 +109,18 @@ namespace CallerRetroBall.Gameplay
             var court = catalog.Court(_request.CourtId) ?? catalog.Court(setup.TeamA.homeCourtId);
             BuildWorld(court, setup);
 
-            _controls = TouchControls.Create(_buffer);
+            var settings = App.Career?.settings;
+            _reduceMotion = settings != null && settings.reduceMotion;
+            _tapToShoot = settings != null && settings.tapToShoot;
+            _controls = TouchControls.Create(_buffer, settings != null && settings.leftHanded, settings != null && settings.largeButtons);
+            _controls.Shoot.Pressed += () => _shootTapped = true;
+            MatchHud.ReduceMotion = _reduceMotion;
+            Audio.AudioManager.PlayMusic(1);
             _controls.Defense.UnavailableHint = "OFFENSE";
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
+            if (settings != null && settings.leftHanded) _hud.SetCallMenuLeft(true);
             _hud.ContinueRequested += Continue;
             _hud.PauseRequested += () => SetPaused(true);
             _hud.ResumeRequested += () => SetPaused(false);
@@ -116,7 +143,7 @@ namespace CallerRetroBall.Gameplay
         {
             var career = App.Career;
             var banner = Cosmetic(career?.equippedBanner);
-            _art = MatchArt.Build(court, setup.Court, StableHash.Of(court.id), banner?.colorA, banner?.colorB);
+            _art = MatchArt.Build(court, setup.Court, StableHash.Of(court.id), banner?.colorA, banner?.colorB, staticCrowd: false);
             var world = new GameObject("World").transform;
 
             var courtGo = new GameObject("Court");
@@ -158,6 +185,7 @@ namespace CallerRetroBall.Gameplay
             _ballView = BallView.Create(world, _art);
             _meter = ShotMeterView.Create(world, _art);
             _bursts = PixelBursts.Create(world, _art);
+            BuildCrowd(world, court, setup, banner != null);
             _hoopWorld = CourtSpace.ToWorldSnapped(setup.Court.Hoop, CourtSpace.RimHeight);
 
             var arrowGo = new GameObject("ReceiverArrow");
@@ -242,6 +270,7 @@ namespace CallerRetroBall.Gameplay
                 if (kb.lKey.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, Time.unscaledTime);
                 if (kb.cKey.wasPressedThisFrame) _buffer.Press(ActionButton.Call, Time.unscaledTime);
                 shootHeld |= kb.kKey.isPressed;
+                if (kb.kKey.wasPressedThisFrame) _shootTapped = true;
 #if UNITY_EDITOR || DEBUG
                 if (kb.bKey.wasPressedThisFrame) _match.KnockLoose(new Vec2(Random.Range(-3f, 3f), Random.Range(1f, 3f)));
 #endif
@@ -257,8 +286,22 @@ namespace CallerRetroBall.Gameplay
                 if (pad.buttonEast.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, Time.unscaledTime);
                 if (pad.buttonNorth.wasPressedThisFrame) _buffer.Press(ActionButton.Call, Time.unscaledTime);
                 shootHeld |= pad.buttonSouth.isPressed;
+                if (pad.buttonSouth.wasPressedThisFrame) _shootTapped = true;
             }
 #endif
+            if (_tapToShoot)
+            {
+                // Accessibility: tap to start the meter, tap again to release.
+                bool mine = _match.ChargingIndex == _match.ControlledIndex;
+                if (_match.OffenseTeam == _match.Setup.HumanTeam && (_match.HumanHasBall || mine))
+                    shootHeld = _tap.Update(_shootTapped, mine);
+                else
+                {
+                    _tap = default;
+                    shootHeld = false;
+                }
+            }
+            _shootTapped = false;
             float now = Time.unscaledTime;
             var input = new PlayerInput { Move = move, ShootHeld = shootHeld };
 
@@ -360,6 +403,13 @@ namespace CallerRetroBall.Gameplay
                     case MatchEventType.ShotReleased:
                         _lastShooter = e.PlayerIndex;
                         _shootPoseUntil = Time.unscaledTime + 0.35f;
+                        if (_match.Ball.Phase == BallPhase.Shot && (_match.Ball.ShotType == ShotType.Dunk || _match.Ball.ShotType == ShotType.Layup))
+                        {
+                            _leaper = e.PlayerIndex;
+                            _leapStart = Time.unscaledTime;
+                            _leapType = _match.Ball.ShotType;
+                            _leapDuration = Mathf.Max(0.3f, _match.Ball.FlightDuration + 0.15f);
+                        }
                         if (e.PlayerIndex == _match.ControlledIndex)
                         {
                             if (e.Value == (int)ShotFeedback.Green) Haptics.Light();
@@ -371,8 +421,18 @@ namespace CallerRetroBall.Gameplay
                         bool swish = _match.Ball.ShotGrade == TimingGrade.Green;
                         bool dunk = _match.Ball.ShotType == ShotType.Dunk;
                         _hud.Toast((dunk ? "SLAM!  +" : swish ? "SWISH  +" : "+") + e.Value, 1.1f);
-                        _bursts.Spawn(_hoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
+                        if (!_reduceMotion) _bursts.Spawn(_hoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
                         if (dunk) _cameraRig.Shake(0.22f);
+                        bool crowdHappy = Versus || e.Team == human;
+                        SetCrowd(crowdHappy ? CrowdMood.Cheer : CrowdMood.Groan, crowdHappy ? 1.6f : 1.1f);
+                        if (_match.IsHumanControlled(e.PlayerIndex))
+                        {
+                            int streak = _match.Players[e.PlayerIndex].HotStreak;
+                            if (streak == 3) Callout("HEATING UP", SfxId.Stinger);
+                            else if (streak >= 4) Callout("ON FIRE!", SfxId.OnFire);
+                            else if (dunk) Sfx(SfxId.Stinger, 0.8f);
+                            else if (swish) Sfx(SfxId.Stinger, 0.5f);
+                        }
                         _celebrator = e.PlayerIndex;
                         _celebrateStart = Time.unscaledTime;
                         _celebration = e.PlayerIndex == _match.ControlledIndex ? _myCelebration : CelebrationKind.FistPump;
@@ -390,13 +450,13 @@ namespace CallerRetroBall.Gameplay
                         Sfx(SfxId.Squeak, 0.6f);
                         break;
                     case MatchEventType.Steal:
-                        _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 1f), new Color32(0x4C, 0xC9, 0xF0, 255), 8, 2.5f, 0.4f);
+                        if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 1f), new Color32(0x4C, 0xC9, 0xF0, 255), 8, 2.5f, 0.4f);
                         _hud.Toast(e.Team == human ? "STEAL!" : "STRIPPED", 1.1f);
                         Sfx(SfxId.Steal);
                         if (e.Team == human) Haptics.Medium();
                         break;
                     case MatchEventType.Block:
-                        _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 2f), new Color32(0xF4, 0xF1, 0xDE, 255), 14, 3.5f, 0.5f);
+                        if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 2f), new Color32(0xF4, 0xF1, 0xDE, 255), 14, 3.5f, 0.5f);
                         _hud.Toast(e.Team == human ? "BLOCKED!" : "SENT BACK", 1.1f);
                         Sfx(SfxId.Block);
                         _cameraRig.Shake(0.18f);
@@ -445,6 +505,8 @@ namespace CallerRetroBall.Gameplay
         private void SyncViews(float dt, bool snapCamera)
         {
             float now = Time.unscaledTime;
+            if (_leaper >= 0 && now - _leapStart >= _leapDuration) _leaper = -1;
+            SyncCrowd(now);
             var move = UpdateDribbleMove(now);
             var celebrate = _celebrator >= 0 ? Flair.Celebration(_celebration, now - _celebrateStart) : FlairPose.None;
             if (_celebrator >= 0 && now - _celebrateStart >= Flair.CelebrationSeconds) _celebrator = -1;
@@ -452,7 +514,9 @@ namespace CallerRetroBall.Gameplay
             {
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
                 var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
-                _playerViews[i].Sync(dt, _match.IsHumanControlled(i), shooting, _match.JumpHeight01(i), flair);
+                float jump = _match.JumpHeight01(i);
+                if (i == _leaper) jump = Mathf.Max(jump, Flair.Leap(_leapType, now - _leapStart, _leapDuration));
+                _playerViews[i].Sync(dt, _match.IsHumanControlled(i), shooting, jump, flair);
             }
 
             int holderOrder = _match.Holder != null ? CourtSpace.SortingOrder(_match.Holder.Position) : 0;
@@ -630,6 +694,7 @@ namespace CallerRetroBall.Gameplay
                 ? System.Guid.NewGuid().ToString("N")
                 : _request.ContextId + "#" + _request.Seed;
             var summary = MatchSummary.From(_match, _request.Mode, matchId);
+            summary.day = App.Today;
             summary.isPlayoff = _request.Round >= 1;
             summary.isFinal = _request.Round >= 2;
             var grant = Rewards.For(summary, App.Rewards);
@@ -669,10 +734,18 @@ namespace CallerRetroBall.Gameplay
                     note = ClassicText(outcome);
                     if (outcome == ClassicOutcome.Champion) title = "CLASSIC CHAMPS";
                 }
+                var records = App.Career.lastNewRecords;
+                if (rewarded && records != null && records.Count > 0)
+                {
+                    string line = "NEW RECORD: " + string.Join(", ", records);
+                    note = string.IsNullOrEmpty(note) ? line : note + "\n" + line;
+                    Sfx(SfxId.Fanfare, 0.8f);
+                }
                 App.SaveCareer();
                 App.ReportGameCenter();
             }
             if (summary.HumanWon) Haptics.Success();
+            if (title == "CHAMPIONS" || title == "CLASSIC CHAMPS") Sfx(SfxId.Fanfare);
 
             // Rise and the Classic continue their run instead of offering a rematch.
             bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament;
@@ -794,6 +867,83 @@ namespace CallerRetroBall.Gameplay
 
         // ------------------------------------------------------------------ helpers
 
+        /// <summary>Big centre callout with a musical sting (the game's "announcer").</summary>
+        private void Callout(string text, SfxId sting)
+        {
+            _hud.Toast(text, 1.4f);
+            Sfx(sting, 0.8f);
+        }
+
+        // ------------------------------------------------------------------ crowd
+
+        /// <summary>Animated fans in the stands behind the baseline; they cheer and groan with the game.</summary>
+        private void BuildCrowd(Transform world, CourtDef court, MatchSetup setup, bool bannerUp)
+        {
+            if (court.crowdDensity <= 0f) return;
+            var g = setup.Court;
+            int texW = CourtGenerator.TextureWidth(g);
+            CourtGenerator.CourtToPixel(g, Vec2.Zero, out float originPx, out float originPy);
+            var rng = new SeededRandom(StableHash.Of(court.id + ":crowd"));
+            var skins = CharacterSpriteGenerator.SkinTones;
+            RgbColor[] shirts =
+            {
+                setup.TeamA.primary, setup.TeamA.secondary, setup.TeamB.primary,
+                court.skyBottom.Darken(0.2f), court.paint, court.lines.Darken(0.3f),
+            };
+            var sprites = new (Sprite idle, Sprite cheer)[shirts.Length * 2];
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                var shirt = shirts[i % shirts.Length];
+                var skin = skins[(i * 7) % skins.Length];
+                sprites[i] = (_art.CrowdFan(shirt, skin, false), _art.CrowdFan(shirt, skin, true));
+            }
+
+            var fans = new System.Collections.Generic.List<Fan>();
+            var parent = new GameObject("Crowd").transform;
+            parent.SetParent(world, false);
+            const float ppu = CourtSpace.PixelsPerUnit;
+            for (int row = 0; row < 3; row++)
+            {
+                int bottom = CourtGenerator.CrowdRowBottom(g, row);
+                for (int x = 2; x < texW - 6; x += 6)
+                {
+                    if (!rng.Chance(court.crowdDensity)) continue;
+                    if (bannerUp && CourtGenerator.BannerCovers(g, texW, x, bottom, CrowdGenerator.Width, CrowdGenerator.Height)) continue;
+                    var pick = sprites[rng.Range(0, sprites.Length)];
+                    var go = new GameObject("Fan");
+                    go.transform.SetParent(parent, false);
+                    var sr = go.AddComponent<SpriteRenderer>();
+                    sr.sprite = pick.idle;
+                    sr.sortingOrder = -9500 - row; // above the court, behind everything that moves
+                    var pos = new Vector3((x - originPx) / ppu, (bottom - originPy) / ppu, 0f);
+                    go.transform.position = pos;
+                    fans.Add(new Fan { Renderer = sr, Idle = pick.idle, Cheer = pick.cheer, Base = pos });
+                }
+            }
+            _fans = fans.ToArray();
+        }
+
+        private void SetCrowd(CrowdMood mood, float seconds)
+        {
+            _crowdMood = mood;
+            _crowdMoodUntil = Time.unscaledTime + seconds;
+        }
+
+        private void SyncCrowd(float now)
+        {
+            if (_fans.Length == 0) return;
+            if (_crowdMood != CrowdMood.Idle && now > _crowdMoodUntil) _crowdMood = CrowdMood.Idle;
+            const float px = 1f / CourtSpace.PixelsPerUnit;
+            for (int i = 0; i < _fans.Length; i++)
+            {
+                ref var f = ref _fans[i];
+                bool armsUp = _crowdMood == CrowdMood.Cheer && (i % 3 != 0);
+                f.Renderer.sprite = armsUp ? f.Cheer : f.Idle;
+                int bob = _reduceMotion ? 0 : CrowdGenerator.Bob(_crowdMood, now, i);
+                f.Renderer.transform.position = f.Base + new Vector3(0f, bob * px, 0f);
+            }
+        }
+
         private static CosmeticDef Cosmetic(string id)
         {
             if (string.IsNullOrEmpty(id) || App.Catalog == null) return null;
@@ -854,6 +1004,7 @@ namespace CallerRetroBall.Gameplay
         private void OnDestroy()
         {
             Audio.AudioManager.SetAmbience(false);
+            Audio.AudioManager.PlayMusic(0);
             _art?.Dispose();
         }
 

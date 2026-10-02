@@ -64,8 +64,8 @@ namespace CallerRetroBall.Core
             if (request == null || Career == null || Catalog == null) return request;
             if (request.HomeTeamId == DefaultContent.PlayerCrewId)
             {
-                var rook = Catalog.Player(DefaultContent.RookPlayerId);
-                if (rook != null) request.HumanAttributes = Logic.Career.EffectiveRatings(rook.attributes, Career, Catalog);
+                // Your player (Rook, or the one you created) with training upgrades applied.
+                request.HumanPlayer = PlayerCreator.ForMatch(Career, Catalog);
             }
             if (request.Mode == GameMode.Rise)
             {

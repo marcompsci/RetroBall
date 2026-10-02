@@ -21,6 +21,73 @@ namespace CallerRetroBall.Logic
         public string difficultyId = DefaultContent.DefaultDifficultyId;
         /// <summary>Opt-in: sign in to Game Center for leaderboards and achievements.</summary>
         public bool gameCenter;
+
+        // Accessibility
+        /// <summary>Joystick on the right, action buttons on the left.</summary>
+        public bool leftHanded;
+        /// <summary>Action buttons 25% bigger.</summary>
+        public bool largeButtons;
+        /// <summary>Tap SHOOT to start the meter and tap again to release (no holding).</summary>
+        public bool tapToShoot;
+        /// <summary>No screen shake, sparks, or score bounce.</summary>
+        public bool reduceMotion;
+    }
+
+    /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
+    [Serializable]
+    public class CustomPlayerData
+    {
+        public bool created;
+        public int skinTone;
+        public int hairStyle;
+        public int hairColor;
+        public int body = 1;
+        public int heightTier = 1;
+        public int jerseyNumber = 1;
+        public string archetypeId;
+    }
+
+    /// <summary>Best single-game marks and streaks.</summary>
+    [Serializable]
+    public class CareerRecords
+    {
+        public int points;
+        public int assists;
+        public int rebounds;
+        public int steals;
+        public int blocks;
+        public int greens;
+        public int biggestWin;
+        public int winStreak;
+        public int bestWinStreak;
+    }
+
+    [Serializable]
+    public class MatchHistoryEntry
+    {
+        public int day;
+        public GameMode mode;
+        public string opponentId;
+        public int scoreFor;
+        public int scoreAgainst;
+        public int points;
+        public int assists;
+        public int rebounds;
+        public bool Won => scoreFor > scoreAgainst;
+    }
+
+    /// <summary>One Rise season (0 = The Blacktop Circuit).</summary>
+    [Serializable]
+    public class SeasonHistoryEntry
+    {
+        public int season;
+        public int games;
+        public int wins;
+        public int losses;
+        public int points;
+        public int assists;
+        public int rebounds;
+        public string result;
     }
 
     [Serializable]
@@ -130,6 +197,12 @@ namespace CallerRetroBall.Logic
         public DailySaveData daily = new DailySaveData();
         /// <summary>Finished the how-to-play tutorial at least once.</summary>
         public bool tutorialDone;
+        public CustomPlayerData customPlayer = new CustomPlayerData();
+        public CareerRecords records = new CareerRecords();
+        public List<MatchHistoryEntry> history = new List<MatchHistoryEntry>();
+        public List<SeasonHistoryEntry> seasons = new List<SeasonHistoryEntry>();
+        /// <summary>Records broken by the last applied game (not saved; shown on the post-game screen).</summary>
+        [NonSerialized] public List<string> lastNewRecords = new List<string>();
         /// <summary>Recent match ids already rewarded (guards against double grants).</summary>
         public List<string> appliedMatchIds = new List<string>();
 

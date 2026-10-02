@@ -19,6 +19,8 @@ namespace CallerRetroBall.Audio
         private readonly Dictionary<SfxId, AudioClip> _clips = new Dictionary<SfxId, AudioClip>();
         private AudioSource _music;
         private AudioSource _ambience;
+        private readonly AudioClip[] _tracks = new AudioClip[AudioSynth.MusicTrackCount];
+        private int _track = -1;
         private bool _ambienceOn;
         private AudioSource[] _sfx;
         private int _next;
@@ -40,7 +42,9 @@ namespace CallerRetroBall.Audio
                 _clips[id] = MakeClip("sfx." + id, AudioSynth.Sfx(id));
 
             _music = gameObject.AddComponent<AudioSource>();
-            _music.clip = MakeClip("music.loop", AudioSynth.MusicLoop());
+            _tracks[0] = MakeClip("music.track0", AudioSynth.MusicLoop(0));
+            _music.clip = _tracks[0];
+            _track = 0;
             _music.loop = true;
             _music.playOnAwake = false;
 
@@ -75,6 +79,22 @@ namespace CallerRetroBall.Audio
             _instance._sfxVolume = s != null ? s.sfxVolume : 0.9f;
             _instance._music.volume = _instance._musicVolume * (_instance._ambienceOn ? 0.3f : 0.5f);
             _instance._ambience.volume = _instance._sfxVolume * 0.22f;
+        }
+
+        /// <summary>
+        /// Switches the music loop: 0 = menus, 1 = matches, 2 = Rise hub. Tracks are synthesised the
+        /// first time they're needed (a fraction of a second each).
+        /// </summary>
+        public static void PlayMusic(int track)
+        {
+            if (_instance == null) return;
+            track = ((track % AudioSynth.MusicTrackCount) + AudioSynth.MusicTrackCount) % AudioSynth.MusicTrackCount;
+            if (_instance._track == track) return;
+            if (_instance._tracks[track] == null)
+                _instance._tracks[track] = MakeClip("music.track" + track, AudioSynth.MusicLoop(track));
+            _instance._track = track;
+            _instance._music.clip = _instance._tracks[track];
+            _instance._music.Play();
         }
 
         /// <summary>Crowd murmur under a match (follows the SFX volume). Music ducks while it plays.</summary>

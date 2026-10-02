@@ -32,7 +32,8 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Brief camera shake (dunks, blocks). Ignored when Screen Shake is off in Settings.</summary>
         public void Shake(float amount)
         {
-            if (Core.App.Career != null && !Core.App.Career.settings.screenShake) return;
+            var settings = Core.App.Career?.settings;
+            if (settings != null && (!settings.screenShake || settings.reduceMotion)) return;
             _shake = Mathf.Max(_shake, amount);
         }
 

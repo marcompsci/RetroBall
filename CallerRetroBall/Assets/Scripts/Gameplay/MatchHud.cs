@@ -31,6 +31,18 @@ namespace CallerRetroBall.Gameplay
         private int _lastScoreA = -1, _lastScoreB = -1, _lastClock = -1, _lastShot = -1, _lastOffense = -1;
         private float _toastUntil;
         private float _punchA = -10f, _punchB = -10f;
+
+        /// <summary>Accessibility: no score bounce.</summary>
+        public static bool ReduceMotion { get; set; }
+
+        /// <summary>Left-handed layout: the CALL menu opens on the left, near the buttons.</summary>
+        public void SetCallMenuLeft(bool left)
+        {
+            var rt = (RectTransform)_callMenu.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(left ? 0f : 1f, 0f);
+            rt.pivot = new Vector2(left ? 0f : 1f, 0f);
+            rt.anchoredPosition = new Vector2(left ? 24f : -24f, 520f);
+        }
         private const float PunchSeconds = 0.3f;
 
         public static MatchHud Create(TeamDef a, TeamDef b)
@@ -290,7 +302,7 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Score bounce: pops to 140 % and settles back over 0.3 s.</summary>
         private static void Punch(TextMeshProUGUI label, float since)
         {
-            float t = (Time.unscaledTime - since) / PunchSeconds;
+            float t = ReduceMotion ? 1f : (Time.unscaledTime - since) / PunchSeconds;
             float scale = t >= 1f || t < 0f ? 1f : 1f + 0.4f * (1f - t) * (1f - t);
             label.rectTransform.localScale = new Vector3(scale, scale, 1f);
         }
