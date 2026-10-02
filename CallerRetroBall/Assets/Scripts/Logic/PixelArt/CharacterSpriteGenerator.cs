@@ -118,6 +118,21 @@ namespace CallerRetroBall.Logic.PixelArt
 
         private static int Mod(int v, int n) => ((v % n) + n) % n;
 
+        /// <summary>
+        /// Row (from the frame bottom) where the head starts in a frame: used by the BIG HEADS
+        /// secret, which redraws everything from this row up at a larger scale.
+        /// Mirrors the layout in <see cref="DrawFrame"/>.
+        /// </summary>
+        public static int HeadBottomRow(AppearanceDef look, int frame)
+        {
+            bool shooting = frame == ShootFrame;
+            bool running = frame >= IdleFrames && !shooting;
+            int runPhase = running ? frame - IdleFrames : 0;
+            int bob = shooting ? 1 : (running ? (runPhase % 2 == 1 ? 1 : 0) : (frame == 1 ? -1 : 0));
+            int legLen = 6 + Clamp(look.heightTier, 0, 2) - 1;
+            return 1 + legLen + 2 + bob + 5 + 1 + 1;
+        }
+
         private static void DrawFrame(PixelCanvas c, CharacterView view, int frame, AppearanceDef look, Palette p)
         {
             bool shooting = frame == ShootFrame;

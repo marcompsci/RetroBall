@@ -19,6 +19,29 @@ namespace CallerRetroBall.Gameplay
         private SpriteRenderer _shadow;
         private SpriteRenderer _ring;
         private float _animTime;
+        private Sprite[,] _heads;
+        private SpriteRenderer _head;
+        private const float BigHeadScale = 1.7f;
+
+        /// <summary>BIG HEADS secret: draws an enlarged copy of the head above the body.</summary>
+        public void EnableBigHead(Sprite[,] heads)
+        {
+            _heads = heads;
+            _head = NewRenderer(transform, "BigHead", heads[(int)CharacterView.Back, 0]);
+            _head.transform.localScale = new Vector3(BigHeadScale, BigHeadScale, 1f);
+        }
+
+        private void SyncHead(int view, int frame, bool flip)
+        {
+            if (_head == null) return;
+            _head.sprite = _heads[view, frame];
+            _head.flipX = flip;
+            // The head sprite's pivot is its bottom row; the body's pivot is one pixel above its feet.
+            int row = CharacterSpriteGenerator.HeadBottomRow(_state.Def.appearance, frame);
+            var body = _body.transform.localPosition;
+            _head.transform.localPosition = body + new Vector3(0f, (row - 1) / CourtSpace.PixelsPerUnit, 0f);
+            _head.sortingOrder = _body.sortingOrder + 1;
+        }
 
         public static PlayerView Create(Transform parent, PlayerRuntimeState state, Sprite[,] frames, MatchArt art, Color ringColor)
         {
@@ -64,6 +87,7 @@ namespace CallerRetroBall.Gameplay
             _shadow.sortingOrder = order - 2;
             _ring.sortingOrder = order - 1;
             _ring.enabled = controlled;
+            SyncHead((int)view, frame, flip);
         }
 
         /// <summary>Called by the match controller after each simulation update.</summary>
@@ -92,6 +116,7 @@ namespace CallerRetroBall.Gameplay
             _shadow.sortingOrder = order - 2;
             _ring.sortingOrder = order - 1;
             _ring.enabled = controlled;
+            SyncHead((int)view, frame, flip);
         }
     }
 }

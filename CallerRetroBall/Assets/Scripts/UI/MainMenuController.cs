@@ -17,6 +17,11 @@ namespace CallerRetroBall.UI
 
         private GameObject _overlay;
         private Texture2D _logoTex;
+        private RectTransform _logo;
+        private Vector2 _logoBase;
+        private float _idleSince;
+        /// <summary>Seconds on the title screen with no input before the attract-mode demo starts.</summary>
+        private const float AttractAfter = 30f;
         private static bool _tutorialOffered;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -49,6 +54,9 @@ namespace CallerRetroBall.UI
             UiKit.Band(holder, 0.75f, 0.955f, 32f);
             var logo = UiKit.Picture(holder, logoTex, "Logo");
             UiKit.Stretch(logo.rectTransform);
+            _logo = holder;
+            _logoBase = holder.anchoredPosition;
+            _idleSince = Time.unscaledTime;
             var fit = logo.gameObject.AddComponent<AspectRatioFitter>();
             fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             fit.aspectRatio = logoTex.width / (float)logoTex.height;
@@ -78,6 +86,11 @@ namespace CallerRetroBall.UI
                 App.OpenKingOnMenu = false;
                 ShowKing();
             }
+            else if (App.OpenArcadeOnMenu)
+            {
+                App.OpenArcadeOnMenu = false;
+                ShowArcade();
+            }
 
             // First-time players are offered the tutorial once per session until they finish it.
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
@@ -91,6 +104,57 @@ namespace CallerRetroBall.UI
             if (App.CareerLoadStatus == LoadStatus.Recovered)
                 UiControls.Dialog("SAVE RESET", "Your save file couldn't be read, so a fresh career was started. A backup of the old file was kept.",
                                   ("OK", ButtonStyle.Primary, null));
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+            float now = Time.unscaledTime;
+            // The title logo bobs in two-pixel steps, like an old cartridge title screen.
+            if (_logo != null && App.Career != null && !App.Career.settings.reduceMotion)
+                _logo.anchoredPosition = _logoBase + new Vector2(0f, Mathf.Round(Mathf.Sin(now * 2.2f) * 2f) * 4f);
+
+            if (AnyInput()) _idleSince = now;
+            bool idle = _overlay == null && GameObject.Find("DialogCanvas") == null && !SceneFlow.IsTransitioning;
+            if (App.Career != null && App.Career.settings.attractMode && idle && now - _idleSince > AttractAfter)
+            {
+                _idleSince = now + 999f;
+                StartDemo();
+            }
+        }
+
+        private static bool AnyInput()
+        {
+#if ENABLE_INPUT_SYSTEM
+            var pointer = UnityEngine.InputSystem.Pointer.current;
+            if (pointer != null && (pointer.press.isPressed || pointer.delta.ReadValue().sqrMagnitude > 0.5f)) return true;
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb != null && kb.anyKey.isPressed) return true;
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            if (pad != null && (pad.leftStick.ReadValue().sqrMagnitude > 0.05f || pad.buttonSouth.isPressed || pad.startButton.isPressed)) return true;
+#endif
+            return false;
+        }
+
+        /// <summary>Attract mode: two random league teams play an AI-only demo game.</summary>
+        private static void StartDemo()
+        {
+            var c = App.Catalog;
+            var league = c.TeamsInTier(TeamTier.League);
+            if (league.Count < 2) return;
+            var rng = new SeededRandom((uint)System.Environment.TickCount | 1u);
+            int a = rng.Range(0, league.Count);
+            int b = (a + 1 + rng.Range(0, league.Count - 1)) % league.Count;
+            App.PendingMatch = new MatchRequest
+            {
+                Mode = GameMode.Demo,
+                HomeTeamId = league[a].id,
+                AwayTeamId = league[b].id,
+                CourtId = league[a].homeCourtId,
+                RulesId = "rules.demo",
+                DifficultyId = "difficulty.legend",
+            };
+            SceneFlow.GoTo(SceneNames.Game);
         }
 
         private void BuildLogoStrip()
@@ -162,9 +226,10 @@ namespace CallerRetroBall.UI
         {
             var c = App.Catalog;
             var column = OpenOverlay("QUICK CALL", out var footer);
-            var league = c.TeamsInTier(TeamTier.League);
-            var mine = league.FindAll(t => t.unlockedByDefault);
+            var league = Secrets.OpponentTeams(c, App.Career.secrets);
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
             int myIndex = 0;
+            int courtChoice = 0; // 0 = home court, then any unlocked hidden courts
             int oppIndex = 0;
             TextMeshProUGUI oppLabel = null; // assigned below; declared first so Refresh() can see it
             var opponents = new List<TeamDef>();
@@ -189,6 +254,16 @@ namespace CallerRetroBall.UI
             UiKit.Size(oppLabel, 70f);
             UiKit.Button(column, "CHANGE OPPONENT", () => { oppIndex = (oppIndex + 1) % opponents.Count; Refresh(); }, ButtonStyle.Ghost, 100f, 36f);
 
+            // Hidden courts, once unlocked, can host any Quick Call.
+            var courts = new List<string> { null };
+            foreach (var id in new[] { DefaultContent.SecretCourtId, DefaultContent.BossCourtId })
+                if (Secrets.IsUnlocked(App.Career.secrets, id)) courts.Add(id);
+            if (courts.Count > 1)
+            {
+                var courtNames = courts.ConvertAll(id => id == null ? "HOME" : c.Court(id).displayName.ToUpperInvariant()).ToArray();
+                UiControls.ChoiceRow(column, "COURT", courtNames, 0, i => courtChoice = i);
+            }
+
             var difficulties = c.Difficulties;
             int diffIndex = Mathf.Max(0, difficulties.FindIndex(d => d.id == App.Career.settings.difficultyId));
             var names = difficulties.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray();
@@ -206,7 +281,7 @@ namespace CallerRetroBall.UI
                     Mode = GameMode.QuickCall,
                     HomeTeamId = home.id,
                     AwayTeamId = away.id,
-                    CourtId = home.homeCourtId,
+                    CourtId = courts[courtChoice] ?? home.homeCourtId,
                     DifficultyId = difficulties[diffIndex].id,
                 };
                 SceneFlow.GoTo(SceneNames.Game);
@@ -237,6 +312,10 @@ namespace CallerRetroBall.UI
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
             Mode(column, "2 PLAYER", "Head to head on one device: keyboard or two controllers.", ShowVersus, ButtonStyle.Secondary);
             Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + App.Career.classic.titles, ShowClassic, ButtonStyle.Secondary);
+            var arcade = App.Career.secrets.arcade;
+            Mode(column, "ARCADE LADDER", arcade.active
+                ? "Stage " + (arcade.rung + 1) + " of " + ArcadeEngine.Rungs + "  ·  continues " + arcade.continues
+                : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
             Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
@@ -293,6 +372,63 @@ namespace CallerRetroBall.UI
                 KingEngine.Start(App.Career.king, App.Catalog, mine[pick].id);
                 App.SaveCareer();
                 ShowKing();
+            }, ButtonStyle.Primary, 130f);
+        }
+
+        /// <summary>Arcade Ladder: six stages against tougher teams, then the secret boss.</summary>
+        private void ShowArcade()
+        {
+            var c = App.Catalog;
+            var a = App.Career.secrets.arcade;
+            var column = OpenOverlay("ARCADE LADDER", out var footer);
+            UiKit.Size(UiKit.Label(column, "Six games, each tougher than the last. Lose and use a continue to try the stage again. Lose with none left: GAME OVER.",
+                                   30f, Theme.Cream), 110f);
+            UiControls.Stat(column, "CLEARS", a.clears.ToString());
+            UiControls.Stat(column, "BEST STAGE", a.bestRung + " / " + ArcadeEngine.Rungs);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+
+            var next = ArcadeEngine.NextMatch(a, c);
+            if (next != null)
+            {
+                var ladder = ArcadeEngine.Ladder(c, a.homeTeamId);
+                for (int i = 0; i < ladder.Count; i++)
+                {
+                    bool boss = ArcadeEngine.IsBossRung(i);
+                    // The boss stays hidden until you've beaten it once.
+                    string name = boss && a.clears == 0 ? "???" : c.Team(ladder[i]).FullName.ToUpperInvariant();
+                    string mark = i < a.rung ? "<color=#8AFF80>CLEAR</color>  " : (i == a.rung ? "<color=#FFD166>NEXT</color>  " : "");
+                    UiKit.Size(UiKit.Label(column, mark + (i + 1) + ".  " + name + (boss ? "  ·  BOSS" : ""), 32f,
+                                           i == a.rung ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Center, true), 50f);
+                }
+                UiControls.Stat(column, "CONTINUES", a.continues.ToString());
+                UiKit.Button(footer, "PLAY", () =>
+                {
+                    App.PendingMatch = next;
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, ButtonStyle.Primary, 130f);
+                return;
+            }
+
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
+            mine.RemoveAll(t => t.id == DefaultContent.BossTeamId); // the boss can't climb its own ladder
+            if (mine.Count == 0) return;
+            int pick = 0;
+            UiKit.Size(UiKit.Label(column, "YOUR TEAM", 32f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
+            var teamLabel = UiKit.Label(column, mine[pick].FullName.ToUpperInvariant(), 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(teamLabel, 64f);
+            if (mine.Count > 1)
+                UiKit.Button(column, "CHANGE TEAM", () =>
+                {
+                    pick = (pick + 1) % mine.Count;
+                    teamLabel.text = mine[pick].FullName.ToUpperInvariant();
+                }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(footer, a.runs == 0 ? "START" : "NEW RUN", () =>
+            {
+                ArcadeEngine.Start(App.Career.secrets.arcade, mine[pick].id);
+                App.SaveCareer();
+                Audio.AudioManager.Play(SfxId.Coin, 0.8f);
+                Audio.AudioManager.Voice("READY? TIP OFF!");
+                ShowArcade();
             }, ButtonStyle.Primary, 130f);
         }
 

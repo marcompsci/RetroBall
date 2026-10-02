@@ -54,6 +54,7 @@ namespace CallerRetroBall.Logic.PixelArt
             var c = new PixelCanvas(w, h);
             var rng = new SeededRandom(seed);
             bool hardwood = court.circuit == CourtCircuit.League;
+            bool grid = court.circuit == CourtCircuit.Secret;
 
             // Floor
             var floorDark = court.floor.Darken(0.12f);
@@ -62,7 +63,13 @@ namespace CallerRetroBall.Logic.PixelArt
                 for (int x = 0; x < w; x++)
                 {
                     RgbColor col;
-                    if (hardwood)
+                    if (grid)
+                    {
+                        // Neon grid: glowing lines every 8 pixels on a dark floor.
+                        bool lineX = x % 8 == 0, lineY = y % 8 == 0;
+                        col = lineX && lineY ? court.paint.Lighten(0.3f) : (lineX || lineY ? court.paint.Darken(0.35f) : court.floor);
+                    }
+                    else if (hardwood)
                     {
                         // Vertical planks with staggered seams.
                         int plank = x / 6;

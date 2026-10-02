@@ -27,6 +27,12 @@ namespace CallerRetroBall.Gameplay
             return view;
         }
 
+        /// <summary>Ball colour (RAINBOW BALL secret, HEAT CHECK glow); white = normal.</summary>
+        public void Tint(Color c)
+        {
+            if (_ball.color != c) _ball.color = c;
+        }
+
         /// <param name="heldOffsetPx">Dribble-move offset in art pixels, applied only while the ball is held.</param>
         public void Sync(BallState ball, int holderSortingOrder, Vector2Int heldOffsetPx = default)
         {

@@ -173,6 +173,35 @@ namespace CallerRetroBall.Logic
             ["EVERY DAY"] = "TODOS LOS DÍAS", ["7-day Daily Challenge streak."] = "Racha de 7 días de Reto Diario.",
             ["SELF MADE"] = "HECHO A MANO", ["Create your own player."] = "Crea tu propio jugador.",
             ["READY TO CALL"] = "LISTO PARA PEDIR", ["Finish How to Play."] = "Termina Cómo Jugar.",
+
+            // Phase 15: arcade feel, secrets, Arcade Ladder, display
+            ["NO CONTINUES NEEDED"] = "SIN CONTINUES", ["Clear the Arcade Ladder."] = "Supera la Escalera Arcade.",
+            ["CODE BREAKER"] = "DESCIFRADOR", ["Find every secret code."] = "Encuentra todos los códigos secretos.",
+            ["HEAT CHECK!"] = "¡AL ROJO VIVO!", ["HEATING UP"] = "CALENTANDO", ["COOLED OFF"] = "SE ENFRIÓ", ["ALLEY-OOP!"] = "¡ALLEY-OOP!",
+            ["DEMO PLAY"] = "DEMOSTRACIÓN", ["DEMO PLAY  ·  TAP OR PRESS ANY BUTTON"] = "DEMOSTRACIÓN  ·  TOCA O PULSA UN BOTÓN",
+            ["STICK MOVE · A SHOOT (HOLD) · X PASS · B STEAL · Y CALL · START PAUSE"] =
+                "STICK MOVER · A TIRAR (MANTÉN) · X PASAR · B ROBAR · Y JUGADA · START PAUSA",
+            ["STAGE CLEAR"] = "FASE SUPERADA", ["CONTINUE?"] = "¿CONTINUAR?", ["GAME OVER"] = "FIN DEL JUEGO", ["LADDER CLEARED"] = "ESCALERA SUPERADA",
+            ["THE GLITCH and its court are unlocked!"] = "¡THE GLITCH y su cancha están desbloqueados!",
+            ["ARCADE LADDER"] = "ESCALERA ARCADE", ["ARCADE"] = "ARCADE", ["CLEARS"] = "SUPERADAS", ["BEST STAGE"] = "MEJOR FASE",
+            ["CONTINUES"] = "CONTINUES", ["YOUR TEAM"] = "TU EQUIPO", ["COURT"] = "CANCHA", ["NEXT"] = "SIGUIENTE", ["BOSS"] = "JEFE",
+            ["Six games, each tougher than the last. Lose and use a continue to try the stage again. Lose with none left: GAME OVER."] =
+                "Seis partidos, cada uno más duro. Si pierdes, usa un continue para repetir la fase. Sin continues: FIN DEL JUEGO.",
+            ["DISPLAY"] = "PANTALLA", ["CRT FILTER"] = "FILTRO CRT", ["SOFT"] = "SUAVE", ["STRONG"] = "FUERTE",
+            ["HIGH FRAME RATE"] = "ALTA TASA DE FOTOGRAMAS", ["TITLE DEMO"] = "DEMO EN EL TÍTULO",
+            ["CRT adds old-TV scanlines. High frame rate runs at 120 Hz on ProMotion iPhones (uses more battery). Title demo plays an AI game on the title screen when it's left alone."] =
+                "CRT añade líneas de televisor antiguo. La alta tasa usa 120 Hz en iPhone ProMotion (gasta más batería). La demo del título juega un partido de la IA si dejas el menú quieto.",
+            ["SECRETS"] = "SECRETOS", ["ENTER A CODE"] = "INTRODUCIR CÓDIGO", ["SECRET CODES"] = "CÓDIGOS SECRETOS",
+            ["Enter four symbols. Earn hints by playing."] = "Introduce cuatro símbolos. Gana pistas jugando.",
+            ["NOTHING HAPPENED..."] = "NO PASÓ NADA...", ["UNLOCKED!"] = "¡DESBLOQUEADO!", ["CLOSE"] = "CERRAR", ["Codes found:"] = "Códigos encontrados:",
+            ["BIG HEADS"] = "CABEZONES", ["RAINBOW BALL"] = "BALÓN ARCOÍRIS", ["ALWAYS HOT"] = "SIEMPRE ARDIENDO",
+            ["Everyone gets a giant head."] = "Todos tienen una cabeza gigante.", ["The ball cycles through colours."] = "El balón cambia de colores.",
+            ["Unlocks the hidden Pixel Void court."] = "Desbloquea la cancha oculta Pixel Void.", ["Unlocks the secret Cartridge Kids crew."] = "Desbloquea el equipo secreto Cartridge Kids.",
+            ["Your player starts every game heated up."] = "Tu jugador empieza cada partido al rojo vivo.",
+            ["Win 3 straight in King of the Court."] = "Gana 3 seguidos en Rey de la Cancha.", ["Reach a 3-day Daily Challenge streak."] = "Logra una racha de 3 días de Reto Diario.",
+            ["Clear the Arcade Ladder."] = "Supera la Escalera Arcade.", ["Win 10 games."] = "Gana 10 partidos.", ["Hit 50 green releases."] = "Consigue 50 tiros perfectos.",
+            ["Enter codes in Settings ▸ SECRETS."] = "Introduce códigos en Ajustes ▸ SECRETOS.",
+            ["KING STREAK"] = "RACHA DE REY", ["LADDER CLEARS"] = "ESCALERAS SUPERADAS",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>
@@ -185,6 +214,7 @@ namespace CallerRetroBall.Logic
                 "PLAYER OF THE GAME", "NEW RECORD", "DAILY COMPLETE!", "NEON STATIC BEATEN!", "TITLES WON", "STANDINGS",
                 "STARTING OVR", "PUT IN SPOT", "STEP ", "NICE!", "DAILY:", "SLAM!", "SWISH", "BADGE:", "CHAMPION:", "NEXT:",
                 "EDITION", "SEASON ", "WEEK ", "STREAK", "BADGES", "DIFFICULTY", "SPOT ", "SEMIFINAL", "FINAL", "BEST",
+                "SECRET CODE HINT FOUND!", "SECRET CODES", "Continues left:", "Next: stage", "Reached stage", "Try the stage again.",
             };
             var es = new Dictionary<string, string>
             {
@@ -195,6 +225,9 @@ namespace CallerRetroBall.Logic
                 ["NEXT:"] = "SIGUIENTE:", ["EDITION"] = "EDICIÓN", ["SEASON "] = "TEMPORADA ", ["WEEK "] = "SEMANA ", ["STREAK"] = "RACHA",
                 ["BADGES"] = "INSIGNIAS", ["DIFFICULTY"] = "DIFICULTAD", ["SPOT "] = "PUESTO ", ["SEMIFINAL"] = "SEMIFINAL",
                 ["FINAL"] = "FINAL", ["BEST"] = "MEJOR",
+                ["SECRET CODE HINT FOUND!"] = "¡PISTA DE CÓDIGO SECRETO!", ["SECRET CODES"] = "CÓDIGOS SECRETOS",
+                ["Continues left:"] = "Continues restantes:", ["Next: stage"] = "Siguiente: fase", ["Reached stage"] = "Llegaste a la fase",
+                ["Try the stage again."] = "Repite la fase.",
             };
             var list = new List<KeyValuePair<string, string>>();
             foreach (var k in keys) list.Add(new KeyValuePair<string, string>(k, es[k]));

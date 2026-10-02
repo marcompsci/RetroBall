@@ -60,6 +60,10 @@ namespace CallerRetroBall.Logic
         public int hotStreakStart = 2;
         public float hotStreakPerMake = 0.03f;
         public float hotStreakMax = 0.09f;
+        /// <summary>HEAT CHECK: makes in a row to heat up; heated players shoot better and move faster.</summary>
+        public int heatThreshold = 3;
+        public float heatBonus = 0.08f;
+        public float heatSpeedScale = 1.06f;
         public float fatigueMaxPenalty = 0.08f;
         public float clutchSwing = 0.08f;
 
@@ -83,6 +87,8 @@ namespace CallerRetroBall.Logic
         public float NearestDefenderDistance;
         public int NearestDefenderDefense;
         public int HotStreak;
+        /// <summary>HEAT CHECK is active for the shooter.</summary>
+        public bool Heated;
         /// <summary>1 = fresh, 0 = exhausted.</summary>
         public float Stamina01;
         public bool LateGame;
@@ -186,6 +192,7 @@ namespace CallerRetroBall.Logic
 
             if (c.HotStreak >= t.hotStreakStart)
                 e.HotStreakBonus = Math.Min(t.hotStreakMax, (c.HotStreak - t.hotStreakStart + 1) * t.hotStreakPerMake);
+            if (c.Heated) e.HotStreakBonus += t.heatBonus;
 
             float stamina = c.Stamina01 <= 0f ? 0f : (c.Stamina01 >= 1f ? 1f : c.Stamina01);
             e.FatiguePenalty = (1f - stamina) * t.fatigueMaxPenalty;

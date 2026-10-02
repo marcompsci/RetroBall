@@ -28,6 +28,7 @@ namespace CallerRetroBall.UI
 
         private static readonly float[] UiScales = { 0.85f, 1f, 1.15f, 1.25f };
         private static readonly string[] UiScaleNames = { "SMALL", "DEFAULT", "LARGE", "LARGEST" };
+        private static readonly string[] CrtNames = { "OFF", "SOFT", "STRONG" };
 
         protected override void Build()
         {
@@ -42,6 +43,38 @@ namespace CallerRetroBall.UI
             Header(column, "FEEL");
             UiControls.ToggleRow(column, "HAPTICS", s.haptics, v => { s.haptics = v; Save(); if (v) Haptics.Light(); });
             UiControls.ToggleRow(column, "SCREEN SHAKE", s.screenShake, v => { s.screenShake = v; Save(); });
+
+            Header(column, "DISPLAY");
+            UiControls.ChoiceRow(column, "CRT FILTER", CrtNames, Mathf.Clamp(s.crt, 0, 2), i =>
+            {
+                s.crt = i;
+                CrtOverlay.Apply(i);
+                Save();
+            });
+            UiControls.ToggleRow(column, "HIGH FRAME RATE", s.highFrameRate, v => { s.highFrameRate = v; App.ApplyFrameRate(); Save(); });
+            UiControls.ToggleRow(column, "TITLE DEMO", s.attractMode, v => { s.attractMode = v; Save(); });
+            UiKit.Size(UiKit.Label(column,
+                "CRT adds old-TV scanlines. High frame rate runs at 120 Hz on ProMotion iPhones (uses more battery). " +
+                "Title demo plays an AI game on the title screen when it's left alone.", 28f, Theme.Muted), 110f);
+
+            Header(column, "SECRETS");
+            var sec = App.Career.secrets;
+            UiKit.Button(column, "ENTER A CODE", () => SecretCodeScreen.Open(changed =>
+            {
+                if (changed) SceneFlow.GoTo(SceneNames.Settings); // show newly found toggles
+            }), ButtonStyle.Secondary, 110f, 40f);
+            foreach (var code in Secrets.All)
+            {
+                if (!Secrets.Found(sec, code.Id)) continue;
+                var id = code.Id;
+                if (id == Secrets.BigHeads)
+                    UiControls.ToggleRow(column, "BIG HEADS", sec.bigHeads, v => { sec.bigHeads = v; Save(); });
+                else if (id == Secrets.RainbowBall)
+                    UiControls.ToggleRow(column, "RAINBOW BALL", sec.rainbowBall, v => { sec.rainbowBall = v; Save(); });
+                else if (id == Secrets.AlwaysHeat)
+                    UiControls.ToggleRow(column, "ALWAYS HOT", sec.alwaysHeat, v => { sec.alwaysHeat = v; Save(); });
+            }
+            UiKit.Size(UiKit.Label(column, Loc.T("Codes found:") + " " + sec.codesFound.Count + " / " + Secrets.All.Count, 28f, Theme.Muted), 50f);
 
             Header(column, "ACCESSIBILITY");
             int scaleIndex = 1;

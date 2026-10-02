@@ -118,6 +118,24 @@ namespace CallerRetroBall.Audio
 
         public static void Click() => Play(SfxId.Click, 0.6f);
 
+        private readonly System.Collections.Generic.Dictionary<string, AudioClip> _voices = new System.Collections.Generic.Dictionary<string, AudioClip>();
+
+        /// <summary>The announcer "says" a callout as chiptune voice blips (synthesised once per phrase, then cached).</summary>
+        public static void Voice(string phrase, float volume = 0.9f)
+        {
+            if (_instance == null || _instance._sfxVolume <= 0f || string.IsNullOrEmpty(phrase)) return;
+            if (!_instance._voices.TryGetValue(phrase, out var clip))
+            {
+                if (_instance._voices.Count > 48) _instance._voices.Clear();
+                clip = MakeClip("voice." + phrase, AudioSynth.Voice(phrase));
+                _instance._voices[phrase] = clip;
+            }
+            var src = _instance._sfx[_instance._next];
+            _instance._next = (_instance._next + 1) % SfxVoices;
+            src.pitch = 1f;
+            src.PlayOneShot(clip, volume * _instance._sfxVolume);
+        }
+
         private void OnDestroy()
         {
             if (_instance == this) _instance = null;

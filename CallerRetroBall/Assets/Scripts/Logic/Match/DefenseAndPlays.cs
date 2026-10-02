@@ -219,7 +219,7 @@ namespace CallerRetroBall.Logic
             Stats[blocker].blocks++;
             Stats[shooter].fieldGoalsAttempted++;
             if (Setup.Court.ZoneOf(s.Position) == ShotZone.BeyondArc) Stats[shooter].arcAttempted++;
-            s.HotStreak = 0;
+            CoolOff(s);
             CancelCharge();
             var away = (s.Position - b.Position).Normalized;
             if (away.SqrMagnitude < 0.01f) away = Vec2.Up;

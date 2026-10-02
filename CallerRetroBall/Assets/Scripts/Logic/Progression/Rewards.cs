@@ -40,7 +40,7 @@ namespace CallerRetroBall.Logic
         public static RewardGrant For(MatchSummary s, RewardTuning t)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
-            if (s.mode == GameMode.Practice || s.mode == GameMode.Versus || s.mode == GameMode.Tutorial) return default;
+            if (s.mode == GameMode.Practice || s.mode == GameMode.Versus || s.mode == GameMode.Tutorial || s.mode == GameMode.Demo) return default;
             // Rival Challenge: Rise rates (its win bonus is paid by RivalEngine).
 
             var line = s.HumanLine?.stats ?? new PlayerStatLine();
@@ -54,12 +54,12 @@ namespace CallerRetroBall.Logic
             int titleBonus = classic ? t.classicTitleBonus : t.championshipBonus;
             if (won && s.isPlayoff && !classic) sp += t.playoffWinBonus;
             if (won && s.isFinal) sp += titleBonus;
-            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King) sp *= t.quickCallScale;
+            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King || s.mode == GameMode.Arcade) sp *= t.quickCallScale;
 
             int cap = s.isFinal && won ? t.maxPerGame + titleBonus : t.maxPerGame;
             int fans = (won ? t.fansPerWin : t.fansPerLoss) + line.greenReleases * t.fansPerGreen
                        + (won && s.Margin >= t.blowoutMargin ? t.blowoutFans : 0);
-            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King) fans = (int)Math.Round(fans * t.quickCallScale);
+            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King || s.mode == GameMode.Arcade) fans = (int)Math.Round(fans * t.quickCallScale);
 
             return new RewardGrant { signalPoints = Math.Min(cap, (int)Math.Round(sp)), fans = fans };
         }

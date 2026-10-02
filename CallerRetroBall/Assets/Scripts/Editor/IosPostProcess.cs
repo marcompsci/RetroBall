@@ -25,7 +25,13 @@ namespace CallerRetroBall.EditorTools
             root.SetBoolean("UIRequiresFullScreen", true);
             root.SetBoolean("UIStatusBarHidden", true);
             root.SetBoolean("UIViewControllerBasedStatusBarAppearance", false);
+            // Lets ProMotion iPhones run the game at 120 Hz (Settings ▸ HIGH FRAME RATE).
+            root.SetBoolean("CADisableMinimumFrameDurationOnPhone", true);
             root.SetString("LSApplicationCategoryType", "public.app-category.sports-games");
+            // Bluetooth / MFi controllers (Xbox, PlayStation, Switch Pro and similar extended gamepads).
+            root.SetBoolean("GCSupportsControllerUserInteraction", true);
+            if (root["GCSupportedGameControllers"] == null)
+                root.CreateArray("GCSupportedGameControllers").AddDict().SetString("ProfileName", "ExtendedGamepad");
             plist.WriteToFile(plistPath);
 
             // Game Center: link GameKit and add the capability (sign-in stays opt-in inside the game).

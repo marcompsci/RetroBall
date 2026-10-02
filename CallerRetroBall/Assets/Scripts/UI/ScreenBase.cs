@@ -60,7 +60,9 @@ namespace CallerRetroBall.UI
         {
 #if ENABLE_INPUT_SYSTEM
             var kb = UnityEngine.InputSystem.Keyboard.current;
-            return kb != null && kb.escapeKey.wasPressedThisFrame;
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            // Controller B / Circle goes back, like Escape.
+            return (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
 #else
             return false;
 #endif

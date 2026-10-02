@@ -22,6 +22,14 @@ namespace CallerRetroBall.Logic
         OnFire = 13,
         /// <summary>Short fanfare for titles and records.</summary>
         Fanfare = 14,
+        /// <summary>Crackling whoosh when a player heats up (HEAT CHECK).</summary>
+        HeatUp = 15,
+        /// <summary>Airy whoosh for an alley-oop lob.</summary>
+        Lob = 16,
+        /// <summary>Two-tone "coin" chime: secret code accepted, continue used.</summary>
+        Coin = 17,
+        /// <summary>Low buzz: wrong code.</summary>
+        Error = 18,
     }
 
     /// <summary>
@@ -51,11 +59,55 @@ namespace CallerRetroBall.Logic
                 case SfxId.Stinger: return Notes(new[] { 79, 84 }, 0.11f, 0.4f);
                 case SfxId.OnFire: return Notes(new[] { 72, 76, 79, 84, 88 }, 0.06f, 0.35f);
                 case SfxId.Fanfare: return Notes(new[] { 67, 72, 76, 79, 84, 84 }, 0.1f, 0.4f);
+                case SfxId.HeatUp: return Mix(Noise(0.5f, rng, 0.3f, attack: 0.3f, lowpass: 0.5f), Chirp(0.5f, 300f, 1400f, 0.3f));
+                case SfxId.Lob: return Noise(0.4f, rng, 0.25f, attack: 0.5f, lowpass: 0.12f);
+                case SfxId.Coin: return Notes(new[] { 83, 88 }, 0.07f, 0.35f);
+                case SfxId.Error: return Square(0.25f, 110f, 0.3f);
                 default: return Square(0.6f, 220f, 0.3f);
             }
         }
 
         public static float Duration(float[] samples) => samples.Length / (float)SampleRate;
+
+        /// <summary>
+        /// Announcer "voice": one formant-ish blip per syllable (square wave through two vowel
+        /// resonances) following <see cref="Announcer.Contour"/>. Deterministic per phrase.
+        /// </summary>
+        public static float[] Voice(string phrase)
+        {
+            var notes = Announcer.Contour(phrase);
+            const float syllable = 0.085f, gap = 0.025f;
+            int per = (int)((syllable + gap) * SampleRate);
+            var s = new float[per * notes.Count + (int)(0.05f * SampleRate)];
+            var rng = new SeededRandom(StableHash.Of("vowels:" + phrase));
+            // Vowel formant pairs (Hz): "ah", "eh", "ee", "oh", "oo".
+            float[,] formants = { { 730, 1090 }, { 530, 1840 }, { 270, 2290 }, { 570, 840 }, { 300, 870 } };
+            for (int k = 0; k < notes.Count; k++)
+            {
+                float f0 = Midi(notes[k]);
+                int v = rng.Range(0, 5);
+                float fa = formants[v, 0], fb = formants[v, 1];
+                int start = k * per;
+                int len = (int)(syllable * SampleRate);
+                for (int i = 0; i < len && start + i < s.Length; i++)
+                {
+                    float t = i / (float)SampleRate;
+                    float env = Math.Min(1f, i / 120f) * Math.Min(1f, (len - i) / 300f);
+                    // Pulse train at the pitch, shaped by two resonances.
+                    float pulse = (t * f0) % 1f < 0.25f ? 1f : -0.33f;
+                    float res = 0.6f * (float)Math.Sin(2 * Math.PI * fa * t) + 0.4f * (float)Math.Sin(2 * Math.PI * fb * t);
+                    s[start + i] += pulse * (0.55f + 0.45f * res) * env;
+                }
+            }
+            return Normalize(s, 0.45f);
+        }
+
+        private static float[] Mix(float[] a, float[] b)
+        {
+            var s = new float[Math.Max(a.Length, b.Length)];
+            for (int i = 0; i < s.Length; i++) s[i] = (i < a.Length ? a[i] : 0f) + (i < b.Length ? b[i] : 0f);
+            return Normalize(s, 0.4f);
+        }
 
         public const int MusicTrackCount = 3;
 

@@ -10,7 +10,7 @@ namespace CallerRetroBall.Gameplay
     /// </summary>
     public sealed class PixelBursts : MonoBehaviour
     {
-        private const int PoolSize = 96;
+        private const int PoolSize = 160;
 
         private struct Spark
         {

@@ -49,6 +49,12 @@ namespace CallerRetroBall.Logic
             if (data.rival == null) data.rival = new RivalSaveData();
             if (data.king == null) data.king = new KingSaveData();
             if (data.king.order == null) data.king.order = new List<string>();
+            if (data.secrets == null) data.secrets = new SecretsSaveData();
+            if (data.secrets.codesFound == null) data.secrets.codesFound = new List<string>();
+            if (data.secrets.hintsRevealed == null) data.secrets.hintsRevealed = new List<string>();
+            if (data.secrets.unlocked == null) data.secrets.unlocked = new List<string>();
+            if (data.secrets.arcade == null) data.secrets.arcade = new ArcadeSaveData();
+            if (data.settings.crt < 0 || data.settings.crt > 2) data.settings.crt = 1;
             data.settings.language = Loc.Normalize(data.settings.language);
             if (data.badgesSeen == null) data.badgesSeen = new List<string>();
             if (data.storySeen == null) data.storySeen = new List<string>();
@@ -93,7 +99,7 @@ namespace CallerRetroBall.Logic
             data.signalPoints += grant.signalPoints;
             data.fans += grant.fans;
             // Practice, tutorial, and local 2-player games don't count toward career stats.
-            if (summary.mode == GameMode.Practice || summary.mode == GameMode.Tutorial || summary.mode == GameMode.Versus) return true;
+            if (summary.mode == GameMode.Practice || summary.mode == GameMode.Tutorial || summary.mode == GameMode.Versus || summary.mode == GameMode.Demo) return true;
 
             data.lastNewRecords = Records.Update(data, summary);
             data.gamesSinceUpgrade++;

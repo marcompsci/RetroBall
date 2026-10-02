@@ -84,6 +84,13 @@ namespace CallerRetroBall.Logic
                     ["home"] = (d.king ?? new KingSaveData()).homeTeamId,
                 },
                 ["language"] = d.settings.language,
+                ["display"] = new Dictionary<string, object>
+                {
+                    ["crt"] = d.settings.crt,
+                    ["highFrameRate"] = d.settings.highFrameRate,
+                    ["attractMode"] = d.settings.attractMode,
+                },
+                ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -107,6 +114,49 @@ namespace CallerRetroBall.Logic
                 ["appliedMatchIds"] = Strings(d.appliedMatchIds),
             };
             return MiniJson.Write(o);
+        }
+
+        private static Dictionary<string, object> EncodeSecrets(SecretsSaveData s)
+        {
+            var a = s.arcade ?? new ArcadeSaveData();
+            return new Dictionary<string, object>
+            {
+                ["codes"] = Strings(s.codesFound ?? new List<string>()),
+                ["hints"] = Strings(s.hintsRevealed ?? new List<string>()),
+                ["unlocked"] = Strings(s.unlocked ?? new List<string>()),
+                ["bigHeads"] = s.bigHeads,
+                ["rainbowBall"] = s.rainbowBall,
+                ["alwaysHeat"] = s.alwaysHeat,
+                ["arcade"] = new Dictionary<string, object>
+                {
+                    ["active"] = a.active, ["rung"] = a.rung, ["continues"] = a.continues, ["home"] = a.homeTeamId,
+                    ["clears"] = a.clears, ["bestRung"] = a.bestRung, ["runs"] = a.runs,
+                },
+            };
+        }
+
+        private static SecretsSaveData DecodeSecrets(Dictionary<string, object> o)
+        {
+            var a = Obj(o, "arcade");
+            return new SecretsSaveData
+            {
+                codesFound = StrList(o, "codes"),
+                hintsRevealed = StrList(o, "hints"),
+                unlocked = StrList(o, "unlocked"),
+                bigHeads = Bool(o, "bigHeads", false),
+                rainbowBall = Bool(o, "rainbowBall", false),
+                alwaysHeat = Bool(o, "alwaysHeat", false),
+                arcade = new ArcadeSaveData
+                {
+                    active = Bool(a, "active", false),
+                    rung = Math.Max(0, Math.Min(ArcadeEngine.Rungs - 1, Int(a, "rung", 0))),
+                    continues = Math.Max(0, Math.Min(ArcadeEngine.Continues, Int(a, "continues", 0))),
+                    homeTeamId = Str(a, "home", null),
+                    clears = Math.Max(0, Int(a, "clears", 0)),
+                    bestRung = Math.Max(0, Math.Min(ArcadeEngine.Rungs, Int(a, "bestRung", 0))),
+                    runs = Math.Max(0, Int(a, "runs", 0)),
+                },
+            };
         }
 
         private static Dictionary<string, object> EncodeGame(ScheduledGame g) => new Dictionary<string, object>
@@ -286,6 +336,11 @@ namespace CallerRetroBall.Logic
                     homeTeamId = Str(kg, "home", null),
                 };
                 d.settings.language = Loc.Normalize(Str(o, "language", Loc.English));
+                var disp = Obj(o, "display");
+                d.settings.crt = Math.Max(0, Math.Min(2, Int(disp, "crt", 1)));
+                d.settings.highFrameRate = Bool(disp, "highFrameRate", true);
+                d.settings.attractMode = Bool(disp, "attractMode", true);
+                d.secrets = DecodeSecrets(Obj(o, "secrets"));
                 var rv = Obj(o, "rival");
                 d.rival = new RivalSaveData
                 {
@@ -318,7 +373,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.King ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Arcade ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });

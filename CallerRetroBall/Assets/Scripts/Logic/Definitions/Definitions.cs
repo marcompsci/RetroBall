@@ -128,6 +128,8 @@ namespace CallerRetroBall.Logic
         PlayerCrew = 2,
         /// <summary>The rival crew (Rise Mode Rival Challenges only).</summary>
         Rival = 3,
+        /// <summary>Hidden teams: the arcade boss and code-unlocked crews (Quick Call once unlocked).</summary>
+        Secret = 4,
     }
 
     public enum LogoShape { Circle = 0, Shield = 1, Diamond = 2, Hexagon = 3, Badge = 4 }
@@ -160,7 +162,7 @@ namespace CallerRetroBall.Logic
         public string FullName => string.IsNullOrEmpty(city) ? nickname : city + " " + nickname;
     }
 
-    public enum CourtCircuit { Blacktop = 0, League = 1, Practice = 2 }
+    public enum CourtCircuit { Blacktop = 0, League = 1, Practice = 2, /** Hidden courts unlocked by secrets: neon grid floor. */ Secret = 3 }
 
     [Serializable]
     public class CourtDef : IHasId

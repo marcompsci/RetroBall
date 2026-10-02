@@ -73,6 +73,25 @@ namespace CallerRetroBall.Gameplay
             return frames;
         }
 
+        /// <summary>
+        /// BIG HEADS secret: for each frame, a sprite of everything from the head row up, pivoted at
+        /// its bottom centre, so it can be drawn scaled up on top of the body.
+        /// </summary>
+        public Sprite[,] HeadFrames(Sprite[,] frames, AppearanceDef look)
+        {
+            var heads = new Sprite[CharacterSpriteGenerator.ViewCount, CharacterSpriteGenerator.FramesPerView];
+            for (int v = 0; v < CharacterSpriteGenerator.ViewCount; v++)
+                for (int f = 0; f < CharacterSpriteGenerator.FramesPerView; f++)
+                {
+                    var body = frames[v, f];
+                    int row = CharacterSpriteGenerator.HeadBottomRow(look, f);
+                    var r = body.rect;
+                    var rect = new Rect(r.x, r.y + row, r.width, r.height - row);
+                    heads[v, f] = Own(Sprite.Create(body.texture, rect, new Vector2(0.5f, 0f), CourtSpace.PixelsPerUnit, 0, SpriteMeshType.FullRect));
+                }
+            return heads;
+        }
+
         public void Dispose()
         {
             foreach (var o in _owned)

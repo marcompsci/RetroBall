@@ -23,6 +23,9 @@ namespace CallerRetroBall.Core
         /// <summary>Perfect (green) release.</summary>
         public static void Medium() => Impact(1);
 
+        /// <summary>Dunk, alley-oop, heating up.</summary>
+        public static void Heavy() => Impact(2);
+
         /// <summary>Steal or block.</summary>
         public static void Success()
         {

@@ -200,6 +200,8 @@ namespace CallerRetroBall.Logic
             B("badge.every_day", "EVERY DAY", "7-day Daily Challenge streak.", d => d.daily.bestStreak >= 7),
             B("badge.self_made", "SELF MADE", "Create your own player.", d => d.customPlayer != null && d.customPlayer.created),
             B("badge.ready", "READY TO CALL", "Finish How to Play.", d => d.tutorialDone),
+            B("badge.ladder", "NO CONTINUES NEEDED", "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade.clears > 0),
+            B("badge.codes", "CODE BREAKER", "Find every secret code.", d => d.secrets != null && Secrets.All.TrueForAll(x => d.secrets.codesFound.Contains(x.Id))),
         };
 
         private static BadgeDef B(string id, string title, string description, Func<CareerSaveData, bool> earned) =>

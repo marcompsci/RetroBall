@@ -17,6 +17,10 @@ namespace CallerRetroBall.Logic
         Rival = 7,
         /// <summary>King of the Court: short games against league teams back to back until you lose.</summary>
         King = 8,
+        /// <summary>Arcade Ladder: six games ending with the secret boss, with three continues.</summary>
+        Arcade = 9,
+        /// <summary>Attract-mode demo on the title screen: AI vs AI, nobody controls a player.</summary>
+        Demo = 10,
     }
 
     /// <summary>
@@ -50,6 +54,8 @@ namespace CallerRetroBall.Logic
         public float ChemistryBonus;
         /// <summary>Practice Lab drill (-1 = none): 0 free shoot, 1 passing targets, 2 dribble lane.</summary>
         public int Drill = -1;
+        /// <summary>Secret code ALWAYS HOT: your player starts heated up.</summary>
+        public bool StartHeated;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

@@ -64,6 +64,10 @@ namespace CallerRetroBall.Logic
         /// <summary>Practice: AI teammates never shoot or drive; drills hand the ball back.</summary>
         public bool TeammatesOnlyPass;
         public float ChemistryBonus;
+        /// <summary>Attract-mode demo: every player is AI (nobody's input is read).</summary>
+        public bool Demo;
+        /// <summary>Secret code: the human's player starts the game heated up.</summary>
+        public bool HumanStartsHeated;
 
         /// <summary>Builds a setup from a request, taking the first three players of each roster.</summary>
         public static MatchSetup FromRequest(MatchRequest request, ContentCatalog c)
@@ -85,6 +89,8 @@ namespace CallerRetroBall.Logic
                 StartingOffense = request.Mode == GameMode.Practice && request.Drill == (int)DrillKind.Lockdown ? 1 : 0,
                 HumanTeamStartingStamina = request.StartingStamina,
                 ChemistryBonus = request.ChemistryBonus,
+                Demo = request.Mode == GameMode.Demo,
+                HumanStartsHeated = request.StartHeated,
             };
             // Practice has no opponent: mirror the player crew so the court still has bodies.
             if (setup.TeamB == null) setup.TeamB = setup.TeamA;
@@ -196,6 +202,12 @@ namespace CallerRetroBall.Logic
         Switch = 20,
         Screen = 21,
         PlayCalled = 22,
+        /// <summary>HEAT CHECK: a player hit three in a row (Value = streak).</summary>
+        HeatUp = 23,
+        /// <summary>A heated-up player cooled off (missed, blocked, or the other team scored).</summary>
+        HeatEnded = 24,
+        /// <summary>An alley-oop finish (PlayerIndex = finisher, Value = passer).</summary>
+        AlleyOop = 25,
     }
 
     public struct MatchEvent
@@ -306,6 +318,7 @@ namespace CallerRetroBall.Logic
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = IndexOf(setup.HumanTeam, 0);
             SecondControlledIndex = setup.SecondHuman ? IndexOf(1 - setup.HumanTeam, 0) : -1;
+            if (setup.HumanStartsHeated && !setup.Demo) Players[ControlledIndex].HotStreak = setup.Shot.heatThreshold;
             CheckBall(setup.StartingOffense);
         }
 
@@ -318,7 +331,7 @@ namespace CallerRetroBall.Logic
             team == Setup.HumanTeam ? ControlledIndex : (SecondControlledIndex >= 0 && Players[SecondControlledIndex].Team == team ? SecondControlledIndex : -1);
 
         /// <summary>True if <paramref name="index"/> is driven by a person (player 1 or player 2).</summary>
-        public bool IsHumanControlled(int index) => index == ControlledIndex || (index >= 0 && index == SecondControlledIndex);
+        public bool IsHumanControlled(int index) => !Setup.Demo && (index == ControlledIndex || (index >= 0 && index == SecondControlledIndex));
         public int HolderIndex => Ball.IsHeld ? Ball.HolderIndex : -1;
         public PlayerRuntimeState Holder => Ball.IsHeld ? Players[Ball.HolderIndex] : null;
         public int DefenseTeam => 1 - OffenseTeam;
@@ -365,6 +378,7 @@ namespace CallerRetroBall.Logic
                 d.Motion = new MotionState(Formation.GuardSpot(man.Position, slot == 0, court), Facing8.N);
             }
             CancelCharge();
+            _alleyOop = false;
             EndPlay();
             ResetMatchups();
             GiveBall(IndexOf(offenseTeam, 0), announce: false, fromCheck: true);
@@ -387,6 +401,7 @@ namespace CallerRetroBall.Logic
         private void GoDead(int nextOffense, float seconds)
         {
             CancelCharge();
+            _alleyOop = false;
             _nextOffense = nextOffense;
             Phase = MatchPhase.DeadBall;
             PhaseTimer = seconds;
@@ -453,7 +468,7 @@ namespace CallerRetroBall.Logic
 
         private void StepLive(float dt, PlayerInput input)
         {
-            HandleHuman(ControlledIndex, input);
+            if (!Setup.Demo) HandleHuman(ControlledIndex, input);
             if (SecondControlledIndex >= 0) HandleHuman(SecondControlledIndex, _input2);
             UpdatePlay();
             UpdateAi(dt);
@@ -463,7 +478,7 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < Players.Length; i++)
             {
                 if (i == ChargingIndex) { _desired[i] = Vec2.Zero; continue; }
-                if (i == ControlledIndex) { _desired[i] = input.Move; continue; }
+                if (i == ControlledIndex && !Setup.Demo) { _desired[i] = input.Move; continue; }
                 if (i == SecondControlledIndex) { _desired[i] = _input2.Move; continue; }
                 _desired[i] = AiDesired(Players[i]);
             }
@@ -491,7 +506,7 @@ namespace CallerRetroBall.Logic
                 bool dribbling = Ball.IsHeld && Ball.HolderIndex == i;
                 float scale = IsHumanControlled(i) || p.Team == Setup.HumanTeam ? 1f : AiProfile(p.Team).movementScale;
                 if (Time < p.ScreenedUntil) scale *= Setup.Defense.screenSlow;
-                float max = Movement.MaxSpeed(p.Def.attributes.speed, dribbling, tuning, scale) * StaminaSpeedFactor(p);
+                float max = Movement.MaxSpeed(p.Def.attributes.speed, dribbling, tuning, scale) * StaminaSpeedFactor(p) * HeatSpeedFactor(p);
                 p.Motion = Movement.Step(p.Motion, desired, max, dt, tuning);
                 UpdateStamina(p, max, dt, freezeAll);
                 _scratch[i] = p.Motion.position;
@@ -609,7 +624,7 @@ namespace CallerRetroBall.Logic
             float meter = ChargeTime / fill;
             float overHold = 1f + Setup.Shot.overHoldSeconds / fill;
 
-            bool release = ChargingIndex == ControlledIndex ? !input.ShootHeld
+            bool release = ChargingIndex == ControlledIndex && !Setup.Demo ? !input.ShootHeld
                          : ChargingIndex == SecondControlledIndex ? !_input2.ShootHeld
                          : meter >= _aiReleaseMeter;
             if (release || meter >= overHold) ReleaseShot(ChargingIndex, meter);
@@ -637,6 +652,7 @@ namespace CallerRetroBall.Logic
                 NearestDefenderDistance = nearestDist,
                 NearestDefenderDefense = nearestDefense,
                 HotStreak = p.HotStreak,
+                Heated = p.HotStreak >= Setup.Shot.heatThreshold,
                 Stamina01 = p.Stamina,
                 LateGame = Setup.Rules.useGameClock && GameClock <= Setup.Flow.lateGameSeconds,
             };
@@ -727,6 +743,7 @@ namespace CallerRetroBall.Logic
                 line.fieldGoalsMade++;
                 if (Ball.ShotPoints >= Setup.Rules.beyondArcPoints) line.arcMade++;
                 p.HotStreak++;
+                OnMadeForHeat(p);
                 if (_lastCatcher == shooter && _lastPasser >= 0 && Players[_lastPasser].Team == p.Team
                     && Time - _lastCatchTime <= Setup.Flow.assistWindowSeconds)
                     Stats[_lastPasser].assists++;
@@ -750,7 +767,7 @@ namespace CallerRetroBall.Logic
             }
 
             // Miss: carom off the rim, away from the hoop, toward the shooter's side.
-            p.HotStreak = 0;
+            CoolOff(p);
             _lastShotWasMiss = true;
             Events.Add(new MatchEvent(MatchEventType.ShotMissed, shooter, p.Team, (int)Ball.ShotGrade));
             var away = (Ball.FlightFrom - court.Hoop).Normalized;
@@ -823,10 +840,12 @@ namespace CallerRetroBall.Logic
             var type = PassModel.ChooseType(minClear, t);
             int receiver = target;
             var destination = to.Position;
+            bool oop = IsAlleyOopTarget(target);
             if (threat >= 0)
             {
                 float chance = PassModel.InterceptChance(type, minClear, Players[threat].Def.attributes.defense,
                                                          from.Def.attributes.playmaking, t);
+                if (oop) chance *= t.alleyOopInterceptScale; // the lob goes over the top
                 if (chance > 0f && _rng.NextFloat() < chance)
                 {
                     receiver = threat;
@@ -846,6 +865,7 @@ namespace CallerRetroBall.Logic
             Ball.FlightTime = 0f;
             Ball.Position = from.Position;
             Ball.Height = Setup.Flow.passHeight;
+            _alleyOop = oop && receiver == target;
             _lastPasser = passer;
             OnPassForPlays(passer, receiver);
             Events.Add(new MatchEvent(MatchEventType.PassThrown, passer, from.Team, (int)type));
@@ -891,7 +911,8 @@ namespace CallerRetroBall.Logic
 
             float total = Math.Max(0.1f, Vec2.Distance(Ball.FlightFrom, goal));
             float progress = Math.Min(1f, Vec2.Distance(Ball.FlightFrom, Ball.Position) / total);
-            Ball.Height = Ball.PassType == PassType.Bounce
+            Ball.Height = _alleyOop ? LobHeight(progress)
+                : Ball.PassType == PassType.Bounce
                 ? Setup.Flow.passHeight * Math.Abs(1f - 2f * progress) + 0.05f
                 : Setup.Flow.passHeight;
 
@@ -910,7 +931,14 @@ namespace CallerRetroBall.Logic
                     _lastCatcher = Ball.TargetIndex;
                     _lastCatchTime = Time;
                     Events.Add(new MatchEvent(MatchEventType.PassCaught, Ball.TargetIndex, receiver.Team));
+                    // The finisher has to still be near the rim when the lob arrives.
+                    if (_alleyOop && Setup.Court.DistanceToHoop(receiver.Position) <= Setup.Pass.alleyOopRange + 1f)
+                    {
+                        FinishAlleyOop(Ball.TargetIndex, Ball.PasserIndex);
+                        return;
+                    }
                 }
+                _alleyOop = false;
                 GiveBall(Ball.TargetIndex, announce: false, fromCheck: false);
                 return;
             }
@@ -918,6 +946,7 @@ namespace CallerRetroBall.Logic
             if (Ball.FlightTime > Setup.Flow.maxPassSeconds)
             {
                 // Safety: a pass that never connects becomes a loose ball.
+                _alleyOop = false;
                 Ball.Phase = BallPhase.Loose;
                 Ball.Velocity = (goal - Ball.Position).Normalized * 2f;
                 Ball.VerticalVelocity = 0f;

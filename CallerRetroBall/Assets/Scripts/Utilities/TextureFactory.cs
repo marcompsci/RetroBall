@@ -51,6 +51,28 @@ namespace CallerRetroBall.Utilities
             return tex;
         }
 
+        /// <summary>8×8 pixel icon for a secret-code symbol, outlined, in <paramref name="color"/>.</summary>
+        public static Texture2D CodeIcon(CodeSymbol symbol, RgbColor color)
+        {
+            string key = "code:" + symbol + ":" + color.r + "," + color.g + "," + color.b;
+            if (Cache.TryGetValue(key, out var cached) && cached != null) return cached;
+            var mask = Secrets.SymbolIcon(symbol);
+            var canvas = new PixelCanvas(10, 10);
+            var outline = new RgbColor(0x14, 0x14, 0x20);
+            for (int y = 0; y < 8; y++)
+                for (int x = 0; x < 8; x++)
+                    if (mask[y][x] == '#')
+                        for (int oy = -1; oy <= 1; oy++)
+                            for (int ox = -1; ox <= 1; ox++)
+                                canvas.Set(x + 1 + ox, 8 - y + oy, outline);
+            for (int y = 0; y < 8; y++)
+                for (int x = 0; x < 8; x++)
+                    if (mask[y][x] == '#') canvas.Set(x + 1, 8 - y, color);
+            var tex = ToTexture(canvas, key);
+            Cache[key] = tex;
+            return tex;
+        }
+
         public static Texture2D Backdrop(CourtDef court, uint seed)
         {
             string key = "backdrop:" + court.id + ":" + seed;

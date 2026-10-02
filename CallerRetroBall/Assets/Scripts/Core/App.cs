@@ -58,6 +58,22 @@ namespace CallerRetroBall.Core
         /// <summary>Set after a King of the Court game so the main menu reopens the run.</summary>
         public static bool OpenKingOnMenu { get; set; }
 
+        /// <summary>Set after an Arcade Ladder game so the main menu reopens the ladder.</summary>
+        public static bool OpenArcadeOnMenu { get; set; }
+
+        /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
+        public static int SimulationRate { get; private set; } = 60;
+
+        /// <summary>Applies the frame-rate setting (ProMotion iPhones run at 120 Hz).</summary>
+        public static void ApplyFrameRate()
+        {
+            int hz = Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value);
+            bool high = Career != null && Career.settings.highFrameRate && hz >= 119;
+            SimulationRate = high ? 120 : 60;
+            Application.targetFrameRate = SimulationRate;
+            QualitySettings.vSyncCount = 0;
+        }
+
         /// <summary>
         /// Applies the career to a request: your trained ratings when you play as the First Callers
         /// (Rise and Practice), plus Rise energy (starting stamina) and chemistry.
@@ -72,6 +88,10 @@ namespace CallerRetroBall.Core
                 // Your recruited crew (or the original First Callers).
                 request.HumanTeammates = CrewEngine.TeammateDefs(Career, Catalog);
             }
+            // Secret code ALWAYS HOT (not in practice, the tutorial, 2-player, or the demo).
+            if (Secrets.IsOn(Career.secrets, Secrets.AlwaysHeat) && request.Mode != GameMode.Practice && request.Mode != GameMode.Tutorial
+                && request.Mode != GameMode.Versus && request.Mode != GameMode.Demo)
+                request.StartHeated = true;
             if (request.Mode == GameMode.Rise || request.Mode == GameMode.Rival)
             {
                 request.StartingStamina = RiseEngine.StartingStamina(Career.rise);
@@ -101,6 +121,8 @@ namespace CallerRetroBall.Core
             UiKit.UiScale = Career.settings.uiScale;
             Loc.Language = Loc.Normalize(Career.settings.language);
             AudioManager.ApplySettings();
+            ApplyFrameRate();
+            CrtOverlay.Apply(Career.settings.crt);
         }
 
 #if UNITY_EDITOR || DEBUG
@@ -145,6 +167,7 @@ namespace CallerRetroBall.Core
             if (Career.settings.gameCenter) GameCenter.Authenticate();
 
             SceneFlow.EnsureExists();
+            ControllerCursor.EnsureExists();
         }
 
         // Supports "Enter Play Mode" without domain reload: static state is reset each play session.

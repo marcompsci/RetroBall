@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 15 | HEAT CHECK, alley-oops, hit-stop, heavy haptics, 120 Hz; CRT filter, title demo, pixel wipes, announcer voice; secret codes, hidden courts/teams, big heads, Arcade Ladder + boss; controller menus and prompts | **Done** (324 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 14 | Instant replay + play of the game, 3-Point Contest and Lockdown drills, King of the Court mode, Spanish language (partial) | **Done** (296 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 13 | Recruit your crew, Neon Static rival + Rival Challenge, story scenes, 16 badges + trophy room, iOS readiness check | **Done** (278 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 12 | Create-a-player, accessibility (left-handed, large buttons, tap-to-shoot, reduce motion), dunk/layup leaps, animated crowd, 3 music tracks + stingers, records/history/seasons | **Done** (262 logic tests pass; Unity changes not yet compiled in Unity) |
@@ -210,6 +211,29 @@
 - **Spanish** (`Loc`): Settings ▸ LANGUAGE. Menus, controls, HUD callouts, tutorial, events, badges and story
   scenes are translated. **Coverage is partial:** some built-up strings (numbers + text), archetype descriptions,
   and team/player names stay English.
+
+## Phase 15: arcade feel, retro presentation, secrets, controllers
+
+- **HEAT CHECK:** three straight makes heat a player up (+8% make chance, +6% speed, flame embers, glowing
+  ball) until they miss, get blocked, or the other team scores. "HEATING UP" warns one make early.
+- **Alley-oops:** pass to a teammate within 2.3 m of the rim (finishing 60+) and it becomes a lob they dunk in
+  the air. The pass arrow turns gold when a pass will be an oop. Lobs are harder to intercept; jumpers can still
+  block the finish.
+- **Feel:** hit-stop on dunks, alley-oops, blocks and the final buzzer (off with Reduce Motion); heavy haptics
+  on dunks/oops/heating up; Settings ▸ HIGH FRAME RATE runs the simulation and screen at 120 Hz on ProMotion
+  iPhones (Info.plist `CADisableMinimumFrameDurationOnPhone`).
+- **Presentation:** Settings ▸ CRT FILTER (off / soft / strong scanlines + vignette); pixel block wipe between
+  screens; the title logo bobs; after 30 s idle on the title an AI-vs-AI demo game plays (any input exits);
+  the announcer "speaks" callouts as synthesised chiptune voice blips.
+- **Secrets:** Settings ▸ SECRETS ▸ ENTER A CODE (four symbols). Codes: BIG HEADS, RAINBOW BALL, ALWAYS HOT
+  (toggles), PIXEL VOID (hidden court), CARTRIDGE KIDS (secret crew). Hints are earned by playing and appear
+  in Locker Room ▸ TROPHY.
+- **Arcade Ladder** (`ArcadeEngine`, `GameMode.Arcade`): five league teams weakest to strongest, then the
+  secret boss THE GLITCH on The Glitch Grid. Difficulty climbs Rookie → Caller → Legend. Three continues.
+  Clearing unlocks the boss team and court for Quick Call (+500 SP first time, +150 after).
+- **Controllers:** menus are navigable with a gamepad (gold pixel cursor, A select, B back); in matches the
+  touch buttons hide when a controller is used and the controls hint shows controller buttons; START pauses.
+  Info.plist declares extended-gamepad support.
 
 ## Deviations from the brief (deliberate)
 

@@ -26,6 +26,15 @@ namespace CallerRetroBall.Logic
         public float directionWeight = 1.2f;
         public float laneRiskWeight = 0.8f;
 
+        // Alley-oops
+        /// <summary>A teammate this close to the rim catches a lob and finishes in the air.</summary>
+        public float alleyOopRange = 2.3f;
+        public float alleyOopMinPassDistance = 4f;
+        public int alleyOopMinFinishing = 60;
+        public float alleyOopInterceptScale = 0.4f;
+        public float alleyOopCatchHeight = 3.3f;
+        public float alleyOopArc = 0.9f;
+
         public static PassTuning Default => new PassTuning();
     }
 

@@ -33,6 +33,12 @@ namespace CallerRetroBall.Logic
         public bool reduceMotion;
         /// <summary>"en" or "es".</summary>
         public string language = Loc.English;
+        /// <summary>CRT look: 0 = off, 1 = soft scanlines, 2 = strong (scanlines + vignette).</summary>
+        public int crt = 1;
+        /// <summary>Use the screen's full refresh rate (120 Hz on ProMotion iPhones) instead of 60.</summary>
+        public bool highFrameRate = true;
+        /// <summary>Title screen plays an AI demo game after a while with no input.</summary>
+        public bool attractMode = true;
     }
 
     /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
@@ -211,6 +217,7 @@ namespace CallerRetroBall.Logic
         public CareerRecords records = new CareerRecords();
         public RivalSaveData rival = new RivalSaveData();
         public KingSaveData king = new KingSaveData();
+        public SecretsSaveData secrets = new SecretsSaveData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Story scenes already shown.</summary>

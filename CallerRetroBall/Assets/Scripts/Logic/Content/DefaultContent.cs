@@ -23,6 +23,12 @@ namespace CallerRetroBall.Logic
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
+        /// <summary>Arcade Ladder boss (secret team) and its hidden court.</summary>
+        public const string BossTeamId = "team.the_glitch";
+        public const string BossCourtId = "court.glitch_grid";
+        /// <summary>Code-unlocked secret crew and hidden court.</summary>
+        public const string SecretCrewId = "crew.cartridge_kids";
+        public const string SecretCourtId = "court.pixel_void";
 
         public static ContentCatalog Create()
         {
@@ -88,6 +94,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.sunspire", "Sunspire Court", CourtCircuit.League,
                 "A glass-roofed arena that turns pink at sunset.",
                 "#D4A373", "#0F1A3C", "#D1127A", "#0F1A3C", "#FF8C1A", 0.90f));
+
+            // Hidden courts (secrets): neon grid floors.
+            c.Courts.Add(Court(BossCourtId, "The Glitch Grid", CourtCircuit.Secret,
+                "A court that shouldn't exist, flickering at the edge of the game.",
+                "#0B0B1A", "#FF2E88", "#00F0FF", "#000000", "#240046", 0.60f));
+            c.Courts.Add(Court(SecretCourtId, "Pixel Void", CourtCircuit.Secret,
+                "Nothing but grid lines and the hum of an old console.",
+                "#120E24", "#FFE066", "#8AFF80", "#000000", "#1B1036", 0.40f));
 
             c.Courts.Add(Court(PracticeCourtId, "Practice Lab", CourtCircuit.Practice,
                 "An empty rec-centre court with chalk targets on the floor.",
@@ -226,6 +240,20 @@ namespace CallerRetroBall.Logic
                 P("okonjo", "Ira", "Okonjo", 9, Archetype.LockdownWing, 1),
                 P("delacroix", "Bo", "Delacroix", 50, Archetype.RimRunner, 1));
 
+            // Secret teams (Arcade Ladder boss and a code-unlocked crew). Original characters.
+            AddTeam(c, BossTeamId, "", "The Glitch", "GLT", TeamTier.Secret,
+                "#FF2E88", "#0B0B1A", "#00F0FF", LogoShape.Diamond, LogoMotif.Signal, TeamPattern.Cross,
+                BossCourtId, "Error: defense not found.", false,
+                P("frame", "Ghost", "Frame", 0, Archetype.ShotCreator, 7),
+                P("okafor", "Byte", "Okafor", 8, Archetype.PostAnchor, 6),
+                P("moreno", "Lag", "Moreno", 64, Archetype.LockdownWing, 6));
+            AddTeam(c, SecretCrewId, "", "Cartridge Kids", "CTK", TeamTier.Secret,
+                "#8AFF80", "#120E24", "#FFE066", LogoShape.Badge, LogoMotif.Ball, TeamPattern.Checker,
+                SecretCourtId, "Blow on it and try again.", false,
+                P("park", "Pixel", "Park", 16, Archetype.QuickCutter, 4),
+                P("tuner", "Chip", "Tuner", 2, Archetype.DeepShooter, 4),
+                P("vale", "Sprite", "Vale", 32, Archetype.RimRunner, 4));
+
             // The player's crew. Rook is the default avatar; nickname is stored in save data.
             AddTeam(c, PlayerCrewId, "", "First Callers", "FCL", TeamTier.PlayerCrew,
                 "#F72585", "#4CC9F0", "#1A1A2E", LogoShape.Hexagon, LogoMotif.Signal, TeamPattern.Diagonal,
@@ -358,6 +386,20 @@ namespace CallerRetroBall.Logic
                 targetScore = 11,
                 useGameClock = true,
                 gameClockSeconds = 90f,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
+                id = "rules.demo",
+                targetScore = 11,
+                useGameClock = true,
+                gameClockSeconds = 70f,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
+                id = "rules.arcade",
+                targetScore = 15,
+                useGameClock = true,
+                gameClockSeconds = 150f,
             });
             c.Rules.Add(new GameRulesDef
             {

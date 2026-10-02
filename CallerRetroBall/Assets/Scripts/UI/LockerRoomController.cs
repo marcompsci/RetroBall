@@ -444,6 +444,13 @@ namespace CallerRetroBall.UI
             Line("FREE SHOOT", p.freeShootMakes + " makes · streak " + p.freeShootStreak);
             Line("PASSING TARGETS", p.passingScore.ToString());
             Line("DRIBBLE LANE", p.dribbleLaneTime > 0f ? p.dribbleLaneTime.ToString("0.00") + " s" : "-");
+            Line("3-POINT CONTEST", p.threePointBest.ToString());
+            Line("LOCKDOWN", p.lockdownBest + " / 6");
+
+            Header("ARCADE");
+            Line("KING STREAK", career.king.best.ToString());
+            Line("LADDER CLEARS", career.secrets.arcade.clears.ToString());
+            Line("BEST STAGE", career.secrets.arcade.bestRung + " / " + ArcadeEngine.Rungs);
         }
 
         /// <summary>Trophy room: titles won and every badge (earned in gold, locked ones show how to earn them).</summary>
@@ -455,6 +462,23 @@ namespace CallerRetroBall.UI
             Line("FIRST CALL CLASSIC", career.classic.titles.ToString());
             Line("VS NEON STATIC", career.rival.wins + "-" + career.rival.losses);
             Line("CIRCUIT", career.rise.stage != RiseStage.Circuit || career.rise.seasonsPlayed > 0 ? "CLEARED" : career.rise.circuitBeaten.Count + "/" + RiseEngine.CircuitOrder.Length);
+
+            Line("ARCADE LADDER", career.secrets.arcade.clears.ToString());
+            Line("KING OF THE COURT", "BEST " + career.king.best);
+
+            // Secret codes: found ones show their symbols; earned hints say how to find the rest.
+            var sec = career.secrets;
+            Header("SECRET CODES  " + sec.codesFound.Count + "/" + Secrets.All.Count);
+            foreach (var code in Secrets.All)
+            {
+                bool found = Secrets.Found(sec, code.Id);
+                bool hint = sec.hintsRevealed.Contains(code.Id);
+                string value = found ? "<color=#FFD166>" + code.SequenceText + "</color>"
+                             : hint ? code.SequenceText
+                             : "<color=#8D99AE>" + Loc.T(code.HintCondition) + "</color>";
+                Line(found || hint ? Loc.T(code.Name) : "???", value);
+            }
+            UiKit.Size(UiKit.Label(_content, "Enter codes in Settings ▸ SECRETS.", 28f, Theme.Muted), 44f);
 
             Header("BADGES  " + Badges.EarnedCount(career) + "/" + Badges.All.Count);
             foreach (var b in Badges.All)
@@ -488,6 +512,8 @@ namespace CallerRetroBall.UI
                 case GameMode.Tournament: return "CLASSIC";
                 case GameMode.Daily: return "DAILY";
                 case GameMode.Rival: return "RIVAL";
+                case GameMode.King: return "KING";
+                case GameMode.Arcade: return "ARCADE";
                 default: return "QUICK";
             }
         }

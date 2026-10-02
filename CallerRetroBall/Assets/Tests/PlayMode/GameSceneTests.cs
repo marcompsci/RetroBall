@@ -33,7 +33,7 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(0, c.Match.Score[1]);
             Assert.AreEqual(0, c.Match.OffenseTeam);
             Assert.AreEqual(0, c.Match.HolderIndex);
-            Assert.AreEqual(6, Object.FindObjectsByType<PlayerView>(FindObjectsSortMode.None).Length);
+            Assert.AreEqual(6, Object.FindObjectsByType<PlayerView>(FindObjectsInactive.Exclude).Length);
         }
 
         [UnityTest]

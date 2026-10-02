@@ -56,14 +56,17 @@ namespace CallerRetroBall.Logic
         public const int StepsPerSecond = 60;
 
         private readonly ReplayFrame[] _ring;
+        private readonly int _stepsPerSecond;
         private int _next;
         private int _count;
 
         public ReplayClip BestPlay { get; private set; }
 
-        public ReplayRecorder(int players, float seconds = DefaultSeconds)
+        /// <param name="stepsPerSecond">Simulation rate (60, or 120 with high frame rate on).</param>
+        public ReplayRecorder(int players, float seconds = DefaultSeconds, int stepsPerSecond = StepsPerSecond)
         {
-            int n = Math.Max(2, (int)(seconds * StepsPerSecond));
+            _stepsPerSecond = Math.Max(1, stepsPerSecond);
+            int n = Math.Max(2, (int)(seconds * _stepsPerSecond));
             _ring = new ReplayFrame[n];
             for (int i = 0; i < n; i++) _ring[i] = new ReplayFrame(players);
         }
@@ -100,7 +103,7 @@ namespace CallerRetroBall.Logic
         public ReplayClip Snapshot(float seconds, string label = null, int score = 0)
         {
             var clip = new ReplayClip { Label = label, Score = score };
-            int want = Math.Min(_count, Math.Max(1, (int)(seconds * StepsPerSecond)));
+            int want = Math.Min(_count, Math.Max(1, (int)(seconds * _stepsPerSecond)));
             int start = (_next - want + _ring.Length * 2) % _ring.Length;
             for (int i = 0; i < want; i++)
             {
