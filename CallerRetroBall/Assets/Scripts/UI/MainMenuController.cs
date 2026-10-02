@@ -585,10 +585,11 @@ namespace CallerRetroBall.UI
             var column = OpenOverlay("1-ON-1", out var footer);
             UiKit.Size(UiKit.Label(column, "Your player against their leader. Teammates sit out. First to 11 or two minutes.", 30f, Theme.Cream), 90f);
             UiKit.Size(UiKit.Label(column, "YOUR TEAM", 32f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
-            var mineLabel = UiKit.Label(column, "", 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            TextMeshProUGUI mineLabel = null, theirLabel = null; // declared first so Refresh() can see them
+            mineLabel = UiKit.Label(column, "", 40f, Theme.Gold, TextAlignmentOptions.Center, true);
             UiKit.Size(mineLabel, 64f);
             UiKit.Button(column, "CHANGE TEAM", () => { a = (a + 1) % mine.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
-            var theirLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            theirLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
             UiKit.Size(theirLabel, 64f);
             UiKit.Button(column, "CHANGE OPPONENT", () => { b = (b + 1) % theirs.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
             UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
