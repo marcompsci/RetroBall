@@ -16,6 +16,12 @@ namespace CallerRetroBall.UI
         protected override float ScrimAlpha => 0.15f;
 
         private GameObject _overlay;
+        private Texture2D _logoTex;
+
+        private void OnDestroy()
+        {
+            if (_logoTex != null) Destroy(_logoTex);
+        }
 
         protected override void Build()
         {
@@ -24,12 +30,15 @@ namespace CallerRetroBall.UI
                                     32f, Theme.Cream, TextAlignmentOptions.Center, true);
             UiKit.Band(strip.rectTransform, 0.965f, 1f, 24f);
 
-            var title = UiKit.ShadowLabel(Body, "CALLER\nRETRO BALL", 140f, Theme.Cream, Theme.Pink, 10f);
-            UiKit.Band((RectTransform)title.transform.parent, 0.78f, 0.96f, 24f);
-            foreach (var t in title.transform.parent.GetComponentsInChildren<TextMeshProUGUI>()) t.lineSpacing = -18f;
-
-            var tagline = UiKit.Label(Body, Theme.Tagline, 42f, Theme.Gold, TextAlignmentOptions.Center, true);
-            UiKit.Band(tagline.rectTransform, 0.735f, 0.78f, 24f);
+            // Pixel-art "RETROBALL" logo (drawn in code), scaled with crisp pixels.
+            var logoTex = _logoTex = Utilities.TextureFactory.ToTexture(Logic.PixelArt.TitleLogoGenerator.Generate(), "ui.title.logo");
+            var holder = UiKit.NewRect("TitleLogo", Body);
+            UiKit.Band(holder, 0.75f, 0.955f, 32f);
+            var logo = UiKit.Picture(holder, logoTex, "Logo");
+            UiKit.Stretch(logo.rectTransform);
+            var fit = logo.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            fit.aspectRatio = logoTex.width / (float)logoTex.height;
 
             var column = UiKit.Column(Body, 24f, null, "Modes");
             UiKit.Band(column, 0.23f, 0.71f, 110f);

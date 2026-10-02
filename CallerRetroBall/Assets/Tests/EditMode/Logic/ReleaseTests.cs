@@ -126,3 +126,31 @@ namespace CallerRetroBall.Tests
         }
     }
 }
+
+namespace CallerRetroBall.Tests
+{
+    public class TitleLogoTests
+    {
+        [Test]
+        public void Logo_IsWideDeterministicAndUsesBothWordColours()
+        {
+            var a = TitleLogoGenerator.Generate();
+            var b = TitleLogoGenerator.Generate();
+            Assert.AreEqual(a.Pixels, b.Pixels);
+            Assert.Greater(a.Width, a.Height * 3, "one-line wordmark");
+            var colours = new System.Collections.Generic.HashSet<CallerRetroBall.Logic.RgbColor>(a.Pixels);
+            Assert.IsTrue(colours.Contains(TitleLogoGenerator.Outline));
+            Assert.IsTrue(colours.Contains(TitleLogoGenerator.ShadowColor));
+            Assert.IsTrue(colours.Contains(TitleLogoGenerator.StripeCyan));
+            Assert.IsTrue(colours.Contains(TitleLogoGenerator.OrangeTop) || colours.Contains(TitleLogoGenerator.OrangeBottom), "BALL colour");
+        }
+
+        [Test]
+        public void Logo_HasTransparentBackground()
+        {
+            var l = TitleLogoGenerator.Generate();
+            Assert.AreEqual(0, l.Get(0, l.Height - 1).a);
+            Assert.AreEqual(0, l.Get(l.Width - 1, l.Height - 1).a);
+        }
+    }
+}
