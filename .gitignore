@@ -1,0 +1,26 @@
+# Unity
+CallerRetroBall/[Ll]ibrary/
+CallerRetroBall/[Tt]emp/
+CallerRetroBall/[Oo]bj/
+CallerRetroBall/[Bb]uild/
+CallerRetroBall/[Bb]uilds/
+CallerRetroBall/[Ll]ogs/
+CallerRetroBall/[Uu]ser[Ss]ettings/
+CallerRetroBall/MemoryCaptures/
+CallerRetroBall/*.csproj
+CallerRetroBall/*.sln
+CallerRetroBall/*.slnx
+CallerRetroBall/.vs/
+CallerRetroBall/.idea/
+CallerRetroBall/*.pidb
+CallerRetroBall/*.userprefs
+CallerRetroBall/crashlytics-build.properties
+
+# Xcode output from iOS builds
+CallerRetroBall/iOSBuild/
+
+# .NET logic-test harness
+tools/**/bin/
+tools/**/obj/
+
+.DS_Store

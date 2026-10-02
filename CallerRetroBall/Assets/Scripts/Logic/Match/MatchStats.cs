@@ -1,0 +1,62 @@
+using System;
+
+namespace CallerRetroBall.Logic
+{
+    /// <summary>Box score line for one player in one match.</summary>
+    [Serializable]
+    public class PlayerStatLine
+    {
+        public int points;
+        public int fieldGoalsMade;
+        public int fieldGoalsAttempted;
+        public int arcMade;
+        public int arcAttempted;
+        public int assists;
+        public int rebounds;
+        public int steals;
+        public int blocks;
+        public int turnovers;
+
+        public float FieldGoalPercentage => fieldGoalsAttempted == 0 ? 0f : (float)fieldGoalsMade / fieldGoalsAttempted;
+    }
+
+    /// <summary>Box score for a match: one line per player index.</summary>
+    [Serializable]
+    public class MatchStats
+    {
+        public PlayerStatLine[] players;
+
+        public MatchStats(int playerCount)
+        {
+            players = new PlayerStatLine[playerCount];
+            for (int i = 0; i < playerCount; i++) players[i] = new PlayerStatLine();
+        }
+
+        public PlayerStatLine this[int playerIndex] => players[playerIndex];
+
+        public int TeamPoints(int team, int playersPerTeam)
+        {
+            int sum = 0;
+            for (int i = team * playersPerTeam; i < (team + 1) * playersPerTeam; i++) sum += players[i].points;
+            return sum;
+        }
+
+        /// <summary>Simple game score: points + assists + rebounds + 1.5×(steals+blocks) − turnovers.</summary>
+        public int PlayerOfTheGame(int winningTeam, int playersPerTeam)
+        {
+            int best = winningTeam * playersPerTeam;
+            float bestScore = float.MinValue;
+            for (int i = winningTeam * playersPerTeam; i < (winningTeam + 1) * playersPerTeam; i++)
+            {
+                var s = players[i];
+                float score = s.points + s.assists + s.rebounds + 1.5f * (s.steals + s.blocks) - s.turnovers;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = i;
+                }
+            }
+            return best;
+        }
+    }
+}

@@ -1,0 +1,89 @@
+using System.Collections.Generic;
+using CallerRetroBall.Logic;
+using CallerRetroBall.Logic.PixelArt;
+using CallerRetroBall.Utilities;
+using UnityEngine;
+
+namespace CallerRetroBall.Gameplay
+{
+    /// <summary>
+    /// Builds every sprite a match needs from the procedural generators, once, at match start.
+    /// Textures are point-filtered at 16 px per metre.
+    /// </summary>
+    public sealed class MatchArt
+    {
+        public Sprite Court { get; private set; }
+        public Sprite Hoop { get; private set; }
+        public Sprite Ball { get; private set; }
+        public Sprite Shadow { get; private set; }
+        public Sprite BallShadow { get; private set; }
+        public Sprite Ring { get; private set; }
+        public Sprite MeterFrame { get; private set; }
+        public Sprite Pixel { get; private set; }
+        public Sprite Arrow { get; private set; }
+
+        private readonly List<Object> _owned = new List<Object>();
+
+        public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed)
+        {
+            var art = new MatchArt();
+            const float ppu = CourtSpace.PixelsPerUnit;
+
+            var courtCanvas = CourtGenerator.Generate(court, geometry, seed);
+            CourtGenerator.OriginPivot(geometry, out float px, out float py);
+            art.Court = art.Make(courtCanvas, "court:" + court.id, new Vector2(px, py), ppu);
+
+            var hoop = PropSpriteGenerator.Hoop();
+            art.Hoop = art.Make(hoop, "hoop",
+                new Vector2((PropSpriteGenerator.HoopPivotX + 0.5f) / hoop.Width, (PropSpriteGenerator.HoopPivotY + 0.5f) / hoop.Height), ppu);
+
+            art.Ball = art.Make(PropSpriteGenerator.Ball(), "ball", new Vector2(0.5f, 0f), ppu);
+            art.Shadow = art.Make(PropSpriteGenerator.Shadow(12, 4), "shadow", new Vector2(0.5f, 0.5f), ppu);
+            art.BallShadow = art.Make(PropSpriteGenerator.Shadow(6, 2), "ball-shadow", new Vector2(0.5f, 0.5f), ppu);
+            art.Ring = art.Make(PropSpriteGenerator.Ring(16, 6), "ring", new Vector2(0.5f, 0.5f), ppu);
+            art.MeterFrame = art.Make(PropSpriteGenerator.MeterFrame(), "meter", new Vector2(0f, 0f), ppu);
+            art.Pixel = art.Make(PropSpriteGenerator.WhitePixel(), "pixel", new Vector2(0f, 0f), ppu);
+            art.Arrow = art.Make(PropSpriteGenerator.Arrow(), "arrow", new Vector2(0.5f, 0f), ppu);
+            return art;
+        }
+
+        /// <summary>Slices a generated player sheet into [view, frame] sprites with the pivot at the feet.</summary>
+        public Sprite[,] PlayerFrames(PlayerDef player, TeamDef team)
+        {
+            var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, team.primary, team.secondary, team.accent);
+            var tex = Own(TextureFactory.ToTexture(sheet, "sheet:" + player.id));
+            var frames = new Sprite[CharacterSpriteGenerator.ViewCount, CharacterSpriteGenerator.FramesPerView];
+            for (int v = 0; v < CharacterSpriteGenerator.ViewCount; v++)
+                for (int f = 0; f < CharacterSpriteGenerator.FramesPerView; f++)
+                {
+                    CharacterSpriteGenerator.FrameOrigin((CharacterView)v, f, out int x, out int y);
+                    var rect = new Rect(x, y, CharacterSpriteGenerator.FrameWidth, CharacterSpriteGenerator.FrameHeight);
+                    // Pivot at the feet (bottom centre, one pixel up to sit on the shadow).
+                    var pivot = new Vector2(0.5f, 1f / CharacterSpriteGenerator.FrameHeight);
+                    frames[v, f] = Own(Sprite.Create(tex, rect, pivot, CourtSpace.PixelsPerUnit, 0, SpriteMeshType.FullRect));
+                }
+            return frames;
+        }
+
+        public void Dispose()
+        {
+            foreach (var o in _owned)
+                if (o != null) Object.Destroy(o);
+            _owned.Clear();
+        }
+
+        private T Own<T>(T o) where T : Object
+        {
+            _owned.Add(o);
+            return o;
+        }
+
+        private Sprite Make(PixelCanvas canvas, string name, Vector2 pivot, float ppu)
+        {
+            var tex = Own(TextureFactory.ToTexture(canvas, name));
+            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), pivot, ppu, 0, SpriteMeshType.FullRect);
+            sprite.name = name;
+            return Own(sprite);
+        }
+    }
+}
