@@ -47,18 +47,23 @@ namespace CallerRetroBall.EditorTools
         // ------------------------------------------------------------------ readiness
 
         [MenuItem("RetroBall/Release/Check iOS Readiness", priority = 59)]
-        public static void CheckReadinessMenu()
+        public static void CheckReadinessMenu() => CheckReadiness(offerFix: true);
+
+        private static void CheckReadiness(bool offerFix)
         {
             var (report, ready) = CheckIosReadiness();
             Debug.Log("[RetroBall] iOS readiness:\n" + report);
             WriteReport("iOS readiness (" + (ready ? "READY" : "NOT READY") + ")\n" + report);
-            if (!ready && EditorUtility.DisplayDialog("RetroBall: iOS readiness", report + "\n\nFix what can be fixed automatically (icon, launch image, release settings)?", "Fix", "Close"))
+            // Fix once (icon, launch image, release settings incl. bundle ID), then show the result with just OK,
+            // so things only you can do (installing a module, restarting Unity) don't loop the dialog.
+            if (offerFix && EditorUtility.DisplayDialog("RetroBall: iOS readiness",
+                    report + "\n\nFix what can be fixed automatically (icon, launch image, release settings, bundle ID)?", "Fix", "Close"))
             {
                 GenerateIconAndLaunch();
                 ApplyReleaseSettings();
-                CheckReadinessMenu();
+                CheckReadiness(offerFix: false);
             }
-            else if (ready)
+            else if (!offerFix)
             {
                 EditorUtility.DisplayDialog("RetroBall: iOS readiness", report, "OK");
             }
@@ -77,7 +82,7 @@ namespace CallerRetroBall.EditorTools
 
             Check(BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS),
                   "iOS Build Support module installed",
-                  "iOS Build Support is not installed. Unity Hub ▸ Installs ▸ ⚙ ▸ Add modules ▸ iOS Build Support");
+                  "iOS Build Support is not installed (or Unity hasn't been restarted since). Unity Hub ▸ Installs ▸ ⚙ ▸ Add modules ▸ iOS Build Support, then quit and reopen Unity");
             Check(Application.platform == RuntimePlatform.OSXEditor, "Running on a Mac", "iOS builds need a Mac with Xcode");
             Check(Directory.Exists("/Applications/Xcode.app"), "Xcode found in /Applications",
                   "Xcode not found in /Applications. Install it from the Mac App Store", blocking: false);
