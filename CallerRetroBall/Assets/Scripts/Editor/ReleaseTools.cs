@@ -88,9 +88,9 @@ namespace CallerRetroBall.EditorTools
                   "Scenes missing from Build Settings. Run RetroBall ▸ Run Project Setup");
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
-            bool placeholder = string.IsNullOrEmpty(id) || id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal);
+            bool placeholder = IsPlaceholderId(id);
             Check(!placeholder, "Bundle ID: " + id,
-                  "Bundle ID is a placeholder (" + id + "). Set your own in Player Settings ▸ iOS ▸ Bundle Identifier, e.g. com.yourname.retroball",
+                  "Bundle ID is a placeholder (" + id + "). Fix sets " + DefaultBundleId + " (or set your own in Player Settings ▸ iOS ▸ Bundle Identifier)",
                   blocking: false);
             Check(!string.IsNullOrEmpty(PlayerSettings.iOS.appleDeveloperTeamID), "Apple Team ID set",
                   "No Apple Team ID yet. Fine for the Simulator; for your iPhone pick your team in Xcode ▸ Signing & Capabilities",
@@ -179,6 +179,13 @@ namespace CallerRetroBall.EditorTools
 
         // ------------------------------------------------------------------ player settings
 
+        /// <summary>Used when the project still has Unity's template bundle ID. Must be unique in your Apple account.</summary>
+        public const string DefaultBundleId = "com.marcompsci.retroball";
+
+        public static bool IsPlaceholderId(string id) =>
+            string.IsNullOrEmpty(id) || id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal)
+            || id.StartsWith("com.DefaultCompany", StringComparison.Ordinal);
+
         public static string ApplyReleaseSettings()
         {
             PlayerSettings.productName = DefaultContent.GameName;
@@ -193,11 +200,14 @@ namespace CallerRetroBall.EditorTools
             PlayerSettings.SplashScreen.show = false;
             // Release builds strip the dev-only cheats and checks (they're behind UNITY_EDITOR || DEBUG).
             EditorUserBuildSettings.development = false;
+            // Replace a template placeholder bundle ID with a real one (change it if you prefer another).
+            string current = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
+            if (IsPlaceholderId(current)) PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, DefaultBundleId);
             AssetDatabase.SaveAssets();
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
             return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, portrait, full screen, no splash.\n" +
-                   "Bundle ID: " + id + (id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal)
+                   "Bundle ID: " + id + (IsPlaceholderId(id)
                        ? "  ← placeholder: change it to your own (e.g. com.yourname.retroball) before signing." : "");
         }
 
