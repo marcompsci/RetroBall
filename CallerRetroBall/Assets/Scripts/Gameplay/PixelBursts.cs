@@ -25,6 +25,7 @@ namespace CallerRetroBall.Gameplay
         private readonly Spark[] _sparks = new Spark[PoolSize];
         private int _next;
         private uint _seed = 1;
+        private readonly BurstParticle[] _scratch = new BurstParticle[PoolSize];
 
         public static PixelBursts Create(Transform parent, MatchArt art)
         {
@@ -47,8 +48,10 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Spawns <paramref name="count"/> sparks at <paramref name="origin"/> (world space).</summary>
         public void Spawn(Vector3 origin, Color color, int count, float speed = 4f, float life = 0.6f)
         {
-            var parts = Bursts.Create(_seed++, Mathf.Min(count, PoolSize), speed, life);
-            for (int i = 0; i < parts.Length; i++)
+            int n = Mathf.Min(count, PoolSize);
+            Bursts.Fill(_seed++, _scratch, n, speed, life);
+            var parts = _scratch;
+            for (int i = 0; i < n; i++)
             {
                 ref var s = ref _sparks[_next];
                 _next = (_next + 1) % PoolSize;

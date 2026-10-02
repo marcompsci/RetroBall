@@ -83,7 +83,11 @@ namespace CallerRetroBall.Gameplay
             _shotClock.color = Theme.Gold;
 
             _toast = UiKit.Label(safe, "", 44f, Theme.Cream, TextAlignmentOptions.Center, true, "Toast");
-            UiKit.Place(_toast.rectTransform, new Vector2(0.5f, 0.52f), new Vector2(1000f, 80f));
+            UiKit.Place(_toast.rectTransform, new Vector2(0.5f, 0.52f), new Vector2(1000f, 120f));
+            // Long lines (coach tips, H-O-R-S-E calls) shrink and wrap instead of spilling off screen.
+            _toast.enableAutoSizing = true;
+            _toast.fontSizeMin = 26f;
+            _toast.fontSizeMax = 44f;
 
             _info = UiKit.Label(safe, "", 36f, Theme.Gold, TextAlignmentOptions.Center, true, "Info");
             _info.rectTransform.anchorMin = _info.rectTransform.anchorMax = new Vector2(0.5f, 1f);

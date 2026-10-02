@@ -71,9 +71,10 @@ namespace CallerRetroBall.Core
         public static void ApplyFrameRate()
         {
             int hz = Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value);
-            bool high = Career != null && Career.settings.highFrameRate && hz >= 119;
-            SimulationRate = high ? 120 : 60;
-            Application.targetFrameRate = SimulationRate;
+            bool setting = Career != null && Career.settings.highFrameRate;
+            // The simulation rate is picked when a match starts; the screen rate also drops while saving power.
+            SimulationRate = PowerPolicy.TargetFrameRate(setting, hz, false);
+            Application.targetFrameRate = PowerPolicy.TargetFrameRate(setting, hz, PowerMonitor.SavingPower);
             QualitySettings.vSyncCount = 0;
         }
 
@@ -129,6 +130,7 @@ namespace CallerRetroBall.Core
             AudioManager.ApplySettings();
             ApplyFrameRate();
             CrtOverlay.Apply(Career.settings.crt);
+            CrtOverlay.ApplyTint(Secrets.IsOn(Career.secrets, Secrets.PocketGreen));
         }
 
 #if UNITY_EDITOR || DEBUG
@@ -176,6 +178,7 @@ namespace CallerRetroBall.Core
 
             SceneFlow.EnsureExists();
             ControllerCursor.EnsureExists();
+            PowerMonitor.EnsureExists();
         }
 
         // Supports "Enter Play Mode" without domain reload: static state is reset each play session.

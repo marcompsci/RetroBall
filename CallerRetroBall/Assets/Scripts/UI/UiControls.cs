@@ -137,6 +137,7 @@ namespace CallerRetroBall.UI
             scrim.raycastTarget = true;
             var panel = UiKit.Panel(canvas.transform, Color.white, Theme.PanelSprite(), true, "Dialog");
             UiKit.Band(panel.rectTransform, 0.3f, 0.72f, 80f);
+            panel.gameObject.AddComponent<OverlayPop>();
             var column = UiKit.Column(panel.transform, 22f, new RectOffset(40, 40, 40, 40));
             UiKit.Stretch(column);
             column.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;

@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 18 | One-command Simulator run, power/battery (Low Power + thermal → 60 fps, SHOW FPS, profiler markers, pooled sparks), onboarding (Coach Dee welcome, one-time coach tips) and juice (button pops, panel pops, jingles), Season 3 (Midnight Tide rival, story chapter 3, 3 courts, kits, 2 celebrations, 2 dribble moves, 3 badges, 2 codes) | **Done** (366 logic tests pass; 0 errors via tools/UnityCheck; Simulator run in progress) |
 | 17 | Party games (H-O-R-S-E vs CPU/friend, 21, Around the World), Dynasty mode (aging, retirements, Hall of Fame, draft, league history), shareable highlight GIFs, iPhone build support (release log, UnityCheck) | **Done** (357 logic tests pass; compiles against Unity 6000.6.3f1 reference assemblies with 0 errors via tools/UnityCheck; not yet run on iPhone) |
 | 16 | Create-a-team (colours, jerseys, shorts, shoes, logo); Season 2 (Sundown Syndicate rival, 3 courts, story chapter 2, kits, 7 badges); AI defensive schemes; 1-on-1; Shootout; 8-team Caller Cup; App Store launch kit | **Done** (342 logic tests pass; Unity changes not yet compiled; iPhone build in progress with Omari) |
 | 15 | HEAT CHECK, alley-oops, hit-stop, heavy haptics, 120 Hz; CRT filter, title demo, pixel wipes, announcer voice; secret codes, hidden courts/teams, big heads, Arcade Ladder + boss; controller menus and prompts | **Done** (324 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
@@ -275,6 +276,25 @@
   `NSPhotoLibraryAddUsageDescription`, set by the build post-processor).
 - **iPhone prep:** iOS readiness checks, builds and screenshots are logged to `Logs/RetroBall-release.txt`;
   `tools/UnityCheck` compiles every assembly against Unity's own reference assemblies before delivery.
+
+## Phase 18: Simulator, performance, onboarding, Season 3
+
+- **Run it:** `tools/play_on_simulator.sh` (quit Unity first) builds with the project's exact Unity version,
+  compiles with xcodebuild for the Simulator (no signing), boots an iPhone simulator and launches the game;
+  every step logs to `Logs/` and failures are summarised in `Logs/RetroBall-release.txt`.
+- **Power:** `PowerMonitor` checks Low Power Mode and thermal state (iOS plugin `RetroPower.mm`) every 5 s;
+  while saving power the screen runs at 60 fps and embers/crowd bobbing switch off. Settings ▸ SHOW FPS shows
+  a rolling fps/avg/worst readout. Sim step and view sync have Profiler markers; spark bursts no longer
+  allocate.
+- **Onboarding:** first launch plays a short Coach Dee welcome scene before the tutorial offer. During your
+  first 6 games Coach Dee gives one-time tips at the right moment (meter, early/late release, clearing,
+  defence, alley-oop, heating up, shot clock); Settings ▸ COACH TIPS turns them off.
+- **Juice:** every button squashes and springs back; menus and dialogs pop open; tip-off, victory and defeat
+  jingles (all off or plain with Reduce Motion where it matters).
+- **Season 3:** Midnight Tide (Mara Quill) is the rival every third Rise season, with intro/beaten scenes and
+  a three-peat scene (EN/ES); courts Ferry Deck, Lantern Market, Canyon Rim; kits; Pixel Wave and Take a Bow
+  celebrations; Double Cross and Step Back moves; badges Tide Turner, Three-Peat, Dynasty; codes POCKET
+  GREEN (old-handheld green screen) and SKY HIGH (double-height jumps, looks only).
 
 ## Deviations from the brief (deliberate)
 

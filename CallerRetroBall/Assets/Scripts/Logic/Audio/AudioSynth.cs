@@ -30,6 +30,12 @@ namespace CallerRetroBall.Logic
         Coin = 17,
         /// <summary>Low buzz: wrong code.</summary>
         Error = 18,
+        /// <summary>Short rising jingle when a game starts.</summary>
+        TipOff = 19,
+        /// <summary>Win jingle.</summary>
+        Victory = 20,
+        /// <summary>Loss jingle (gentle, not mocking).</summary>
+        Defeat = 21,
     }
 
     /// <summary>
@@ -63,6 +69,9 @@ namespace CallerRetroBall.Logic
                 case SfxId.Lob: return Noise(0.4f, rng, 0.25f, attack: 0.5f, lowpass: 0.12f);
                 case SfxId.Coin: return Notes(new[] { 83, 88 }, 0.07f, 0.35f);
                 case SfxId.Error: return Square(0.25f, 110f, 0.3f);
+                case SfxId.TipOff: return Notes(new[] { 64, 67, 71, 76 }, 0.08f, 0.35f);
+                case SfxId.Victory: return Notes(new[] { 72, 76, 79, 84, 79, 84, 88 }, 0.09f, 0.4f);
+                case SfxId.Defeat: return Notes(new[] { 67, 64, 60, 55 }, 0.14f, 0.3f);
                 default: return Square(0.6f, 220f, 0.3f);
             }
         }

@@ -2,9 +2,9 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5 }
 
-    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3 }
+    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5 }
 
     /// <summary>
     /// Presentation-only offsets for one player sprite at one moment, in art pixels.
@@ -47,6 +47,8 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.celebration.call_it": return CelebrationKind.CallIt;
                 case "cosmetic.celebration.shimmy_step": return CelebrationKind.ShimmyStep;
                 case "cosmetic.celebration.raise_roof": return CelebrationKind.RaiseTheRoof;
+                case "cosmetic.celebration.pixel_wave": return CelebrationKind.PixelWave;
+                case "cosmetic.celebration.take_a_bow": return CelebrationKind.TakeABow;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -58,6 +60,8 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.move.hesi_hop": return DribbleMoveKind.HesiHop;
                 case "cosmetic.move.spin_cycle": return DribbleMoveKind.SpinCycle;
                 case "cosmetic.move.behind_back": return DribbleMoveKind.BehindTheBack;
+                case "cosmetic.move.double_cross": return DribbleMoveKind.DoubleCross;
+                case "cosmetic.move.step_back": return DribbleMoveKind.StepBack;
                 default: return DribbleMoveKind.Crossover;
             }
         }
@@ -84,6 +88,18 @@ namespace CallerRetroBall.Logic
                     int beat = (int)(t / 0.15f);
                     p.ArmsUp = beat % 2 == 0;
                     p.Lift = beat % 2 == 0 ? 2 : 0;
+                    break;
+                case CelebrationKind.PixelWave:
+                    // A ripple: the sprite rises one pixel at a time, then falls, twice, arms up at the crest.
+                    int phase = (int)(t / 0.075f) % 6;
+                    p.Lift = phase < 3 ? phase : 6 - phase;
+                    p.ArmsUp = phase == 3;
+                    break;
+                case CelebrationKind.TakeABow:
+                    // Step back, dip (a bow), then arms up to the crowd.
+                    p.OffsetX = t < 0.2f ? -1 : 0;
+                    p.Lift = t >= 0.25f && t < 0.6f ? -2 : 0;
+                    p.ArmsUp = t >= 0.65f;
                     break;
                 default: // ShimmyStep
                     int step = (int)(t / 0.12f);
@@ -118,6 +134,17 @@ namespace CallerRetroBall.Logic
                     p.BallOffsetX = (int)Math.Round(-3f + 6f * u);
                     p.BallLift = u > 0.2f && u < 0.8f ? -3 : 0;
                     p.FlipOverride = u > 0.5f && u < 0.7f;
+                    break;
+                case DribbleMoveKind.DoubleCross:
+                    // Two crossovers back to back: left, right, left.
+                    p.BallOffsetX = (int)Math.Round(3f * Math.Cos(u * 2.0 * Math.PI));
+                    p.BallLift = -(int)Math.Round(Math.Abs(Math.Sin(u * 2.0 * Math.PI)) * 2f);
+                    break;
+                case DribbleMoveKind.StepBack:
+                    // Hop back a couple of pixels, ball gathered high.
+                    p.OffsetX = u < 0.6f ? -(int)Math.Round(u / 0.6f * 2f) : -2;
+                    p.Lift = Hop(t, 0.05f, 0.2f, 1);
+                    p.BallLift = 2;
                     break;
                 default: // SpinCycle
                     // Two facing flips in quick succession reads as a spin at pixel scale.
@@ -224,8 +251,16 @@ namespace CallerRetroBall.Logic
         public static BurstParticle[] Create(uint seed, int count, float speed, float life)
         {
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            var rng = new SeededRandom(seed == 0 ? 1u : seed);
             var parts = new BurstParticle[count];
+            Fill(seed, parts, count, speed, life);
+            return parts;
+        }
+
+        /// <summary>Same as <see cref="Create"/> but writes into <paramref name="parts"/> (no allocation).</summary>
+        public static void Fill(uint seed, BurstParticle[] parts, int count, float speed, float life)
+        {
+            if (count < 0 || count > parts.Length) throw new ArgumentOutOfRangeException(nameof(count));
+            var rng = new SeededRandom(seed == 0 ? 1u : seed);
             for (int i = 0; i < count; i++)
             {
                 // Mostly upward fan, like sparks off the rim.
@@ -238,7 +273,6 @@ namespace CallerRetroBall.Logic
                     life = life * (0.7f + 0.3f * rng.NextFloat()),
                 };
             }
-            return parts;
         }
 
         /// <summary>Offset from the burst origin after <paramref name="t"/> seconds.</summary>

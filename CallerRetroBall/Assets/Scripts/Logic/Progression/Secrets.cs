@@ -17,6 +17,8 @@ namespace CallerRetroBall.Logic
         public bool bigHeads;
         public bool rainbowBall;
         public bool alwaysHeat;
+        public bool pocketGreen;
+        public bool skyHigh;
         public ArcadeSaveData arcade = new ArcadeSaveData();
     }
 
@@ -72,6 +74,8 @@ namespace CallerRetroBall.Logic
         public const string PixelVoid = "code.pixel_void";
         public const string CartridgeKids = "code.cartridge_kids";
         public const string AlwaysHeat = "code.always_heat";
+        public const string PocketGreen = "code.pocket_green";
+        public const string SkyHigh = "code.sky_high";
 
         public static readonly List<SecretCode> All = new List<SecretCode>
         {
@@ -85,6 +89,10 @@ namespace CallerRetroBall.Logic
                  CodeSymbol.Ball, CodeSymbol.Star, CodeSymbol.Heart, CodeSymbol.Bolt),
             Code(AlwaysHeat, "ALWAYS HOT", "Your player starts every game heated up.", "Hit 50 green releases.",
                  CodeSymbol.Heart, CodeSymbol.Heart, CodeSymbol.Heart, CodeSymbol.Star),
+            Code(PocketGreen, "POCKET GREEN", "Four-shade green screen, like an old handheld.", "Win a game of H-O-R-S-E.",
+                 CodeSymbol.Ball, CodeSymbol.Bolt, CodeSymbol.Ball, CodeSymbol.Bolt),
+            Code(SkyHigh, "SKY HIGH", "Everybody jumps twice as high (looks only).", "Throw or finish 5 alley-oops.",
+                 CodeSymbol.Star, CodeSymbol.Heart, CodeSymbol.Star, CodeSymbol.Heart),
         };
 
         private static SecretCode Code(string id, string name, string desc, string hint, params CodeSymbol[] seq) =>
@@ -143,6 +151,8 @@ namespace CallerRetroBall.Logic
                 case BigHeads: s.bigHeads = first || !s.bigHeads; return CodeResult.Toggled;
                 case RainbowBall: s.rainbowBall = first || !s.rainbowBall; return CodeResult.Toggled;
                 case AlwaysHeat: s.alwaysHeat = first || !s.alwaysHeat; return CodeResult.Toggled;
+                case PocketGreen: s.pocketGreen = first || !s.pocketGreen; return CodeResult.Toggled;
+                case SkyHigh: s.skyHigh = first || !s.skyHigh; return CodeResult.Toggled;
                 case PixelVoid: Unlock(s, DefaultContent.SecretCourtId); return CodeResult.Unlocked;
                 case CartridgeKids: Unlock(s, DefaultContent.SecretCrewId); return CodeResult.Unlocked;
             }
@@ -158,6 +168,8 @@ namespace CallerRetroBall.Logic
                 case BigHeads: return s.bigHeads;
                 case RainbowBall: return s.rainbowBall;
                 case AlwaysHeat: return s.alwaysHeat;
+                case PocketGreen: return s.pocketGreen;
+                case SkyHigh: return s.skyHigh;
                 default: return true;
             }
         }
@@ -185,6 +197,8 @@ namespace CallerRetroBall.Logic
             Check(PixelVoid, s.arcade != null && s.arcade.clears > 0);
             Check(CartridgeKids, d.totals != null && d.totals.wins >= 10);
             Check(AlwaysHeat, d.totals != null && d.totals.greens >= 50);
+            Check(PocketGreen, d.practice != null && d.practice.horseWins >= 1);
+            Check(SkyHigh, d.totals != null && d.totals.alleyOops >= 5);
             return revealed;
         }
 

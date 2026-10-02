@@ -117,6 +117,8 @@ namespace CallerRetroBall.Logic
         public int losses;
         /// <summary>Wins over the Sundown Syndicate (also counted in <see cref="wins"/>).</summary>
         public int sundownWins;
+        /// <summary>Wins over the Midnight Tide (also counted in <see cref="wins"/>).</summary>
+        public int tideWins;
         /// <summary>Rise season of the last Rival Challenge played (0 = none yet).</summary>
         public int lastSeason;
     }
@@ -160,16 +162,20 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Which rival crew a Rise season brings: Sundown Syndicate in even seasons, Neon Static otherwise.</summary>
         public static string RivalFor(int seasonNumber) =>
-            seasonNumber >= 2 && seasonNumber % 2 == 0 ? DefaultContent.Rival2CrewId : DefaultContent.RivalCrewId;
+            seasonNumber >= 3 && seasonNumber % 3 == 0 ? DefaultContent.Rival3CrewId
+            : seasonNumber >= 2 && seasonNumber % 2 == 0 ? DefaultContent.Rival2CrewId
+            : DefaultContent.RivalCrewId;
 
         public static RivalOutcome ApplyResult(CareerSaveData d, MatchSummary s)
         {
             if (d == null || s == null || s.mode != GameMode.Rival) return RivalOutcome.None;
             d.rival.lastSeason = d.rise.season != null ? d.rise.season.seasonNumber : d.rival.lastSeason + 1;
             bool sundown = s.teamAId == DefaultContent.Rival2CrewId || s.teamBId == DefaultContent.Rival2CrewId;
+            bool tide = s.teamAId == DefaultContent.Rival3CrewId || s.teamBId == DefaultContent.Rival3CrewId;
             if (s.HumanWon)
             {
                 if (sundown) d.rival.sundownWins++;
+                if (tide) d.rival.tideWins++;
                 d.rival.wins++;
                 d.signalPoints += WinBonus;
                 d.fans += WinFans;
@@ -216,6 +222,9 @@ namespace CallerRetroBall.Logic
             B("badge.your_colors", "YOUR COLORS", "Create your own team.", d => d.customTeam != null && d.customTeam.created),
             B("badge.caller_cup", "CUP RUN", "Win the Caller Cup.", d => d.cup != null && d.cup.titles >= 1),
             B("badge.shootout", "SHOOTOUT STAR", "Win a Shootout.", d => d.practice.shootoutWins >= 1),
+            B("badge.tide", "TIDE TURNER", "Beat the Midnight Tide.", d => d.rival.tideWins >= 1),
+            B("badge.three_peat", "THREE-PEAT", "Win The Gold Signal Cup three times.", d => d.totals.championships >= 3),
+            B("badge.dynasty", "DYNASTY", "Play five Rise seasons.", d => d.rise.seasonsPlayed >= 5),
             B("badge.ladder", "NO CONTINUES NEEDED", "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade.clears > 0),
             B("badge.codes", "CODE BREAKER", "Find every secret code.", d => d.secrets != null && Secrets.All.TrueForAll(x => d.secrets.codesFound.Contains(x.Id))),
         };
@@ -251,7 +260,8 @@ namespace CallerRetroBall.Logic
         }
     }
 
-    public enum StorySpeaker { Coach = 0, Rival = 1, You = 2, /** Kaia Sol of the Sundown Syndicate (chapter 2). */ Rival2 = 3 }
+    public enum StorySpeaker { Coach = 0, Rival = 1, You = 2, /** Kaia Sol of the Sundown Syndicate (chapter 2). */ Rival2 = 3,
+        /** Mara Quill of the Midnight Tide (chapter 3). */ Rival3 = 4 }
 
     public struct StoryLine
     {
@@ -275,6 +285,7 @@ namespace CallerRetroBall.Logic
         public const string CoachName = "COACH DEE";
         public const string RivalName = "VEX";
         public const string Rival2Name = "KAIA";
+        public const string Rival3Name = "MARA";
 
         public const string Intro = "story.intro";
         public const string CircuitCleared = "story.circuit_cleared";
@@ -283,11 +294,17 @@ namespace CallerRetroBall.Logic
         public const string RivalLost = "story.rival_lost";
         public const string Playoffs = "story.playoffs";
         public const string Champions = "story.champions";
+        /// <summary>First launch: Coach Dee says hello (played from the main menu, not the Rise hub).</summary>
+        public const string Welcome = "story.welcome";
         // Chapter 2 (Rise Season 2 and later).
         public const string Season2 = "story.s2_open";
         public const string Rival2Intro = "story.rival2_intro";
         public const string Rival2Beaten = "story.rival2_beaten";
         public const string TwoTime = "story.two_time";
+        // Chapter 3 (Rise Season 3 and every third season).
+        public const string Rival3Intro = "story.rival3_intro";
+        public const string Rival3Beaten = "story.rival3_beaten";
+        public const string ThreePeat = "story.three_peat";
 
         public static StoryBeat Beat(string id, string nickname) => Beat(id, nickname, Loc.Language);
 
@@ -299,10 +316,31 @@ namespace CallerRetroBall.Logic
             void V(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival, t));
             void Y(string t) => b.Lines.Add(new StoryLine(StorySpeaker.You, t));
             void K(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival2, t));
+            void M(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival3, t));
             if (language == Loc.Spanish)
             {
                 switch (id)
                 {
+                    case Rival3Intro:
+                        M("Llegamos en el último ferry. Nadie nos vio venir.");
+                        M("El Midnight Tide no corre. Esperamos a que te canses y luego subimos, como la marea.");
+                        Y("Entonces no me voy a cansar.");
+                        C("Mara juega en los dos lados de la cancha. Cuida el balón y corre cuando puedas.");
+                        break;
+                    case Rival3Beaten:
+                        M("...La marea vuelve, " + me + ". Siempre vuelve.");
+                        C("Que vuelva. Nosotros estaremos aquí.");
+                        break;
+                    case ThreePeat:
+                        C("Tres copas. Ya hablan de los First Callers como una dinastía.");
+                        Y("Y apenas estamos empezando.");
+                        break;
+                    case Welcome:
+                        C("¡Eh, tú! Sí, tú. ¿Juegas?");
+                        C("Soy la entrenadora Dee. Armo un equipo que anuncia sus tiros antes de lanzarlos: los First Callers.");
+                        Y("¿Y qué necesito para entrar?");
+                        C("Dos minutos de práctica. Te enseño a tirar, pasar y defender. Luego, a la cancha.");
+                        break;
                     case Season2:
                         C("Temporada dos. Ya no somos los nuevos, " + me + ". Ahora todos nos tienen estudiados.");
                         C("Y corre la voz de un equipo nuevo en el muelle del ferrocarril. Juegan al atardecer y no pierden.");
@@ -366,6 +404,26 @@ namespace CallerRetroBall.Logic
             }
             switch (id)
             {
+                case Rival3Intro:
+                    M("We came in on the last ferry. Nobody saw us coming.");
+                    M("The Midnight Tide doesn't rush. We wait for you to tire, then we rise. Like the tide.");
+                    Y("Then I won't get tired.");
+                    C("Mara plays both ends of the floor. Protect the ball and run when you can.");
+                    break;
+                case Rival3Beaten:
+                    M("...The tide comes back, " + me + ". It always comes back.");
+                    C("Let it. We'll be right here.");
+                    break;
+                case ThreePeat:
+                    C("Three cups. People are calling the First Callers a dynasty now.");
+                    Y("And we're just getting started.");
+                    break;
+                case Welcome:
+                    C("Hey, you! Yeah, you. You hoop?");
+                    C("I'm Coach Dee. I'm putting together a crew that calls its shots before it takes them: the First Callers.");
+                    Y("So what does it take to get in?");
+                    C("Two minutes of practice. I'll show you how to shoot, pass, and defend. Then we hit the courts.");
+                    break;
                 case Season2:
                     C("Season two. We're not the new kids anymore, " + me + ". Everybody's got film on us now.");
                     C("And there's word of a new crew down at the rail yard. They play at sundown and they don't lose.");
@@ -438,15 +496,19 @@ namespace CallerRetroBall.Logic
             if (r.stage != RiseStage.Circuit && !Seen(CircuitCleared)) return CircuitCleared;
             int season = r.season != null ? r.season.seasonNumber : 0;
             bool sundownSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival2CrewId;
+            bool tideSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival3CrewId;
             if (season >= 2 && r.stage == RiseStage.Season && !Seen(Season2)) return Season2;
-            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !Seen(RivalIntro)) return RivalIntro;
+            if (RivalEngine.ChallengeAvailable(d) && tideSeason && !Seen(Rival3Intro)) return Rival3Intro;
+            if (d.rival.tideWins >= 1 && !Seen(Rival3Beaten)) return Rival3Beaten;
+            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !tideSeason && !Seen(RivalIntro)) return RivalIntro;
             if (RivalEngine.ChallengeAvailable(d) && sundownSeason && !Seen(Rival2Intro)) return Rival2Intro;
             if (d.rival.sundownWins >= 1 && !Seen(Rival2Beaten)) return Rival2Beaten;
-            if (d.rival.wins - d.rival.sundownWins >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
-            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !Seen(RivalLost)) return RivalLost;
+            if (d.rival.wins - d.rival.sundownWins - d.rival.tideWins >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
+            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !tideSeason && !Seen(RivalLost)) return RivalLost;
             if (r.stage == RiseStage.Playoffs && !Seen(Playoffs)) return Playoffs;
             if (d.totals.championships >= 1 && !Seen(Champions)) return Champions;
             if (d.totals.championships >= 2 && !Seen(TwoTime)) return TwoTime;
+            if (d.totals.championships >= 3 && !Seen(ThreePeat)) return ThreePeat;
             return null;
         }
 
@@ -458,7 +520,7 @@ namespace CallerRetroBall.Logic
         public static readonly string[] AllIds =
         {
             Intro, CircuitCleared, RivalIntro, RivalBeaten, RivalLost, Playoffs, Champions,
-            Season2, Rival2Intro, Rival2Beaten, TwoTime,
+            Season2, Rival2Intro, Rival2Beaten, TwoTime, Welcome, Rival3Intro, Rival3Beaten, ThreePeat,
         };
     }
 }

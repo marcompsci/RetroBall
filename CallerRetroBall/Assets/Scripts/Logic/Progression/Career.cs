@@ -53,6 +53,7 @@ namespace CallerRetroBall.Logic
             if (data.customTeam == null) data.customTeam = new CustomTeamData();
             if (data.cup == null) data.cup = new CupSaveData();
             if (data.dynasty == null) data.dynasty = new DynastySaveData();
+            if (data.tipsSeen == null) data.tipsSeen = new List<string>();
             if (data.secrets.codesFound == null) data.secrets.codesFound = new List<string>();
             if (data.secrets.hintsRevealed == null) data.secrets.hintsRevealed = new List<string>();
             if (data.secrets.unlocked == null) data.secrets.unlocked = new List<string>();

@@ -17,8 +17,16 @@ mkdir -p "$LOGS"
 REPORT="$LOGS/RetroBall-release.txt"
 note() { echo "$1"; printf '=== %s  play_on_simulator\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
 
-UNITY="${UNITY:-$(ls -d /Applications/Unity/Hub/Editor/6000.*/Unity.app/Contents/MacOS/Unity 2>/dev/null | sort -V | tail -1)}"
-if [[ -z "$UNITY" || ! -x "$UNITY" ]]; then note "STOPPED: Unity 6 not found in /Applications/Unity/Hub/Editor."; exit 1; fi
+# Use the exact editor version the project was made with (another version would refuse to open it in batch mode).
+VERSION="$(sed -n 's/^m_EditorVersion: //p' "$PROJECT/ProjectSettings/ProjectVersion.txt" 2>/dev/null | tr -d '[:space:]')"
+UNITY="${UNITY:-/Applications/Unity/Hub/Editor/$VERSION/Unity.app/Contents/MacOS/Unity}"
+if [[ ! -x "$UNITY" ]]; then note "STOPPED: Unity $VERSION (the project's version) not found at $UNITY."; exit 1; fi
+if [[ ! -d "/Applications/Unity/Hub/Editor/$VERSION/PlaybackEngines/iOSSupport" ]]; then
+  note "STOPPED: Unity $VERSION has no iOS Build Support. Unity Hub > Installs > $VERSION > gear > Add modules > iOS Build Support."; exit 1
+fi
+if pgrep -f "Unity.app/Contents/MacOS/Unity" | xargs -I{} ps -o args= -p {} 2>/dev/null | grep -v -- "-batchmode" | grep -q "Unity.app/Contents/MacOS/Unity"; then
+  note "STOPPED: the Unity Editor is still open. Quit it (Cmd+Q) — Unity Hub can stay open — and run this again."; exit 1
+fi
 if ! xcode-select -p >/dev/null 2>&1; then note "STOPPED: Xcode command line tools not set up. Run: sudo xcode-select -s /Applications/Xcode.app"; exit 1; fi
 
 echo "1/3  Unity: writing the Xcode project (a few minutes)..."
@@ -31,7 +39,9 @@ if grep -q "another Unity instance is running" "$LOGS/unity_build_simulator.log"
 fi
 if [[ ! -d "$XCPROJ" ]]; then
   note "FAILED at step 1 (Unity build). Errors:
-$(grep -E 'error|Error|Exception' "$LOGS/unity_build_simulator.log" | grep -v 'Licensing' | head -25)"
+$(grep -E 'error|Error|Exception|aborting|another Unity' "$LOGS/unity_build_simulator.log" | grep -v 'Licensing' | head -25)
+Last lines of the Unity log:
+$(tail -15 "$LOGS/unity_build_simulator.log")"
   exit 1
 fi
 

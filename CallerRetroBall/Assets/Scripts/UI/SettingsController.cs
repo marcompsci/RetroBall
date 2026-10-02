@@ -53,6 +53,8 @@ namespace CallerRetroBall.UI
             });
             UiControls.ToggleRow(column, "HIGH FRAME RATE", s.highFrameRate, v => { s.highFrameRate = v; App.ApplyFrameRate(); Save(); });
             UiControls.ToggleRow(column, "TITLE DEMO", s.attractMode, v => { s.attractMode = v; Save(); });
+            UiControls.ToggleRow(column, "SHOW FPS", s.showFps, v => { s.showFps = v; Save(); });
+            UiControls.ToggleRow(column, "COACH TIPS", s.coachTips, v => { s.coachTips = v; Save(); });
             UiKit.Size(UiKit.Label(column,
                 "CRT adds old-TV scanlines. High frame rate runs at 120 Hz on ProMotion iPhones (uses more battery). " +
                 "Title demo plays an AI game on the title screen when it's left alone.", 28f, Theme.Muted), 110f);
@@ -73,6 +75,10 @@ namespace CallerRetroBall.UI
                     UiControls.ToggleRow(column, "RAINBOW BALL", sec.rainbowBall, v => { sec.rainbowBall = v; Save(); });
                 else if (id == Secrets.AlwaysHeat)
                     UiControls.ToggleRow(column, "ALWAYS HOT", sec.alwaysHeat, v => { sec.alwaysHeat = v; Save(); });
+                else if (id == Secrets.PocketGreen)
+                    UiControls.ToggleRow(column, "POCKET GREEN", sec.pocketGreen, v => { sec.pocketGreen = v; CrtOverlay.ApplyTint(v); Save(); });
+                else if (id == Secrets.SkyHigh)
+                    UiControls.ToggleRow(column, "SKY HIGH", sec.skyHigh, v => { sec.skyHigh = v; Save(); });
             }
             UiKit.Size(UiKit.Label(column, Loc.T("Codes found:") + " " + sec.codesFound.Count + " / " + Secrets.All.Count, 28f, Theme.Muted), 50f);
 

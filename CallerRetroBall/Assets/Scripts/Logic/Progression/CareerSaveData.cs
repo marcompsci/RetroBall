@@ -39,6 +39,10 @@ namespace CallerRetroBall.Logic
         public bool highFrameRate = true;
         /// <summary>Title screen plays an AI demo game after a while with no input.</summary>
         public bool attractMode = true;
+        /// <summary>Small frame-rate readout in the corner (for checking performance).</summary>
+        public bool showFps;
+        /// <summary>Coach Dee's tips during your first games.</summary>
+        public bool coachTips = true;
     }
 
     /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
@@ -230,6 +234,8 @@ namespace CallerRetroBall.Logic
         public CustomTeamData customTeam = new CustomTeamData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
+        /// <summary>Coach tips already shown.</summary>
+        public List<string> tipsSeen = new List<string>();
         /// <summary>Story scenes already shown.</summary>
         public List<string> storySeen = new List<string>();
         public List<MatchHistoryEntry> history = new List<MatchHistoryEntry>();

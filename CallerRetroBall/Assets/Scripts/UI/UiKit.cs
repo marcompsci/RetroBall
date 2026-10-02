@@ -157,6 +157,7 @@ namespace CallerRetroBall.UI
             var image = Panel(parent, Color.white, Theme.ButtonSprite(style), true, "Button: " + text);
             image.raycastTarget = true;
             var button = image.gameObject.AddComponent<UnityEngine.UI.Button>();
+            image.gameObject.AddComponent<ButtonPop>();
             button.targetGraphic = image;
             // Console-style press: swap to the pushed-in face instead of tinting.
             button.transition = Selectable.Transition.SpriteSwap;

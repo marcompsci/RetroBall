@@ -27,6 +27,9 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Simulation step: 1/60 s, or 1/120 s on 120 Hz screens with high frame rate on.</summary>
         private float FixedStep = 1f / 60f;
         private int MaxStepsPerFrame = 5;
+        // Profiler markers (visible in Unity's Profiler and Xcode Instruments' signposts).
+        private static readonly Unity.Profiling.ProfilerMarker StepMarker = new Unity.Profiling.ProfilerMarker("RetroBall.SimStep");
+        private static readonly Unity.Profiling.ProfilerMarker ViewsMarker = new Unity.Profiling.ProfilerMarker("RetroBall.SyncViews");
 
         private MatchRequest _request;
         private MatchSimulation _match;
@@ -63,7 +66,12 @@ namespace CallerRetroBall.Gameplay
         private float _hitStopUntil;
         private float _nextFlameAt;
         private bool _rainbowBall;
+        private bool _skyHigh;
         private float _demoStartedAt;
+        // Phase 18: coach tips.
+        private float _lastTipAt = -99f;
+        private float _nextTipCheck;
+        private bool _tooEarly, _tooLate;
         /// <summary>A controller is being used: hide the touch buttons and show controller hints.</summary>
         private bool _padMode;
 
@@ -168,6 +176,7 @@ namespace CallerRetroBall.Gameplay
             _hud.PlayChosen += play => _pendingCall = play;
             _recorder = new ReplayRecorder(_match.Players.Length, ReplayRecorder.DefaultSeconds, App.SimulationRate);
             _rainbowBall = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.RainbowBall);
+            _skyHigh = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.SkyHigh);
             if (Demo)
             {
                 _controls.SetVisible(false);
@@ -188,6 +197,7 @@ namespace CallerRetroBall.Gameplay
             Audio.AudioManager.SetAmbience(true);
 
             SyncViews(0f, snapCamera: true);
+            if (!Demo) Sfx(SfxId.TipOff, 0.7f);
             _hud.Toast(_tutorial != null ? "HOW TO PLAY"
                      : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
@@ -319,7 +329,9 @@ namespace CallerRetroBall.Gameplay
             int steps = 0;
             while (_accumulator >= FixedStep && steps < MaxStepsPerFrame)
             {
+                StepMarker.Begin();
                 _match.Step(FixedStep, input, input2);
+                StepMarker.End();
                 _recorder.Capture(_match);
                 _practice?.Update(_match, FixedStep);
                 _horse?.Update(_match);
@@ -352,7 +364,9 @@ namespace CallerRetroBall.Gameplay
                 _accumulator -= FixedStep;
                 steps++;
             }
+            ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: false);
+            ViewsMarker.End();
 
             if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
             else if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
@@ -583,6 +597,8 @@ namespace CallerRetroBall.Gameplay
                         }
                         if (e.PlayerIndex == _match.ControlledIndex)
                         {
+                            _tooEarly = e.Value == (int)ShotFeedback.TooEarly;
+                            _tooLate = e.Value == (int)ShotFeedback.TooLate;
                             if (e.Value == (int)ShotFeedback.Green) Haptics.Light();
                             _meter.ShowRelease(_match.LastReleaseMeter, _match.Ball.ShotGrade);
                             _hud.Toast(ShotModel.FeedbackText((ShotFeedback)e.Value), 0.9f);
@@ -693,6 +709,7 @@ namespace CallerRetroBall.Gameplay
                 var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
                 float jump = _match.JumpHeight01(i);
                 if (i == _leaper) jump = Mathf.Max(jump, Flair.Leap(_leapType, now - _leapStart, _leapDuration));
+                if (_skyHigh) jump *= 2f; // SKY HIGH secret: looks only
                 _playerViews[i].Sync(dt, _match.IsHumanControlled(i), shooting, jump, flair);
             }
 
@@ -738,13 +755,14 @@ namespace CallerRetroBall.Gameplay
             }
             SyncPracticeMarkers();
             SyncHorse();
+            UpdateCoachTips();
             UpdateControlLabels();
         }
 
         /// <summary>HEAT CHECK: embers rise off heated-up players (and the ball they carry).</summary>
         private void SpawnFlames(float now)
         {
-            if (_reduceMotion || now < _nextFlameAt) return;
+            if (_reduceMotion || Core.PowerMonitor.SavingPower || now < _nextFlameAt) return;
             _nextFlameAt = now + 0.07f;
             for (int i = 0; i < _match.Players.Length; i++)
             {
@@ -1047,6 +1065,7 @@ namespace CallerRetroBall.Gameplay
                 App.ReportGameCenter();
             }
             if (summary.HumanWon) Haptics.Success();
+            Sfx(summary.HumanWon ? SfxId.Victory : SfxId.Defeat, 0.8f);
             if (title == "CHAMPIONS" || title == "CLASSIC CHAMPS") Sfx(SfxId.Fanfare);
 
             // Rise and the Classic continue their run instead of offering a rematch.
@@ -1096,6 +1115,38 @@ namespace CallerRetroBall.Gameplay
             Haptics.Success();
             Sfx(SfxId.CrowdCheer, 0.7f);
             _hud.ShowPracticeEnd("TUTORIAL COMPLETE", reward > 0 ? "+" + reward + " SP · YOU'RE READY" : "YOU'RE READY TO PLAY", false);
+        }
+
+        /// <summary>Coach Dee's one-time tips during your first games (normal games only).</summary>
+        private void UpdateCoachTips()
+        {
+            if (Time.unscaledTime < _nextTipCheck || App.Career == null) return;
+            _nextTipCheck = Time.unscaledTime + 0.25f;
+            if (_practice != null || _horse != null || _tutorial != null || Demo || Versus || _match.IsOver) return;
+            int me = _match.ControlledIndex;
+            int handler = _match.HolderIndex;
+            bool onDefense = _match.OffenseTeam != _match.Setup.HumanTeam;
+            int target = _match.HumanHasBall ? _match.PreviewPassTarget(_controls.CourtMove) : -1;
+            var s = new TipSituation
+            {
+                Live = _match.Phase == MatchPhase.Live,
+                HumanHasBall = _match.HumanHasBall,
+                OnDefense = onDefense,
+                MustClear = _match.MustClear,
+                AlleyOopOpen = target >= 0 && _match.IsAlleyOopTarget(target),
+                HumanHotStreak = _match.Players[me].HotStreak,
+                HeatThreshold = _match.Setup.Shot.heatThreshold,
+                LastShotTooEarly = _tooEarly,
+                LastShotTooLate = _tooLate,
+                NearBallHandler = onDefense && handler >= 0 && Vec2.Distance(_match.Players[me].Position, _match.Players[handler].Position) < 2f,
+                ShotClock = _match.Setup.Rules.shotClockSeconds < 99f ? _match.ShotClock : 0f,
+                MatchTime = _match.Time,
+            };
+            _tooEarly = _tooLate = false;
+            var tip = CoachTips.Next(App.Career, s, Time.unscaledTime, ref _lastTipAt);
+            if (tip == null) return;
+            _hud.Toast(Loc.T("COACH:") + " " + Loc.T(tip.Text), 3.2f);
+            Sfx(SfxId.Click, 0.6f, 1.3f);
         }
 
         private static string Pad(string letters) => letters.Length == 0 ? "-" : letters;
@@ -1464,7 +1515,7 @@ namespace CallerRetroBall.Gameplay
                 ref var f = ref _fans[i];
                 bool armsUp = _crowdMood == CrowdMood.Cheer && (i % 3 != 0);
                 f.Renderer.sprite = armsUp ? f.Cheer : f.Idle;
-                int bob = _reduceMotion ? 0 : CrowdGenerator.Bob(_crowdMood, now, i);
+                int bob = _reduceMotion || Core.PowerMonitor.SavingPower ? 0 : CrowdGenerator.Bob(_crowdMood, now, i);
                 f.Renderer.transform.position = f.Base + new Vector3(0f, bob * px, 0f);
             }
         }

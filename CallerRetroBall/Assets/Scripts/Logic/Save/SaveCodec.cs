@@ -94,6 +94,8 @@ namespace CallerRetroBall.Logic
                     ["crt"] = d.settings.crt,
                     ["highFrameRate"] = d.settings.highFrameRate,
                     ["attractMode"] = d.settings.attractMode,
+                    ["showFps"] = d.settings.showFps,
+                    ["coachTips"] = d.settings.coachTips,
                 },
                 ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
                 ["customTeam"] = EncodeTeam(d.customTeam ?? new CustomTeamData()),
@@ -101,11 +103,13 @@ namespace CallerRetroBall.Logic
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
                     ["sundownWins"] = (d.rival ?? new RivalSaveData()).sundownWins,
+                    ["tideWins"] = (d.rival ?? new RivalSaveData()).tideWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
                 ["badgesSeen"] = Strings(d.badgesSeen ?? new List<string>()),
                 ["storySeen"] = Strings(d.storySeen ?? new List<string>()),
+                ["tipsSeen"] = Strings(d.tipsSeen ?? new List<string>()),
                 ["customPlayer"] = EncodeCustom(d.customPlayer ?? new CustomPlayerData()),
                 ["records"] = EncodeRecords(d.records ?? new CareerRecords()),
                 ["history"] = List(d.history ?? new List<MatchHistoryEntry>(), h => new Dictionary<string, object>
@@ -134,6 +138,8 @@ namespace CallerRetroBall.Logic
                 ["bigHeads"] = s.bigHeads,
                 ["rainbowBall"] = s.rainbowBall,
                 ["alwaysHeat"] = s.alwaysHeat,
+                ["pocketGreen"] = s.pocketGreen,
+                ["skyHigh"] = s.skyHigh,
                 ["arcade"] = new Dictionary<string, object>
                 {
                     ["active"] = a.active, ["rung"] = a.rung, ["continues"] = a.continues, ["home"] = a.homeTeamId,
@@ -181,6 +187,8 @@ namespace CallerRetroBall.Logic
                 bigHeads = Bool(o, "bigHeads", false),
                 rainbowBall = Bool(o, "rainbowBall", false),
                 alwaysHeat = Bool(o, "alwaysHeat", false),
+                pocketGreen = Bool(o, "pocketGreen", false),
+                skyHigh = Bool(o, "skyHigh", false),
                 arcade = new ArcadeSaveData
                 {
                     active = Bool(a, "active", false),
@@ -463,6 +471,9 @@ namespace CallerRetroBall.Logic
                 d.settings.crt = Math.Max(0, Math.Min(2, Int(disp, "crt", 1)));
                 d.settings.highFrameRate = Bool(disp, "highFrameRate", true);
                 d.settings.attractMode = Bool(disp, "attractMode", true);
+                d.settings.showFps = Bool(disp, "showFps", false);
+                d.settings.coachTips = Bool(disp, "coachTips", true);
+                d.tipsSeen = StrList(o, "tipsSeen");
                 d.secrets = DecodeSecrets(Obj(o, "secrets"));
                 d.customTeam = DecodeTeam(Obj(o, "customTeam"));
                 CustomTeams.Clamp(d.customTeam, c);
@@ -471,6 +482,7 @@ namespace CallerRetroBall.Logic
                 {
                     wins = Math.Max(0, Int(rv, "wins", 0)),
                     sundownWins = Math.Max(0, Int(rv, "sundownWins", 0)),
+                    tideWins = Math.Max(0, Int(rv, "tideWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

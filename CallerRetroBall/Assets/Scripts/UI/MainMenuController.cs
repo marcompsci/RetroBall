@@ -97,13 +97,15 @@ namespace CallerRetroBall.UI
                 ShowCup();
             }
 
-            // First-time players are offered the tutorial once per session until they finish it.
+            // First launch: Coach Dee says hello, then the tutorial is offered (once per session until it's done).
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
             {
                 _tutorialOffered = true;
-                UiControls.Dialog("NEW TO RETROBALL?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
-                                  ("PLAY TUTORIAL", ButtonStyle.Primary, StartTutorial),
-                                  ("MAYBE LATER", ButtonStyle.Ghost, null));
+                void Offer() => UiControls.Dialog("NEW TO RETROBALL?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
+                                                  ("PLAY TUTORIAL", ButtonStyle.Primary, StartTutorial),
+                                                  ("MAYBE LATER", ButtonStyle.Ghost, null));
+                if (!App.Career.storySeen.Contains(Story.Welcome)) StoryView.Show(Story.Beat(Story.Welcome, App.Career.nickname), Offer);
+                else Offer();
             }
 
             if (App.CareerLoadStatus == LoadStatus.Recovered)
@@ -199,6 +201,7 @@ namespace CallerRetroBall.UI
             var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "Panel");
             UiKit.Band(panel.rectTransform, 0.04f, 0.96f, 48f);
             panel.raycastTarget = true;
+            panel.gameObject.AddComponent<OverlayPop>();
 
             const float footerHeight = 170f;
             footer = UiKit.Row(panel.transform, 20f, "Footer");
