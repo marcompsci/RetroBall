@@ -32,6 +32,8 @@ namespace CallerRetroBall.Logic
         public float StartingStamina = 1f;
         /// <summary>Teammate release-accuracy bonus from crew chemistry (visible in the Rise hub).</summary>
         public float ChemistryBonus;
+        /// <summary>Practice Lab drill (-1 = none): 0 free shoot, 1 passing targets, 2 dribble lane.</summary>
+        public int Drill = -1;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

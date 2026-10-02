@@ -27,6 +27,15 @@ namespace CallerRetroBall.Gameplay
 
         public int Zoom { get; private set; } = 1;
 
+        private float _shake;
+
+        /// <summary>Brief camera shake (dunks, blocks). Ignored when Screen Shake is off in Settings.</summary>
+        public void Shake(float amount)
+        {
+            if (Core.App.Career != null && !Core.App.Career.settings.screenShake) return;
+            _shake = Mathf.Max(_shake, amount);
+        }
+
         public void Init(CourtGeometry court, Color background)
         {
             _camera = GetComponent<Camera>();
@@ -54,7 +63,14 @@ namespace CallerRetroBall.Gameplay
                                         new Vec2(_minX, -1000f), new Vec2(_maxX, 1000f));
             // Snap the camera to the pixel grid of the current zoom to avoid shimmering.
             float step = 1f / (CourtSpace.PixelsPerUnit * Zoom);
-            transform.position = new Vector3(Mathf.Round(next.x / step) * step, _targetY, -10f);
+            float sx = 0f, sy = 0f;
+            if (_shake > 0.001f)
+            {
+                sx = (Random.value * 2f - 1f) * _shake;
+                sy = (Random.value * 2f - 1f) * _shake;
+                _shake = Mathf.MoveTowards(_shake, 0f, dt * 1.2f);
+            }
+            transform.position = new Vector3(Mathf.Round((next.x + sx) / step) * step, Mathf.Round((_targetY + sy) / step) * step, -10f);
         }
 
         private void Recompute()

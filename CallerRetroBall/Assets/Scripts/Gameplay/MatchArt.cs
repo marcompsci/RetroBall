@@ -24,12 +24,12 @@ namespace CallerRetroBall.Gameplay
 
         private readonly List<Object> _owned = new List<Object>();
 
-        public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed)
+        public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed, RgbColor? bannerA = null, RgbColor? bannerB = null)
         {
             var art = new MatchArt();
             const float ppu = CourtSpace.PixelsPerUnit;
 
-            var courtCanvas = CourtGenerator.Generate(court, geometry, seed);
+            var courtCanvas = CourtGenerator.Generate(court, geometry, seed, bannerA, bannerB);
             CourtGenerator.OriginPivot(geometry, out float px, out float py);
             art.Court = art.Make(courtCanvas, "court:" + court.id, new Vector2(px, py), ppu);
 
@@ -48,9 +48,12 @@ namespace CallerRetroBall.Gameplay
         }
 
         /// <summary>Slices a generated player sheet into [view, frame] sprites with the pivot at the feet.</summary>
-        public Sprite[,] PlayerFrames(PlayerDef player, TeamDef team)
+        public Sprite[,] PlayerFrames(PlayerDef player, TeamDef team) => PlayerFrames(player, team.primary, team.secondary, team.accent, null, TeamPattern.Solid);
+
+        /// <summary>Sheet with cosmetic overrides (jersey palette, shoes) and optional colourblind pattern.</summary>
+        public Sprite[,] PlayerFrames(PlayerDef player, RgbColor jersey, RgbColor trim, RgbColor accent, RgbColor? shoes, TeamPattern pattern)
         {
-            var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, team.primary, team.secondary, team.accent);
+            var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, jersey, trim, accent, shoes, pattern);
             var tex = Own(TextureFactory.ToTexture(sheet, "sheet:" + player.id));
             var frames = new Sprite[CharacterSpriteGenerator.ViewCount, CharacterSpriteGenerator.FramesPerView];
             for (int v = 0; v < CharacterSpriteGenerator.ViewCount; v++)

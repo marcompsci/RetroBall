@@ -176,6 +176,7 @@ namespace CallerRetroBall.UI
                 if (SceneFlow.IsTransitioning) return;
                 if (Time.unscaledTime - _lastClick < ClickCooldown) return;
                 _lastClick = Time.unscaledTime;
+                Audio.AudioManager.Click();
                 onClick?.Invoke();
             });
             return button;
@@ -195,6 +196,38 @@ namespace CallerRetroBall.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
             return rt;
+        }
+
+        /// <summary>
+        /// Vertically scrolling column filling <paramref name="parent"/>. Add children to the returned
+        /// content rect; it grows to fit them.
+        /// </summary>
+        public static RectTransform ScrollColumn(Transform parent, float spacing, RectOffset padding = null)
+        {
+            var root = NewRect("Scroll", parent);
+            Stretch(root);
+            var viewport = NewRect("Viewport", root);
+            Stretch(viewport);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var hit = viewport.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f); // lets drags anywhere scroll
+
+            var content = Column(viewport, spacing, padding, "Content");
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.offsetMin = content.offsetMax = Vector2.zero;
+            var fitter = content.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = root.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = content;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.scrollSensitivity = 30f;
+            return content;
         }
 
         public static RectTransform Row(Transform parent, float spacing, string name = "Row")

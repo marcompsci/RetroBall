@@ -5,8 +5,9 @@ using UnityEngine;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// SettingsScene. PHASE 1: lists the settings that Phase 6 will make interactive
-    /// and shows the credits / asset-licence disclosure (required for release).
+    /// SettingsScene: volumes, haptics, screen shake, UI scale, colourblind team contrast,
+    /// difficulty, reset save (with confirmation), and credits / licences. Every change is
+    /// saved immediately to the local career file.
     /// </summary>
     public sealed class SettingsController : ScreenBase
     {
@@ -19,28 +20,71 @@ namespace CallerRetroBall.UI
             "Caller Retro Ball is an original game. All teams, players, leagues, courts, logos, " +
             "and pixel art are original and generated procedurally inside this project.\n\n" +
             "Text font: Liberation Sans, bundled with Unity TextMeshPro (SIL Open Font License 1.1).\n" +
-            "Audio: none bundled yet; any placeholder tones will be generated in-project.\n\n" +
+            "Audio: every sound effect and the music loop are synthesised in code at runtime (no recordings or samples).\n" +
+            "Haptics: a small original iOS plugin using Apple's UIKit feedback generators.\n\n" +
             "No ads, analytics, tracking, accounts, or purchases. Progress is stored only on this device.";
+
+        private static readonly float[] UiScales = { 0.85f, 1f, 1.15f, 1.25f };
+        private static readonly string[] UiScaleNames = { "SMALL", "DEFAULT", "LARGE", "LARGEST" };
 
         protected override void Build()
         {
-            var planned = UiKit.Panel(Body, Color.white, Theme.PanelSprite(), true, "Planned");
-            UiKit.Band(planned.rectTransform, 0.52f, 0.97f, 48f);
-            var plannedText = UiKit.Label(planned.transform,
-                "<color=#4CC9F0>COMING IN PHASE 6</color>\n" +
-                "Music volume · SFX volume\n" +
-                "Haptics · Screen shake\n" +
-                "UI scale · Colourblind team contrast\n" +
-                "Difficulty: Rookie / Caller / Legend\n" +
-                "Reset local save (with confirmation)",
-                38f, Theme.Cream);
-            UiKit.Stretch(plannedText.rectTransform, 32f);
+            var column = UiKit.ScrollColumn(Body, 14f, new RectOffset(48, 48, 12, 60));
+            var c = App.Catalog;
+            var s = App.Career.settings;
 
-            var credits = UiKit.Panel(Body, Color.white, Theme.PanelSprite(), true, "Credits");
-            UiKit.Band(credits.rectTransform, 0.04f, 0.49f, 48f);
-            var creditsText = UiKit.Label(credits.transform, LicenseText + "\n\n<color=#8D99AE>v" + App.Version + "</color>",
-                                          30f, Theme.Cream, TextAlignmentOptions.TopLeft);
-            UiKit.Stretch(creditsText.rectTransform, 36f);
+            Header(column, "AUDIO");
+            UiControls.SliderRow(column, "MUSIC", s.musicVolume, v => { s.musicVolume = v; App.ApplySettings(); });
+            UiControls.SliderRow(column, "SFX", s.sfxVolume, v => { s.sfxVolume = v; App.ApplySettings(); });
+
+            Header(column, "FEEL");
+            UiControls.ToggleRow(column, "HAPTICS", s.haptics, v => { s.haptics = v; Save(); if (v) Haptics.Light(); });
+            UiControls.ToggleRow(column, "SCREEN SHAKE", s.screenShake, v => { s.screenShake = v; Save(); });
+
+            Header(column, "ACCESSIBILITY");
+            int scaleIndex = 1;
+            for (int i = 0; i < UiScales.Length; i++) if (Mathf.Abs(UiScales[i] - s.uiScale) < 0.01f) scaleIndex = i;
+            UiControls.ChoiceRow(column, "UI SCALE", UiScaleNames, scaleIndex, i =>
+            {
+                s.uiScale = UiScales[i];
+                Save();
+                SceneFlow.GoTo(SceneNames.Settings); // rebuild canvases at the new scale
+            });
+            UiControls.ToggleRow(column, "TEAM PATTERNS", s.colorblindContrast, v => { s.colorblindContrast = v; Save(); });
+            UiKit.Size(UiKit.Label(column, "Team patterns give each side a distinct jersey pattern, not just a colour.", 28f, Theme.Muted), 70f);
+
+            Header(column, "GAME");
+            var diffs = c.Difficulties;
+            int di = Mathf.Max(0, diffs.FindIndex(d => d.id == s.difficultyId));
+            UiControls.ChoiceRow(column, "DIFFICULTY", diffs.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray(), di, i =>
+            {
+                s.difficultyId = diffs[i].id;
+                Save();
+            });
+            UiKit.Size(UiKit.Label(column, "Difficulty changes how fast and how well the AI decides. It never boosts their ratings.", 28f, Theme.Muted), 70f);
+
+            UiKit.Button(column, "RESET SAVE", () =>
+                UiControls.Dialog("RESET SAVE?",
+                    "This deletes your career, Rise Mode progress, upgrades, and cosmetics on this device. It can't be undone.",
+                    ("RESET", ButtonStyle.Primary, () =>
+                    {
+                        App.ResetCareer();
+                        SceneFlow.GoTo(SceneNames.MainMenu);
+                    }),
+                    ("CANCEL", ButtonStyle.Ghost, null)),
+                ButtonStyle.Ghost, 110f, 40f);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            UiKit.Button(column, "DEV: UNLOCK ALL", () => App.DevUnlockAll(), ButtonStyle.Ghost, 90f, 30f);
+#endif
+
+            var credits = UiKit.Label(column, LicenseText + "\n\n<color=#8D99AE>v" + App.Version + "</color>", 30f, Theme.Cream, TextAlignmentOptions.TopLeft);
+            UiKit.Size(credits, 620f);
         }
+
+        private static void Header(Transform parent, string text) =>
+            UiKit.Size(UiKit.Label(parent, text, 38f, Theme.Gold, TextAlignmentOptions.Left, true), 64f);
+
+        private static void Save() => App.SaveCareer();
     }
 }

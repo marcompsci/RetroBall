@@ -47,7 +47,7 @@ namespace CallerRetroBall.Gameplay
         }
 
         /// <summary>Called by the match controller after each simulation update.</summary>
-        public void Sync(float dt, bool controlled, bool shooting = false)
+        public void Sync(float dt, bool controlled, bool shooting = false, float jump01 = 0f)
         {
             var motion = _state.Motion;
             transform.position = CourtSpace.ToWorldSnapped(motion.position);
@@ -55,11 +55,14 @@ namespace CallerRetroBall.Gameplay
             bool moving = motion.IsMoving;
             _animTime += dt;
             var view = CharacterSpriteGenerator.ViewFor(motion.facing, out bool flip);
-            int frame = shooting ? CharacterSpriteGenerator.ShootFrame
+            int frame = shooting || jump01 > 0.05f ? CharacterSpriteGenerator.ShootFrame
                 : moving ? CharacterSpriteGenerator.IdleFrames + (int)(_animTime * RunFps) % CharacterSpriteGenerator.RunFrames
                 : (int)(_animTime * IdleFps) % CharacterSpriteGenerator.IdleFrames;
             _body.sprite = _frames[(int)view, frame];
             _body.flipX = flip;
+            // Jumping lifts the sprite off its shadow (0.7 m at the peak), snapped to art pixels.
+            float lift = Mathf.Round(jump01 * 0.7f * CourtSpace.PixelsPerUnit) / CourtSpace.PixelsPerUnit;
+            _body.transform.localPosition = new Vector3(0f, lift, 0f);
 
             int order = CourtSpace.SortingOrder(motion.position);
             _body.sortingOrder = order;

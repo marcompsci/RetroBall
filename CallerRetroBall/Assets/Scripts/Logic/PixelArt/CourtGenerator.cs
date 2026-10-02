@@ -40,7 +40,10 @@ namespace CallerRetroBall.Logic.PixelArt
             pivotY = py / TextureHeight(g);
         }
 
-        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed)
+        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed) => Generate(court, g, seed, null, null);
+
+        /// <summary>With an optional two-colour court banner (cosmetic) hung over the crowd.</summary>
+        public static PixelCanvas Generate(CourtDef court, CourtGeometry g, uint seed, RgbColor? bannerA, RgbColor? bannerB)
         {
             if (court == null) throw new ArgumentNullException(nameof(court));
             int w = TextureWidth(g), h = TextureHeight(g);
@@ -99,6 +102,7 @@ namespace CallerRetroBall.Logic.PixelArt
             CourtArc(c, g, new Vec2(0f, g.depth), 1.8f, 90f, 270f, line);
 
             DrawCrowd(c, g, court, rng);
+            if (bannerA.HasValue) DrawBanner(c, g, bannerA.Value, bannerB ?? bannerA.Value);
             return c;
         }
 
@@ -135,6 +139,24 @@ namespace CallerRetroBall.Logic.PixelArt
                 if (p.y < 0f) continue; // never draw behind the baseline
                 CourtToPixel(g, p, out float px, out float py);
                 c.Set((int)Math.Round(px), (int)Math.Round(py), col);
+            }
+        }
+
+        private static void DrawBanner(PixelCanvas c, CourtGeometry g, RgbColor a, RgbColor b)
+        {
+            CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
+            int y0 = (int)Math.Round(baselinePy) + 12;
+            // Two banners either side of the backboard, with a zig-zag trim.
+            foreach (int x0 in new[] { 20, c.Width - 20 - 64 })
+            {
+                c.FillRect(x0, y0, 64, 10, a);
+                for (int x = 0; x < 64; x++)
+                {
+                    c.Set(x0 + x, y0, b);
+                    if (x % 4 < 2) c.Set(x0 + x, y0 + 1, b);
+                    c.Set(x0 + x, y0 + 9, b);
+                }
+                for (int x = 8; x < 56; x += 8) c.FillRect(x0 + x, y0 + 4, 4, 3, b);
             }
         }
 

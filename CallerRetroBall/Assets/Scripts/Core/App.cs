@@ -1,4 +1,6 @@
+using CallerRetroBall.Audio;
 using CallerRetroBall.Data;
+using CallerRetroBall.UI;
 using CallerRetroBall.Logic;
 using CallerRetroBall.Utilities;
 using UnityEngine;
@@ -12,7 +14,7 @@ namespace CallerRetroBall.Core
     /// </summary>
     public static class App
     {
-        public const string Version = "0.3.0-phase3";
+        public const string Version = "1.0.0";
 
         public static ContentDatabase Content { get; private set; }
 
@@ -22,6 +24,71 @@ namespace CallerRetroBall.Core
         public static bool IsInitialized => Content != null;
 
         public static ContentCatalog Catalog => Content?.Catalog;
+
+        /// <summary>The local career (progress, settings). Loaded at boot; saved after games and changes.</summary>
+        public static CareerSaveData Career { get; private set; }
+        public static LoadStatus CareerLoadStatus { get; private set; }
+
+        public static readonly RewardTuning Rewards = RewardTuning.Default;
+        public static readonly IGameCenterService GameCenter = new NullGameCenterService();
+
+        /// <summary>What the last Rise game changed (announced once by the Rise hub, then cleared).</summary>
+        public static RiseOutcome LastRiseOutcome { get; set; }
+
+        /// <summary>
+        /// Applies the career to a request: your trained ratings when you play as the First Callers
+        /// (Rise and Practice), plus Rise energy (starting stamina) and chemistry.
+        /// </summary>
+        public static MatchRequest PrepareRequest(MatchRequest request)
+        {
+            if (request == null || Career == null || Catalog == null) return request;
+            if (request.HomeTeamId == DefaultContent.PlayerCrewId)
+            {
+                var rook = Catalog.Player(DefaultContent.RookPlayerId);
+                if (rook != null) request.HumanAttributes = Logic.Career.EffectiveRatings(rook.attributes, Career, Catalog);
+            }
+            if (request.Mode == GameMode.Rise)
+            {
+                request.StartingStamina = RiseEngine.StartingStamina(Career.rise);
+                request.ChemistryBonus = Career.rise.chemistry / 100f * 0.1f;
+            }
+            return request;
+        }
+
+        public static void SaveCareer()
+        {
+            if (Career != null) SaveStore.Save(Career);
+        }
+
+        /// <summary>Settings ▸ Reset: wipes the save and starts a fresh career.</summary>
+        public static void ResetCareer()
+        {
+            SaveStore.Delete();
+            Career = Logic.Career.New(Catalog);
+            SaveCareer();
+            ApplySettings();
+        }
+
+        /// <summary>Pushes settings to the systems that use them.</summary>
+        public static void ApplySettings()
+        {
+            if (Career == null) return;
+            UiKit.UiScale = Career.settings.uiScale;
+            AudioManager.ApplySettings();
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Development only: lots of currency and every cosmetic unlocked.</summary>
+        public static void DevUnlockAll()
+        {
+            Career.signalPoints += 100000;
+            Career.fans += 100000;
+            foreach (var c in Catalog.Cosmetics)
+                if (!Career.ownedCosmetics.Contains(c.id)) Career.ownedCosmetics.Add(c.id);
+            Career.gamesSinceUpgrade = 99;
+            SaveCareer();
+        }
+#endif
 
         public static void EnsureInitialized()
         {
@@ -45,6 +112,11 @@ namespace CallerRetroBall.Core
             else if (report.Warnings.Count > 0) Debug.LogWarning("[CallerRetroBall] " + report);
 #endif
 
+            Career = SaveStore.Load(Content.Catalog, out var status);
+            CareerLoadStatus = status;
+            AudioManager.EnsureExists();
+            ApplySettings();
+
             SceneFlow.EnsureExists();
         }
 
@@ -54,6 +126,7 @@ namespace CallerRetroBall.Core
         {
             Content = null;
             PendingMatch = null;
+            Career = null;
             TextureFactory.ClearCache();
         }
     }

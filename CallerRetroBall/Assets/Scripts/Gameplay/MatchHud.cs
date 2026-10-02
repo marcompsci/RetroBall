@@ -16,12 +16,18 @@ namespace CallerRetroBall.Gameplay
         public event Action ResumeRequested;
         public event Action QuitRequested;
         public event Action RematchRequested;
+        public event Action ContinueRequested;
+        public event Action<PlayCall> PlayChosen;
 
         private TextMeshProUGUI _teamA, _teamB, _scoreA, _scoreB, _clock, _shotClock, _toast;
         private GameObject _pausePanel;
         private GameObject _finalPanel;
         private TextMeshProUGUI _finalTitle;
         private TextMeshProUGUI _finalScore;
+        private RectTransform _finalColumn;
+        private GameObject _callMenu;
+        private TextMeshProUGUI _info;
+        private string _lastInfo = "";
         private int _lastScoreA = -1, _lastScoreB = -1, _lastClock = -1, _lastShot = -1, _lastOffense = -1;
         private float _toastUntil;
 
@@ -61,6 +67,13 @@ namespace CallerRetroBall.Gameplay
             _toast = UiKit.Label(safe, "", 44f, Theme.Cream, TextAlignmentOptions.Center, true, "Toast");
             UiKit.Place(_toast.rectTransform, new Vector2(0.5f, 0.52f), new Vector2(1000f, 80f));
 
+            _info = UiKit.Label(safe, "", 36f, Theme.Gold, TextAlignmentOptions.Center, true, "Info");
+            _info.rectTransform.anchorMin = _info.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _info.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _info.rectTransform.sizeDelta = new Vector2(1000f, 60f);
+            _info.rectTransform.anchoredPosition = new Vector2(0f, -172f);
+
+            BuildCallMenu(safe);
             BuildPausePanel(safe);
             BuildFinalPanel(safe);
         }
@@ -88,31 +101,149 @@ namespace CallerRetroBall.Gameplay
             _pausePanel.SetActive(false);
         }
 
+        private void BuildCallMenu(RectTransform safe)
+        {
+            var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "CallMenu");
+            panel.raycastTarget = true;
+            var rt = panel.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.sizeDelta = new Vector2(460f, 520f);
+            rt.anchoredPosition = new Vector2(-24f, 520f);
+            var column = UiKit.Column(rt, 14f, new RectOffset(20, 20, 20, 20));
+            UiKit.Stretch(column);
+            UiKit.Size(UiKit.Label(column, "CALL A PLAY", 36f, Theme.Gold, TextAlignmentOptions.Center, true), 56f);
+            UiKit.Button(column, "PICK & ROLL", () => Choose(PlayCall.PickAndRoll), ButtonStyle.Secondary, 100f, 36f);
+            UiKit.Button(column, "GIVE & GO", () => Choose(PlayCall.GiveAndGo), ButtonStyle.Secondary, 100f, 36f);
+            UiKit.Button(column, "CLEAR OUT", () => Choose(PlayCall.ClearOut), ButtonStyle.Secondary, 100f, 36f);
+            UiKit.Button(column, "CANCEL", () => ShowCallMenu(false), ButtonStyle.Ghost, 80f, 30f);
+            _callMenu = panel.gameObject;
+            _callMenu.SetActive(false);
+        }
+
+        private void Choose(PlayCall play)
+        {
+            ShowCallMenu(false);
+            PlayChosen?.Invoke(play);
+        }
+
+        public bool CallMenuOpen => _callMenu != null && _callMenu.activeSelf;
+
+        public void ShowCallMenu(bool visible)
+        {
+            if (_callMenu != null) _callMenu.SetActive(visible);
+        }
+
+        /// <summary>Small line under the score bar (drill timer, BOX OUT, objective).</summary>
+        public void SetInfo(string text)
+        {
+            text = text ?? "";
+            if (text == _lastInfo) return;
+            _lastInfo = text;
+            _info.text = text;
+        }
+
         private void BuildFinalPanel(RectTransform safe)
         {
             var scrim = UiKit.Panel(safe.parent, Theme.Scrim, name: "FinalScrim");
             UiKit.Stretch(scrim.rectTransform);
             scrim.raycastTarget = true;
             _finalPanel = scrim.gameObject;
-
-            var column = UiKit.Column(scrim.transform, 24f, null, "FinalMenu");
-            UiKit.Band(column, 0.3f, 0.7f, 140f);
-            column.GetComponent<UnityEngine.UI.VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
-            _finalTitle = UiKit.ShadowLabel(column, "FINAL", 96f, Theme.Cream, Theme.Pink, 8f);
-            UiKit.Size(_finalTitle.transform.parent.GetComponent<RectTransform>(), 150f);
-            _finalScore = UiKit.Label(column, "", 56f, Theme.Gold, TextAlignmentOptions.Center, true);
-            UiKit.Size(_finalScore, 90f);
-            UiKit.Size(UiKit.Label(column, "Full box score and rewards arrive in Phase 4.", 30f, Theme.Muted), 60f);
-            UiKit.Button(column, "REMATCH", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 150f);
-            UiKit.Button(column, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 130f, 48f);
+            var inner = UiKit.SafeArea(scrim.transform);
+            var holder = UiKit.NewRect("FinalHolder", inner);
+            UiKit.Band(holder, 0.04f, 0.96f, 40f);
+            _finalColumn = UiKit.ScrollColumn(holder, 18f, new RectOffset(0, 0, 20, 20));
             _finalPanel.SetActive(false);
         }
 
-        /// <summary>End-of-game card (Phase 4 extends it with stats and rewards).</summary>
+        private void ClearFinal()
+        {
+            for (int i = _finalColumn.childCount - 1; i >= 0; i--) Destroy(_finalColumn.GetChild(i).gameObject);
+        }
+
+        private void Title(string title, string subtitle)
+        {
+            _finalTitle = UiKit.ShadowLabel(_finalColumn, title, 96f, Theme.Cream, Theme.Pink, 8f);
+            UiKit.Size(_finalTitle.transform.parent.GetComponent<RectTransform>(), 140f);
+            _finalScore = UiKit.Label(_finalColumn, subtitle, 52f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(_finalScore, 80f);
+        }
+
+        /// <summary>Simple end card (no stats).</summary>
         public void ShowFinal(string title, string scoreLine)
         {
-            foreach (var t in _finalTitle.transform.parent.GetComponentsInChildren<TextMeshProUGUI>()) t.text = title;
-            _finalScore.text = scoreLine;
+            ClearFinal();
+            Title(title, scoreLine);
+            UiKit.Button(_finalColumn, "REMATCH", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
+            UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 120f, 48f);
+            Open();
+        }
+
+        /// <summary>
+        /// Post-game: score, box score (PTS AST REB STL BLK FG%), player of the game, rewards, and
+        /// Rematch / Continue / Home. <paramref name="continueLabel"/> null hides Continue.
+        /// </summary>
+        public void ShowPostGame(string title, MatchSummary s, RewardGrant grant, bool rewarded, string note, string continueLabel, bool allowRematch)
+        {
+            ClearFinal();
+            Title(title, s.teamAName.ToUpperInvariant() + "  " + s.scoreA + " - " + s.scoreB + "  " + s.teamBName.ToUpperInvariant());
+
+            var pog = s.Line(s.playerOfTheGame);
+            if (pog != null)
+                UiKit.Size(UiKit.Label(_finalColumn, "PLAYER OF THE GAME  <color=#FFD166>" + pog.name.ToUpperInvariant() + "</color>  " +
+                                       pog.stats.points + " PTS", 34f, Theme.Cream, TextAlignmentOptions.Center, true), 56f);
+
+            BoxScore(s, 0);
+            BoxScore(s, 1);
+
+            if (rewarded && (grant.signalPoints > 0 || grant.fans > 0))
+                UiKit.Size(UiKit.Label(_finalColumn, "+" + grant.signalPoints + " SP    +" + grant.fans + " FANS", 48f, Theme.Cyan, TextAlignmentOptions.Center, true), 76f);
+            if (!string.IsNullOrEmpty(note))
+                UiKit.Size(UiKit.Label(_finalColumn, note, 36f, Theme.Gold, TextAlignmentOptions.Center, true), 110f);
+
+            if (continueLabel != null)
+                UiKit.Button(_finalColumn, continueLabel, () => ContinueRequested?.Invoke(), ButtonStyle.Primary, 140f);
+            if (allowRematch)
+                UiKit.Button(_finalColumn, "REMATCH", () => RematchRequested?.Invoke(), continueLabel == null ? ButtonStyle.Primary : ButtonStyle.Secondary, 120f, 48f);
+            UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 110f, 44f);
+            Open();
+        }
+
+        private void BoxScore(MatchSummary s, int team)
+        {
+            UiKit.Size(UiKit.Label(_finalColumn, (team == 0 ? s.teamAName : s.teamBName).ToUpperInvariant(), 34f,
+                                   team == s.humanTeam ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true), 50f);
+            UiKit.Size(UiKit.Label(_finalColumn, Row("", "PTS", "AST", "REB", "STL", "BLK", "FG%"), 28f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
+            foreach (var line in s.lines)
+            {
+                if (line.team != team) continue;
+                var st = line.stats;
+                string fg = st.fieldGoalsAttempted == 0 ? "-" : Mathf.RoundToInt(st.FieldGoalPercentage * 100f).ToString();
+                string name = (line.isHuman ? "» " : "") + line.name.ToUpperInvariant();
+                UiKit.Size(UiKit.Label(_finalColumn, Row(name, st.points.ToString(), st.assists.ToString(), st.rebounds.ToString(),
+                                                         st.steals.ToString(), st.blocks.ToString(), fg), 30f,
+                                       line.isHuman ? Theme.Cyan : Theme.Cream, TextAlignmentOptions.Left, false), 44f);
+            }
+        }
+
+        // Fixed columns via TMP <pos> tags (percent of the line width).
+        private static string Row(string name, string a, string b, string c, string d, string e, string f) =>
+            name + "<pos=44%>" + a + "<pos=53%>" + b + "<pos=62%>" + c + "<pos=71%>" + d + "<pos=80%>" + e + "<pos=90%>" + f;
+
+        /// <summary>Practice end card.</summary>
+        public void ShowPracticeEnd(string title, string result, bool newBest)
+        {
+            ClearFinal();
+            Title(title, result);
+            if (newBest) UiKit.Size(UiKit.Label(_finalColumn, "NEW PERSONAL BEST!", 48f, Theme.Cyan, TextAlignmentOptions.Center, true), 76f);
+            UiKit.Button(_finalColumn, "RUN IT BACK", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
+            UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 110f, 44f);
+            Open();
+        }
+
+        private void Open()
+        {
+            ShowCallMenu(false);
             _pausePanel.SetActive(false);
             _finalPanel.SetActive(true);
         }

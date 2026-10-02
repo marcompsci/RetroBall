@@ -557,3 +557,73 @@ namespace CallerRetroBall.Tests
         }
     }
 }
+
+namespace CallerRetroBall.Tests
+{
+    using CallerRetroBall.Logic.PixelArt;
+
+    public class AudioAndCosmeticArtTests
+    {
+        [Test]
+        public void EverySfx_IsShort_InRange_AndDeterministic()
+        {
+            foreach (SfxId id in System.Enum.GetValues(typeof(SfxId)))
+            {
+                var a = AudioSynth.Sfx(id);
+                var b = AudioSynth.Sfx(id);
+                Assert.Greater(a.Length, 100, id.ToString());
+                Assert.LessOrEqual(AudioSynth.Duration(a), 2f, id.ToString());
+                float peak = 0f;
+                for (int i = 0; i < a.Length; i++)
+                {
+                    Assert.AreEqual(a[i], b[i]);
+                    peak = System.Math.Max(peak, System.Math.Abs(a[i]));
+                }
+                Assert.LessOrEqual(peak, 1f, id.ToString());
+                Assert.Greater(peak, 0.05f, id.ToString());
+            }
+        }
+
+        [Test]
+        public void MusicLoop_IsAWholeNumberOfBeats()
+        {
+            var loop = AudioSynth.MusicLoop();
+            float seconds = AudioSynth.Duration(loop);
+            float beats = seconds * 112f / 60f;
+            Assert.AreEqual(32f, beats, 0.01);
+        }
+
+        [Test]
+        public void ColourblindPatterns_ChangeTheJersey_AndDifferPerTeam()
+        {
+            var look = new AppearanceDef(1, 1, 1, BodyType.Standard, 1);
+            var plain = CharacterSpriteGenerator.GenerateSheet(look, RgbColor.FromHex("#1FB5A6"), RgbColor.FromHex("#FF6F59"), RgbColor.White, null, TeamPattern.Solid);
+            var stripes = CharacterSpriteGenerator.GenerateSheet(look, RgbColor.FromHex("#1FB5A6"), RgbColor.FromHex("#FF6F59"), RgbColor.White, null, TeamPattern.Stripes);
+            var dots = CharacterSpriteGenerator.GenerateSheet(look, RgbColor.FromHex("#1FB5A6"), RgbColor.FromHex("#FF6F59"), RgbColor.White, null, TeamPattern.Dots);
+            Assert.AreNotEqual(plain.Pixels, stripes.Pixels);
+            Assert.AreNotEqual(stripes.Pixels, dots.Pixels);
+        }
+
+        [Test]
+        public void ShoeColour_IsApplied()
+        {
+            var look = new AppearanceDef(1, 1, 1, BodyType.Standard, 1);
+            var red = RgbColor.FromHex("#FF0000");
+            var sheet = CharacterSpriteGenerator.GenerateSheet(look, RgbColor.White, RgbColor.Black, RgbColor.Black, red, TeamPattern.Solid);
+            bool found = false;
+            foreach (var px in sheet.Pixels) if (px == red) found = true;
+            Assert.IsTrue(found);
+        }
+
+        [Test]
+        public void CourtBanner_ChangesTheCrowdStrip()
+        {
+            var c = DefaultContent.Create();
+            var g = CourtGeometry.Default;
+            var court = c.Court("court.sunset_cage");
+            var plain = CourtGenerator.Generate(court, g, 3);
+            var banner = CourtGenerator.Generate(court, g, 3, RgbColor.FromHex("#D4A017"), RgbColor.FromHex("#1A1A2E"));
+            Assert.AreNotEqual(plain.Pixels, banner.Pixels);
+        }
+    }
+}

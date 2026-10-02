@@ -69,9 +69,17 @@ namespace CallerRetroBall.Logic.PixelArt
         }
 
         public static PixelCanvas GenerateSheet(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent)
+            => GenerateSheet(look, jersey, trim, accent, null, TeamPattern.Solid);
+
+        /// <param name="shoes">Shoe colour (cosmetic); null = classic white.</param>
+        /// <param name="pattern">Jersey pattern drawn in colourblind contrast mode (Solid = none).</param>
+        public static PixelCanvas GenerateSheet(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent,
+                                                RgbColor? shoes, TeamPattern pattern)
         {
             var sheet = new PixelCanvas(FrameWidth * FramesPerView, FrameHeight * ViewCount);
             var p = new Palette(look, jersey, trim, accent);
+            if (shoes.HasValue) p.Shoe = shoes.Value;
+            p.Pattern = pattern;
             for (int v = 0; v < ViewCount; v++)
                 for (int f = 0; f < FramesPerView; f++)
                 {
@@ -89,6 +97,7 @@ namespace CallerRetroBall.Logic.PixelArt
         private struct Palette
         {
             public RgbColor Skin, SkinShade, Hair, Jersey, JerseyShade, Shorts, Trim, Accent, Shoe, Sole, Eye;
+            public TeamPattern Pattern;
 
             public Palette(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent)
             {
@@ -103,6 +112,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 Shoe = new RgbColor(0xF2, 0xF2, 0xF2);
                 Sole = new RgbColor(0x9A, 0x9A, 0xA4);
                 Eye = new RgbColor(0x1A, 0x1A, 0x1A);
+                Pattern = TeamPattern.Solid;
             }
         }
 
@@ -155,6 +165,14 @@ namespace CallerRetroBall.Logic.PixelArt
             // ---- jersey
             Rect(c, torsoLeft, torsoBottom, torsoW, torsoTop - torsoBottom + 1, p.Jersey);
             Rect(c, torsoLeft, torsoBottom, torsoW, 1, p.JerseyShade);                   // waist shade
+            if (p.Pattern != TeamPattern.Solid)
+            {
+                // Colourblind contrast: a distinct pattern per team, drawn in the trim colour.
+                var ink = RgbColor.Distance(p.Trim, p.Jersey) > 90 ? p.Trim : (p.Jersey.Luminance > 0.4 ? RgbColor.Black : RgbColor.White);
+                for (int y = torsoBottom + 1; y <= torsoTop; y++)
+                    for (int x = torsoLeft; x < torsoLeft + torsoW; x++)
+                        if (PatternHit(p.Pattern, x - torsoLeft, y - torsoBottom)) c.Set(x, y, ink);
+            }
             if (view == CharacterView.Front)
             {
                 c.Set(cx - 1, torsoTop, p.Trim);                                              // neckline V
@@ -227,6 +245,22 @@ namespace CallerRetroBall.Logic.PixelArt
                     c.Set(torsoLeft - 1, top, p.SkinShade);
                     c.Set(torsoLeft + torsoW, top, p.SkinShade);
                 }
+            }
+        }
+
+        /// <summary>Whether a jersey pixel (local coords) is inked for a pattern.</summary>
+        public static bool PatternHit(TeamPattern pattern, int x, int y)
+        {
+            switch (pattern)
+            {
+                case TeamPattern.Stripes: return x % 2 == 0;
+                case TeamPattern.Dots: return x % 2 == 1 && y % 2 == 0;
+                case TeamPattern.Chevrons: return (x + (y % 4 < 2 ? y % 4 : 4 - y % 4)) % 4 == 0;
+                case TeamPattern.Checker: return (x / 2 + y / 2) % 2 == 0;
+                case TeamPattern.Diagonal: return (x + y) % 3 == 0;
+                case TeamPattern.Rings: return y % 3 == 0;
+                case TeamPattern.Cross: return x == 2 || y == 3;
+                default: return false;
             }
         }
 

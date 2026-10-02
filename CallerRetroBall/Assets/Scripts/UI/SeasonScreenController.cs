@@ -7,59 +7,218 @@ using UnityEngine;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// SeasonScene (Rise Mode hub). PHASE 1: shows the Rise Mode path and a Caller
-    /// League preview from content data. Phase 5 adds the playable season, standings,
-    /// bracket, save state, and event cards.
+    /// SeasonScene: the Rise Mode hub. Shows the current stage, crew record, energy and
+    /// chemistry, the objective, and PLAY NEXT. In the league it adds standings and, in the
+    /// playoffs, the bracket. Pending event cards open as a modal before the next game.
+    /// All rules live in <see cref="RiseEngine"/> / <see cref="SeasonEngine"/>; this only draws them.
     /// </summary>
     public sealed class SeasonScreenController : ScreenBase
     {
         protected override string ScreenTitle => "RISE MODE";
         protected override string BackdropCourtId => "court.overpass_park";
 
+        private RectTransform _content;
+
         protected override void Build()
         {
+            _content = UiKit.ScrollColumn(Body, 18f, new RectOffset(48, 48, 12, 40));
+            Rebuild();
+
+            var outcome = App.LastRiseOutcome;
+            App.LastRiseOutcome = RiseOutcome.None;
+            if (outcome == RiseOutcome.Champion)
+                UiControls.Dialog("CHAMPIONS!", "The First Callers hold " + DefaultContent.ChampionshipName + ". Start the next season when you're ready to defend it.",
+                                  ("NICE", ButtonStyle.Primary, ShowPendingEvent));
+            else if (outcome == RiseOutcome.EnteredLeague)
+                UiControls.Dialog("CIRCUIT CLEARED", "Every street crew is beaten. " + DefaultContent.LeagueName + " has an open spot — it's yours.",
+                                  ("LET'S GO", ButtonStyle.Primary, ShowPendingEvent));
+            else if (outcome == RiseOutcome.MadePlayoffs)
+                UiControls.Dialog("PLAYOFFS", "Top " + SeasonEngine.PlayoffTeams + " finish. Win two more for the Cup.",
+                                  ("OK", ButtonStyle.Primary, ShowPendingEvent));
+            else
+                ShowPendingEvent();
+        }
+
+        private void Rebuild()
+        {
+            for (int i = _content.childCount - 1; i >= 0; i--) Destroy(_content.GetChild(i).gameObject);
+
             var c = App.Catalog;
-            var season = c.Seasons.Count > 0 ? c.Seasons[0] : new SeasonConfigDef();
+            var career = App.Career;
+            var r = career.rise;
 
-            string path =
-                "<color=#FFD166>" + DefaultContent.CircuitName.ToUpperInvariant() + "</color>\n" +
-                "Win the three street courts\n" +
-                "<color=#FFD166>" + DefaultContent.LeagueName.ToUpperInvariant() + "</color>\n" +
-                season.regularSeasonGames + "-game season · top " + season.playoffTeams + " make the playoffs\n" +
-                "<color=#F72585>" + season.championshipName.ToUpperInvariant() + "</color>";
-            var intro = UiKit.Label(Body, path, 38f, Theme.Cream);
-            UiKit.Band(intro.rectTransform, 0.72f, 0.99f, 48f);
+            UiKit.Size(UiKit.Label(_content, StageName(r.stage), 52f, Theme.Gold, TextAlignmentOptions.Center, true), 80f);
+            UiKit.Size(UiKit.Label(_content, RiseEngine.Objective(r, c), 36f, Theme.Cream), 110f);
 
-            var list = UiKit.Column(Body, 14f, null, "LeagueList");
-            UiKit.Band(list, 0.03f, 0.70f, 48f);
+            var stats = UiKit.Row(_content, 12f, "Meters");
+            UiKit.Size(stats, 64f);
+            UiControls.Stat(stats, "ENERGY", r.energy.ToString());
+            UiControls.Stat(stats, "CHEM", r.chemistry.ToString());
+            if (r.season != null && r.stage != RiseStage.Circuit)
+            {
+                var rec = FindRecord(r.season, RiseEngine.CrewId);
+                UiControls.Stat(stats, "RECORD", rec != null ? rec.Wins + "-" + rec.Losses : "0-0");
+            }
+            else
+            {
+                UiControls.Stat(stats, "CIRCUIT", r.circuitBeaten.Count + "/" + RiseEngine.CircuitOrder.Length);
+            }
 
-            foreach (var id in season.teamIds)
+            var next = RiseEngine.NextMatch(r, c, career.settings.difficultyId);
+            if (next != null)
+            {
+                var opp = c.Team(next.AwayTeamId);
+                var court = c.Court(next.CourtId);
+                var card = UiKit.Panel(_content, Color.white, Theme.PanelSprite(), true, "NextGame");
+                UiKit.Size(card, 170f);
+                if (opp != null)
+                {
+                    var logo = UiKit.Picture(card.transform, TextureFactory.TeamLogo(opp));
+                    logo.rectTransform.anchorMin = logo.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                    logo.rectTransform.pivot = new Vector2(0f, 0.5f);
+                    logo.rectTransform.sizeDelta = new Vector2(130f, 130f);
+                    logo.rectTransform.anchoredPosition = new Vector2(20f, 0f);
+                }
+                string round = next.Round == 2 ? "FINAL" : (next.Round == 1 ? "SEMIFINAL" : "NEXT GAME");
+                var text = UiKit.Label(card.transform, "<color=#FFD166>" + round + "</color>\nVS " + (opp?.FullName ?? "?").ToUpperInvariant() +
+                                       (court != null ? "\n<size=70%><color=#8D99AE>" + court.displayName + "</color></size>" : ""),
+                                       36f, Theme.Cream, TextAlignmentOptions.Left, true);
+                UiKit.Stretch(text.rectTransform);
+                text.rectTransform.offsetMin = new Vector2(170f, 8f);
+                text.rectTransform.offsetMax = new Vector2(-20f, -8f);
+
+                UiKit.Button(_content, "PLAY NEXT", () => Play(next), ButtonStyle.Primary, 150f);
+            }
+            else if (r.stage == RiseStage.Complete)
+            {
+                UiKit.Button(_content, "START NEXT SEASON", () =>
+                {
+                    RiseEngine.StartNextSeason(r, c);
+                    App.SaveCareer();
+                    Rebuild();
+                }, ButtonStyle.Primary, 150f);
+            }
+
+            if (r.season != null && r.stage != RiseStage.Circuit)
+            {
+                Bracket(r.season);
+                StandingsTable(r.season);
+            }
+            else
+            {
+                CircuitList(r);
+            }
+
+            var diffs = c.Difficulties;
+            int di = Mathf.Max(0, diffs.FindIndex(d => d.id == career.settings.difficultyId));
+            UiControls.ChoiceRow(_content, "DIFFICULTY", diffs.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray(), di, i =>
+            {
+                career.settings.difficultyId = diffs[i].id;
+                App.SaveCareer();
+            });
+        }
+
+        private void Play(MatchRequest request)
+        {
+            if (!string.IsNullOrEmpty(App.Career.rise.pendingEventId))
+            {
+                ShowPendingEvent();
+                return;
+            }
+            App.PendingMatch = request;
+            SceneFlow.GoTo(SceneNames.Game);
+        }
+
+        private void ShowPendingEvent()
+        {
+            var r = App.Career.rise;
+            var card = EventCards.Find(r.pendingEventId);
+            if (card == null) return;
+            var buttons = new (string, ButtonStyle, System.Action)[card.choices.Count];
+            for (int i = 0; i < card.choices.Count; i++)
+            {
+                int index = i;
+                var choice = card.choices[i];
+                buttons[i] = (choice.label.ToUpperInvariant() + "\n<size=60%>" + choice.effect.Describe() + "</size>",
+                              i == 0 ? ButtonStyle.Primary : ButtonStyle.Secondary,
+                              () =>
+                              {
+                                  RiseEngine.ResolveEvent(r, App.Career, index);
+                                  App.SaveCareer();
+                                  Rebuild();
+                              });
+            }
+            UiControls.Dialog(card.title.ToUpperInvariant(), card.body, buttons);
+        }
+
+        private void CircuitList(RiseSaveData r)
+        {
+            var c = App.Catalog;
+            UiKit.Size(UiKit.Label(_content, DefaultContent.CircuitName.ToUpperInvariant(), 40f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
+            foreach (var id in RiseEngine.CircuitOrder)
             {
                 var team = c.Team(id);
-                if (team != null) TeamRow(list, team);
+                if (team == null) continue;
+                bool beaten = r.circuitBeaten.Contains(id);
+                UiKit.Size(UiKit.Label(_content, (beaten ? "<color=#4CC9F0>BEATEN</color>  " : "<color=#8D99AE>—</color>  ") + team.FullName.ToUpperInvariant(),
+                                       34f, Theme.Cream, TextAlignmentOptions.Left, true), 52f);
             }
         }
 
-        private static void TeamRow(Transform parent, TeamDef team)
+        private void Bracket(SeasonSaveData s)
         {
-            var row = UiKit.Panel(parent, Color.white, Theme.PanelSprite(), true, "Row " + team.abbreviation);
-            UiKit.Size(row, 112f);
+            if (!SeasonEngine.HasRound(s, 1)) return;
+            UiKit.Size(UiKit.Label(_content, DefaultContent.ChampionshipName.ToUpperInvariant(), 40f, Theme.Pink, TextAlignmentOptions.Left, true), 60f);
+            foreach (var g in s.games)
+            {
+                if (g.round == 0) continue;
+                string label = g.round == 2 ? "FINAL" : "SEMI";
+                string line = label + "  " + Abbr(g.homeId) + (g.played ? " " + g.homeScore + " - " + g.awayScore + " " : "  vs  ") + Abbr(g.awayId);
+                bool mine = g.Involves(RiseEngine.CrewId);
+                UiKit.Size(UiKit.Label(_content, line, 34f, mine ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true), 50f);
+            }
+            if (!string.IsNullOrEmpty(s.championId))
+                UiKit.Size(UiKit.Label(_content, "CHAMPION: " + (App.Catalog.Team(s.championId)?.FullName ?? s.championId).ToUpperInvariant(),
+                                       34f, Theme.Cyan, TextAlignmentOptions.Left, true), 50f);
+        }
 
-            var logo = UiKit.Picture(row.transform, TextureFactory.TeamLogo(team));
-            logo.rectTransform.anchorMin = logo.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-            logo.rectTransform.pivot = new Vector2(0f, 0.5f);
-            logo.rectTransform.sizeDelta = new Vector2(88f, 88f);
-            logo.rectTransform.anchoredPosition = new Vector2(16f, 0f);
+        private void StandingsTable(SeasonSaveData s)
+        {
+            UiKit.Size(UiKit.Label(_content, "STANDINGS  ·  WEEK " + Mathf.Min(s.currentWeek + 1, Mathf.Max(1, s.weeks)) + "/" + s.weeks,
+                                   40f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
+            UiKit.Size(UiKit.Label(_content, "#  TEAM<pos=62%>W-L<pos=76%>DIFF<pos=90%>STK", 28f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
+            var table = SeasonEngine.Standings(s);
+            for (int i = 0; i < table.Count; i++)
+            {
+                var t = table[i];
+                var team = App.Catalog.Team(t.TeamId);
+                bool mine = t.TeamId == RiseEngine.CrewId;
+                string diff = t.Differential > 0 ? "+" + t.Differential : t.Differential.ToString();
+                string line = (i + 1) + "  " + (team?.FullName ?? t.TeamId).ToUpperInvariant() +
+                              "<pos=62%>" + t.Wins + "-" + t.Losses + "<pos=76%>" + diff + "<pos=90%>" + t.StreakText;
+                var label = UiKit.Label(_content, line, 30f, mine ? Theme.Gold : (i < SeasonEngine.PlayoffTeams ? Theme.Cream : Theme.Muted),
+                                        TextAlignmentOptions.Left, mine);
+                UiKit.Size(label, 46f);
+            }
+        }
 
-            var name = UiKit.Label(row.transform, team.FullName.ToUpperInvariant() + "\n<size=70%><color=#8D99AE>" + team.motto + "</color></size>",
-                                   36f, Theme.Cream, TextAlignmentOptions.Left, true);
-            UiKit.Stretch(name.rectTransform);
-            name.rectTransform.offsetMin = new Vector2(124f, 6f);
-            name.rectTransform.offsetMax = new Vector2(-140f, -6f);
+        private static TeamRecord FindRecord(SeasonSaveData s, string id)
+        {
+            foreach (var t in SeasonEngine.Standings(s)) if (t.TeamId == id) return t;
+            return null;
+        }
 
-            var tag = UiKit.Label(row.transform, team.abbreviation, 34f, Theme.Gold, TextAlignmentOptions.Right, true);
-            UiKit.Stretch(tag.rectTransform);
-            tag.rectTransform.offsetMax = new Vector2(-24f, 0f);
+        private static string Abbr(string id) => App.Catalog.Team(id)?.abbreviation ?? "?";
+
+        private static string StageName(RiseStage stage)
+        {
+            switch (stage)
+            {
+                case RiseStage.Circuit: return DefaultContent.CircuitName.ToUpperInvariant();
+                case RiseStage.Season: return DefaultContent.LeagueName.ToUpperInvariant();
+                case RiseStage.Playoffs: return "PLAYOFFS";
+                default: return "SEASON COMPLETE";
+            }
         }
     }
 }
