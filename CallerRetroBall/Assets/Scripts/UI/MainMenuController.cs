@@ -70,7 +70,13 @@ namespace CallerRetroBall.UI
 
         // ------------------------------------------------------------------ overlays
 
-        private RectTransform OpenOverlay(string title)
+        private RectTransform OpenOverlay(string title) => OpenOverlay(title, out _);
+
+        /// <summary>
+        /// Opens a modal panel. <paramref name="footer"/> is a bar pinned to the bottom of the panel
+        /// for the main buttons, so they stay visible on any screen shape; everything else scrolls.
+        /// </summary>
+        private RectTransform OpenOverlay(string title, out RectTransform footer)
         {
             CloseOverlay();
             var canvas = UiKit.CreateScreenCanvas("Overlay", 30);
@@ -80,9 +86,21 @@ namespace CallerRetroBall.UI
             scrim.raycastTarget = true;
             var safe = UiKit.SafeArea(canvas.transform);
             var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "Panel");
-            UiKit.Band(panel.rectTransform, 0.08f, 0.92f, 48f);
-            // Scrolls, so every button stays reachable on short screens or a landscape Game view.
-            var column = UiKit.ScrollColumn(panel.transform, 20f, new RectOffset(40, 40, 36, 40));
+            UiKit.Band(panel.rectTransform, 0.04f, 0.96f, 48f);
+            panel.raycastTarget = true;
+
+            const float footerHeight = 170f;
+            footer = UiKit.Row(panel.transform, 20f, "Footer");
+            footer.anchorMin = new Vector2(0f, 0f);
+            footer.anchorMax = new Vector2(1f, 0f);
+            footer.pivot = new Vector2(0.5f, 0f);
+            footer.sizeDelta = new Vector2(-80f, footerHeight - 30f);
+            footer.anchoredPosition = new Vector2(0f, 24f);
+
+            var body = UiKit.NewRect("Body", panel.transform);
+            UiKit.Stretch(body);
+            body.offsetMin = new Vector2(0f, footerHeight);
+            var column = UiKit.ScrollColumn(body, 20f, new RectOffset(40, 40, 30, 20));
             UiKit.Size(UiKit.ShadowLabel(column, title, 64f, Theme.Cream, Theme.Pink, 6f).transform.parent.GetComponent<RectTransform>(), 100f);
             return column;
         }
@@ -101,7 +119,7 @@ namespace CallerRetroBall.UI
         private void ShowQuickCall()
         {
             var c = App.Catalog;
-            var column = OpenOverlay("QUICK CALL");
+            var column = OpenOverlay("QUICK CALL", out var footer);
             var league = c.TeamsInTier(TeamTier.League);
             var mine = league.FindAll(t => t.unlockedByDefault);
             int myIndex = 0;
@@ -134,7 +152,8 @@ namespace CallerRetroBall.UI
             var names = difficulties.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray();
             UiControls.ChoiceRow(column, "DIFFICULTY", names, diffIndex, i => diffIndex = i);
 
-            UiKit.Button(column, "TIP OFF", () =>
+            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "TIP OFF", () =>
             {
                 var home = mine[myIndex];
                 var away = opponents[oppIndex];
@@ -149,10 +168,9 @@ namespace CallerRetroBall.UI
                     DifficultyId = difficulties[diffIndex].id,
                 };
                 SceneFlow.GoTo(SceneNames.Game);
-            }, ButtonStyle.Primary, 140f);
+            }, ButtonStyle.Primary, 130f);
             UiKit.Size(UiKit.Label(column, "Touch: stick + SHOOT / PASS / DEF / CALL\nKeyboard: WASD move · K shoot (hold) · J pass · L steal · C call · Esc pause",
                                    28f, Theme.Muted), 90f);
-            UiKit.Button(column, "BACK", CloseOverlay, ButtonStyle.Ghost, 100f, 40f);
 
             void Refresh()
             {
@@ -167,12 +185,12 @@ namespace CallerRetroBall.UI
 
         private void ShowPractice()
         {
-            var column = OpenOverlay("PRACTICE LAB");
+            var column = OpenOverlay("PRACTICE LAB", out var footer);
             var best = App.Career.practice;
             Drill(column, "FREE SHOOT", "60 seconds. Best: " + best.freeShootMakes + " makes, streak " + best.freeShootStreak, 0);
             Drill(column, "PASSING TARGETS", "45 seconds. Best: " + best.passingScore + " targets", 1);
             Drill(column, "DRIBBLE LANE", "Weave the cones. Best: " + (best.dribbleLaneTime > 0f ? best.dribbleLaneTime.ToString("0.00") + " s" : "—"), 2);
-            UiKit.Button(column, "BACK", CloseOverlay, ButtonStyle.Ghost, 100f, 40f);
+            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
         }
 
         private static void Drill(Transform column, string name, string detail, int drill)
