@@ -38,13 +38,16 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > **FIRST CALL CLASSIC**
 > A four-team knockout for your crew. Two wins and the trophy is yours.
 >
+> **DAILY CHALLENGE & 2 PLAYER**
+> A new challenge every day with streak bonuses, and head-to-head games on one device with a keyboard or two controllers.
+>
 > **PRACTICE LAB**
 > Free Shoot, Passing Targets, and a timed Dribble Lane, each with a personal best to chase.
 >
 > **MADE TO RESPECT YOUR TIME**
 > • Games last about two minutes
 > • Fully offline. No account, no ads, no in-app purchases
-> • No tracking or data collection
+> • No tracking or data collection (Game Center is optional)
 > • Haptics, screen shake, UI scale, and colourblind team patterns are all adjustable
 >
 > All teams, players, courts, and music are original.

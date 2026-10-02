@@ -17,6 +17,19 @@ namespace CallerRetroBall.UI
 
         private GameObject _overlay;
         private Texture2D _logoTex;
+        private static bool _tutorialOffered;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _tutorialOffered = false;
+
+        /// <summary>Starts the how-to-play tutorial (also reachable from Settings).</summary>
+        public static void StartTutorial()
+        {
+            var request = MatchRequest.PracticeDefault();
+            request.Mode = GameMode.Tutorial;
+            App.PendingMatch = request;
+            SceneFlow.GoTo(SceneNames.Game);
+        }
 
         private void OnDestroy()
         {
@@ -44,12 +57,11 @@ namespace CallerRetroBall.UI
             UiKit.Band(column, 0.23f, 0.71f, 110f);
             column.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 
-            UiKit.Button(column, "PLAY", ShowQuickCall, ButtonStyle.Primary, 140f, 64f);
-            UiKit.Button(column, "RISE MODE", () => SceneFlow.GoTo(SceneNames.Season), ButtonStyle.Secondary, 112f, 50f);
-            UiKit.Button(column, "FIRST CALL CLASSIC", ShowClassic, ButtonStyle.Secondary, 112f, 50f);
-            UiKit.Button(column, "PRACTICE LAB", ShowPractice, ButtonStyle.Secondary, 112f, 50f);
-            UiKit.Button(column, "LOCKER ROOM", () => SceneFlow.GoTo(SceneNames.LockerRoom), ButtonStyle.Secondary, 112f, 50f);
-            UiKit.Button(column, "SETTINGS", () => SceneFlow.GoTo(SceneNames.Settings), ButtonStyle.Ghost, 100f, 44f);
+            UiKit.Button(column, "PLAY", ShowPlayMenu, ButtonStyle.Primary, 150f, 64f);
+            UiKit.Button(column, "RISE MODE", () => SceneFlow.GoTo(SceneNames.Season), ButtonStyle.Secondary, 120f, 52f);
+            UiKit.Button(column, "PRACTICE LAB", ShowPractice, ButtonStyle.Secondary, 120f, 52f);
+            UiKit.Button(column, "LOCKER ROOM", () => SceneFlow.GoTo(SceneNames.LockerRoom), ButtonStyle.Secondary, 120f, 52f);
+            UiKit.Button(column, "SETTINGS", () => SceneFlow.GoTo(SceneNames.Settings), ButtonStyle.Ghost, 104f, 46f);
 
             BuildLogoStrip();
 
@@ -60,6 +72,15 @@ namespace CallerRetroBall.UI
             {
                 App.OpenClassicOnMenu = false;
                 ShowClassic();
+            }
+
+            // First-time players are offered the tutorial once per session until they finish it.
+            if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
+            {
+                _tutorialOffered = true;
+                UiControls.Dialog("NEW TO RETROBALL?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
+                                  ("PLAY TUTORIAL", ButtonStyle.Primary, StartTutorial),
+                                  ("MAYBE LATER", ButtonStyle.Ghost, null));
             }
 
             if (App.CareerLoadStatus == LoadStatus.Recovered)
@@ -168,7 +189,7 @@ namespace CallerRetroBall.UI
             var names = difficulties.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray();
             UiControls.ChoiceRow(column, "DIFFICULTY", names, diffIndex, i => diffIndex = i);
 
-            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
             UiKit.Button(footer, "TIP OFF", () =>
             {
                 var home = mine[myIndex];
@@ -195,6 +216,109 @@ namespace CallerRetroBall.UI
                 foreach (var t in league) if (t.id != mine[myIndex].id) opponents.Add(t);
                 oppIndex %= opponents.Count;
                 oppLabel.text = "VS  " + opponents[oppIndex].FullName.ToUpperInvariant();
+            }
+            Refresh();
+        }
+
+        /// <summary>PLAY: every way to start a game.</summary>
+        private void ShowPlayMenu()
+        {
+            var column = OpenOverlay("PLAY", out var footer);
+            Mode(column, "QUICK CALL", "Pick a team and an opponent. One game.", ShowQuickCall, ButtonStyle.Primary);
+
+            var today = DailyChallenges.For(App.Today, App.Catalog);
+            bool done = DailyChallenges.CompletedToday(App.Career.daily, App.Today);
+            int streak = DailyChallenges.LiveStreak(App.Career.daily, App.Today);
+            Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
+            Mode(column, "2 PLAYER", "Head to head on one device: keyboard or two controllers.", ShowVersus, ButtonStyle.Secondary);
+            Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + App.Career.classic.titles, ShowClassic, ButtonStyle.Secondary);
+            Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
+            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+        }
+
+        private static void Mode(Transform column, string name, string detail, System.Action onClick, ButtonStyle style)
+        {
+            UiKit.Button(column, name, onClick, style, 120f, 50f);
+            UiKit.Size(UiKit.Label(column, detail, 28f, Theme.Muted), 44f);
+        }
+
+        /// <summary>Today's Daily Challenge: goal, matchup, streak.</summary>
+        private void ShowDaily()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            int day = App.Today;
+            var d = DailyChallenges.For(day, c);
+            var column = OpenOverlay("DAILY CHALLENGE", out var footer);
+            UiKit.Size(UiKit.Label(column, d.Describe().ToUpperInvariant(), 48f, Theme.Gold, TextAlignmentOptions.Center, true), 80f);
+            var home = c.Team(d.HomeTeamId);
+            var opp = c.Team(d.OpponentId);
+            UiKit.Size(UiKit.Label(column, (home?.FullName ?? "?").ToUpperInvariant() + "\nVS  " + (opp?.FullName ?? "?").ToUpperInvariant(),
+                                   36f, Theme.Cream, TextAlignmentOptions.Center, true), 110f);
+            var diff = c.Difficulty(d.DifficultyId);
+            UiControls.Stat(column, "DIFFICULTY", (diff?.displayName ?? "?").ToUpperInvariant());
+            int streak = DailyChallenges.LiveStreak(career.daily, day);
+            UiControls.Stat(column, "STREAK", streak + "  (best " + career.daily.bestStreak + ")");
+            bool done = DailyChallenges.CompletedToday(career.daily, day);
+            UiKit.Size(UiKit.Label(column, done
+                ? "Done for today! A new challenge arrives tomorrow. You can still play for fun."
+                : "Complete it for +" + DailyChallenges.BonusFor(streak + 1) + " SP. Keep the streak going every day for a bigger bonus.",
+                30f, done ? Theme.Cyan : Theme.Muted), 100f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "PLAY", () =>
+            {
+                App.PendingMatch = d.ToRequest();
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Primary, 130f);
+        }
+
+        /// <summary>Local 2-player setup: each player picks a team.</summary>
+        private void ShowVersus()
+        {
+            var c = App.Catalog;
+            var league = c.TeamsInTier(TeamTier.League);
+            int p1 = 0, p2 = 1;
+            var column = OpenOverlay("2 PLAYER", out var footer);
+            TextMeshProUGUI p1Label = null, p2Label = null;
+            UiKit.Size(UiKit.Label(column, "PLAYER 1", 34f, Theme.Gold, TextAlignmentOptions.Center, true), 50f);
+            p1Label = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(p1Label, 60f);
+            UiKit.Button(column, "CHANGE TEAM", () => { p1 = Next(p1, p2); Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Size(UiKit.Label(column, "PLAYER 2", 34f, Theme.Cyan, TextAlignmentOptions.Center, true), 50f);
+            p2Label = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(p2Label, 60f);
+            UiKit.Button(column, "CHANGE TEAM", () => { p2 = Next(p2, p1); Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Size(UiKit.Label(column,
+                "P1: touch, or WASD · K shoot (hold) · J pass · L steal · C call\n" +
+                "P2: arrows · Num1 shoot (hold) · Num2 pass · Num3 steal · Num0 pick & roll\n" +
+                "Controllers: with two, P1 gets the first; with one, it's P2's.",
+                26f, Theme.Muted), 150f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "TIP OFF", () =>
+            {
+                var home = league[p1];
+                App.PendingMatch = new MatchRequest
+                {
+                    Mode = GameMode.Versus,
+                    HomeTeamId = home.id,
+                    AwayTeamId = league[p2].id,
+                    CourtId = home.homeCourtId,
+                    DifficultyId = App.Career.settings.difficultyId,
+                };
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Primary, 130f);
+
+            int Next(int current, int other)
+            {
+                int n = (current + 1) % league.Count;
+                if (n == other) n = (n + 1) % league.Count;
+                return n;
+            }
+
+            void Refresh()
+            {
+                p1Label.text = league[p1].FullName.ToUpperInvariant();
+                p2Label.text = league[p2].FullName.ToUpperInvariant();
             }
             Refresh();
         }
@@ -227,7 +351,7 @@ namespace CallerRetroBall.UI
                                            36f, Theme.Cyan, TextAlignmentOptions.Center, true), 60f);
             }
 
-            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
             var next = ClassicEngine.NextMatch(t, c, career.settings.difficultyId);
             if (next != null)
             {

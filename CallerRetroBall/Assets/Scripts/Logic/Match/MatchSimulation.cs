@@ -56,6 +56,8 @@ namespace CallerRetroBall.Logic
         public uint Seed = 1;
         /// <summary>Practice: opponents stand still and never take the ball.</summary>
         public bool PassiveOpponents;
+        /// <summary>Local 2-player: slot 0 of the other team is also human-controlled (second input).</summary>
+        public bool SecondHuman;
         /// <summary>Practice: the human's team keeps the ball after scoring.</summary>
         public bool KeepPossessionAfterScore;
         public float HumanTeamStartingStamina = 1f;
@@ -76,9 +78,10 @@ namespace CallerRetroBall.Logic
                 Rules = c.Find(c.Rules, request.RulesId) ?? new GameRulesDef(),
                 Difficulty = c.Difficulty(request.DifficultyId),
                 Seed = request.Seed != 0 ? request.Seed : 1,
-                PassiveOpponents = request.Mode == GameMode.Practice,
-                KeepPossessionAfterScore = request.Mode == GameMode.Practice,
-                TeammatesOnlyPass = request.Mode == GameMode.Practice,
+                PassiveOpponents = request.Mode == GameMode.Practice || request.Mode == GameMode.Tutorial,
+                SecondHuman = request.Mode == GameMode.Versus,
+                KeepPossessionAfterScore = request.Mode == GameMode.Practice || request.Mode == GameMode.Tutorial,
+                TeammatesOnlyPass = request.Mode == GameMode.Practice || request.Mode == GameMode.Tutorial,
                 HumanTeamStartingStamina = request.StartingStamina,
                 ChemistryBonus = request.ChemistryBonus,
             };
@@ -271,7 +274,7 @@ namespace CallerRetroBall.Logic
                         Slot = slot,
                         Def = roster[slot],
                         Archetype = slot < archetypes.Count ? archetypes[slot] : null,
-                        IsHuman = team == setup.HumanTeam && slot == 0,
+                        IsHuman = slot == 0 && (team == setup.HumanTeam || setup.SecondHuman),
                         Motion = new MotionState(Vec2.Zero),
                     };
                 }
@@ -284,10 +287,20 @@ namespace CallerRetroBall.Logic
             GameClock = setup.Rules.useGameClock ? setup.Rules.gameClockSeconds : 0f;
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = IndexOf(setup.HumanTeam, 0);
+            SecondControlledIndex = setup.SecondHuman ? IndexOf(1 - setup.HumanTeam, 0) : -1;
             CheckBall(setup.StartingOffense);
         }
 
         public PlayerRuntimeState Controlled => Players[ControlledIndex];
+        /// <summary>Player 2's player in local 2-player, otherwise -1.</summary>
+        public int SecondControlledIndex { get; private set; } = -1;
+
+        /// <summary>The human-controlled player on <paramref name="team"/>, or -1 if that team is all AI.</summary>
+        public int HumanIndexOf(int team) =>
+            team == Setup.HumanTeam ? ControlledIndex : (SecondControlledIndex >= 0 && Players[SecondControlledIndex].Team == team ? SecondControlledIndex : -1);
+
+        /// <summary>True if <paramref name="index"/> is driven by a person (player 1 or player 2).</summary>
+        public bool IsHumanControlled(int index) => index == ControlledIndex || (index >= 0 && index == SecondControlledIndex);
         public int HolderIndex => Ball.IsHeld ? Ball.HolderIndex : -1;
         public PlayerRuntimeState Holder => Ball.IsHeld ? Players[Ball.HolderIndex] : null;
         public int DefenseTeam => 1 - OffenseTeam;
@@ -296,6 +309,24 @@ namespace CallerRetroBall.Logic
         public bool HumanTeamHasBall => Ball.IsHeld && Players[Ball.HolderIndex].Team == Setup.HumanTeam;
 
         public static int IndexOf(int team, int slot) => team * PlayersPerTeam + slot;
+
+        /// <summary>Puts the ball in a teammate's hands during live play (tutorial "ASK" step).</summary>
+        public void HandBallTo(int playerIndex)
+        {
+            if (Phase != MatchPhase.Live || playerIndex < 0 || playerIndex >= Players.Length) return;
+            if (Ball.IsHeld && Players[Ball.HolderIndex].Team != Players[playerIndex].Team) return;
+            CancelCharge();
+            GiveBall(playerIndex, announce: true, fromCheck: false);
+        }
+
+        /// <summary>Restarts play with a check ball for <paramref name="team"/> (tutorial steps, tools).</summary>
+        public void RestartWithBall(int team)
+        {
+            if (Phase == MatchPhase.Final) return;
+            CancelCharge();
+            MustClear = false;
+            CheckBall(team);
+        }
 
         // ------------------------------------------------------------------ phases
 
@@ -355,9 +386,15 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ step
 
+        private PlayerInput _input2;
+
         /// <summary>Advances the match by <paramref name="dt"/> seconds using the human's input.</summary>
-        public void Step(float dt, PlayerInput input)
+        public void Step(float dt, PlayerInput input) => Step(dt, input, default);
+
+        /// <summary>Two-player step: <paramref name="input2"/> drives player 2 (ignored unless SecondHuman).</summary>
+        public void Step(float dt, PlayerInput input, PlayerInput input2)
         {
+            _input2 = SecondControlledIndex >= 0 ? input2 : default;
             Events.Clear();
             if (dt <= 0f) return;
             Time += dt;
@@ -381,7 +418,9 @@ namespace CallerRetroBall.Logic
 
                 case MatchPhase.CheckBall:
                     PhaseTimer -= dt;
-                    bool humanStarts = HumanHasBall && (input.Move.SqrMagnitude > 0.04f || input.ShootPressed || input.PassPressed);
+                    bool humanStarts = (HumanHasBall && (input.Move.SqrMagnitude > 0.04f || input.ShootPressed || input.PassPressed))
+                        || (SecondControlledIndex >= 0 && Ball.IsHeld && Ball.HolderIndex == SecondControlledIndex
+                            && (_input2.Move.SqrMagnitude > 0.04f || _input2.ShootPressed || _input2.PassPressed));
                     if (PhaseTimer <= 0f || humanStarts) GoLive();
                     else
                     {
@@ -396,7 +435,8 @@ namespace CallerRetroBall.Logic
 
         private void StepLive(float dt, PlayerInput input)
         {
-            HandleHumanActions(dt, input);
+            HandleHuman(ControlledIndex, input);
+            if (SecondControlledIndex >= 0) HandleHuman(SecondControlledIndex, _input2);
             UpdatePlay();
             UpdateAi(dt);
             UpdateCharge(dt, input);
@@ -406,6 +446,7 @@ namespace CallerRetroBall.Logic
             {
                 if (i == ChargingIndex) { _desired[i] = Vec2.Zero; continue; }
                 if (i == ControlledIndex) { _desired[i] = input.Move; continue; }
+                if (i == SecondControlledIndex) { _desired[i] = _input2.Move; continue; }
                 _desired[i] = AiDesired(Players[i]);
             }
             Integrate(dt, freezeAll: false);
@@ -430,7 +471,7 @@ namespace CallerRetroBall.Logic
                 var p = Players[i];
                 var desired = freezeAll || Time < p.StunnedUntil ? Vec2.Zero : _desired[i];
                 bool dribbling = Ball.IsHeld && Ball.HolderIndex == i;
-                float scale = p.Team == Setup.HumanTeam ? 1f : AiProfile(p.Team).movementScale;
+                float scale = IsHumanControlled(i) || p.Team == Setup.HumanTeam ? 1f : AiProfile(p.Team).movementScale;
                 if (Time < p.ScreenedUntil) scale *= Setup.Defense.screenSlow;
                 float max = Movement.MaxSpeed(p.Def.attributes.speed, dribbling, tuning, scale) * StaminaSpeedFactor(p);
                 p.Motion = Movement.Step(p.Motion, desired, max, dt, tuning);
@@ -474,23 +515,27 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ human
 
-        private void HandleHumanActions(float dt, PlayerInput input)
+        /// <summary>Applies one person's buttons to their player (offense or defense).</summary>
+        private void HandleHuman(int me, PlayerInput input)
         {
-            if (OffenseTeam != Setup.HumanTeam)
+            int team = Players[me].Team;
+            if (OffenseTeam != team)
             {
-                HandleHumanDefense(input);
+                HandleHumanDefense(me, input);
                 return;
             }
-            if (input.CallPlay != PlayCall.None) CallPlay(input.CallPlay);
-            if (HumanHasBall && ChargingIndex < 0)
+            if (input.CallPlay != PlayCall.None) StartPlay(team, input.CallPlay, me);
+            bool hasBall = Ball.IsHeld && Ball.HolderIndex == me;
+            bool teamHasBall = Ball.IsHeld && Players[Ball.HolderIndex].Team == team;
+            if (hasBall && ChargingIndex < 0)
             {
-                if (input.ShootPressed && CanShoot(ControlledIndex)) BeginCharge(ControlledIndex, -1f);
-                else if (input.PassPressed) PassFrom(ControlledIndex, input.Move, -1);
+                if (input.ShootPressed && CanShoot(me)) BeginCharge(me, -1f);
+                else if (input.PassPressed) PassFrom(me, input.Move, -1);
             }
-            else if (input.PassPressed && HumanTeamHasBall && ChargingIndex != Ball.HolderIndex)
+            else if (input.PassPressed && teamHasBall && !IsHumanControlled(Ball.HolderIndex) && ChargingIndex != Ball.HolderIndex)
             {
-                // Call for the ball: the AI teammate with it passes to the human.
-                PassFrom(Ball.HolderIndex, Vec2.Zero, ControlledIndex);
+                // Call for the ball: the AI teammate with it passes to this person.
+                PassFrom(Ball.HolderIndex, Vec2.Zero, me);
             }
         }
 
@@ -546,8 +591,9 @@ namespace CallerRetroBall.Logic
             float meter = ChargeTime / fill;
             float overHold = 1f + Setup.Shot.overHoldSeconds / fill;
 
-            bool isHuman = ChargingIndex == ControlledIndex;
-            bool release = isHuman ? !input.ShootHeld : meter >= _aiReleaseMeter;
+            bool release = ChargingIndex == ControlledIndex ? !input.ShootHeld
+                         : ChargingIndex == SecondControlledIndex ? !_input2.ShootHeld
+                         : meter >= _aiReleaseMeter;
             if (release || meter >= overHold) ReleaseShot(ChargingIndex, meter);
         }
 

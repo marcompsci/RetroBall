@@ -22,7 +22,8 @@ namespace CallerRetroBall.UI
             "Text font: Liberation Sans, bundled with Unity TextMeshPro (SIL Open Font License 1.1).\n" +
             "Audio: every sound effect and the music loop are synthesised in code at runtime (no recordings or samples).\n" +
             "Haptics: a small original iOS plugin using Apple's UIKit feedback generators.\n\n" +
-            "No ads, analytics, tracking, accounts, or purchases. Progress is stored only on this device.";
+            "No ads, analytics, tracking, accounts, or purchases. Progress is stored only on this device. " +
+            "Game Center is optional and off unless you turn it on.";
 
         private static readonly float[] UiScales = { 0.85f, 1f, 1.15f, 1.25f };
         private static readonly string[] UiScaleNames = { "SMALL", "DEFAULT", "LARGE", "LARGEST" };
@@ -62,6 +63,21 @@ namespace CallerRetroBall.UI
                 Save();
             });
             UiKit.Size(UiKit.Label(column, "Difficulty changes how fast and how well the AI decides. It never boosts their ratings.", 28f, Theme.Muted), 70f);
+
+            UiKit.Button(column, "HOW TO PLAY", MainMenuController.StartTutorial, ButtonStyle.Secondary, 110f, 40f);
+
+            Header(column, "GAME CENTER");
+            UiControls.ToggleRow(column, "SIGN IN", s.gameCenter, v => App.SetGameCenter(v));
+            UiKit.Size(UiKit.Label(column, App.GameCenter.IsAvailable
+                    ? "Optional. Posts your wins, greens, and daily streak to leaderboards and unlocks achievements. The game works the same without it."
+                    : "Game Center is only available in the iPhone app.",
+                28f, Theme.Muted), 90f);
+            if (App.GameCenter.IsAvailable)
+                UiKit.Button(column, "OPEN GAME CENTER", () =>
+                {
+                    App.ReportGameCenter();
+                    App.GameCenter.ShowDashboard();
+                }, ButtonStyle.Secondary, 110f, 40f);
 
             UiKit.Button(column, "RESET SAVE", () =>
                 UiControls.Dialog("RESET SAVE?",

@@ -7,6 +7,12 @@ namespace CallerRetroBall.Logic
         Practice = 2,
         /// <summary>First Call Classic: a four-team knockout for the First Callers.</summary>
         Tournament = 3,
+        /// <summary>Local 2-player: player 1 vs player 2, each leading a 3-player side. No rewards.</summary>
+        Versus = 4,
+        /// <summary>Daily Challenge: a seeded Quick Call with a goal for the day.</summary>
+        Daily = 5,
+        /// <summary>How-to-play tutorial (practice rules, guided steps).</summary>
+        Tutorial = 6,
     }
 
     /// <summary>

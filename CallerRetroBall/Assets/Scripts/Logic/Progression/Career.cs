@@ -73,7 +73,8 @@ namespace CallerRetroBall.Logic
 
             data.signalPoints += grant.signalPoints;
             data.fans += grant.fans;
-            if (summary.mode == GameMode.Practice) return true;
+            // Practice, tutorial, and local 2-player games don't count toward career stats.
+            if (summary.mode == GameMode.Practice || summary.mode == GameMode.Tutorial || summary.mode == GameMode.Versus) return true;
 
             data.gamesSinceUpgrade++;
             var t = data.totals;
@@ -173,6 +174,17 @@ namespace CallerRetroBall.Logic
             if (c == null || !data.ownedCosmetics.Contains(c.id)) return false;
             data.SetEquipped(c.slot, c.id);
             return true;
+        }
+
+        public const int TutorialReward = 100;
+
+        /// <summary>Marks the tutorial done; the first time grants a small Signal Point reward. Returns the reward.</summary>
+        public static int CompleteTutorial(CareerSaveData data)
+        {
+            if (data == null || data.tutorialDone) return 0;
+            data.tutorialDone = true;
+            data.signalPoints += TutorialReward;
+            return TutorialReward;
         }
 
         // ------------------------------------------------------------------ practice

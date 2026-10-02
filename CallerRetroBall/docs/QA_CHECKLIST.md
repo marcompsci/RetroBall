@@ -67,6 +67,12 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] RESET SAVE asks for confirmation; CANCEL keeps everything; RESET returns to a fresh career.
 - [ ] Credits and licences text is readable.
 
+## Tutorial, Daily, 2 Player, Game Center
+- [ ] Fresh install: the main menu offers the tutorial. Each of the 8 steps advances only when done. The end card grants +100 SP once.
+- [ ] Daily Challenge shows today's goal. Completing it pays the bonus once and builds the streak on consecutive days. The streak resets after a missed day.
+- [ ] 2 Player: both people move independently (keyboard, and two controllers). P2 has a cyan ring and can shoot, pass, steal, and jump. No rewards are given.
+- [ ] Game Center (device): turning on Sign in shows Apple's sign-in. After a win, the leaderboard updates. OPEN GAME CENTER shows the dashboard.
+
 ## Robustness
 - [ ] Incoming call / home swipe pauses the match; RESUME continues.
 - [ ] Airplane mode: everything works (no network use).

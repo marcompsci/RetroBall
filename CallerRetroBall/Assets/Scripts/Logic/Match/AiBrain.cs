@@ -51,7 +51,7 @@ namespace CallerRetroBall.Logic
         public AiState AiStateOf(int playerIndex) => _ai[playerIndex];
 
         public DifficultyDef AiProfile(int team) =>
-            team == Setup.HumanTeam ? FriendlyAi : (Setup.Difficulty ?? DefaultOpponent);
+            team == Setup.HumanTeam || Setup.SecondHuman ? FriendlyAi : (Setup.Difficulty ?? DefaultOpponent);
 
         private void InitAi()
         {
@@ -74,7 +74,7 @@ namespace CallerRetroBall.Logic
         {
             for (int i = 0; i < Players.Length; i++)
             {
-                if (i == ControlledIndex) continue;
+                if (IsHumanControlled(i)) continue;
                 var p = Players[i];
                 var s = _ai[i];
 
@@ -110,7 +110,7 @@ namespace CallerRetroBall.Logic
 
         private void OnAiPassed(int passer)
         {
-            if (passer == ControlledIndex) return;
+            if (IsHumanControlled(passer)) return;
             var p = Players[passer];
             var s = _ai[passer];
             var court = Setup.Court;
@@ -253,12 +253,13 @@ namespace CallerRetroBall.Logic
             {
                 float open = OpennessOf(Players[target]);
                 uPass = Math.Min(open, 4f) / 4f * 0.6f + tend.pass * 0.25f - 0.2f;
-                if (p.Team == Setup.HumanTeam)
+                int humanMate = HumanIndexOf(p.Team);
+                if (humanMate >= 0)
                 {
-                    float humanOpen = OpennessOf(Controlled);
+                    float humanOpen = OpennessOf(Players[humanMate]);
                     if (humanOpen > 1.8f)
                     {
-                        target = ControlledIndex;
+                        target = humanMate;
                         uPass = Math.Max(uPass, 0.35f + Math.Min(humanOpen, 4f) / 16f);
                     }
                 }

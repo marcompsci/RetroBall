@@ -7,9 +7,9 @@ using UnityEditor.iOS.Xcode;
 namespace CallerRetroBall.EditorTools
 {
     /// <summary>
-    /// After an iOS build, sets the Info.plist keys App Store Connect would otherwise ask about:
-    /// no non-exempt encryption (the game uses none), full screen, hidden status bar, and the
-    /// Sports Games category.
+    /// After an iOS build, sets the Info.plist keys App Store Connect would otherwise ask about
+    /// (no non-exempt encryption, full screen, hidden status bar, Sports Games category), links
+    /// GameKit, and adds the Game Center capability.
     /// </summary>
     public static class IosPostProcess
     {
@@ -27,6 +27,16 @@ namespace CallerRetroBall.EditorTools
             root.SetBoolean("UIViewControllerBasedStatusBarAppearance", false);
             root.SetString("LSApplicationCategoryType", "public.app-category.sports-games");
             plist.WriteToFile(plistPath);
+
+            // Game Center: link GameKit and add the capability (sign-in stays opt-in inside the game).
+            string projPath = PBXProject.GetPBXProjectPath(path);
+            var proj = new PBXProject();
+            proj.ReadFromFile(projPath);
+            proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "GameKit.framework", false);
+            proj.WriteToFile(projPath);
+            var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroBall.entitlements", null, proj.GetUnityMainTargetGuid());
+            caps.AddGameCenter();
+            caps.WriteToFile();
         }
     }
 }

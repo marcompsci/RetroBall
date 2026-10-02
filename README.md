@@ -8,10 +8,11 @@ An original, offline, portrait-first retro arcade 3v3 basketball game for iPhone
 - **Plan and phase log:** [`CallerRetroBall/docs/PLAN.md`](CallerRetroBall/docs/PLAN.md)
 - **Design:** [`CallerRetroBall/DESIGN.md`](CallerRetroBall/DESIGN.md)
 - **Release checklist and App Store kit:** [`CallerRetroBall/docs/RELEASE_CHECKLIST.md`](CallerRetroBall/docs/RELEASE_CHECKLIST.md), [`CallerRetroBall/docs/APP_STORE.md`](CallerRetroBall/docs/APP_STORE.md)
+- **Game Center setup:** [`CallerRetroBall/docs/GAME_CENTER.md`](CallerRetroBall/docs/GAME_CENTER.md)
 - **Manual QA checklist:** [`CallerRetroBall/docs/QA_CHECKLIST.md`](CallerRetroBall/docs/QA_CHECKLIST.md)
 - **Command-line iOS build (macOS, Unity 6 installed):** `tools/build_ios.sh [simulator|device]`
 - **Logic tests without Unity:** `cd tools/LogicTests && dotnet run --project Runner/Runner.csproj`
 
-**Status:** Phases 1–10 implemented. Game logic passes 224 automated tests on .NET; the Unity project compiles in Unity 6000.6.3f1; no iOS build or device run yet.
+**Status:** Phases 1–11 implemented. Game logic passes 243 automated tests on .NET; the Phase 8 code compiled in Unity 6000.6.3f1 with 0 errors, but later changes (Phases 9–11) have not been compiled in Unity yet. There has been no iOS build or device run.
 
 All teams, players, courts, logos, art, and audio are original and generated procedurally in the project.

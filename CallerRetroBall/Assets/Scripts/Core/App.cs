@@ -31,7 +31,23 @@ namespace CallerRetroBall.Core
         public static LoadStatus CareerLoadStatus { get; private set; }
 
         public static readonly RewardTuning Rewards = RewardTuning.Default;
-        public static readonly IGameCenterService GameCenter = new NullGameCenterService();
+        /// <summary>Game Center on iOS builds, a no-op elsewhere. Only used after the player opts in.</summary>
+        public static readonly IGameCenterService GameCenter = GameCenterSync.Create();
+
+        /// <summary>Settings ▸ Game Center toggle: signs in when turned on.</summary>
+        public static void SetGameCenter(bool on)
+        {
+            if (Career == null) return;
+            Career.settings.gameCenter = on;
+            SaveCareer();
+            if (on) GameCenter.Authenticate();
+        }
+
+        /// <summary>Pushes achievements and leaderboard scores (no-op unless opted in and signed in).</summary>
+        public static void ReportGameCenter() => GameCenterSync.Report(GameCenter, Career);
+
+        /// <summary>Today's local day number for the Daily Challenge.</summary>
+        public static int Today => DailyChallenges.DayNumber(System.DateTime.Now);
 
         /// <summary>What the last Rise game changed (announced once by the Rise hub, then cleared).</summary>
         public static RiseOutcome LastRiseOutcome { get; set; }
@@ -120,6 +136,7 @@ namespace CallerRetroBall.Core
             CareerLoadStatus = status;
             AudioManager.EnsureExists();
             ApplySettings();
+            if (Career.settings.gameCenter) GameCenter.Authenticate();
 
             SceneFlow.EnsureExists();
         }
@@ -132,6 +149,7 @@ namespace CallerRetroBall.Core
             PendingMatch = null;
             Career = null;
             TextureFactory.ClearCache();
+            GameCenterSync.ResetSession();
         }
     }
 }

@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 11 | How to Play tutorial, opt-in Game Center (GameKit bridge), local 2-player, Daily Challenge | **Done** (243 logic tests pass incl. a scripted tutorial run and 2-player sim tests; Unity UI and GameKit not yet run) |
 | 10 | Rename to RetroBall; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
 | 9 | Polish: celebrations, dribble moves, pixel bursts, dunk SLAM + shake, crowd ambience, score bounce, reward count-up | **Done** (207 logic tests pass; not yet seen running) |
 | 8 | Release prep: app icon, launch image, release settings, iOS build tooling, Info.plist, privacy manifest, App Store kit | **Done** (198 logic tests pass; icon previewed; no build run yet) |
@@ -142,6 +143,22 @@
 - **First Call Classic** (`ClassicEngine`, `GameMode.Tournament`, saved in `career.classic`): crew vs three
   league teams drawn by seed in a 1v4 / 2v3 bracket. Other games are simulated. The title bonus is 200 SP
   (smaller than the Cup), and titles count in the Locker Room.
+
+## Phase 11 — tutorial, Game Center, 2-player, Daily Challenge
+
+- **Engine:** `MatchSimulation` supports a second human (`MatchSetup.SecondHuman`, `Step(dt, p1, p2)`,
+  `HumanIndexOf`, `IsHumanControlled`). One-player behaviour is unchanged: every earlier seeded test still passes.
+- **Tutorial** (`TutorialSession`, `GameMode.Tutorial`): eight steps that advance only when the player does the
+  thing. On offense the ball is handed back; for defense the ball goes to the other side. Offered on first launch,
+  replayable from PLAY and Settings, with a 100 SP one-time reward.
+- **Daily Challenge** (`DailyChallenges`, `GameMode.Daily`): seeded by calendar day, six goal types, streaks, and
+  a capped streak bonus, once per day. Saved in `career.daily`.
+- **2 Player** (`GameMode.Versus`): P1 uses touch/WASD and the first controller, P2 uses arrows + numpad or a
+  controller. The camera follows the ball, P2 has a cyan ring, there are no rewards, and nothing counts toward the career.
+- **Game Center:** `CallerGameCenter.mm` (GameKit) plus `GameKitGameCenterService`. It's opt-in in Settings, and
+  achievements and leaderboards come from `Achievements`. The post-processor adds GameKit and the capability. The IDs
+  to create are in `docs/GAME_CENTER.md`.
+- **Menus:** PLAY now opens Quick Call, Daily Challenge, 2 Player, First Call Classic, and How to Play.
 
 ## Deviations from the brief (deliberate)
 

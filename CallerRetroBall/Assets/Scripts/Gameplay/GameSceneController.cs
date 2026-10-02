@@ -44,6 +44,10 @@ namespace CallerRetroBall.Gameplay
         private float _shootPoseUntil;
         private int _lastLabelState = -1;
         private PracticeSession _practice;
+        private TutorialSession _tutorial;
+        private DailyChallenge _daily;
+        private readonly InputBuffer _buffer2 = new InputBuffer();
+        private bool Versus => _request != null && _request.Mode == GameMode.Versus;
         private SpriteRenderer[] _cones;
         private SpriteRenderer _targetArrow;
         private PlayCall _pendingCall;
@@ -77,6 +81,10 @@ namespace CallerRetroBall.Gameplay
             _match = new MatchSimulation(setup);
             if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
                 _practice = new PracticeSession((DrillKind)_request.Drill, _match, _request.Seed);
+            if (_request.Mode == GameMode.Tutorial) _tutorial = new TutorialSession();
+            if (_request.Mode == GameMode.Daily && _request.ContextId != null && _request.ContextId.StartsWith("daily:", System.StringComparison.Ordinal)
+                && int.TryParse(_request.ContextId.Substring(6), out int day))
+                _daily = DailyChallenges.For(day, catalog);
 
             var court = catalog.Court(_request.CourtId) ?? catalog.Court(setup.TeamA.homeCourtId);
             BuildWorld(court, setup);
@@ -97,7 +105,11 @@ namespace CallerRetroBall.Gameplay
             Audio.AudioManager.SetAmbience(true);
 
             SyncViews(0f, snapCamera: true);
-            _hud.Toast(_practice != null ? DrillTitle(_practice.Kind) : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.6f);
+            _hud.Toast(_tutorial != null ? "HOW TO PLAY"
+                     : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
+                     : Versus ? "PLAYER 1  VS  PLAYER 2"
+                     : _practice != null ? DrillTitle(_practice.Kind)
+                     : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.8f);
         }
 
         private void BuildWorld(CourtDef court, MatchSetup setup)
@@ -137,9 +149,11 @@ namespace CallerRetroBall.Gameplay
                     primary = jersey.colorA;
                     trim = jersey.colorB;
                 }
-                RgbColor? shoeColor = p.IsHuman && shoes != null ? shoes.colorA : (RgbColor?)null;
+                RgbColor? shoeColor = i == _match.ControlledIndex && shoes != null ? shoes.colorA : (RgbColor?)null;
                 var pattern = contrast ? PatternFor(p.Team, setup) : TeamPattern.Solid;
-                _playerViews[i] = PlayerView.Create(world, p, _art.PlayerFrames(p.Def, primary, trim, team.accent, shoeColor, pattern), _art, ringColor);
+                // Player 2's ring is cyan so both people can find themselves.
+                var ring = i == _match.SecondControlledIndex ? new Color32(0x4C, 0xC9, 0xF0, 255) : (Color32)ringColor;
+                _playerViews[i] = PlayerView.Create(world, p, _art.PlayerFrames(p.Def, primary, trim, team.accent, shoeColor, pattern), _art, ring);
             }
             _ballView = BallView.Create(world, _art);
             _meter = ShotMeterView.Create(world, _art);
@@ -171,13 +185,29 @@ namespace CallerRetroBall.Gameplay
             if (_paused) return;
 
             var input = ReadInput();
+            var input2 = Versus ? ReadInput2() : default;
             _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
             int steps = 0;
             while (_accumulator >= FixedStep && steps < MaxStepsPerFrame)
             {
-                _match.Step(FixedStep, input);
+                _match.Step(FixedStep, input, input2);
                 _practice?.Update(_match, FixedStep);
+                if (_tutorial != null)
+                {
+                    _tutorial.Update(_match);
+                    if (_tutorial.JustAdvanced && !_tutorial.Finished)
+                    {
+                        _hud.Toast("NICE!  NEXT: " + _tutorial.Title, 1.4f);
+                        Sfx(SfxId.Click, 0.8f, 1.4f);
+                        Haptics.Light();
+                        _nextInfoAt = 0f;
+                    }
+                }
                 HandleEvents();
+                input2.ShootPressed = false;
+                input2.PassPressed = false;
+                input2.DefensePressed = false;
+                input2.CallPlay = PlayCall.None;
                 // Edge-triggered presses apply to one step only.
                 input.ShootPressed = false;
                 input.PassPressed = false;
@@ -188,7 +218,8 @@ namespace CallerRetroBall.Gameplay
             }
             SyncViews(steps * FixedStep, snapCamera: false);
 
-            if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
+            if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
+            else if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
             else if (_match.IsOver && !_finalShown) ShowFinal();
         }
 
@@ -201,8 +232,10 @@ namespace CallerRetroBall.Gameplay
             var kb = Keyboard.current;
             if (kb != null)
             {
-                float x = (kb.dKey.isPressed || kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || kb.leftArrowKey.isPressed ? 1f : 0f);
-                float y = (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f) - (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f);
+                // In 2-player the arrow keys belong to player 2.
+                bool arrows = !Versus;
+                float x = (kb.dKey.isPressed || arrows && kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || arrows && kb.leftArrowKey.isPressed ? 1f : 0f);
+                float y = (kb.sKey.isPressed || arrows && kb.downArrowKey.isPressed ? 1f : 0f) - (kb.wKey.isPressed || arrows && kb.upArrowKey.isPressed ? 1f : 0f);
                 if (x != 0f || y != 0f) move = Vec2.ClampMagnitude(new Vec2(x, y), 1f);
                 if (kb.jKey.wasPressedThisFrame) _buffer.Press(ActionButton.Pass, Time.unscaledTime);
                 if (kb.kKey.wasPressedThisFrame) _buffer.Press(ActionButton.Shoot, Time.unscaledTime);
@@ -213,7 +246,8 @@ namespace CallerRetroBall.Gameplay
                 if (kb.bKey.wasPressedThisFrame) _match.KnockLoose(new Vec2(Random.Range(-3f, 3f), Random.Range(1f, 3f)));
 #endif
             }
-            var pad = Gamepad.current;
+            // 2-player: with two controllers player 1 takes the first; with one, it goes to player 2.
+            var pad = Versus ? (Gamepad.all.Count >= 2 ? Gamepad.all[0] : null) : Gamepad.current;
             if (pad != null)
             {
                 var stick = pad.leftStick.ReadValue();
@@ -254,6 +288,64 @@ namespace CallerRetroBall.Gameplay
                 if (liveOnly && _buffer.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
                 if (liveOnly && _buffer.Consume(ActionButton.Pass, now)) input.PassPressed = true;
                 _buffer.Consume(ActionButton.Call, now);
+            }
+            return input;
+        }
+
+        /// <summary>
+        /// Player 2 in local 2-player: arrow keys + numpad (1 shoot, 2 pass, 3 steal, 0 pick-and-roll),
+        /// or the second controller (the only one if just one is connected). Touch controls stay with player 1.
+        /// </summary>
+        private PlayerInput ReadInput2()
+        {
+            var move = Vec2.Zero;
+            bool shootHeld = false;
+            float now = Time.unscaledTime;
+            bool callPressed = false;
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                float x = (kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.leftArrowKey.isPressed ? 1f : 0f);
+                float y = (kb.downArrowKey.isPressed ? 1f : 0f) - (kb.upArrowKey.isPressed ? 1f : 0f);
+                if (x != 0f || y != 0f) move = Vec2.ClampMagnitude(new Vec2(x, y), 1f);
+                if (kb.numpad1Key.wasPressedThisFrame || kb.periodKey.wasPressedThisFrame) _buffer2.Press(ActionButton.Shoot, now);
+                if (kb.numpad2Key.wasPressedThisFrame || kb.commaKey.wasPressedThisFrame) _buffer2.Press(ActionButton.Pass, now);
+                if (kb.numpad3Key.wasPressedThisFrame || kb.slashKey.wasPressedThisFrame) _buffer2.Press(ActionButton.Defense, now);
+                if (kb.numpad0Key.wasPressedThisFrame || kb.mKey.wasPressedThisFrame) callPressed = true;
+                shootHeld |= kb.numpad1Key.isPressed || kb.periodKey.isPressed;
+            }
+            var pad = Gamepad.all.Count >= 2 ? Gamepad.all[1] : (Gamepad.all.Count == 1 ? Gamepad.all[0] : null);
+            if (pad != null)
+            {
+                var stick = pad.leftStick.ReadValue();
+                if (stick.sqrMagnitude > 0.02f) move = new Vec2(stick.x, -stick.y);
+                if (pad.buttonSouth.wasPressedThisFrame) _buffer2.Press(ActionButton.Shoot, now);
+                if (pad.buttonWest.wasPressedThisFrame) _buffer2.Press(ActionButton.Pass, now);
+                if (pad.buttonEast.wasPressedThisFrame) _buffer2.Press(ActionButton.Defense, now);
+                if (pad.buttonNorth.wasPressedThisFrame) callPressed = true;
+                shootHeld |= pad.buttonSouth.isPressed;
+            }
+#endif
+            int me = _match.SecondControlledIndex;
+            var input = new PlayerInput { Move = move, ShootHeld = shootHeld };
+            if (me < 0) return input;
+            int team = _match.Players[me].Team;
+            bool live = _match.Phase == MatchPhase.Live || _match.Phase == MatchPhase.CheckBall;
+            bool hasBall = _match.Ball.IsHeld && _match.Ball.HolderIndex == me;
+            bool teamHasBall = _match.Ball.IsHeld && _match.Players[_match.Ball.HolderIndex].Team == team;
+            if (_match.OffenseTeam == team)
+            {
+                if (live && hasBall && !_match.MustClear && _match.ChargingIndex < 0 && _buffer2.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
+                if (live && teamHasBall && _match.ChargingIndex < 0 && _buffer2.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                _buffer2.Consume(ActionButton.Defense, now);
+                if (callPressed && teamHasBall && _match.Phase == MatchPhase.Live && _match.ActivePlay == PlayCall.None) input.CallPlay = PlayCall.PickAndRoll;
+            }
+            else if (_match.Phase == MatchPhase.Live)
+            {
+                if (_buffer2.Consume(ActionButton.Defense, now)) input.DefensePressed = true;
+                if (_buffer2.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
+                if (_buffer2.Consume(ActionButton.Pass, now)) input.PassPressed = true;
             }
             return input;
         }
@@ -360,7 +452,7 @@ namespace CallerRetroBall.Gameplay
             {
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
                 var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
-                _playerViews[i].Sync(dt, i == _match.ControlledIndex, shooting, _match.JumpHeight01(i), flair);
+                _playerViews[i].Sync(dt, _match.IsHumanControlled(i), shooting, _match.JumpHeight01(i), flair);
             }
 
             int holderOrder = _match.Holder != null ? CourtSpace.SortingOrder(_match.Holder.Position) : 0;
@@ -368,9 +460,9 @@ namespace CallerRetroBall.Gameplay
             _ballView.Sync(_match.Ball, holderOrder, ballOffset);
 
             // Shot meter (human only).
-            if (_match.ChargingIndex == _match.ControlledIndex && _match.ChargingIndex >= 0)
+            if (_match.ChargingIndex >= 0 && _match.IsHumanControlled(_match.ChargingIndex))
             {
-                var shooter = _match.Controlled;
+                var shooter = _match.Players[_match.ChargingIndex];
                 _meter.ShowCharging(CourtSpace.ToWorld(shooter.Position), _match.ChargeMeter,
                                     shooter.Def.attributes.shooting, _match.Setup.Shot);
             }
@@ -385,7 +477,8 @@ namespace CallerRetroBall.Gameplay
             if (receiver >= 0)
                 _receiverArrow.transform.position = CourtSpace.ToWorldSnapped(_match.Players[receiver].Position) + new Vector3(0f, 1.75f, 0f);
 
-            _cameraRig.Follow(_match.Controlled.Position, Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
+            // 2-player: follow the ball so neither player is left off screen.
+            _cameraRig.Follow(Versus ? _match.Ball.Position : _match.Controlled.Position, Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
             _hud.Sync(_match);
             // The info line builds a string, so refresh it ~10x a second rather than every frame.
             if (Time.unscaledTime >= _nextInfoAt)
@@ -466,6 +559,13 @@ namespace CallerRetroBall.Gameplay
 
         private string InfoLine()
         {
+            if (_tutorial != null && !_tutorial.Finished)
+            {
+                string hint = Application.isMobilePlatform ? _tutorial.TouchHint : _tutorial.TouchHint + "  (" + _tutorial.KeyHint + ")";
+                return "STEP " + ((int)_tutorial.Step + 1) + "/" + TutorialSession.StepCount + " · " + _tutorial.Title + " — " + hint.ToUpperInvariant();
+            }
+            if (Versus && _match.Time < 10f)
+                return "P1: WASD · K SHOOT · J PASS · L STEAL · C CALL     P2: ARROWS · NUM1 SHOOT · NUM2 PASS · NUM3 STEAL · NUM0 CALL";
             if (_practice != null)
             {
                 string time = _practice.TimeLimit > 0f ? Mathf.CeilToInt(_practice.TimeLeft) + "s  ·  " : _practice.Elapsed.ToString("0.0") + "s  ·  ";
@@ -476,6 +576,7 @@ namespace CallerRetroBall.Gameplay
                 return "WASD MOVE · K SHOOT (HOLD) · J PASS · L STEAL · C CALL · ESC PAUSE";
             if (_match.ActivePlay != PlayCall.None && _match.ActivePlayTeam == _match.Setup.HumanTeam) return PlayName(_match.ActivePlay);
             if (_match.IsBoxingOut(_match.ControlledIndex)) return "BOX OUT";
+            if (_daily != null) return "DAILY: " + _daily.Describe().ToUpperInvariant();
             return "";
         }
 
@@ -508,10 +609,20 @@ namespace CallerRetroBall.Gameplay
             int human = s.HumanTeam;
             string title = _match.Winner < 0 ? "TIE" : (_match.Winner == human ? "YOU WIN" : "FINAL");
 
-            if (_request.Mode == GameMode.Practice)
+            if (_request.Mode == GameMode.Practice || _request.Mode == GameMode.Tutorial)
             {
                 string line = s.TeamA.abbreviation + "  " + _match.Score[0] + "  -  " + _match.Score[1] + "  " + s.TeamB.abbreviation;
                 _hud.ShowFinal(title, line);
+                return;
+            }
+
+            if (Versus)
+            {
+                // Local 2-player: box score, no rewards, nothing saved.
+                var vs = MatchSummary.From(_match, _request.Mode, "versus");
+                string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
+                Haptics.Success();
+                _hud.ShowPostGame(winner, vs, default, false, null, null, true);
                 return;
             }
 
@@ -536,6 +647,21 @@ namespace CallerRetroBall.Gameplay
                     note = OutcomeText(outcome);
                     if (outcome == RiseOutcome.Champion) title = "CHAMPIONS";
                 }
+                if (rewarded && _daily != null)
+                {
+                    if (DailyChallenges.IsMet(_daily, summary))
+                    {
+                        int bonus = DailyChallenges.Complete(App.Career.daily, App.Career, _daily.Day);
+                        note = bonus > 0
+                            ? "DAILY COMPLETE!  +" + bonus + " SP  ·  STREAK " + App.Career.daily.streak
+                            : "Daily already done today. Come back tomorrow!";
+                        if (bonus > 0) title = "DAILY DONE";
+                    }
+                    else
+                    {
+                        note = "Daily goal: " + _daily.Describe() + ". Not this time. Rematch?";
+                    }
+                }
                 if (rewarded && _request.Mode == GameMode.Tournament)
                 {
                     var outcome = ClassicEngine.ApplyResult(App.Career.classic, App.Catalog, summary);
@@ -544,6 +670,7 @@ namespace CallerRetroBall.Gameplay
                     if (outcome == ClassicOutcome.Champion) title = "CLASSIC CHAMPS";
                 }
                 App.SaveCareer();
+                App.ReportGameCenter();
             }
             if (summary.HumanWon) Haptics.Success();
 
@@ -577,6 +704,21 @@ namespace CallerRetroBall.Gameplay
                 case ClassicOutcome.Eliminated: return "Knocked out. Enter the next Classic from the main menu.";
                 default: return null;
             }
+        }
+
+        private void ShowTutorialEnd()
+        {
+            _finalShown = true;
+            _controls.SetVisible(false);
+            int reward = App.Career != null ? Career.CompleteTutorial(App.Career) : 0;
+            if (App.Career != null)
+            {
+                App.SaveCareer();
+                App.ReportGameCenter();
+            }
+            Haptics.Success();
+            Sfx(SfxId.CrowdCheer, 0.7f);
+            _hud.ShowPracticeEnd("TUTORIAL COMPLETE", reward > 0 ? "+" + reward + " SP · YOU'RE READY" : "YOU'RE READY TO PLAY", false);
         }
 
         private void ShowPracticeEnd()

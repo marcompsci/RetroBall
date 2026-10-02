@@ -84,12 +84,11 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ human defense
 
-        private void HandleHumanDefense(PlayerInput input)
+        private void HandleHumanDefense(int me, PlayerInput input)
         {
-            var me = Controlled;
-            if (input.DefensePressed) TrySteal(me.Index);
-            if (input.ShootPressed) Jump(me.Index);
-            if (input.PassPressed) SwitchOntoBall(me.Index);
+            if (input.DefensePressed) TrySteal(me);
+            if (input.ShootPressed) Jump(me);
+            if (input.PassPressed) SwitchOntoBall(me);
         }
 
         /// <summary>Reach for the ball. Needs to be close; a miss leaves you briefly beaten.</summary>
@@ -460,13 +459,14 @@ namespace CallerRetroBall.Logic
         /// <summary>Give-and-go: after the human passes during the play, the receiver hits them back on the cut.</summary>
         private bool GiveAndGoReturn(PlayerRuntimeState handler)
         {
-            if (_play != PlayCall.GiveAndGo || handler.Team != _playTeam || handler.Index == ControlledIndex) return false;
+            int humanIndex = HumanIndexOf(_playTeam);
+            if (_play != PlayCall.GiveAndGo || handler.Team != _playTeam || humanIndex < 0 || handler.Index == humanIndex) return false;
             if (_giveAndGoPartner != handler.Index) return false;
-            var human = Controlled;
+            var human = Players[humanIndex];
             float humanToHoop = Setup.Court.DistanceToHoop(human.Position);
             if (humanToHoop < 3.5f || OpennessOf(human) > 1.8f)
             {
-                PassFrom(handler.Index, Vec2.Zero, ControlledIndex);
+                PassFrom(handler.Index, Vec2.Zero, humanIndex);
                 EndPlay();
                 return true;
             }
@@ -475,7 +475,7 @@ namespace CallerRetroBall.Logic
 
         private void OnPassForPlays(int passer, int receiver)
         {
-            if (_play == PlayCall.GiveAndGo && passer == ControlledIndex && Players[receiver].Team == _playTeam)
+            if (_play == PlayCall.GiveAndGo && passer == HumanIndexOf(_playTeam) && Players[receiver].Team == _playTeam)
                 _giveAndGoPartner = receiver;
         }
     }

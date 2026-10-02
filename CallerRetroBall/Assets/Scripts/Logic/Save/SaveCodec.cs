@@ -56,9 +56,18 @@ namespace CallerRetroBall.Logic
                     ["haptics"] = d.settings.haptics, ["screenShake"] = d.settings.screenShake,
                     ["uiScale"] = (double)d.settings.uiScale, ["colorblindContrast"] = d.settings.colorblindContrast,
                     ["difficultyId"] = d.settings.difficultyId,
+                    ["gameCenter"] = d.settings.gameCenter,
                 },
                 ["rise"] = EncodeRise(d.rise),
                 ["classic"] = EncodeClassic(d.classic),
+                ["daily"] = new Dictionary<string, object>
+                {
+                    ["lastCompletedDay"] = (d.daily ?? new DailySaveData()).lastCompletedDay,
+                    ["streak"] = (d.daily ?? new DailySaveData()).streak,
+                    ["bestStreak"] = (d.daily ?? new DailySaveData()).bestStreak,
+                    ["completed"] = (d.daily ?? new DailySaveData()).completed,
+                },
+                ["tutorialDone"] = d.tutorialDone,
                 ["appliedMatchIds"] = Strings(d.appliedMatchIds),
             };
             return MiniJson.Write(o);
@@ -195,9 +204,19 @@ namespace CallerRetroBall.Logic
                     uiScale = Math.Max(0.85f, Math.Min(1.25f, (float)Num(st, "uiScale", 1))),
                     colorblindContrast = Bool(st, "colorblindContrast", false),
                     difficultyId = Str(st, "difficultyId", DefaultContent.DefaultDifficultyId),
+                    gameCenter = Bool(st, "gameCenter", false),
                 };
                 d.rise = DecodeRise(Obj(o, "rise"));
                 d.classic = DecodeClassic(Obj(o, "classic"));
+                var dy = Obj(o, "daily");
+                d.daily = new DailySaveData
+                {
+                    lastCompletedDay = Int(dy, "lastCompletedDay", -1),
+                    streak = Math.Max(0, Int(dy, "streak", 0)),
+                    bestStreak = Math.Max(0, Int(dy, "bestStreak", 0)),
+                    completed = Math.Max(0, Int(dy, "completed", 0)),
+                };
+                d.tutorialDone = Bool(o, "tutorialDone", false);
 
                 Career.EnsureDefaults(d, c);
                 status = version < CareerSaveData.CurrentVersion ? LoadStatus.Migrated : LoadStatus.Ok;

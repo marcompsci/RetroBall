@@ -37,6 +37,19 @@ namespace NUnit.Framework
 
         public static void Fail(string message = null) => throw new AssertionException(message ?? "Assert.Fail");
 
+        public static void IsNotEmpty(System.Collections.IEnumerable value, string message = null)
+        {
+            if (value == null || !value.GetEnumerator().MoveNext()) throw new AssertionException(message ?? "Expected a non-empty value");
+        }
+
+        public static void Contains(object expected, System.Collections.ICollection actual, string message = null)
+        {
+            if (actual != null)
+                foreach (var item in actual)
+                    if (Equals(item, expected)) return;
+            throw new AssertionException(message ?? "Expected collection to contain <" + expected + ">");
+        }
+
         public static void IsTrue(bool condition, string message = null)
         {
             if (!condition) throw new AssertionException(M(message, "Expected true"));

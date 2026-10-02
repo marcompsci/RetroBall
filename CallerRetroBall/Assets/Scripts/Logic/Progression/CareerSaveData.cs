@@ -19,6 +19,8 @@ namespace CallerRetroBall.Logic
         public float uiScale = 1f;
         public bool colorblindContrast;
         public string difficultyId = DefaultContent.DefaultDifficultyId;
+        /// <summary>Opt-in: sign in to Game Center for leaderboards and achievements.</summary>
+        public bool gameCenter;
     }
 
     [Serializable]
@@ -125,6 +127,9 @@ namespace CallerRetroBall.Logic
         public SettingsData settings = new SettingsData();
         public RiseSaveData rise = new RiseSaveData();
         public ClassicSaveData classic = new ClassicSaveData();
+        public DailySaveData daily = new DailySaveData();
+        /// <summary>Finished the how-to-play tutorial at least once.</summary>
+        public bool tutorialDone;
         /// <summary>Recent match ids already rewarded (guards against double grants).</summary>
         public List<string> appliedMatchIds = new List<string>();
 
