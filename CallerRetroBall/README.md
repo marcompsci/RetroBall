@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–8 implemented (8 = release prep); not yet compiled in the Unity Editor.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis, app icon and launch art) compiles on .NET and passes 198 automated tests. The Unity-side scripts pass a syntax check and a name-resolution check, but nobody has opened the project in Unity, built it for iOS, or played it on a device yet. Expect a few compile fixes on first open. See [Known limitations](#known-limitations).
+> **Status: Phases 1–9 implemented (8 = release prep, 9 = polish). It compiles in Unity 6000.6.3f1 but hasn't had a full playtest yet.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis, app icon and launch art) compiles on .NET and passes 207 automated tests. The Unity scripts now compile in the Editor (after two small fixes found on first open), but the game hasn't had a full playtest, an iOS build, or a device run yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -68,7 +68,7 @@ cd ../tools/LogicTests
 dotnet run --project Runner/Runner.csproj
 ```
 
-This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **198 passed, 0 failed**.
+This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **207 passed, 0 failed**.
 
 `tools/SyntaxCheck` parses every C# file under `Assets/`. It does not resolve Unity APIs, so it is not a substitute for compiling in Unity.
 
@@ -120,7 +120,6 @@ Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 
 - **Not compiled in Unity yet.** The Unity layer has passed a syntax check and a name-resolution check only. No Editor run, iOS build, simulator run, or device test has happened.
 - Not tuned by hand: balance numbers come from AI-vs-AI simulations (AI field-goal rate about 29 % Rookie, 38 % Caller, 56 % Legend), not from people playing.
-- Celebrations and dribble moves are collectible tags with no animation yet.
 - The URP asset must be assigned by hand (setup step 4).
 - The app icon and launch image are generated, but not yet checked in Xcode or on a device. There is no localisation (English only).
 - No Game Center implementation (interface only), by design for the offline MVP.

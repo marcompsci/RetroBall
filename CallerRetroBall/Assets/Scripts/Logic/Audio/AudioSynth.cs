@@ -84,6 +84,44 @@ namespace CallerRetroBall.Logic
             return Normalize(s, 0.8f);
         }
 
+        /// <summary>
+        /// Low crowd murmur for matches: filtered noise with slow swells, 4 s, looping seamlessly
+        /// (the tail is cross-faded into the head so there is no click at the loop point).
+        /// </summary>
+        public static float[] CrowdAmbience()
+        {
+            const float seconds = 4f;
+            int n = (int)(seconds * SampleRate);
+            int fade = SampleRate / 2;
+            var raw = new float[n + fade];
+            var rng = new SeededRandom(777);
+            float y1 = 0f, y2 = 0f;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                float t = i / (float)SampleRate;
+                float x = rng.NextFloat() * 2f - 1f;
+                y1 += 0.05f * (x - y1);  // low rumble
+                y2 += 0.18f * (x - y2);  // chatter
+                // Two slow swells per loop, plus an off-beat one; periods divide the loop length.
+                float swell = 0.75f + 0.15f * (float)Math.Sin(2 * Math.PI * t / 2.0) + 0.1f * (float)Math.Sin(2 * Math.PI * t / 1.0 + 1.3);
+                raw[i] = (y1 * 1.6f + y2 * 0.35f) * swell;
+            }
+            var s = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                if (i < fade)
+                {
+                    float w = i / (float)fade;
+                    s[i] = raw[i] * w + raw[n + i] * (1f - w);
+                }
+                else
+                {
+                    s[i] = raw[i];
+                }
+            }
+            return Normalize(s, 0.5f);
+        }
+
         public static float Midi(int note) => 440f * (float)Math.Pow(2.0, (note - 69) / 12.0);
 
         // ------------------------------------------------------------------ building blocks

@@ -30,6 +30,8 @@ namespace CallerRetroBall.Gameplay
         private string _lastInfo = "";
         private int _lastScoreA = -1, _lastScoreB = -1, _lastClock = -1, _lastShot = -1, _lastOffense = -1;
         private float _toastUntil;
+        private float _punchA = -10f, _punchB = -10f;
+        private const float PunchSeconds = 0.3f;
 
         public static MatchHud Create(TeamDef a, TeamDef b)
         {
@@ -200,7 +202,11 @@ namespace CallerRetroBall.Gameplay
             BoxScore(s, 1);
 
             if (rewarded && (grant.signalPoints > 0 || grant.fans > 0))
-                UiKit.Size(UiKit.Label(_finalColumn, "+" + grant.signalPoints + " SP    +" + grant.fans + " FANS", 48f, Theme.Cyan, TextAlignmentOptions.Center, true), 76f);
+            {
+                var rewards = UiKit.Label(_finalColumn, "", 48f, Theme.Cyan, TextAlignmentOptions.Center, true);
+                UiKit.Size(rewards, 76f);
+                StartCoroutine(CountUp(rewards, grant.signalPoints, grant.fans));
+            }
             if (!string.IsNullOrEmpty(note))
                 UiKit.Size(UiKit.Label(_finalColumn, note, 36f, Theme.Gold, TextAlignmentOptions.Center, true), 110f);
 
@@ -233,6 +239,21 @@ namespace CallerRetroBall.Gameplay
         private static string Row(string name, string a, string b, string c, string d, string e, string f) =>
             name + "<pos=44%>" + a + "<pos=53%>" + b + "<pos=62%>" + c + "<pos=71%>" + d + "<pos=80%>" + e + "<pos=90%>" + f;
 
+        /// <summary>Ticks the reward line up from zero (presentation only; the career is already saved).</summary>
+        private System.Collections.IEnumerator CountUp(TextMeshProUGUI label, int sp, int fans)
+        {
+            const float seconds = 0.9f;
+            float start = Time.unscaledTime;
+            while (true)
+            {
+                float u = Mathf.Clamp01((Time.unscaledTime - start) / seconds);
+                float e = 1f - (1f - u) * (1f - u);
+                label.text = "+" + Mathf.RoundToInt(sp * e) + " SP    +" + Mathf.RoundToInt(fans * e) + " FANS";
+                if (u >= 1f) yield break;
+                yield return null;
+            }
+        }
+
         /// <summary>Practice end card.</summary>
         public void ShowPracticeEnd(string title, string result, bool newBest)
         {
@@ -260,10 +281,34 @@ namespace CallerRetroBall.Gameplay
             _toastUntil = Time.unscaledTime + seconds;
         }
 
+        private void Update()
+        {
+            Punch(_scoreA, _punchA);
+            Punch(_scoreB, _punchB);
+        }
+
+        /// <summary>Score bounce: pops to 140 % and settles back over 0.3 s.</summary>
+        private static void Punch(TextMeshProUGUI label, float since)
+        {
+            float t = (Time.unscaledTime - since) / PunchSeconds;
+            float scale = t >= 1f || t < 0f ? 1f : 1f + 0.4f * (1f - t) * (1f - t);
+            label.rectTransform.localScale = new Vector3(scale, scale, 1f);
+        }
+
         public void Sync(MatchSimulation m)
         {
-            if (m.Score[0] != _lastScoreA) { _lastScoreA = m.Score[0]; _scoreA.text = _lastScoreA.ToString(); }
-            if (m.Score[1] != _lastScoreB) { _lastScoreB = m.Score[1]; _scoreB.text = _lastScoreB.ToString(); }
+            if (m.Score[0] != _lastScoreA)
+            {
+                if (_lastScoreA >= 0) _punchA = Time.unscaledTime;
+                _lastScoreA = m.Score[0];
+                _scoreA.text = _lastScoreA.ToString();
+            }
+            if (m.Score[1] != _lastScoreB)
+            {
+                if (_lastScoreB >= 0) _punchB = Time.unscaledTime;
+                _lastScoreB = m.Score[1];
+                _scoreB.text = _lastScoreB.ToString();
+            }
 
             int clock = Mathf.CeilToInt(m.GameClock);
             if (clock != _lastClock)

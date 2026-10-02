@@ -18,6 +18,8 @@ namespace CallerRetroBall.Audio
 
         private readonly Dictionary<SfxId, AudioClip> _clips = new Dictionary<SfxId, AudioClip>();
         private AudioSource _music;
+        private AudioSource _ambience;
+        private bool _ambienceOn;
         private AudioSource[] _sfx;
         private int _next;
         private float _musicVolume = 0.6f;
@@ -41,6 +43,11 @@ namespace CallerRetroBall.Audio
             _music.clip = MakeClip("music.loop", AudioSynth.MusicLoop());
             _music.loop = true;
             _music.playOnAwake = false;
+
+            _ambience = gameObject.AddComponent<AudioSource>();
+            _ambience.clip = MakeClip("ambience.crowd", AudioSynth.CrowdAmbience());
+            _ambience.loop = true;
+            _ambience.playOnAwake = false;
 
             _sfx = new AudioSource[SfxVoices];
             for (int i = 0; i < SfxVoices; i++)
@@ -66,7 +73,18 @@ namespace CallerRetroBall.Audio
             var s = App.Career?.settings;
             _instance._musicVolume = s != null ? s.musicVolume : 0.6f;
             _instance._sfxVolume = s != null ? s.sfxVolume : 0.9f;
-            _instance._music.volume = _instance._musicVolume * 0.5f;
+            _instance._music.volume = _instance._musicVolume * (_instance._ambienceOn ? 0.3f : 0.5f);
+            _instance._ambience.volume = _instance._sfxVolume * 0.22f;
+        }
+
+        /// <summary>Crowd murmur under a match (follows the SFX volume). Music ducks while it plays.</summary>
+        public static void SetAmbience(bool on)
+        {
+            if (_instance == null || _instance._ambienceOn == on) return;
+            _instance._ambienceOn = on;
+            if (on) _instance._ambience.Play();
+            else _instance._ambience.Stop();
+            _instance._music.volume = _instance._musicVolume * (on ? 0.3f : 0.5f);
         }
 
         public static void Play(SfxId id, float volume = 1f, float pitch = 1f)

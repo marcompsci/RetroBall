@@ -50,6 +50,18 @@ namespace CallerRetroBall.Gameplay
         private bool _resultApplied;
         private float _nextInfoAt;
 
+        // Phase 9 presentation (never read by the simulation).
+        private PixelBursts _bursts;
+        private int _celebrator = -1;
+        private float _celebrateStart;
+        private CelebrationKind _celebration;
+        private CelebrationKind _myCelebration;
+        private DribbleMoveKind _myMove;
+        private float _moveStart = -10f;
+        private float _moveReadyAt;
+        private Vec2 _lastMoveDir;
+        private Vector3 _hoopWorld;
+
         public MatchSimulation Match => _match;
         public bool IsPaused => _paused;
 
@@ -79,6 +91,10 @@ namespace CallerRetroBall.Gameplay
             _hud.ResumeRequested += () => SetPaused(false);
             _hud.QuitRequested += Quit;
             _hud.RematchRequested += Rematch;
+
+            _myCelebration = Flair.CelebrationFor(App.Career?.equippedCelebration);
+            _myMove = Flair.DribbleMoveFor(App.Career?.equippedMove);
+            Audio.AudioManager.SetAmbience(true);
 
             SyncViews(0f, snapCamera: true);
             _hud.Toast(_practice != null ? DrillTitle(_practice.Kind) : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.6f);
@@ -127,6 +143,8 @@ namespace CallerRetroBall.Gameplay
             }
             _ballView = BallView.Create(world, _art);
             _meter = ShotMeterView.Create(world, _art);
+            _bursts = PixelBursts.Create(world, _art);
+            _hoopWorld = CourtSpace.ToWorldSnapped(setup.Court.Hoop, CourtSpace.RimHeight);
 
             var arrowGo = new GameObject("ReceiverArrow");
             arrowGo.transform.SetParent(world, false);
@@ -259,7 +277,13 @@ namespace CallerRetroBall.Gameplay
                         break;
                     case MatchEventType.ShotMade:
                         bool swish = _match.Ball.ShotGrade == TimingGrade.Green;
-                        _hud.Toast((swish ? "SWISH  +" : "+") + e.Value, 1.1f);
+                        bool dunk = _match.Ball.ShotType == ShotType.Dunk;
+                        _hud.Toast((dunk ? "SLAM!  +" : swish ? "SWISH  +" : "+") + e.Value, 1.1f);
+                        _bursts.Spawn(_hoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
+                        if (dunk) _cameraRig.Shake(0.22f);
+                        _celebrator = e.PlayerIndex;
+                        _celebrateStart = Time.unscaledTime;
+                        _celebration = e.PlayerIndex == _match.ControlledIndex ? _myCelebration : CelebrationKind.FistPump;
                         Sfx(swish ? SfxId.Swish : SfxId.Rim);
                         Sfx(e.Team == human ? SfxId.CrowdCheer : SfxId.CrowdGroan, 0.6f);
                         if (e.Team == human) Haptics.Success();
@@ -274,11 +298,13 @@ namespace CallerRetroBall.Gameplay
                         Sfx(SfxId.Squeak, 0.6f);
                         break;
                     case MatchEventType.Steal:
+                        _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 1f), new Color32(0x4C, 0xC9, 0xF0, 255), 8, 2.5f, 0.4f);
                         _hud.Toast(e.Team == human ? "STEAL!" : "STRIPPED", 1.1f);
                         Sfx(SfxId.Steal);
                         if (e.Team == human) Haptics.Medium();
                         break;
                     case MatchEventType.Block:
+                        _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 2f), new Color32(0xF4, 0xF1, 0xDE, 255), 14, 3.5f, 0.5f);
                         _hud.Toast(e.Team == human ? "BLOCKED!" : "SENT BACK", 1.1f);
                         Sfx(SfxId.Block);
                         _cameraRig.Shake(0.18f);
@@ -327,14 +353,19 @@ namespace CallerRetroBall.Gameplay
         private void SyncViews(float dt, bool snapCamera)
         {
             float now = Time.unscaledTime;
+            var move = UpdateDribbleMove(now);
+            var celebrate = _celebrator >= 0 ? Flair.Celebration(_celebration, now - _celebrateStart) : FlairPose.None;
+            if (_celebrator >= 0 && now - _celebrateStart >= Flair.CelebrationSeconds) _celebrator = -1;
             for (int i = 0; i < _playerViews.Length; i++)
             {
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
-                _playerViews[i].Sync(dt, i == _match.ControlledIndex, shooting, _match.JumpHeight01(i));
+                var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
+                _playerViews[i].Sync(dt, i == _match.ControlledIndex, shooting, _match.JumpHeight01(i), flair);
             }
 
             int holderOrder = _match.Holder != null ? CourtSpace.SortingOrder(_match.Holder.Position) : 0;
-            _ballView.Sync(_match.Ball, holderOrder);
+            var ballOffset = _match.HumanHasBall ? new Vector2Int(move.BallOffsetX, move.BallLift + move.Lift) : Vector2Int.zero;
+            _ballView.Sync(_match.Ball, holderOrder, ballOffset);
 
             // Shot meter (human only).
             if (_match.ChargingIndex == _match.ControlledIndex && _match.ChargingIndex >= 0)
@@ -405,6 +436,28 @@ namespace CallerRetroBall.Gameplay
             _lastLabelState = state;
             _controls.SetLabels(shoot, pass, def);
             _controls.SetAvailability(canShoot, canPass, !offense, canCall);
+        }
+
+        /// <summary>
+        /// Plays your equipped dribble move when you cut sharply with the ball (looks only:
+        /// speed and handling come from the simulation, not from this).
+        /// </summary>
+        private FlairPose UpdateDribbleMove(float now)
+        {
+            if (!_match.HumanHasBall || _match.ChargingIndex >= 0)
+            {
+                _lastMoveDir = Vec2.Zero;
+                return FlairPose.None;
+            }
+            var dir = _match.Controlled.Motion.velocity;
+            if (now >= _moveReadyAt && Flair.IsSharpCut(_lastMoveDir, dir))
+            {
+                _moveStart = now;
+                _moveReadyAt = now + Flair.DribbleMoveCooldown;
+                Sfx(SfxId.Squeak, 0.5f, 1.1f);
+            }
+            if (dir.SqrMagnitude >= 0.25f) _lastMoveDir = dir;
+            return Flair.DribbleMove(_myMove, now - _moveStart);
         }
 
         private bool CanCall() =>
@@ -639,6 +692,7 @@ namespace CallerRetroBall.Gameplay
 
         private void OnDestroy()
         {
+            Audio.AudioManager.SetAmbience(false);
             _art?.Dispose();
         }
 

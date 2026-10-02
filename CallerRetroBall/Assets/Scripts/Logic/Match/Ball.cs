@@ -63,6 +63,8 @@ namespace CallerRetroBall.Logic
         public bool ShotWillScore;
         public int ShotPoints;
         public TimingGrade ShotGrade;
+        /// <summary>Kind of the shot in the air (or the last one taken); used for presentation.</summary>
+        public ShotType ShotType;
 
         public bool InFlight => Phase == BallPhase.Pass || Phase == BallPhase.Shot;
 

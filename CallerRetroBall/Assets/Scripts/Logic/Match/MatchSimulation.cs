@@ -630,6 +630,7 @@ namespace CallerRetroBall.Logic
             Ball.ShotWillScore = makes;
             Ball.ShotPoints = points;
             Ball.ShotGrade = eval.Grade;
+            Ball.ShotType = type;
             Ball.FlightFrom = p.Position;
             Ball.FlightTo = court.Hoop;
             Ball.FlightTime = 0f;

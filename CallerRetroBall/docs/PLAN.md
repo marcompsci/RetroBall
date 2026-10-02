@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 9 | Polish: celebrations, dribble moves, pixel bursts, dunk SLAM + shake, crowd ambience, score bounce, reward count-up | **Done** (207 logic tests pass; not yet seen running) |
 | 8 | Release prep: app icon, launch image, release settings, iOS build tooling, Info.plist, privacy manifest, App Store kit | **Done** (198 logic tests pass; icon previewed; no build run yet) |
 
 ## Phase 1 — what exists
@@ -113,6 +114,19 @@
 - **Docs:** `docs/APP_STORE.md` (metadata within Apple's character limits, privacy policy text, privacy label, age rating,
   export compliance, screenshot plan, review notes) and `docs/RELEASE_CHECKLIST.md`.
 - **Version:** the menus now show the Player Settings version (`Application.version`) instead of a hard-coded string.
+
+## Phase 9 — polish (presentation only, no gameplay or balance changes)
+
+- `Logic/Feel/Flair.cs`: celebrations (Fist Pump, Call It, Shimmy Step) and dribble moves (Crossover, Hesi Hop,
+  Spin Cycle) as pure pose functions chosen by the equipped cosmetic. A sharp cut (>110°) with the ball triggers
+  your move, with a 0.7 s cooldown. Also deterministic `Bursts` for sparks.
+- `AudioSynth.CrowdAmbience`: a 4 s seamless crowd loop under matches. Music ducks while it plays.
+- Unity: `PixelBursts` (pooled 1-px sparks: white on makes, gold on greens, bigger on dunks; dust on blocks;
+  cyan on steals), SLAM! toast and camera shake on dunks, score bounce in the HUD, post-game rewards count up.
+- `BallState.ShotType` records the kind of shot in the air, for presentation.
+- First-compile fixes from Unity 6000.6.3f1: a `PlayerInput` name clash, a definite-assignment error in Quick
+  Call, and the deprecated `DEVELOPMENT_BUILD` define replaced by `DEBUG`. The overlays now scroll, and the keyboard
+  controls show on screen.
 
 ## Deviations from the brief (deliberate)
 

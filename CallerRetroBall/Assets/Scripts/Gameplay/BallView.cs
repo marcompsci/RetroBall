@@ -27,10 +27,12 @@ namespace CallerRetroBall.Gameplay
             return view;
         }
 
-        public void Sync(BallState ball, int holderSortingOrder)
+        /// <param name="heldOffsetPx">Dribble-move offset in art pixels, applied only while the ball is held.</param>
+        public void Sync(BallState ball, int holderSortingOrder, Vector2Int heldOffsetPx = default)
         {
             _shadow.transform.position = CourtSpace.ToWorldSnapped(ball.Position);
-            _ball.transform.position = CourtSpace.ToWorldSnapped(ball.Position, ball.Height);
+            var offset = ball.IsHeld ? new Vector3(heldOffsetPx.x, heldOffsetPx.y, 0f) / CourtSpace.PixelsPerUnit : Vector3.zero;
+            _ball.transform.position = CourtSpace.ToWorldSnapped(ball.Position, ball.Height) + offset;
 
             int order = ball.IsHeld ? holderSortingOrder + 1
                 : ball.Phase == BallPhase.Shot || ball.Height > 2f ? 31000 // in the air: above players and the hoop
