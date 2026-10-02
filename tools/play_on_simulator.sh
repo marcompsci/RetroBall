@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# One command from Unity project to RetroBall running in the iOS Simulator (macOS).
+#
+#   bash ~/RetroBall-push/tools/play_on_simulator.sh            # project at ~/RetroBall
+#   bash ~/RetroBall-push/tools/play_on_simulator.sh /path/to/project
+#
+# Quit the Unity Editor first (Unity can't open one project twice). Steps:
+#   1. Unity (batch mode) writes the Xcode project to <project>/iOSBuild/Simulator
+#   2. xcodebuild compiles it for the Simulator (no signing needed)
+#   3. an iPhone simulator boots, the app installs and launches
+# Everything is logged to <project>/Logs/ so it can be shared if something fails.
+set -uo pipefail
+
+PROJECT="${1:-$HOME/RetroBall}"
+LOGS="$PROJECT/Logs"
+mkdir -p "$LOGS"
+REPORT="$LOGS/RetroBall-release.txt"
+note() { echo "$1"; printf '=== %s  play_on_simulator\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
+
+UNITY="${UNITY:-$(ls -d /Applications/Unity/Hub/Editor/6000.*/Unity.app/Contents/MacOS/Unity 2>/dev/null | sort -V | tail -1)}"
+if [[ -z "$UNITY" || ! -x "$UNITY" ]]; then note "STOPPED: Unity 6 not found in /Applications/Unity/Hub/Editor."; exit 1; fi
+if ! xcode-select -p >/dev/null 2>&1; then note "STOPPED: Xcode command line tools not set up. Run: sudo xcode-select -s /Applications/Xcode.app"; exit 1; fi
+
+echo "1/3  Unity: writing the Xcode project (a few minutes)..."
+"$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
+  -executeMethod CallerRetroBall.EditorTools.ReleaseTools.BuildSimulator -logFile "$LOGS/unity_build_simulator.log"
+XCPROJ="$PROJECT/iOSBuild/Simulator/Unity-iPhone.xcodeproj"
+if grep -q "another Unity instance is running" "$LOGS/unity_build_simulator.log" 2>/dev/null; then
+  note "STOPPED: Unity has this project open. Quit Unity (Cmd+Q) and run this again."
+  exit 1
+fi
+if [[ ! -d "$XCPROJ" ]]; then
+  note "FAILED at step 1 (Unity build). Errors:
+$(grep -E 'error|Error|Exception' "$LOGS/unity_build_simulator.log" | grep -v 'Licensing' | head -25)"
+  exit 1
+fi
+
+echo "2/3  Xcode: compiling for the Simulator (several minutes the first time)..."
+DERIVED="$PROJECT/iOSBuild/Simulator/DerivedData"
+xcodebuild -project "$XCPROJ" -scheme Unity-iPhone -configuration Release -sdk iphonesimulator \
+  -derivedDataPath "$DERIVED" CODE_SIGNING_ALLOWED=NO build > "$LOGS/xcodebuild_simulator.log" 2>&1
+APP="$(find "$DERIVED/Build/Products" -maxdepth 2 -name '*.app' -type d | head -1)"
+if [[ -z "$APP" ]]; then
+  note "FAILED at step 2 (xcodebuild). Errors:
+$(grep -E 'error:|BUILD FAILED' "$LOGS/xcodebuild_simulator.log" | head -25)"
+  exit 1
+fi
+
+echo "3/3  Simulator: booting an iPhone and launching RetroBall..."
+DEVICE="$(xcrun simctl list devices available | grep -E 'iPhone' | grep -m1 -E 'Booted' | grep -oE '[0-9A-F-]{36}')"
+if [[ -z "$DEVICE" ]]; then
+  DEVICE="$(xcrun simctl list devices available | grep -E 'iPhone .*Pro Max' | grep -m1 -oE '[0-9A-F-]{36}')"
+  [[ -z "$DEVICE" ]] && DEVICE="$(xcrun simctl list devices available | grep -E 'iPhone' | grep -m1 -oE '[0-9A-F-]{36}')"
+  if [[ -z "$DEVICE" ]]; then note "FAILED at step 3: no iPhone simulator installed. Xcode > Settings > Components > iOS > Get."; exit 1; fi
+  xcrun simctl boot "$DEVICE" >/dev/null 2>&1
+fi
+open -a Simulator
+BUNDLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")"
+xcrun simctl install "$DEVICE" "$APP" && xcrun simctl launch "$DEVICE" "$BUNDLE" >/dev/null
+note "SIMULATOR OK: $BUNDLE launched on $(xcrun simctl list devices | grep "$DEVICE" | sed 's/ (.*//' | xargs)"
