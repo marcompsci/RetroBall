@@ -64,7 +64,7 @@ namespace CallerRetroBall.UI
             var button = UiKit.Button(row, state ? "ON" : "OFF", () =>
             {
                 state = !state;
-                buttonLabel.text = state ? "ON" : "OFF";
+                buttonLabel.text = Logic.Loc.T(state ? "ON" : "OFF");
                 AudioManager.Click();
                 onChanged?.Invoke(state);
             }, ButtonStyle.Secondary, 90f, 36f);
@@ -90,7 +90,7 @@ namespace CallerRetroBall.UI
             var button = UiKit.Button(row, options[current], () =>
             {
                 current = (current + 1) % options.Length;
-                buttonLabel.text = options[current];
+                buttonLabel.text = Logic.Loc.T(options[current]);
                 AudioManager.Click();
                 onChanged?.Invoke(current);
             }, ButtonStyle.Secondary, 90f, 34f);

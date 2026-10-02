@@ -115,7 +115,7 @@ namespace CallerRetroBall.UI
         {
             var rt = NewRect(name, parent);
             var label = rt.gameObject.AddComponent<TextMeshProUGUI>();
-            label.text = text;
+            label.text = Logic.Loc.T(text);
             label.fontSize = size;
             label.color = color;
             label.alignment = align;

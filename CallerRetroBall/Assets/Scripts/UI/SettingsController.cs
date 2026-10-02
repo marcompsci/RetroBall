@@ -1,4 +1,5 @@
 using CallerRetroBall.Core;
+using CallerRetroBall.Logic;
 using TMPro;
 using UnityEngine;
 
@@ -60,6 +61,16 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(column,
                 "Left-handed puts the stick on the right and buttons on the left. Tap to shoot: tap once to start the meter, tap again to release. " +
                 "Reduce motion turns off screen shake, sparks, the score bounce, and crowd bobbing.", 28f, Theme.Muted), 150f);
+
+            Header(column, "LANGUAGE");
+            int li = System.Array.IndexOf(Loc.Languages, Loc.Normalize(s.language));
+            UiControls.ChoiceRow(column, "LANGUAGE", Loc.LanguageNames, Mathf.Max(0, li), i =>
+            {
+                s.language = Loc.Languages[i];
+                App.ApplySettings();
+                Save();
+                SceneFlow.GoTo(SceneNames.Settings); // rebuild in the new language
+            });
 
             Header(column, "GAME");
             var diffs = c.Difficulties;

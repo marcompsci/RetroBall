@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CallerRetroBall.Logic
 {
-    public enum DrillKind { FreeShoot = 0, PassingTargets = 1, DribbleLane = 2 }
+    public enum DrillKind { FreeShoot = 0, PassingTargets = 1, DribbleLane = 2, ThreePoint = 3, Lockdown = 4 }
 
     /// <summary>
     /// Practice Lab drill scoring on top of a practice <see cref="MatchSimulation"/>
@@ -15,6 +15,22 @@ namespace CallerRetroBall.Logic
         public const float PassingSeconds = 45f;
         public const float ConeRadius = 0.8f;
         public const float HandBackDelay = 0.4f;
+        public const float ThreePointSeconds = 60f;
+        public const float MoneyBallRadius = 1.5f;
+        public const int LockdownPossessions = 6;
+        /// <summary>A defensive possession that lasts this long without a score counts as a stop.</summary>
+        public const float LockdownPossessionSeconds = 10f;
+
+        /// <summary>3-Point Contest: points (arc make = 1, money-ball spot = 2).</summary>
+        public int ContestPoints { get; private set; }
+        /// <summary>3-Point Contest: the five spots around the arc; the money spot rotates after every shot.</summary>
+        public readonly List<Vec2> MoneySpots = new List<Vec2>();
+        public int MoneySpot { get; private set; }
+        /// <summary>Lockdown: defensive possessions played and stops made.</summary>
+        public int Possessions { get; private set; }
+        public int Stops { get; private set; }
+        private bool _releaseWasMoney;
+        private float _possessionStart = -1f;
 
         public readonly DrillKind Kind;
         public int Makes { get; private set; }
@@ -39,10 +55,26 @@ namespace CallerRetroBall.Logic
             Kind = kind;
             _rng = new SeededRandom(seed);
             if (kind == DrillKind.DribbleLane) BuildCourse(m.Setup.Court);
+            if (kind == DrillKind.ThreePoint) BuildMoneySpots(m.Setup.Court);
             if (kind == DrillKind.PassingTargets) PickTarget(m);
         }
 
-        public float TimeLimit => Kind == DrillKind.FreeShoot ? FreeShootSeconds : (Kind == DrillKind.PassingTargets ? PassingSeconds : 0f);
+        public float TimeLimit => Kind == DrillKind.FreeShoot ? FreeShootSeconds
+                                : Kind == DrillKind.PassingTargets ? PassingSeconds
+                                : Kind == DrillKind.ThreePoint ? ThreePointSeconds : 0f;
+
+        private void BuildMoneySpots(CourtGeometry c)
+        {
+            // Corners, wings, top of the key, just beyond the arc.
+            float r = c.arcRadius + 0.7f;
+            foreach (float deg in new[] { 5f, 45f, 90f, 135f, 175f })
+            {
+                double a = deg * Math.PI / 180.0;
+                var p = new Vec2((float)Math.Cos(a) * r, c.hoopY + (float)Math.Sin(a) * r);
+                MoneySpots.Add(c.Clamp(p));
+            }
+            MoneySpot = 0;
+        }
         public float TimeLeft => TimeLimit <= 0f ? 0f : Math.Max(0f, TimeLimit - Elapsed);
 
         private void BuildCourse(CourtGeometry c)
@@ -73,8 +105,26 @@ namespace CallerRetroBall.Logic
             if (Finished) return;
             if (m.Phase == MatchPhase.Live) Elapsed += dt;
 
+            if (Kind == DrillKind.Lockdown)
+            {
+                UpdateLockdown(m);
+                return;
+            }
+
             foreach (var e in m.Events)
             {
+                if (Kind == DrillKind.ThreePoint && e.PlayerIndex == m.ControlledIndex)
+                {
+                    if (e.Type == MatchEventType.ShotReleased)
+                    {
+                        _releaseWasMoney = MoneySpots.Count > 0 && Vec2.Distance(m.Controlled.Position, MoneySpots[MoneySpot]) <= MoneyBallRadius;
+                        MoneySpot = (MoneySpot + 1) % Math.Max(1, MoneySpots.Count);
+                    }
+                    else if (e.Type == MatchEventType.ShotMade && e.Value >= m.Setup.Rules.beyondArcPoints)
+                    {
+                        ContestPoints += _releaseWasMoney ? 2 : 1;
+                    }
+                }
                 switch (e.Type)
                 {
                     case MatchEventType.ShotReleased when e.PlayerIndex == m.ControlledIndex:
@@ -124,6 +174,38 @@ namespace CallerRetroBall.Logic
             if (TimeLimit > 0f && Elapsed >= TimeLimit) Finished = true;
         }
 
+        /// <summary>
+        /// Lockdown: the other side attacks; each possession ends in a stop (steal, defensive rebound,
+        /// block recovery, or 10 seconds without a score) or a score. Six possessions.
+        /// </summary>
+        private void UpdateLockdown(MatchSimulation m)
+        {
+            int me = m.Setup.HumanTeam;
+            if (_possessionStart < 0f)
+            {
+                if (m.OffenseTeam != me) _possessionStart = m.Time;
+                else { m.RestartWithBall(1 - me); return; }
+            }
+            bool ended = false, stop = false;
+            foreach (var e in m.Events)
+            {
+                if (e.Type == MatchEventType.ShotMade && e.Team != me) { ended = true; stop = false; }
+                else if (e.Type == MatchEventType.PossessionChanged && e.Team == me) { ended = true; stop = true; }
+                else if (e.Type == MatchEventType.ShotClockViolation) { ended = true; stop = true; }
+            }
+            if (!ended && m.Phase == MatchPhase.Live && m.Time - _possessionStart >= LockdownPossessionSeconds) { ended = true; stop = true; }
+            if (!ended) return;
+            Possessions++;
+            if (stop) Stops++;
+            if (Possessions >= LockdownPossessions)
+            {
+                Finished = true;
+                return;
+            }
+            m.RestartWithBall(1 - me);
+            _possessionStart = m.Time;
+        }
+
         public string ResultText()
         {
             switch (Kind)
@@ -132,6 +214,10 @@ namespace CallerRetroBall.Logic
                     return Makes + " / " + Attempts + " made  ·  " + Greens + " green  ·  best streak " + BestStreak;
                 case DrillKind.PassingTargets:
                     return PassScore + " targets hit";
+                case DrillKind.ThreePoint:
+                    return ContestPoints + " points  ·  " + Makes + " / " + Attempts + " made";
+                case DrillKind.Lockdown:
+                    return Stops + " / " + LockdownPossessions + " stops";
                 default:
                     return Finished ? "Course: " + CourseTime.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s" : "Cone " + NextCone + " / " + Cones.Count;
             }

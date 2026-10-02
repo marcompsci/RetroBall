@@ -47,6 +47,9 @@ namespace CallerRetroBall.Logic
             if (data.history == null) data.history = new List<MatchHistoryEntry>();
             if (data.seasons == null) data.seasons = new List<SeasonHistoryEntry>();
             if (data.rival == null) data.rival = new RivalSaveData();
+            if (data.king == null) data.king = new KingSaveData();
+            if (data.king.order == null) data.king.order = new List<string>();
+            data.settings.language = Loc.Normalize(data.settings.language);
             if (data.badgesSeen == null) data.badgesSeen = new List<string>();
             if (data.storySeen == null) data.storySeen = new List<string>();
             if (data.rise.teammates == null) data.rise.teammates = new List<string>();
@@ -207,10 +210,13 @@ namespace CallerRetroBall.Logic
         // ------------------------------------------------------------------ practice
 
         /// <summary>Records drill results; returns true if any personal best improved.</summary>
-        public static bool RecordPractice(CareerSaveData data, int makes, int bestStreak, int passingScore, float dribbleTime)
+        public static bool RecordPractice(CareerSaveData data, int makes, int bestStreak, int passingScore, float dribbleTime,
+                                          int threePoint = 0, int lockdownStops = 0)
         {
             var p = data.practice;
             bool improved = false;
+            if (threePoint > p.threePointBest) { p.threePointBest = threePoint; improved = true; }
+            if (lockdownStops > p.lockdownBest) { p.lockdownBest = lockdownStops; improved = true; }
             if (makes > p.freeShootMakes) { p.freeShootMakes = makes; improved = true; }
             if (bestStreak > p.freeShootStreak) { p.freeShootStreak = bestStreak; improved = true; }
             if (passingScore > p.passingScore) { p.passingScore = passingScore; improved = true; }

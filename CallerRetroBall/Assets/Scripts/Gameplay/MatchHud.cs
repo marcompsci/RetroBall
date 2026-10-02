@@ -18,6 +18,8 @@ namespace CallerRetroBall.Gameplay
         public event Action RematchRequested;
         public event Action ContinueRequested;
         public event Action<PlayCall> PlayChosen;
+        public event Action ReplayRequested;
+        public event Action PlayOfTheGameRequested;
 
         private TextMeshProUGUI _teamA, _teamB, _scoreA, _scoreB, _clock, _shotClock, _toast;
         private GameObject _pausePanel;
@@ -91,6 +93,7 @@ namespace CallerRetroBall.Gameplay
             _info.rectTransform.anchoredPosition = new Vector2(0f, -172f);
 
             BuildCallMenu(safe);
+            BuildReplayUi(safe);
             BuildPausePanel(safe);
             BuildFinalPanel(safe);
         }
@@ -117,6 +120,58 @@ namespace CallerRetroBall.Gameplay
             UiKit.Button(column, "QUIT TO MENU", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 130f, 48f);
             _pausePanel.SetActive(false);
         }
+
+        private GameObject _replayButton;
+        private float _replayButtonUntil;
+        private GameObject _replayOverlay;
+
+        private void BuildReplayUi(RectTransform safe)
+        {
+            var b = UiKit.Button(safe, "REPLAY", () =>
+            {
+                _replayButton.SetActive(false);
+                ReplayRequested?.Invoke();
+            }, ButtonStyle.Secondary, 90f, 34f);
+            var rt = (RectTransform)b.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.66f);
+            rt.sizeDelta = new Vector2(320f, 90f);
+            _replayButton = b.gameObject;
+            _replayButton.SetActive(false);
+
+            // Letterbox bars + label shown while a replay plays.
+            var overlay = UiKit.NewRect("ReplayOverlay", safe.parent);
+            UiKit.Stretch(overlay);
+            var top = UiKit.Panel(overlay, Color.black, name: "Top");
+            top.rectTransform.anchorMin = new Vector2(0f, 0.9f);
+            top.rectTransform.anchorMax = Vector2.one;
+            top.rectTransform.offsetMin = top.rectTransform.offsetMax = Vector2.zero;
+            var bottom = UiKit.Panel(overlay, Color.black, name: "Bottom");
+            bottom.rectTransform.anchorMin = Vector2.zero;
+            bottom.rectTransform.anchorMax = new Vector2(1f, 0.1f);
+            bottom.rectTransform.offsetMin = bottom.rectTransform.offsetMax = Vector2.zero;
+            var label = UiKit.Label(top.transform, "REPLAY", 48f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Stretch(label.rectTransform);
+            var tapHint = UiKit.Label(bottom.transform, "TAP TO SKIP", 30f, Theme.Muted, TextAlignmentOptions.Center, true);
+            UiKit.Stretch(tapHint.rectTransform);
+            _replayOverlay = overlay.gameObject;
+            _replayOverlay.SetActive(false);
+        }
+
+        /// <summary>Offers a REPLAY button for a few seconds after a big play.</summary>
+        public void OfferReplay(float seconds)
+        {
+            _replayButton.SetActive(true);
+            _replayButtonUntil = Time.unscaledTime + seconds;
+        }
+
+        public void ShowReplayOverlay(bool visible)
+        {
+            _replayOverlay.SetActive(visible);
+            if (visible) _replayButton.SetActive(false);
+            _finalPanel.SetActive(!visible && _finalShownOnce);
+        }
+
+        private bool _finalShownOnce;
 
         private void BuildCallMenu(RectTransform safe)
         {
@@ -157,7 +212,7 @@ namespace CallerRetroBall.Gameplay
             text = text ?? "";
             if (text == _lastInfo) return;
             _lastInfo = text;
-            _info.text = text;
+            _info.text = Loc.T(text);
         }
 
         private void BuildFinalPanel(RectTransform safe)
@@ -222,6 +277,8 @@ namespace CallerRetroBall.Gameplay
             if (!string.IsNullOrEmpty(note))
                 UiKit.Size(UiKit.Label(_finalColumn, note, 36f, Theme.Gold, TextAlignmentOptions.Center, true), 110f);
 
+            if (PlayOfTheGameRequested != null && HasPlayOfTheGame)
+                UiKit.Button(_finalColumn, "PLAY OF THE GAME", () => PlayOfTheGameRequested?.Invoke(), ButtonStyle.Secondary, 110f, 40f);
             if (continueLabel != null)
                 UiKit.Button(_finalColumn, continueLabel, () => ContinueRequested?.Invoke(), ButtonStyle.Primary, 140f);
             if (allowRematch)
@@ -277,8 +334,13 @@ namespace CallerRetroBall.Gameplay
             Open();
         }
 
+        /// <summary>Set by the match controller when there's a highlight to show on the post-game card.</summary>
+        public bool HasPlayOfTheGame { get; set; }
+
         private void Open()
         {
+            _finalShownOnce = true;
+            if (_replayButton != null) _replayButton.SetActive(false);
             ShowCallMenu(false);
             _pausePanel.SetActive(false);
             _finalPanel.SetActive(true);
@@ -289,12 +351,13 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Brief centre-screen callout ("STEAL!", "BALL!").</summary>
         public void Toast(string text, float seconds = 1.2f)
         {
-            _toast.text = text;
+            _toast.text = Loc.T(text);
             _toastUntil = Time.unscaledTime + seconds;
         }
 
         private void Update()
         {
+            if (_replayButton != null && _replayButton.activeSelf && Time.unscaledTime > _replayButtonUntil) _replayButton.SetActive(false);
             Punch(_scoreA, _punchA);
             Punch(_scoreB, _punchB);
         }

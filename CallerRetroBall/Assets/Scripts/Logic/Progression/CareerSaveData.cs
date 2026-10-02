@@ -31,6 +31,8 @@ namespace CallerRetroBall.Logic
         public bool tapToShoot;
         /// <summary>No screen shake, sparks, or score bounce.</summary>
         public bool reduceMotion;
+        /// <summary>"en" or "es".</summary>
+        public string language = Loc.English;
     }
 
     /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
@@ -122,6 +124,8 @@ namespace CallerRetroBall.Logic
         public int passingScore;
         /// <summary>Seconds; 0 = never completed.</summary>
         public float dribbleLaneTime;
+        public int threePointBest;
+        public int lockdownBest;
     }
 
     public enum RiseStage { Circuit = 0, Season = 1, Playoffs = 2, Complete = 3 }
@@ -206,6 +210,7 @@ namespace CallerRetroBall.Logic
         public CustomPlayerData customPlayer = new CustomPlayerData();
         public CareerRecords records = new CareerRecords();
         public RivalSaveData rival = new RivalSaveData();
+        public KingSaveData king = new KingSaveData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Story scenes already shown.</summary>

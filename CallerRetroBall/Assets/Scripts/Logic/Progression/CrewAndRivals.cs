@@ -265,13 +265,59 @@ namespace CallerRetroBall.Logic
         public const string Playoffs = "story.playoffs";
         public const string Champions = "story.champions";
 
-        public static StoryBeat Beat(string id, string nickname)
+        public static StoryBeat Beat(string id, string nickname) => Beat(id, nickname, Loc.Language);
+
+        public static StoryBeat Beat(string id, string nickname, string language)
         {
             string me = string.IsNullOrEmpty(nickname) ? "Rook" : nickname;
             var b = new StoryBeat { Id = id };
             void C(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Coach, t));
             void V(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival, t));
             void Y(string t) => b.Lines.Add(new StoryLine(StorySpeaker.You, t));
+            if (language == Loc.Spanish)
+            {
+                switch (id)
+                {
+                    case Intro:
+                        C("Así que tú eres " + me + ". Dicen que anuncias tu tiro antes de lanzarlo.");
+                        C("Cinco equipos callejeros mandan en el Blacktop Circuit. Gánales a los cinco y la Caller League tendrá que abrirnos la puerta.");
+                        Y("Entonces, a tocar puertas.");
+                        C("Ese es el espíritu. Primero, los Cage Regulars. No les gustan las visitas.");
+                        break;
+                    case CircuitCleared:
+                        C("Cinco de cinco. Todo el asfalto habla de los First Callers.");
+                        C("La Caller League es otra cosa. Diez partidos y los cuatro mejores van a playoffs.");
+                        Y("¿Y la Gold Signal Cup?");
+                        C("Gana dos partidos de playoffs y es nuestra. Paso a paso.");
+                        break;
+                    case RivalIntro:
+                        V("Así que estos son los famosos First Callers. Qué tiernos.");
+                        V("Neon Static mandaba en esta ciudad antes de que aprendieras a botar. Ven al Static Lot y demuéstralo.");
+                        Y("Dime la hora.");
+                        C("No hagas caso, " + me + ". Aunque... callarlos se sentiría bien.");
+                        break;
+                    case RivalBeaten:
+                        V("...Noche de suerte. No te acostumbres.");
+                        C("¿Suerte? Escuchaste a la gente. Eso fue todo tuyo.");
+                        break;
+                    case RivalLost:
+                        V("Static gana. Static siempre gana.");
+                        C("Olvídalo. Volverán la próxima temporada, y nosotros también.");
+                        break;
+                    case Playoffs:
+                        C("Playoffs. Todo lo que construimos se decide en dos partidos.");
+                        Y("Entonces anunciamos el tiro.");
+                        break;
+                    case Champions:
+                        C("Campeones de la Gold Signal Cup. De la jaula a lo más alto de la liga.");
+                        V("Disfrútalo mientras dure, " + me + ". La próxima temporada es nuestra.");
+                        Y("Aquí los esperamos.");
+                        break;
+                    default:
+                        return null;
+                }
+                return b;
+            }
             switch (id)
             {
                 case Intro:

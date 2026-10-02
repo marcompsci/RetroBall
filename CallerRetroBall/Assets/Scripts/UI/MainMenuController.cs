@@ -73,6 +73,11 @@ namespace CallerRetroBall.UI
                 App.OpenClassicOnMenu = false;
                 ShowClassic();
             }
+            else if (App.OpenKingOnMenu)
+            {
+                App.OpenKingOnMenu = false;
+                ShowKing();
+            }
 
             // First-time players are offered the tutorial once per session until they finish it.
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
@@ -232,6 +237,7 @@ namespace CallerRetroBall.UI
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
             Mode(column, "2 PLAYER", "Head to head on one device: keyboard or two controllers.", ShowVersus, ButtonStyle.Secondary);
             Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + App.Career.classic.titles, ShowClassic, ButtonStyle.Secondary);
+            Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
         }
@@ -240,6 +246,54 @@ namespace CallerRetroBall.UI
         {
             UiKit.Button(column, name, onClick, style, 120f, 50f);
             UiKit.Size(UiKit.Label(column, detail, 28f, Theme.Muted), 44f);
+        }
+
+        /// <summary>King of the Court: short games against league teams in a row until you lose.</summary>
+        private void ShowKing()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            var k = career.king;
+            var column = OpenOverlay("KING OF THE COURT", out var footer);
+            UiKit.Size(UiKit.Label(column, "First to 11 or 90 seconds. Every win adds to your streak and pays a bonus. One loss ends the run.",
+                                   30f, Theme.Cream), 100f);
+            UiControls.Stat(column, "BEST STREAK", k.best.ToString());
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+
+            var mine = c.TeamsInTier(TeamTier.League).FindAll(t => t.unlockedByDefault);
+            var next = k.active && c.Team(k.homeTeamId) != null ? KingEngine.NextMatch(k, c, k.homeTeamId, career.settings.difficultyId) : null;
+            if (next != null)
+            {
+                UiControls.Stat(column, "CURRENT STREAK", k.streak.ToString());
+                UiKit.Size(UiKit.Label(column, c.Team(k.homeTeamId).FullName.ToUpperInvariant() + "\nVS  " +
+                                       (c.Team(next.AwayTeamId)?.FullName ?? "?").ToUpperInvariant(), 38f, Theme.Gold, TextAlignmentOptions.Center, true), 110f);
+                UiKit.Button(footer, "PLAY", () =>
+                {
+                    App.PendingMatch = next;
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, ButtonStyle.Primary, 130f);
+                return;
+            }
+
+            if (mine.Count == 0) mine = c.TeamsInTier(TeamTier.League);
+            if (mine.Count == 0) return;
+            int pick = 0;
+            TextMeshProUGUI teamLabel = null;
+            UiKit.Size(UiKit.Label(column, "YOUR TEAM", 32f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
+            teamLabel = UiKit.Label(column, mine[pick].FullName.ToUpperInvariant(), 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(teamLabel, 64f);
+            if (mine.Count > 1)
+                UiKit.Button(column, "CHANGE TEAM", () =>
+                {
+                    pick = (pick + 1) % mine.Count;
+                    teamLabel.text = mine[pick].FullName.ToUpperInvariant();
+                }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(footer, k.runs == 0 ? "START" : "NEW RUN", () =>
+            {
+                KingEngine.Start(App.Career.king, App.Catalog, mine[pick].id);
+                App.SaveCareer();
+                ShowKing();
+            }, ButtonStyle.Primary, 130f);
         }
 
         /// <summary>Today's Daily Challenge: goal, matchup, streak.</summary>
@@ -382,6 +436,8 @@ namespace CallerRetroBall.UI
             Drill(column, "FREE SHOOT", "60 seconds. Best: " + best.freeShootMakes + " makes, streak " + best.freeShootStreak, 0);
             Drill(column, "PASSING TARGETS", "45 seconds. Best: " + best.passingScore + " targets", 1);
             Drill(column, "DRIBBLE LANE", "Weave the cones. Best: " + (best.dribbleLaneTime > 0f ? best.dribbleLaneTime.ToString("0.00") + " s" : "—"), 2);
+            Drill(column, "3-POINT CONTEST", "60 seconds, arc shots only. Gold spot = money ball (2). Best: " + best.threePointBest, 3);
+            Drill(column, "LOCKDOWN", "Defense: stop 6 possessions. Best: " + best.lockdownBest + " / 6", 4);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
         }
 

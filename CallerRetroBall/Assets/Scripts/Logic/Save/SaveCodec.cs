@@ -49,6 +49,7 @@ namespace CallerRetroBall.Logic
                 {
                     ["freeShootMakes"] = d.practice.freeShootMakes, ["freeShootStreak"] = d.practice.freeShootStreak,
                     ["passingScore"] = d.practice.passingScore, ["dribbleLaneTime"] = (double)d.practice.dribbleLaneTime,
+                    ["threePointBest"] = d.practice.threePointBest, ["lockdownBest"] = d.practice.lockdownBest,
                 },
                 ["settings"] = new Dictionary<string, object>
                 {
@@ -72,6 +73,17 @@ namespace CallerRetroBall.Logic
                     ["completed"] = (d.daily ?? new DailySaveData()).completed,
                 },
                 ["tutorialDone"] = d.tutorialDone,
+                ["king"] = new Dictionary<string, object>
+                {
+                    ["order"] = Strings((d.king ?? new KingSaveData()).order),
+                    ["index"] = (d.king ?? new KingSaveData()).index,
+                    ["streak"] = (d.king ?? new KingSaveData()).streak,
+                    ["best"] = (d.king ?? new KingSaveData()).best,
+                    ["active"] = (d.king ?? new KingSaveData()).active,
+                    ["runs"] = (d.king ?? new KingSaveData()).runs,
+                    ["home"] = (d.king ?? new KingSaveData()).homeTeamId,
+                },
+                ["language"] = d.settings.language,
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -233,6 +245,7 @@ namespace CallerRetroBall.Logic
                 {
                     freeShootMakes = Int(pr, "freeShootMakes", 0), freeShootStreak = Int(pr, "freeShootStreak", 0),
                     passingScore = Int(pr, "passingScore", 0), dribbleLaneTime = (float)Num(pr, "dribbleLaneTime", 0),
+                    threePointBest = Math.Max(0, Int(pr, "threePointBest", 0)), lockdownBest = Math.Max(0, Int(pr, "lockdownBest", 0)),
                 };
                 var st = Obj(o, "settings");
                 d.settings = new SettingsData
@@ -261,6 +274,18 @@ namespace CallerRetroBall.Logic
                     completed = Math.Max(0, Int(dy, "completed", 0)),
                 };
                 d.tutorialDone = Bool(o, "tutorialDone", false);
+                var kg = Obj(o, "king");
+                d.king = new KingSaveData
+                {
+                    order = StrList(kg, "order"),
+                    index = Math.Max(0, Int(kg, "index", 0)),
+                    streak = Math.Max(0, Int(kg, "streak", 0)),
+                    best = Math.Max(0, Int(kg, "best", 0)),
+                    active = Bool(kg, "active", false),
+                    runs = Math.Max(0, Int(kg, "runs", 0)),
+                    homeTeamId = Str(kg, "home", null),
+                };
+                d.settings.language = Loc.Normalize(Str(o, "language", Loc.English));
                 var rv = Obj(o, "rival");
                 d.rival = new RivalSaveData
                 {
@@ -293,7 +318,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Rival ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.King ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });

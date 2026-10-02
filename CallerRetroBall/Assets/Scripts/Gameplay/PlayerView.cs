@@ -46,6 +46,26 @@ namespace CallerRetroBall.Gameplay
             return sr;
         }
 
+        /// <summary>Draws a recorded replay frame instead of live state (presentation only).</summary>
+        public void SyncReplay(float dt, ReplayPlayer f, bool controlled)
+        {
+            transform.position = CourtSpace.ToWorldSnapped(f.Position);
+            _animTime += dt;
+            var view = CharacterSpriteGenerator.ViewFor(f.Facing, out bool flip);
+            int frame = f.ArmsUp || f.Jump01 > 0.05f ? CharacterSpriteGenerator.ShootFrame
+                : f.Moving ? CharacterSpriteGenerator.IdleFrames + (int)(_animTime * RunFps) % CharacterSpriteGenerator.RunFrames
+                : (int)(_animTime * IdleFps) % CharacterSpriteGenerator.IdleFrames;
+            _body.sprite = _frames[(int)view, frame];
+            _body.flipX = flip;
+            float lift = Mathf.Round(f.Jump01 * 0.7f * CourtSpace.PixelsPerUnit) / CourtSpace.PixelsPerUnit;
+            _body.transform.localPosition = new Vector3(0f, lift, 0f);
+            int order = CourtSpace.SortingOrder(f.Position);
+            _body.sortingOrder = order;
+            _shadow.sortingOrder = order - 2;
+            _ring.sortingOrder = order - 1;
+            _ring.enabled = controlled;
+        }
+
         /// <summary>Called by the match controller after each simulation update.</summary>
         public void Sync(float dt, bool controlled, bool shooting = false, float jump01 = 0f, FlairPose flair = default)
         {

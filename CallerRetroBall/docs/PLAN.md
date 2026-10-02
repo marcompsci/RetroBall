@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 14 | Instant replay + play of the game, 3-Point Contest and Lockdown drills, King of the Court mode, Spanish language (partial) | **Done** (296 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 13 | Recruit your crew, Neon Static rival + Rival Challenge, story scenes, 16 badges + trophy room, iOS readiness check | **Done** (278 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 12 | Create-a-player, accessibility (left-handed, large buttons, tap-to-shoot, reduce motion), dunk/layup leaps, animated crowd, 3 music tracks + stingers, records/history/seasons | **Done** (262 logic tests pass; Unity changes not yet compiled in Unity) |
 | 11 | How to Play tutorial, opt-in Game Center (GameKit bridge), local 2-player, Daily Challenge | **Done** (243 logic tests pass incl. a scripted tutorial run and 2-player sim tests; Unity UI and GameKit not yet run) |
@@ -195,6 +196,20 @@
   and all badges.
 - **RetroBall ▸ Release ▸ Check iOS Readiness:** iOS module, Mac/Xcode, scenes, bundle ID, team, app name, and
   icon, with an automatic fix for the icon and release settings.
+
+## Phase 14: replay, drills, King of the Court, Spanish
+
+- **Instant replay** (`ReplayRecorder`): a 5-second ring buffer of positions and ball state, recorded after every
+  step. Big plays (dunks, green releases, blocks, steals) offer a REPLAY button; the replay plays at half speed
+  with a letterbox (tap to skip). The best play is kept as **PLAY OF THE GAME** on the post-game screen.
+- **Drills:** 3-POINT CONTEST (60 s, arc shots only, a rotating gold money spot is worth 2) and LOCKDOWN
+  (defense: stop 6 possessions). Bests are saved.
+- **King of the Court** (`KingEngine`, `GameMode.King`): pick a league team, then play short games (first to 11
+  or 90 s) against the others in a shuffled order. Each win adds to the streak and pays a bonus (20 SP per
+  streak win, capped at 200); one loss ends the run. Best streak is saved.
+- **Spanish** (`Loc`): Settings ▸ LANGUAGE. Menus, controls, HUD callouts, tutorial, events, badges and story
+  scenes are translated. **Coverage is partial:** some built-up strings (numbers + text), archetype descriptions,
+  and team/player names stay English.
 
 ## Deviations from the brief (deliberate)
 

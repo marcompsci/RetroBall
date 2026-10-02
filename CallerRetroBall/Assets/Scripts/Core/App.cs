@@ -55,6 +55,9 @@ namespace CallerRetroBall.Core
         /// <summary>Set after a First Call Classic game so the main menu reopens the bracket.</summary>
         public static bool OpenClassicOnMenu { get; set; }
 
+        /// <summary>Set after a King of the Court game so the main menu reopens the run.</summary>
+        public static bool OpenKingOnMenu { get; set; }
+
         /// <summary>
         /// Applies the career to a request: your trained ratings when you play as the First Callers
         /// (Rise and Practice), plus Rise energy (starting stamina) and chemistry.
@@ -96,6 +99,7 @@ namespace CallerRetroBall.Core
         {
             if (Career == null) return;
             UiKit.UiScale = Career.settings.uiScale;
+            Loc.Language = Loc.Normalize(Career.settings.language);
             AudioManager.ApplySettings();
         }
 

@@ -179,7 +179,7 @@ namespace CallerRetroBall.UI
             {
                 int index = i;
                 var choice = card.choices[i];
-                buttons[i] = (choice.label.ToUpperInvariant() + "\n<size=60%>" + choice.effect.Describe() + "</size>",
+                buttons[i] = (Loc.T(choice.label).ToUpperInvariant() + "\n<size=60%>" + choice.effect.Describe() + "</size>",
                               i == 0 ? ButtonStyle.Primary : ButtonStyle.Secondary,
                               () =>
                               {
@@ -188,7 +188,7 @@ namespace CallerRetroBall.UI
                                   Rebuild();
                               });
             }
-            UiControls.Dialog(card.title.ToUpperInvariant(), card.body, buttons);
+            UiControls.Dialog(Loc.T(card.title).ToUpperInvariant(), Loc.T(card.body), buttons);
         }
 
         // ------------------------------------------------------------------ crew

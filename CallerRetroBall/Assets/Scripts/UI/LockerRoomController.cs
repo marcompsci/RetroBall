@@ -467,8 +467,9 @@ namespace CallerRetroBall.UI
                 medal.rectTransform.pivot = new Vector2(0f, 0.5f);
                 medal.rectTransform.sizeDelta = new Vector2(80f, 80f);
                 medal.rectTransform.anchoredPosition = new Vector2(20f, 0f);
-                var text = UiKit.Label(card.transform, (earned ? b.Title : "<color=#8D99AE>" + b.Title + "</color>") +
-                                       "\n<size=70%><color=#8D99AE>" + b.Description + "</color></size>",
+                string title = Loc.T(b.Title);
+                var text = UiKit.Label(card.transform, (earned ? title : "<color=#8D99AE>" + title + "</color>") +
+                                       "\n<size=70%><color=#8D99AE>" + Loc.T(b.Description) + "</color></size>",
                                        34f, earned ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true);
                 UiKit.Stretch(text.rectTransform);
                 text.rectTransform.offsetMin = new Vector2(120f, 6f);

@@ -54,12 +54,12 @@ namespace CallerRetroBall.Logic
             int titleBonus = classic ? t.classicTitleBonus : t.championshipBonus;
             if (won && s.isPlayoff && !classic) sp += t.playoffWinBonus;
             if (won && s.isFinal) sp += titleBonus;
-            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily) sp *= t.quickCallScale;
+            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King) sp *= t.quickCallScale;
 
             int cap = s.isFinal && won ? t.maxPerGame + titleBonus : t.maxPerGame;
             int fans = (won ? t.fansPerWin : t.fansPerLoss) + line.greenReleases * t.fansPerGreen
                        + (won && s.Margin >= t.blowoutMargin ? t.blowoutFans : 0);
-            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily) fans = (int)Math.Round(fans * t.quickCallScale);
+            if (s.mode == GameMode.QuickCall || s.mode == GameMode.Daily || s.mode == GameMode.King) fans = (int)Math.Round(fans * t.quickCallScale);
 
             return new RewardGrant { signalPoints = Math.Min(cap, (int)Math.Round(sp)), fans = fans };
         }

@@ -354,6 +354,13 @@ namespace CallerRetroBall.Logic
             c.Rules.Add(new GameRulesDef { id = DefaultRulesId });
             c.Rules.Add(new GameRulesDef
             {
+                id = "rules.king",
+                targetScore = 11,
+                useGameClock = true,
+                gameClockSeconds = 90f,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
                 id = "rules.practice",
                 targetScore = 999,
                 useGameClock = false,

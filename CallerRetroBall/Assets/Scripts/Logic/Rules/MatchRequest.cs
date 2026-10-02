@@ -15,6 +15,8 @@ namespace CallerRetroBall.Logic
         Tutorial = 6,
         /// <summary>Rise Mode Rival Challenge vs Neon Static (doesn't count in the standings).</summary>
         Rival = 7,
+        /// <summary>King of the Court: short games against league teams back to back until you lose.</summary>
+        King = 8,
     }
 
     /// <summary>

@@ -47,6 +47,7 @@ namespace CallerRetroBall.Controls
 
         public void SetLabel(string text)
         {
+            text = Logic.Loc.T(text);
             if (_label != null && _label.text != text) _label.text = text;
         }
 
@@ -59,7 +60,7 @@ namespace CallerRetroBall.Controls
             if (!Available)
             {
                 _hintUntil = Time.unscaledTime + 0.8f;
-                if (_hint != null) _hint.text = UnavailableHint;
+                if (_hint != null) _hint.text = Logic.Loc.T(UnavailableHint);
             }
             Pressed?.Invoke();
         }

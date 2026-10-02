@@ -66,6 +66,15 @@ namespace CallerRetroBall.Gameplay
             public Vector3 Base;
         }
         private Fan[] _fans = new Fan[0];
+
+        // Phase 14: instant replay.
+        private ReplayRecorder _recorder;
+        private ReplayClip _lastHighlight;
+        private ReplayClip _replay;
+        private float _replayT;
+        private readonly BallState _replayBall = new BallState();
+        private const float ReplaySpeed = 0.5f;
+        private bool Replaying => _replay != null;
         private CrowdMood _crowdMood = CrowdMood.Idle;
         private float _crowdMoodUntil;
         private SpriteRenderer[] _cones;
@@ -120,6 +129,9 @@ namespace CallerRetroBall.Gameplay
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
+            _recorder = new ReplayRecorder(_match.Players.Length);
+            _hud.ReplayRequested += () => StartReplay(_lastHighlight);
+            _hud.PlayOfTheGameRequested += () => StartReplay(_recorder.BestPlay);
             if (settings != null && settings.leftHanded) _hud.SetCallMenuLeft(true);
             _hud.ContinueRequested += Continue;
             _hud.PauseRequested += () => SetPaused(true);
@@ -209,6 +221,11 @@ namespace CallerRetroBall.Gameplay
         private void Update()
         {
             if (_match == null) return;
+            if (Replaying)
+            {
+                StepReplay();
+                return;
+            }
             if (EscapePressed() && !_match.IsOver) SetPaused(!_paused);
             if (_paused) return;
 
@@ -219,13 +236,14 @@ namespace CallerRetroBall.Gameplay
             while (_accumulator >= FixedStep && steps < MaxStepsPerFrame)
             {
                 _match.Step(FixedStep, input, input2);
+                _recorder.Capture(_match);
                 _practice?.Update(_match, FixedStep);
                 if (_tutorial != null)
                 {
                     _tutorial.Update(_match);
                     if (_tutorial.JustAdvanced && !_tutorial.Finished)
                     {
-                        _hud.Toast("NICE!  NEXT: " + _tutorial.Title, 1.4f);
+                        _hud.Toast("NICE!  NEXT: " + Loc.T(_tutorial.Title), 1.4f);
                         Sfx(SfxId.Click, 0.8f, 1.4f);
                         Haptics.Light();
                         _nextInfoAt = 0f;
@@ -398,6 +416,7 @@ namespace CallerRetroBall.Gameplay
             int human = _match.Setup.HumanTeam;
             foreach (var e in _match.Events)
             {
+                NoteHighlight(e);
                 switch (e.Type)
                 {
                     case MatchEventType.ShotReleased:
@@ -625,8 +644,9 @@ namespace CallerRetroBall.Gameplay
         {
             if (_tutorial != null && !_tutorial.Finished)
             {
-                string hint = Application.isMobilePlatform ? _tutorial.TouchHint : _tutorial.TouchHint + "  (" + _tutorial.KeyHint + ")";
-                return "STEP " + ((int)_tutorial.Step + 1) + "/" + TutorialSession.StepCount + " · " + _tutorial.Title + " — " + hint.ToUpperInvariant();
+                string touch = Loc.T(_tutorial.TouchHint);
+                string hint = Application.isMobilePlatform ? touch : touch + "  (" + _tutorial.KeyHint + ")";
+                return "STEP " + ((int)_tutorial.Step + 1) + "/" + TutorialSession.StepCount + " · " + Loc.T(_tutorial.Title) + " — " + hint.ToUpperInvariant();
             }
             if (Versus && _match.Time < 10f)
                 return "P1: WASD · K SHOOT · J PASS · L STEAL · C CALL     P2: ARROWS · NUM1 SHOOT · NUM2 PASS · NUM3 STEAL · NUM0 CALL";
@@ -661,6 +681,8 @@ namespace CallerRetroBall.Gameplay
             {
                 case DrillKind.FreeShoot: return "FREE SHOOT";
                 case DrillKind.PassingTargets: return "PASSING TARGETS";
+                case DrillKind.ThreePoint: return "3-POINT CONTEST";
+                case DrillKind.Lockdown: return "LOCKDOWN";
                 default: return "DRIBBLE LANE";
             }
         }
@@ -684,6 +706,7 @@ namespace CallerRetroBall.Gameplay
             {
                 // Local 2-player: box score, no rewards, nothing saved.
                 var vs = MatchSummary.From(_match, _request.Mode, "versus");
+                _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
                 string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
                 Haptics.Success();
                 _hud.ShowPostGame(winner, vs, default, false, null, null, true);
@@ -736,6 +759,21 @@ namespace CallerRetroBall.Gameplay
                         note = "Daily goal: " + _daily.Describe() + ". Not this time. Rematch?";
                     }
                 }
+                if (rewarded && _request.Mode == GameMode.King)
+                {
+                    var king = KingEngine.ApplyResult(App.Career.king, App.Catalog, summary, App.Career, out int kingBonus);
+                    App.OpenKingOnMenu = true;
+                    if (king == KingOutcome.Defended)
+                    {
+                        title = "STILL KING";
+                        note = "STREAK " + App.Career.king.streak + "  ·  +" + kingBonus + " SP BONUS";
+                    }
+                    else if (king == KingOutcome.Dethroned)
+                    {
+                        title = "DETHRONED";
+                        note = "Run over at " + App.Career.king.streak + " (best " + App.Career.king.best + ").";
+                    }
+                }
                 if (rewarded && _request.Mode == GameMode.Tournament)
                 {
                     var outcome = ClassicEngine.ApplyResult(App.Career.classic, App.Catalog, summary);
@@ -765,7 +803,8 @@ namespace CallerRetroBall.Gameplay
             if (title == "CHAMPIONS" || title == "CLASSIC CHAMPS") Sfx(SfxId.Fanfare);
 
             // Rise and the Classic continue their run instead of offering a rematch.
-            bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival;
+            _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
+            bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival || _request.Mode == GameMode.King;
             _hud.ShowPostGame(title, summary, grant, rewarded, note, run ? "CONTINUE" : null, !run);
         }
 
@@ -824,7 +863,9 @@ namespace CallerRetroBall.Gameplay
                     p.Kind == DrillKind.FreeShoot ? p.Makes : 0,
                     p.Kind == DrillKind.FreeShoot ? p.BestStreak : 0,
                     p.Kind == DrillKind.PassingTargets ? p.PassScore : 0,
-                    p.Kind == DrillKind.DribbleLane && p.Finished ? p.CourseTime : 0f);
+                    p.Kind == DrillKind.DribbleLane && p.Finished ? p.CourseTime : 0f,
+                    p.Kind == DrillKind.ThreePoint ? p.ContestPoints : 0,
+                    p.Kind == DrillKind.Lockdown ? p.Stops : 0);
                 App.SaveCareer();
             }
             if (best) Haptics.Success();
@@ -836,12 +877,14 @@ namespace CallerRetroBall.Gameplay
 
         private void BuildPracticeMarkers(Transform world)
         {
-            _cones = new SpriteRenderer[_practice.Cones.Count];
+            // Dribble Lane cones, or the 3-Point Contest's money-ball spots.
+            var spots = _practice.Kind == DrillKind.ThreePoint ? _practice.MoneySpots : _practice.Cones;
+            _cones = new SpriteRenderer[spots.Count];
             for (int i = 0; i < _cones.Length; i++)
             {
                 var go = new GameObject("Cone " + i);
                 go.transform.SetParent(world, false);
-                go.transform.position = CourtSpace.ToWorldSnapped(_practice.Cones[i]);
+                go.transform.position = CourtSpace.ToWorldSnapped(spots[i]);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = _art.Ring;
                 sr.sortingOrder = -9000;
@@ -865,6 +908,12 @@ namespace CallerRetroBall.Gameplay
             {
                 for (int i = 0; i < _cones.Length; i++)
                 {
+                    if (_practice.Kind == DrillKind.ThreePoint)
+                    {
+                        // The money-ball spot glows gold; the rest are faint.
+                        _cones[i].color = i == _practice.MoneySpot ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : new Color(1f, 1f, 1f, 0.25f);
+                        continue;
+                    }
                     bool done = i < _practice.NextCone;
                     bool next = i == _practice.NextCone;
                     _cones[i].color = done ? new Color(0.3f, 0.9f, 0.5f, 0.5f)
@@ -884,6 +933,73 @@ namespace CallerRetroBall.Gameplay
         }
 
         // ------------------------------------------------------------------ helpers
+
+        // ------------------------------------------------------------------ replay
+
+        /// <summary>Big plays by a person (dunks, greens, blocks, steals) can be replayed.</summary>
+        private void NoteHighlight(MatchEvent e)
+        {
+            if (_practice != null || _tutorial != null || e.PlayerIndex < 0 || !_match.IsHumanControlled(e.PlayerIndex)) return;
+            int score = ReplayRecorder.PlayScore(e.Type, _match.Ball.ShotType, _match.Ball.ShotGrade, e.Type == MatchEventType.ShotMade ? e.Value : 0);
+            if (score <= 0) return;
+            string label = e.Type == MatchEventType.Block ? "BLOCKED!" : e.Type == MatchEventType.Steal ? "STEAL!"
+                         : _match.Ball.ShotType == ShotType.Dunk ? "SLAM!" : "SWISH";
+            _recorder.OfferBestPlay(label, score);
+            if (score >= 50)
+            {
+                _lastHighlight = _recorder.Snapshot(3.5f, label, score);
+                _hud.OfferReplay(3f);
+            }
+        }
+
+        private void StartReplay(ReplayClip clip)
+        {
+            if (clip == null || clip.Frames.Count < 2) return;
+            _replay = clip;
+            _replayT = 0f;
+            _controls.SetVisible(false);
+            _hud.ShowCallMenu(false);
+            _hud.ShowReplayOverlay(true);
+        }
+
+        private void StepReplay()
+        {
+            float dt = Time.unscaledDeltaTime;
+            _replayT += dt * ReplaySpeed;
+            bool skip = false;
+#if ENABLE_INPUT_SYSTEM
+            var pointer = UnityEngine.InputSystem.Pointer.current;
+            skip = pointer != null && pointer.press.wasPressedThisFrame && _replayT > 0.3f;
+            var kb = Keyboard.current;
+            skip |= kb != null && (kb.escapeKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame);
+#endif
+            if (skip || _replayT > _replay.Duration + 0.4f)
+            {
+                EndReplay();
+                return;
+            }
+            var f = ReplayRecorder.FrameAt(_replay, _replayT);
+            for (int i = 0; i < _playerViews.Length && i < f.Players.Length; i++)
+                _playerViews[i].SyncReplay(dt * ReplaySpeed, f.Players[i], _match.IsHumanControlled(i));
+            _replayBall.Phase = f.BallPhase;
+            _replayBall.HolderIndex = f.BallHolder;
+            _replayBall.Position = f.BallPosition;
+            _replayBall.Height = f.BallHeight;
+            int holderOrder = f.BallHolder >= 0 ? CourtSpace.SortingOrder(f.Players[f.BallHolder].Position) : 0;
+            _ballView.Sync(_replayBall, holderOrder);
+            _meter.Idle();
+            _receiverArrow.enabled = false;
+            _cameraRig.Follow(f.BallPosition, dt, false);
+        }
+
+        private void EndReplay()
+        {
+            _replay = null;
+            _accumulator = 0f;
+            _hud.ShowReplayOverlay(false);
+            if (!_finalShown && !_paused) _controls.SetVisible(true);
+            SyncViews(0f, snapCamera: true);
+        }
 
         /// <summary>Big centre callout with a musical sting (the game's "announcer").</summary>
         private void Callout(string text, SfxId sting)
@@ -997,7 +1113,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Rematch()
         {
-            if (_request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival) { Continue(); return; }
+            if (_request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival || _request.Mode == GameMode.King) { Continue(); return; }
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);
