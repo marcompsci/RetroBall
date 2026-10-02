@@ -1,4 +1,4 @@
-# Caller Retro Ball — Design
+# RetroBall — Design
 
 ## Vision
 A 90-second-to-fun, one-more-game retro arcade 3v3 half-court basketball game for iPhone.

@@ -17,7 +17,7 @@ namespace CallerRetroBall.UI
 
         public const string LicenseText =
             "<color=#FFD166>CREDITS & LICENCES</color>\n" +
-            "Caller Retro Ball is an original game. All teams, players, leagues, courts, logos, " +
+            "RetroBall is an original game. All teams, players, leagues, courts, logos, " +
             "and pixel art are original and generated procedurally inside this project.\n\n" +
             "Text font: Liberation Sans, bundled with Unity TextMeshPro (SIL Open Font License 1.1).\n" +
             "Audio: every sound effect and the music loop are synthesised in code at runtime (no recordings or samples).\n" +

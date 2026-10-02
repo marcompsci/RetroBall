@@ -2,9 +2,9 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3 }
 
-    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2 }
+    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3 }
 
     /// <summary>
     /// Presentation-only offsets for one player sprite at one moment, in art pixels.
@@ -46,6 +46,7 @@ namespace CallerRetroBall.Logic
             {
                 case "cosmetic.celebration.call_it": return CelebrationKind.CallIt;
                 case "cosmetic.celebration.shimmy_step": return CelebrationKind.ShimmyStep;
+                case "cosmetic.celebration.raise_roof": return CelebrationKind.RaiseTheRoof;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -56,6 +57,7 @@ namespace CallerRetroBall.Logic
             {
                 case "cosmetic.move.hesi_hop": return DribbleMoveKind.HesiHop;
                 case "cosmetic.move.spin_cycle": return DribbleMoveKind.SpinCycle;
+                case "cosmetic.move.behind_back": return DribbleMoveKind.BehindTheBack;
                 default: return DribbleMoveKind.Crossover;
             }
         }
@@ -76,6 +78,12 @@ namespace CallerRetroBall.Logic
                     // Arms up the whole time, two hops: "called it".
                     p.ArmsUp = true;
                     p.Lift = Hop(t, 0f, 0.35f, 3) + Hop(t, 0.45f, 0.35f, 2);
+                    break;
+                case CelebrationKind.RaiseTheRoof:
+                    // Arms pumping up on the beat with a little bounce each time.
+                    int beat = (int)(t / 0.15f);
+                    p.ArmsUp = beat % 2 == 0;
+                    p.Lift = beat % 2 == 0 ? 2 : 0;
                     break;
                 default: // ShimmyStep
                     int step = (int)(t / 0.12f);
@@ -104,6 +112,12 @@ namespace CallerRetroBall.Logic
                     // Freeze-and-hop: the player pops up while the ball is held high.
                     p.Lift = Hop(t, 0.1f, 0.22f, 2);
                     p.BallLift = u < 0.6f ? 3 : 0;
+                    break;
+                case DribbleMoveKind.BehindTheBack:
+                    // Ball disappears behind the body (lowered, swung across) then pops out the far side.
+                    p.BallOffsetX = (int)Math.Round(-3f + 6f * u);
+                    p.BallLift = u > 0.2f && u < 0.8f ? -3 : 0;
+                    p.FlipOverride = u > 0.5f && u < 0.7f;
                     break;
                 default: // SpinCycle
                     // Two facing flips in quick succession reads as a spin at pixel scale.

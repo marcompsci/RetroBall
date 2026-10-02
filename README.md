@@ -1,4 +1,4 @@
-# RetroBall — Caller Retro Ball
+# RetroBall — RetroBall
 
 *Call your shot. Build your legacy.*
 
@@ -12,6 +12,6 @@ An original, offline, portrait-first retro arcade 3v3 basketball game for iPhone
 - **Command-line iOS build (macOS, Unity 6 installed):** `tools/build_ios.sh [simulator|device]`
 - **Logic tests without Unity:** `cd tools/LogicTests && dotnet run --project Runner/Runner.csproj`
 
-**Status:** Phases 1–8 implemented (8 = release prep). Game logic passes 198 automated tests on .NET; the Unity layer has not yet been compiled in the Editor or run on a device.
+**Status:** Phases 1–10 implemented. Game logic passes 224 automated tests on .NET; the Unity project compiles in Unity 6000.6.3f1; no iOS build or device run yet.
 
 All teams, players, courts, logos, art, and audio are original and generated procedurally in the project.

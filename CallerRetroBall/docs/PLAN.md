@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 10 | Rename to RetroBall; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
 | 9 | Polish: celebrations, dribble moves, pixel bursts, dunk SLAM + shake, crowd ambience, score bounce, reward count-up | **Done** (207 logic tests pass; not yet seen running) |
 | 8 | Release prep: app icon, launch image, release settings, iOS build tooling, Info.plist, privacy manifest, App Store kit | **Done** (198 logic tests pass; icon previewed; no build run yet) |
 
@@ -127,6 +128,20 @@
 - First-compile fixes from Unity 6000.6.3f1: a `PlayerInput` name clash, a definite-assignment error in Quick
   Call, and the deprecated `DEVELOPMENT_BUILD` define replaced by `DEBUG`. The overlays now scroll, and the keyboard
   controls show on screen.
+
+## Phase 10 — RetroBall + content
+
+- Renamed the game to **RetroBall** everywhere players see it: the app name (`productName`), Settings credits,
+  Editor menus, docs, and the App Store kit. The placeholder bundle ID is now `com.retroball.game`. Code
+  folders and namespaces keep their `CallerRetroBall` names so Unity references don't break.
+- **Blacktop Circuit:** two new courts (Rooftop Ring, Boardwalk Slab) and two crews (Rooftop Relay, Boardwalk
+  Bandits), each a bit tougher than the last. The circuit is now five games.
+- **Rise:** four new event cards (Rain Delay, Highlight Tape, Trash Talk, Shoe Drop), ten in total.
+- **Cosmetics:** Arcade Mint and Gold Rush jerseys, Glacier Highs and Cosmic Runners shoes, a Boardwalk Pennant
+  banner, the Raise the Roof celebration, and the Behind the Back dribble move (both animated).
+- **First Call Classic** (`ClassicEngine`, `GameMode.Tournament`, saved in `career.classic`): crew vs three
+  league teams drawn by seed in a 1v4 / 2v3 bracket. Other games are simulated. The title bonus is 200 SP
+  (smaller than the Cup), and titles count in the Locker Room.
 
 ## Deviations from the brief (deliberate)
 

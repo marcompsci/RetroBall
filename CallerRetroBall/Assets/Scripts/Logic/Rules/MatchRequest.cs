@@ -5,6 +5,8 @@ namespace CallerRetroBall.Logic
         QuickCall = 0,
         Rise = 1,
         Practice = 2,
+        /// <summary>First Call Classic: a four-team knockout for the First Callers.</summary>
+        Tournament = 3,
     }
 
     /// <summary>

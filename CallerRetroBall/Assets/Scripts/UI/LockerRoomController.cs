@@ -273,6 +273,7 @@ namespace CallerRetroBall.UI
             Line("FIELD GOALS", t.fieldGoalsMade + "/" + t.fieldGoalsAttempted + "  " + fg);
             Line("GREEN RELEASES", t.greens.ToString());
             Line("CHAMPIONSHIPS", t.championships.ToString());
+            Line("CLASSIC TITLES", career.classic.titles.ToString());
 
             UiKit.Size(UiKit.Label(_content, "PRACTICE BESTS", 36f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
             var p = career.practice;

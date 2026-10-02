@@ -25,23 +25,23 @@ namespace CallerRetroBall.EditorTools
         public const string DeviceOutput = "iOSBuild/Device";
         public const string ReleaseVersion = "1.0.0";
 
-        [MenuItem("Caller Retro Ball/Release/Generate App Icon and Launch Image", priority = 60)]
+        [MenuItem("RetroBall/Release/Generate App Icon and Launch Image", priority = 60)]
         public static void GenerateIconAndLaunchMenu()
         {
             string report = GenerateIconAndLaunch();
-            EditorUtility.DisplayDialog("Caller Retro Ball", report, "OK");
+            EditorUtility.DisplayDialog("RetroBall", report, "OK");
         }
 
-        [MenuItem("Caller Retro Ball/Release/Apply Release Player Settings", priority = 61)]
+        [MenuItem("RetroBall/Release/Apply Release Player Settings", priority = 61)]
         public static void ApplyReleaseSettingsMenu()
         {
-            EditorUtility.DisplayDialog("Caller Retro Ball", ApplyReleaseSettings(), "OK");
+            EditorUtility.DisplayDialog("RetroBall", ApplyReleaseSettings(), "OK");
         }
 
-        [MenuItem("Caller Retro Ball/Release/Build iOS (Simulator)", priority = 80)]
+        [MenuItem("RetroBall/Release/Build iOS (Simulator)", priority = 80)]
         public static void BuildSimulator() => Build(iOSSdkVersion.SimulatorSDK, SimulatorOutput);
 
-        [MenuItem("Caller Retro Ball/Release/Build iOS (Device)", priority = 81)]
+        [MenuItem("RetroBall/Release/Build iOS (Device)", priority = 81)]
         public static void BuildDevice() => Build(iOSSdkVersion.DeviceSDK, DeviceOutput);
 
         // ------------------------------------------------------------------ icon + launch image
@@ -115,7 +115,7 @@ namespace CallerRetroBall.EditorTools
 
         public static string ApplyReleaseSettings()
         {
-            PlayerSettings.productName = "Caller Retro Ball";
+            PlayerSettings.productName = DefaultContent.GameName;
             PlayerSettings.bundleVersion = ReleaseVersion;
             if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int build) || build < 1) PlayerSettings.iOS.buildNumber = "1";
             PlayerSettings.iOS.targetOSVersionString = "15.0";
@@ -131,7 +131,7 @@ namespace CallerRetroBall.EditorTools
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
             return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, portrait, full screen, no splash.\n" +
-                   "Bundle ID: " + id + (id == "com.callerretroball.game" ? "  ← placeholder: change it to your own before App Store submission." : "");
+                   "Bundle ID: " + id + (id == "com.retroball.game" ? "  ← placeholder: change it to your own before App Store submission." : "");
         }
 
         // ------------------------------------------------------------------ builds
@@ -141,7 +141,7 @@ namespace CallerRetroBall.EditorTools
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {
-                Fail("No scenes in Build Settings. Run 'Caller Retro Ball ▸ Run Project Setup' first.");
+                Fail("No scenes in Build Settings. Run 'RetroBall ▸ Run Project Setup' first.");
                 return;
             }
 
@@ -176,14 +176,14 @@ namespace CallerRetroBall.EditorTools
                          "Open Unity-iPhone.xcodeproj, choose your team under Signing & Capabilities, pick " +
                          (sdk == iOSSdkVersion.SimulatorSDK ? "an iPhone simulator" : "your iPhone") + ", and press Run.";
             Debug.Log("[CallerRetroBall] " + msg);
-            if (!Application.isBatchMode) EditorUtility.DisplayDialog("Caller Retro Ball", msg, "OK");
+            if (!Application.isBatchMode) EditorUtility.DisplayDialog("RetroBall", msg, "OK");
         }
 
         private static void Fail(string message)
         {
             Debug.LogError("[CallerRetroBall] " + message);
             if (Application.isBatchMode) EditorApplication.Exit(1);
-            else EditorUtility.DisplayDialog("Caller Retro Ball", message, "OK");
+            else EditorUtility.DisplayDialog("RetroBall", message, "OK");
         }
     }
 }

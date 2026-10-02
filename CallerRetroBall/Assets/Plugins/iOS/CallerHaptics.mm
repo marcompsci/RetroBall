@@ -1,4 +1,4 @@
-// Caller Retro Ball — tiny iOS haptics bridge (original code).
+// RetroBall — tiny iOS haptics bridge (original code).
 // Called from C# via [DllImport("__Internal")]. Uses the public UIKit feedback generators.
 #import <UIKit/UIKit.h>
 

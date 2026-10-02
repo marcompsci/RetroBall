@@ -4,7 +4,7 @@ namespace CallerRetroBall.Logic
 {
     /// <summary>
     /// The handcrafted MVP content for The Caller League — every name, colour, and
-    /// line of copy here is original to Caller Retro Ball. The editor setup tool
+    /// line of copy here is original to RetroBall. The editor setup tool
     /// writes these into ScriptableObject assets; the runtime falls back to this
     /// class if the assets are missing, so the game is always playable.
     /// </summary>
@@ -14,6 +14,7 @@ namespace CallerRetroBall.Logic
         public const string ChampionshipName = "The Gold Signal Cup";
         public const string CircuitName = "The Blacktop Circuit";
         public const string RookieTournamentName = "First Call Classic";
+        public const string GameName = "RetroBall";
 
         public const string RookPlayerId = "player.crew.rook";
         public const string PlayerCrewId = "crew.first_callers";
@@ -50,6 +51,12 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.overpass_park", "Overpass Park", CourtCircuit.Blacktop,
                 "Every dribble echoes under the highway. Night games only.",
                 "#2F2F36", "#FFE066", "#9B5DE5", "#1B1B3A", "#F15BB5", 0.45f));
+            c.Courts.Add(Court("court.rooftop_ring", "Rooftop Ring", CourtCircuit.Blacktop,
+                "A fenced court on top of the old cannery. The wind always wins.",
+                "#3A3F4B", "#E0FBFC", "#3D5A80", "#0B132B", "#5BC0BE", 0.40f));
+            c.Courts.Add(Court("court.boardwalk_slab", "Boardwalk Slab", CourtCircuit.Blacktop,
+                "Sun-bleached concrete between the arcade and the sand.",
+                "#5C5552", "#FFF3B0", "#E09F3E", "#FF9F1C", "#FFBF69", 0.50f));
 
             // Caller League venues (one per team)
             c.Courts.Add(Court("court.volt_box", "The Volt Box", CourtCircuit.League,
@@ -191,6 +198,20 @@ namespace CallerRetroBall.Logic
                 P("ansel", "Kip", "Ansel", 6, Archetype.TwoWaySpark, -4),
                 P("sturgis", "Mo", "Sturgis", 35, Archetype.RimRunner, -3),
                 P("corwin", "Jax", "Corwin", 1, Archetype.Playmaker, -3));
+
+            AddTeam(c, "crew.rooftop_relay", "", "Rooftop Relay", "RFR", TeamTier.Circuit,
+                "#3D5A80", "#E0FBFC", "#EE6C4D", LogoShape.Badge, LogoMotif.Comet, TeamPattern.Rings,
+                "court.rooftop_ring", "Pass it up.", false,
+                P("okafor", "Tobi", "Okafor", 7, Archetype.Playmaker, -3),
+                P("lindqvist", "Saul", "Lindqvist", 33, Archetype.StretchForward, -2),
+                P("pryce", "Remy", "Pryce", 15, Archetype.LockdownWing, -2));
+
+            AddTeam(c, "crew.boardwalk_bandits", "", "Boardwalk Bandits", "BWB", TeamTier.Circuit,
+                "#E09F3E", "#540B0E", "#FFF3B0", LogoShape.Circle, LogoMotif.Dune, TeamPattern.Checker,
+                "court.boardwalk_slab", "Take what's open.", false,
+                P("castellan", "Vic", "Castellan", 0, Archetype.ShotCreator, -2),
+                P("brightwater", "Ike", "Brightwater", 24, Archetype.HustleGuard, -1),
+                P("moreau", "Dax", "Moreau", 44, Archetype.RimRunner, -1));
 
             // The player's crew. Rook is the default avatar; nickname is stored in save data.
             AddTeam(c, PlayerCrewId, "", "First Callers", "FCL", TeamTier.PlayerCrew,
@@ -379,22 +400,29 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.crew_home", "Crew Home", CosmeticSlot.JerseyPalette, 0, 0, true, "#F72585", "#4CC9F0"));
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.sunset_fade", "Sunset Fade", CosmeticSlot.JerseyPalette, 200, 50, false, "#FF7E5F", "#FEB47B"));
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.midnight_neon", "Midnight Neon", CosmeticSlot.JerseyPalette, 300, 150, false, "#0F0C29", "#00F5D4"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.arcade_mint", "Arcade Mint", CosmeticSlot.JerseyPalette, 350, 300, false, "#2EC4B6", "#FFBF69"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.gold_rush", "Gold Rush", CosmeticSlot.JerseyPalette, 500, 600, false, "#FFD166", "#1A1A2E"));
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.chalk_brick", "Chalk & Brick", CosmeticSlot.JerseyPalette, 300, 250, false, "#EDE6D6", "#A23E48"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.classic", "Classic Whites", CosmeticSlot.Shoes, 0, 0, true, "#FFFFFF", "#D9D9D9"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.volt_laces", "Volt Laces", CosmeticSlot.Shoes, 150, 40, false, "#1A1A1A", "#FFD400"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.glacier", "Glacier Highs", CosmeticSlot.Shoes, 200, 120, false, "#E0FBFC", "#3D5A80"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.cosmic", "Cosmic Runners", CosmeticSlot.Shoes, 350, 350, false, "#7209B7", "#F72585"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.lava_soles", "Lava Soles", CosmeticSlot.Shoes, 250, 200, false, "#2B2B2B", "#FF4D00"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.blacktop", "Blacktop Banner", CosmeticSlot.CourtBanner, 0, 0, true, "#2F2F36", "#FFE066"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.signal_flag", "Signal Flag", CosmeticSlot.CourtBanner, 200, 100, false, "#4CC9F0", "#F72585"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.banner.boardwalk", "Boardwalk Pennant", CosmeticSlot.CourtBanner, 250, 180, false, "#2EC4B6", "#FFBF69"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.gold_signal", "Gold Signal", CosmeticSlot.CourtBanner, 600, 400, false, "#D4A017", "#1A1A2E"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.fist_pump", "Fist Pump", CosmeticSlot.Celebration, 0, 0, true, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.call_it", "Call It", CosmeticSlot.Celebration, 250, 120, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.celebration.raise_roof", "Raise the Roof", CosmeticSlot.Celebration, 400, 450, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.shimmy_step", "Shimmy Step", CosmeticSlot.Celebration, 350, 300, false, "#FFFFFF", "#FFFFFF"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.move.basic_cross", "Basic Crossover", CosmeticSlot.DribbleMove, 0, 0, true, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.hesi_hop", "Hesitation Hop", CosmeticSlot.DribbleMove, 300, 150, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.move.behind_back", "Behind the Back", CosmeticSlot.DribbleMove, 400, 250, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.spin_cycle", "Spin Cycle", CosmeticSlot.DribbleMove, 450, 350, false, "#FFFFFF", "#FFFFFF"));
         }
 

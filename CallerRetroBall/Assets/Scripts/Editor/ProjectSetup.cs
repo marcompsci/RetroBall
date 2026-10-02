@@ -27,7 +27,9 @@ namespace CallerRetroBall.EditorTools
     {
         public const string ScenesFolder = "Assets/Scenes";
         private const string AutoRunKey = "CallerRetroBall.ProjectSetup.AutoRanThisSession";
-        private const string PlaceholderBundleId = "com.callerretroball.game";
+        private const string PlaceholderBundleId = "com.retroball.game";
+        /// <summary>Placeholder used before the rename; replaced with the new one on the next setup run.</summary>
+        private const string OldPlaceholderBundleId = "com.callerretroball.game";
 
         static ProjectSetup()
         {
@@ -45,10 +47,10 @@ namespace CallerRetroBall.EditorTools
 
         public static string ScenePath(string sceneName) => ScenesFolder + "/" + sceneName + ".unity";
 
-        [MenuItem("Caller Retro Ball/Run Project Setup", priority = 0)]
+        [MenuItem("RetroBall/Run Project Setup", priority = 0)]
         public static void RunFromMenu() => Run(interactive: true);
 
-        [MenuItem("Caller Retro Ball/Rebuild Scenes (overwrite)", priority = 20)]
+        [MenuItem("RetroBall/Rebuild Scenes (overwrite)", priority = 20)]
         public static void RebuildScenes()
         {
             if (!EditorUtility.DisplayDialog("Rebuild scenes?",
@@ -60,7 +62,7 @@ namespace CallerRetroBall.EditorTools
             EditorSceneManager.OpenScene(ScenePath(SceneNames.Boot));
         }
 
-        [MenuItem("Caller Retro Ball/Regenerate Content Assets (overwrite)", priority = 21)]
+        [MenuItem("RetroBall/Regenerate Content Assets (overwrite)", priority = 21)]
         public static void RegenerateContent()
         {
             if (!EditorUtility.DisplayDialog("Regenerate content?",
@@ -71,7 +73,7 @@ namespace CallerRetroBall.EditorTools
             Debug.Log("[CallerRetroBall] Regenerated " + written + " content assets.");
         }
 
-        [MenuItem("Caller Retro Ball/Validate Content", priority = 40)]
+        [MenuItem("RetroBall/Validate Content", priority = 40)]
         public static void ValidateContentMenu()
         {
             var report = ContentValidator.Validate(ContentDatabase.Load().Catalog);
@@ -102,7 +104,7 @@ namespace CallerRetroBall.EditorTools
 
             Debug.Log("[CallerRetroBall] Project setup finished:\n  • " + string.Join("\n  • ", log));
             if (interactive)
-                EditorUtility.DisplayDialog("Caller Retro Ball", "Project setup finished. See the Console for details.\n\nPress Play in BootScene to start.", "OK");
+                EditorUtility.DisplayDialog("RetroBall", "Project setup finished. See the Console for details.\n\nPress Play in BootScene to start.", "OK");
         }
 
         // ------------------------------------------------------------------ folders
@@ -151,9 +153,9 @@ namespace CallerRetroBall.EditorTools
 
         private static string ConfigurePlayerSettings()
         {
-            PlayerSettings.productName = "Caller Retro Ball";
+            PlayerSettings.productName = DefaultContent.GameName;
             if (string.IsNullOrEmpty(PlayerSettings.companyName) || PlayerSettings.companyName == "DefaultCompany")
-                PlayerSettings.companyName = "Caller Retro Ball Dev";
+                PlayerSettings.companyName = "RetroBall Dev";
             if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" ||
                 PlayerSettings.bundleVersion == "1.0" || PlayerSettings.bundleVersion == "0.1.0")
                 PlayerSettings.bundleVersion = ReleaseTools.ReleaseVersion;
@@ -163,7 +165,7 @@ namespace CallerRetroBall.EditorTools
             var android = UnityEditor.Build.NamedBuildTarget.Android;
             string currentId = PlayerSettings.GetApplicationIdentifier(ios);
             if (string.IsNullOrEmpty(currentId) || currentId.StartsWith("com.DefaultCompany", StringComparison.Ordinal) ||
-                currentId.StartsWith("com.Company", StringComparison.Ordinal))
+                currentId.StartsWith("com.Company", StringComparison.Ordinal) || currentId == OldPlaceholderBundleId)
             {
                 PlayerSettings.SetApplicationIdentifier(ios, PlaceholderBundleId);
                 PlayerSettings.SetApplicationIdentifier(android, PlaceholderBundleId);

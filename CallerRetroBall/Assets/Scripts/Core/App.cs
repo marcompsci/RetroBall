@@ -36,6 +36,9 @@ namespace CallerRetroBall.Core
         /// <summary>What the last Rise game changed (announced once by the Rise hub, then cleared).</summary>
         public static RiseOutcome LastRiseOutcome { get; set; }
 
+        /// <summary>Set after a First Call Classic game so the main menu reopens the bracket.</summary>
+        public static bool OpenClassicOnMenu { get; set; }
+
         /// <summary>
         /// Applies the career to a request: your trained ratings when you play as the First Callers
         /// (Rise and Practice), plus Rise energy (starting stamina) and chemistry.
@@ -104,7 +107,7 @@ namespace CallerRetroBall.Core
             {
                 Debug.LogWarning("[CallerRetroBall] Using built-in default content for: " +
                                  string.Join(", ", Content.FallbackKinds) +
-                                 ". Run 'Caller Retro Ball ▸ Run Project Setup' to generate editable assets.");
+                                 ". Run 'RetroBall ▸ Run Project Setup' to generate editable assets.");
             }
 
 #if UNITY_EDITOR || DEBUG

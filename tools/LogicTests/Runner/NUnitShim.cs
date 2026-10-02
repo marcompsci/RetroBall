@@ -1,4 +1,4 @@
-// Minimal NUnit-compatible surface used by the Caller Retro Ball logic tests, so they can
+// Minimal NUnit-compatible surface used by the RetroBall logic tests, so they can
 // run with plain `dotnet run` where NuGet is unavailable. Only the members the tests use
 // are implemented. Inside Unity, the real nunit.framework.dll is used instead.
 using System;

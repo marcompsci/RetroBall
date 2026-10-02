@@ -6,10 +6,10 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 | Field | Value |
 |---|---|
-| Name (30) | Caller Retro Ball |
+| Name (30) | RetroBall |
 | Subtitle (30) | Retro 3v3 street basketball *(27)* |
-| Bundle ID | **YOU:** replace the placeholder `com.callerretroball.game` in Player Settings ▸ iOS and register the same ID in your Apple Developer account |
-| SKU | `caller-retro-ball-ios-1` (any unique string) |
+| Bundle ID | **YOU:** replace the placeholder `com.retroball.game` in Player Settings ▸ iOS and register the same ID in your Apple Developer account |
+| SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
 | Secondary category | Games ▸ Arcade |
 | Price | Free, or a one-time paid price. The game has no in-app purchases. |
@@ -25,15 +25,18 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 > **Call your shot. Build your legacy.**
 >
-> Caller Retro Ball is a pixel-art 3v3 half-court basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Thread passes to an open teammate, or call for the ball. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
+> RetroBall is a pixel-art 3v3 half-court basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Thread passes to an open teammate, or call for the ball. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
 >
 > On defense, jump to contest, reach for steals, switch onto the ball handler, and box out for the rebound. The AI plays the same rules you do. Rookie, Caller, and Legend change how quickly and how smartly it decides, never how good its players are.
 >
 > **RISE MODE**
-> Start on The Blacktop Circuit and beat three street crews on their home courts. Earn a spot in The Caller League, play a 10-game season with event cards between games, manage your crew's energy and chemistry, and fight through the playoffs for The Gold Signal Cup.
+> Start on The Blacktop Circuit and beat five street crews on their home courts. Earn a spot in The Caller League, play a 10-game season with event cards between games, manage your crew's energy and chemistry, and fight through the playoffs for The Gold Signal Cup.
 >
 > **BUILD YOUR PLAYER**
 > Earn Signal Points and Fans every game. Train your player's attributes, unlock jersey palettes, shoes, and court banners, and track your career stats.
+>
+> **FIRST CALL CLASSIC**
+> A four-team knockout for your crew. Two wins and the trophy is yours.
 >
 > **PRACTICE LAB**
 > Free Shoot, Passing Targets, and a timed Dribble Lane, each with a personal best to chase.
@@ -64,7 +67,7 @@ basketball,arcade,retro,pixel,3v3,hoops,streetball,offline,sports,court,season,s
 
 ### Privacy policy text (ready to host)
 
-> Caller Retro Ball does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved only on your device and is deleted when you delete the app. Contact: **YOU: your email**.
+> RetroBall does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved only on your device and is deleted when you delete the app. Contact: **YOU: your email**.
 
 ## App Privacy ("nutrition label")
 

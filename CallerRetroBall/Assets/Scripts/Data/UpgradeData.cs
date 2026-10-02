@@ -3,6 +3,6 @@ using UnityEngine;
 
 namespace CallerRetroBall.Data
 {
-    [CreateAssetMenu(fileName = "UpgradeData", menuName = "Caller Retro Ball/Upgrade")]
+    [CreateAssetMenu(fileName = "UpgradeData", menuName = "RetroBall/Upgrade")]
     public sealed class UpgradeData : DefinitionAsset<UpgradeDef> { }
 }

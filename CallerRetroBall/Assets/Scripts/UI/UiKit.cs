@@ -80,7 +80,7 @@ namespace CallerRetroBall.UI
             if (!ok)
             {
                 Debug.LogError("[CallerRetroBall] TextMeshPro Essential Resources are missing, so text will not render. " +
-                               "Run 'Caller Retro Ball ▸ Run Project Setup' or 'Window ▸ TextMeshPro ▸ Import TMP Essential Resources'.");
+                               "Run 'RetroBall ▸ Run Project Setup' or 'Window ▸ TextMeshPro ▸ Import TMP Essential Resources'.");
             }
             return ok;
         }

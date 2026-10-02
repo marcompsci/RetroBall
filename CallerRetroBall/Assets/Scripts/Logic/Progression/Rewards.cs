@@ -22,6 +22,8 @@ namespace CallerRetroBall.Logic
         public int championshipBonus = 500;
         /// <summary>Quick Call pays less than Rise Mode so the career stays the main path.</summary>
         public float quickCallScale = 0.5f;
+        /// <summary>First Call Classic title bonus (replaces playoff/championship bonuses in that mode).</summary>
+        public int classicTitleBonus = 200;
 
         public static RewardTuning Default => new RewardTuning();
     }
@@ -47,11 +49,13 @@ namespace CallerRetroBall.Logic
                        + line.assists * t.pointsPerAssist
                        + line.rebounds * t.pointsPerRebound
                        + (line.steals + line.blocks) * t.pointsPerStealOrBlock;
-            if (won && s.isPlayoff) sp += t.playoffWinBonus;
-            if (won && s.isFinal) sp += t.championshipBonus;
+            bool classic = s.mode == GameMode.Tournament;
+            int titleBonus = classic ? t.classicTitleBonus : t.championshipBonus;
+            if (won && s.isPlayoff && !classic) sp += t.playoffWinBonus;
+            if (won && s.isFinal) sp += titleBonus;
             if (s.mode == GameMode.QuickCall) sp *= t.quickCallScale;
 
-            int cap = s.isFinal && won ? t.maxPerGame + t.championshipBonus : t.maxPerGame;
+            int cap = s.isFinal && won ? t.maxPerGame + titleBonus : t.maxPerGame;
             int fans = (won ? t.fansPerWin : t.fansPerLoss) + line.greenReleases * t.fansPerGreen
                        + (won && s.Margin >= t.blowoutMargin ? t.blowoutFans : 0);
             if (s.mode == GameMode.QuickCall) fans = (int)Math.Round(fans * t.quickCallScale);

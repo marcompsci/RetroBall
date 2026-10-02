@@ -44,16 +44,23 @@ namespace CallerRetroBall.UI
             UiKit.Band(column, 0.23f, 0.71f, 110f);
             column.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 
-            UiKit.Button(column, "PLAY", ShowQuickCall, ButtonStyle.Primary, 150f, 64f);
-            UiKit.Button(column, "RISE MODE", () => SceneFlow.GoTo(SceneNames.Season), ButtonStyle.Secondary, 128f);
-            UiKit.Button(column, "PRACTICE LAB", ShowPractice, ButtonStyle.Secondary, 128f);
-            UiKit.Button(column, "LOCKER ROOM", () => SceneFlow.GoTo(SceneNames.LockerRoom), ButtonStyle.Secondary, 128f);
-            UiKit.Button(column, "SETTINGS", () => SceneFlow.GoTo(SceneNames.Settings), ButtonStyle.Ghost, 116f, 48f);
+            UiKit.Button(column, "PLAY", ShowQuickCall, ButtonStyle.Primary, 140f, 64f);
+            UiKit.Button(column, "RISE MODE", () => SceneFlow.GoTo(SceneNames.Season), ButtonStyle.Secondary, 112f, 50f);
+            UiKit.Button(column, "FIRST CALL CLASSIC", ShowClassic, ButtonStyle.Secondary, 112f, 50f);
+            UiKit.Button(column, "PRACTICE LAB", ShowPractice, ButtonStyle.Secondary, 112f, 50f);
+            UiKit.Button(column, "LOCKER ROOM", () => SceneFlow.GoTo(SceneNames.LockerRoom), ButtonStyle.Secondary, 112f, 50f);
+            UiKit.Button(column, "SETTINGS", () => SceneFlow.GoTo(SceneNames.Settings), ButtonStyle.Ghost, 100f, 44f);
 
             BuildLogoStrip();
 
             var footer = UiKit.Label(Body, "v" + App.Version + "  ·  offline  ·  no ads  ·  no purchases", 28f, Theme.Muted);
             UiKit.Band(footer.rectTransform, 0.005f, 0.045f, 24f);
+
+            if (App.OpenClassicOnMenu)
+            {
+                App.OpenClassicOnMenu = false;
+                ShowClassic();
+            }
 
             if (App.CareerLoadStatus == LoadStatus.Recovered)
                 UiControls.Dialog("SAVE RESET", "Your save file couldn't be read, so a fresh career was started. A backup of the old file was kept.",
@@ -190,6 +197,58 @@ namespace CallerRetroBall.UI
                 oppLabel.text = "VS  " + opponents[oppIndex].FullName.ToUpperInvariant();
             }
             Refresh();
+        }
+
+        /// <summary>First Call Classic: four-team knockout. Shows the bracket and plays the crew's next game.</summary>
+        private void ShowClassic()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            var t = career.classic;
+            var column = OpenOverlay("FIRST CALL CLASSIC", out var footer);
+            UiKit.Size(UiKit.Label(column, "Your First Callers vs three league teams. Win two in a row for the title.",
+                                   32f, Theme.Cream), 100f);
+            UiKit.Size(UiKit.Label(column, "TITLES WON: " + t.titles, 36f, Theme.Gold, TextAlignmentOptions.Center, true), 60f);
+
+            if (t.seeds.Count == 4)
+            {
+                UiKit.Size(UiKit.Label(column, "EDITION " + t.edition, 30f, Theme.Muted, TextAlignmentOptions.Center, true), 44f);
+                foreach (var g in t.games)
+                {
+                    string label = g.round == 2 ? "FINAL" : "SEMI";
+                    string home = c.Team(g.homeId)?.abbreviation ?? "?";
+                    string away = c.Team(g.awayId)?.abbreviation ?? "?";
+                    string line = label + "   " + home + (g.played ? "  " + g.homeScore + " - " + g.awayScore + "  " : "  vs  ") + away;
+                    bool mine = g.Involves(ClassicEngine.CrewId);
+                    UiKit.Size(UiKit.Label(column, line, 40f, mine ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Center, true), 60f);
+                }
+                if (t.finished)
+                    UiKit.Size(UiKit.Label(column, "CHAMPION: " + (c.Team(t.championId)?.FullName ?? "?").ToUpperInvariant(),
+                                           36f, Theme.Cyan, TextAlignmentOptions.Center, true), 60f);
+            }
+
+            UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+            var next = ClassicEngine.NextMatch(t, c, career.settings.difficultyId);
+            if (next != null)
+            {
+                var opp = c.Team(next.AwayTeamId);
+                UiKit.Size(UiKit.Label(column, "NEXT: " + (next.Round == 2 ? "FINAL" : "SEMIFINAL") + " VS " +
+                                               (opp?.FullName ?? "?").ToUpperInvariant(), 34f, Theme.Cream, TextAlignmentOptions.Center, true), 60f);
+                UiKit.Button(footer, "PLAY", () =>
+                {
+                    App.PendingMatch = next;
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, ButtonStyle.Primary, 130f);
+            }
+            else
+            {
+                UiKit.Button(footer, t.edition == 0 ? "ENTER" : "NEW CLASSIC", () =>
+                {
+                    ClassicEngine.Start(App.Career.classic, App.Catalog);
+                    App.SaveCareer();
+                    ShowClassic();
+                }, ButtonStyle.Primary, 130f);
+            }
         }
 
         private void ShowPractice()

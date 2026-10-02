@@ -536,12 +536,20 @@ namespace CallerRetroBall.Gameplay
                     note = OutcomeText(outcome);
                     if (outcome == RiseOutcome.Champion) title = "CHAMPIONS";
                 }
+                if (rewarded && _request.Mode == GameMode.Tournament)
+                {
+                    var outcome = ClassicEngine.ApplyResult(App.Career.classic, App.Catalog, summary);
+                    App.OpenClassicOnMenu = true;
+                    note = ClassicText(outcome);
+                    if (outcome == ClassicOutcome.Champion) title = "CLASSIC CHAMPS";
+                }
                 App.SaveCareer();
             }
             if (summary.HumanWon) Haptics.Success();
 
-            bool rise = _request.Mode == GameMode.Rise;
-            _hud.ShowPostGame(title, summary, grant, rewarded, note, rise ? "CONTINUE" : null, !rise);
+            // Rise and the Classic continue their run instead of offering a rematch.
+            bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament;
+            _hud.ShowPostGame(title, summary, grant, rewarded, note, run ? "CONTINUE" : null, !run);
         }
 
         private static string OutcomeText(RiseOutcome o)
@@ -556,6 +564,17 @@ namespace CallerRetroBall.Gameplay
                 case RiseOutcome.AdvancedToFinal: return "On to the final!";
                 case RiseOutcome.Eliminated: return "Eliminated. Next season starts from the Rise hub.";
                 case RiseOutcome.Champion: return "GOLD SIGNAL CUP CHAMPIONS!";
+                default: return null;
+            }
+        }
+
+        private static string ClassicText(ClassicOutcome o)
+        {
+            switch (o)
+            {
+                case ClassicOutcome.WonSemi: return "Semifinal won! The " + DefaultContent.RookieTournamentName + " final is next.";
+                case ClassicOutcome.Champion: return DefaultContent.RookieTournamentName.ToUpperInvariant() + " CHAMPIONS!";
+                case ClassicOutcome.Eliminated: return "Knocked out. Enter the next Classic from the main menu.";
                 default: return null;
             }
         }
@@ -668,7 +687,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Rematch()
         {
-            if (_request.Mode == GameMode.Rise) { Continue(); return; }
+            if (_request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament) { Continue(); return; }
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);

@@ -39,12 +39,12 @@ namespace CallerRetroBall.Tests
         }
 
         [Test]
-        public void BlacktopCircuit_HasThreeCourtsAndThreeCrews()
+        public void BlacktopCircuit_HasFiveCourtsAndFiveCrews()
         {
             int courts = 0;
             foreach (var c in _catalog.Courts) if (c.circuit == CourtCircuit.Blacktop) courts++;
-            Assert.AreEqual(3, courts);
-            Assert.AreEqual(3, _catalog.TeamsInTier(TeamTier.Circuit).Count);
+            Assert.AreEqual(5, courts);
+            Assert.AreEqual(5, _catalog.TeamsInTier(TeamTier.Circuit).Count);
         }
 
         [Test]

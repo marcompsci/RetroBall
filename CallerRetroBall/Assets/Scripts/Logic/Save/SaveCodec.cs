@@ -58,9 +58,53 @@ namespace CallerRetroBall.Logic
                     ["difficultyId"] = d.settings.difficultyId,
                 },
                 ["rise"] = EncodeRise(d.rise),
+                ["classic"] = EncodeClassic(d.classic),
                 ["appliedMatchIds"] = Strings(d.appliedMatchIds),
             };
             return MiniJson.Write(o);
+        }
+
+        private static Dictionary<string, object> EncodeGame(ScheduledGame g) => new Dictionary<string, object>
+        {
+            ["week"] = g.week, ["round"] = g.round, ["home"] = g.homeId, ["away"] = g.awayId,
+            ["played"] = g.played, ["homeScore"] = g.homeScore, ["awayScore"] = g.awayScore,
+        };
+
+        private static ScheduledGame DecodeGame(Dictionary<string, object> g) => new ScheduledGame
+        {
+            week = Int(g, "week", 0), round = Int(g, "round", 0),
+            homeId = Str(g, "home", null), awayId = Str(g, "away", null),
+            played = Bool(g, "played", false), homeScore = Int(g, "homeScore", 0), awayScore = Int(g, "awayScore", 0),
+        };
+
+        private static object EncodeClassic(ClassicSaveData t)
+        {
+            t = t ?? new ClassicSaveData();
+            return new Dictionary<string, object>
+            {
+                ["seeds"] = Strings(t.seeds),
+                ["games"] = List(t.games, EncodeGame),
+                ["edition"] = t.edition,
+                ["championId"] = t.championId,
+                ["finished"] = t.finished,
+                ["titles"] = t.titles,
+            };
+        }
+
+        private static ClassicSaveData DecodeClassic(Dictionary<string, object> o)
+        {
+            var t = new ClassicSaveData();
+            if (o == null) return t;
+            t.seeds = StrList(o, "seeds");
+            foreach (var item in Arr(o, "games"))
+                if (item is Dictionary<string, object> g) t.games.Add(DecodeGame(g));
+            t.edition = Math.Max(0, Int(o, "edition", 0));
+            t.championId = Str(o, "championId", null);
+            t.finished = Bool(o, "finished", false);
+            t.titles = Math.Max(0, Int(o, "titles", 0));
+            // A bracket that isn't four teams is unusable: drop it (titles are kept).
+            if (t.seeds.Count != 4) { t.seeds.Clear(); t.games.Clear(); t.finished = false; }
+            return t;
         }
 
         private static object EncodeRise(RiseSaveData r)
@@ -153,6 +197,7 @@ namespace CallerRetroBall.Logic
                     difficultyId = Str(st, "difficultyId", DefaultContent.DefaultDifficultyId),
                 };
                 d.rise = DecodeRise(Obj(o, "rise"));
+                d.classic = DecodeClassic(Obj(o, "classic"));
 
                 Career.EnsureDefaults(d, c);
                 status = version < CareerSaveData.CurrentVersion ? LoadStatus.Migrated : LoadStatus.Ok;

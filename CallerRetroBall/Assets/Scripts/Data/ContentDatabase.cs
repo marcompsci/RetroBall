@@ -22,7 +22,8 @@ namespace CallerRetroBall.Data
     /// <summary>
     /// Loads all content ScriptableObjects from Resources into a <see cref="ContentCatalog"/>.
     /// Any kind with no assets falls back to <see cref="DefaultContent"/>, so a fresh clone
-    /// (before the editor setup has generated assets) is still fully playable.
+    /// (before the editor setup has generated assets) is still fully playable. Built-in items
+    /// missing from the assets are merged in, so content added by updates always shows up.
     /// Loaded once at boot; never queried with Find* calls during gameplay.
     /// </summary>
     public sealed class ContentDatabase
@@ -82,6 +83,14 @@ namespace CallerRetroBall.Data
                 fallback.Add(label);
                 return defaults;
             }
+
+            // Built-in items added in later updates (new crews, courts, cosmetics) are merged in when
+            // the project's assets predate them, so they appear without regenerating assets.
+            // Assets with the same id always win, so edited content is never overwritten.
+            var ids = new HashSet<string>();
+            foreach (var d in result) ids.Add(d.Id);
+            foreach (var d in defaults)
+                if (!ids.Contains(d.Id)) result.Add(d);
 
             // Resources.LoadAll order is not guaranteed; sort for determinism.
             result.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));

@@ -361,7 +361,7 @@ namespace CallerRetroBall.Tests
         private readonly ContentCatalog _c = DefaultContent.Create();
 
         [Test]
-        public void Circuit_ThreeWins_EntersTheLeague()
+        public void Circuit_FiveWins_EntersTheLeague()
         {
             var career = Career.New(_c);
             var r = career.rise;
@@ -375,7 +375,9 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(0, r.circuitBeaten.Count);
             Assert.AreEqual(RiseOutcome.CircuitWin, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "1", opponent: "crew.cage_regulars"), career));
             Assert.AreEqual(RiseOutcome.CircuitWin, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "2", opponent: "crew.pier_pressure"), career));
-            Assert.AreEqual(RiseOutcome.EnteredLeague, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "3", opponent: "crew.underpass_union"), career));
+            Assert.AreEqual(RiseOutcome.CircuitWin, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "3", opponent: "crew.underpass_union"), career));
+            Assert.AreEqual(RiseOutcome.CircuitWin, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "4", opponent: "crew.rooftop_relay"), career));
+            Assert.AreEqual(RiseOutcome.EnteredLeague, RiseEngine.ApplyResult(r, _c, Fake.Summary(GameMode.Rise, true, "5", opponent: "crew.boardwalk_bandits"), career));
             Assert.AreEqual(RiseStage.Season, r.stage);
             Assert.IsNotNull(r.season);
         }

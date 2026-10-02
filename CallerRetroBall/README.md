@@ -1,10 +1,10 @@
-# Caller Retro Ball
+# RetroBall
 
 *Call your shot. Build your legacy.*
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–9 implemented (8 = release prep, 9 = polish). It compiles in Unity 6000.6.3f1 but hasn't had a full playtest yet.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis, app icon and launch art) compiles on .NET and passes 207 automated tests. The Unity scripts now compile in the Editor (after two small fixes found on first open), but the game hasn't had a full playtest, an iOS build, or a device run yet. See [Known limitations](#known-limitations).
+> **Status: Phases 1–9 implemented (8 = release prep, 9 = polish). It compiles in Unity 6000.6.3f1 but hasn't had a full playtest yet.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis, app icon and launch art) compiles on .NET and passes 224 automated tests. The Unity scripts now compile in the Editor (after two small fixes found on first open), but the game hasn't had a full playtest, an iOS build, or a device run yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -20,7 +20,7 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
 
 1. In **Unity Hub**, choose **Add ▸ Add project from disk**, select this `CallerRetroBall` folder, and open it with Unity 6 LTS.
 2. If the Input System asks to enable the new input backend, choose **Yes**. The editor restarts.
-3. On first open the editor runs **Caller Retro Ball ▸ Run Project Setup** automatically (you can rerun it from the menu). It:
+3. On first open the editor runs **RetroBall ▸ Run Project Setup** automatically (you can rerun it from the menu). It:
    - creates the six scenes in `Assets/Scenes` and adds them to Build Settings, Boot first;
    - imports TextMeshPro Essential Resources;
    - applies portrait-only, iOS 15+ Player Settings;
@@ -29,12 +29,13 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
 4. **URP 2D (manual, about a minute):** **Assets ▸ Create ▸ Rendering ▸ URP Asset (with 2D Renderer)**, save it to `Assets/Settings`, then assign it in **Project Settings ▸ Graphics** and **▸ Quality**. The game also runs on the built-in pipeline.
 5. Open `Assets/Scenes/BootScene.unity` and press **Play**. For a phone-shaped preview, set the Game view to an iPhone portrait resolution such as 1179×2556.
 
-**Menu commands** (Caller Retro Ball menu): Run Project Setup (safe to rerun), Rebuild Scenes (overwrite), Regenerate Content Assets (overwrite), Validate Content.
+**Menu commands** (RetroBall menu): Run Project Setup (safe to rerun), Rebuild Scenes (overwrite), Regenerate Content Assets (overwrite), Validate Content.
 
 ## Modes
 
 - **Quick Call (PLAY):** pick one of your two unlocked teams, cycle the opponent, choose difficulty, tip off. Pays half rewards.
-- **Rise Mode:** play as the First Callers. Beat three street crews in The Blacktop Circuit, join The Caller League for a 10-game season (event cards between games, energy and chemistry), then a four-team bracket for The Gold Signal Cup. Next season starts from the hub.
+- **Rise Mode:** play as the First Callers. Beat five street crews in The Blacktop Circuit, join The Caller League for a 10-game season (event cards between games, energy and chemistry), then a four-team bracket for The Gold Signal Cup. Next season starts from the hub.
+- **First Call Classic:** a four-team knockout. Your First Callers (fourth seed) face three league teams drawn at random; win the semi and the final for the title (+200 SP bonus). Enter a new Classic any time it's over.
 - **Practice Lab:** Free Shoot (60 s), Passing Targets (45 s), Dribble Lane (5 cones, timed). Personal bests are saved. No rewards.
 - **Locker Room:** nickname, trained ratings, upgrades (Signal Points + a game played between purchases), cosmetics shop and equip, career stats and practice bests.
 - **Settings:** music and SFX volume, haptics, screen shake, UI scale, colourblind team patterns, difficulty, reset save (with confirmation), credits and licences.
@@ -68,7 +69,7 @@ cd ../tools/LogicTests
 dotnet run --project Runner/Runner.csproj
 ```
 
-This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **207 passed, 0 failed**.
+This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **224 passed, 0 failed**.
 
 `tools/SyntaxCheck` parses every C# file under `Assets/`. It does not resolve Unity APIs, so it is not a substitute for compiling in Unity.
 
@@ -78,9 +79,9 @@ Full steps, from the first build to App Store submission, are in [`docs/RELEASE_
 
 The short version:
 
-1. **Player Settings:** replace the placeholder bundle ID `com.callerretroball.game` with your own, and set your Team ID.
-2. Run **Caller Retro Ball ▸ Release ▸ Generate App Icon and Launch Image**, then **Apply Release Player Settings**.
-3. Run **Caller Retro Ball ▸ Release ▸ Build iOS (Simulator)** or **Build iOS (Device)**. From Terminal, close the Editor and run `tools/build_ios.sh [simulator|device]`. Either way the output goes to `iOSBuild/…`.
+1. **Player Settings:** replace the placeholder bundle ID `com.retroball.game` with your own, and set your Team ID.
+2. Run **RetroBall ▸ Release ▸ Generate App Icon and Launch Image**, then **Apply Release Player Settings**.
+3. Run **RetroBall ▸ Release ▸ Build iOS (Simulator)** or **Build iOS (Device)**. From Terminal, close the Editor and run `tools/build_ios.sh [simulator|device]`. Either way the output goes to `iOSBuild/…`.
 4. Open `iOSBuild/<Simulator|Device>/Unity-iPhone.xcodeproj`, choose your team under **Signing & Capabilities**, pick a simulator or your iPhone, and press **Run**.
 
 The build post-processor writes the Info.plist keys (no non-exempt encryption, full screen, hidden status bar, Sports Games category). `Assets/Plugins/iOS/PrivacyInfo.xcprivacy` declares no tracking and no collected data.

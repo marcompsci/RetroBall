@@ -74,6 +74,22 @@ namespace CallerRetroBall.Logic
                     "The neighbourhood is hosting a shootout night with a small prize.",
                     Choice("Enter the shootout", new EventEffect(-8, 0, 60, 10)),
                     Choice("Cheer from the stands", new EventEffect(5, 3, 0, 5))),
+                Card("event.rainout", "Rain Delay",
+                    "A storm rolls in and the gym floor needs a day to dry.",
+                    Choice("Rest and stretch", new EventEffect(15, 0, 0, 0)),
+                    Choice("Shoot in the garage", new EventEffect(-5, 6, 10, 0))),
+                Card("event.mixtape", "Highlight Tape",
+                    "A local video crew wants to cut a highlight tape of your last game.",
+                    Choice("Let them roll", new EventEffect(0, 0, 0, 60)),
+                    Choice("Keep it low key", new EventEffect(5, 4, 0, 0))),
+                Card("event.rival_trash_talk", "Trash Talk",
+                    "Next week's opponent is talking loud online.",
+                    Choice("Answer on the court", new EventEffect(-6, 8, 0, 20)),
+                    Choice("Stay quiet", new EventEffect(4, 2, 0, 0))),
+                Card("event.new_kicks", "Shoe Drop",
+                    "The corner store got a shipment of fresh sneakers in your size.",
+                    Choice("Treat the crew", new EventEffect(0, 10, -40, 0)),
+                    Choice("Save the money", new EventEffect(0, -2, 20, 0))),
                 Card("event.early_bus", "Early Bus",
                     "Road game tomorrow. The bus leaves at dawn.",
                     Choice("Early night", new EventEffect(12, 0, 0, 0)),
@@ -117,7 +133,10 @@ namespace CallerRetroBall.Logic
         public const int EnergyRecoveryPerGame = 4;
         public const int MinEnergy = 20;
 
-        public static readonly string[] CircuitOrder = { "crew.cage_regulars", "crew.pier_pressure", "crew.underpass_union" };
+        public static readonly string[] CircuitOrder =
+        {
+            "crew.cage_regulars", "crew.pier_pressure", "crew.underpass_union", "crew.rooftop_relay", "crew.boardwalk_bandits",
+        };
 
         public static string CrewId => DefaultContent.PlayerCrewId;
 

@@ -3,6 +3,6 @@ using UnityEngine;
 
 namespace CallerRetroBall.Data
 {
-    [CreateAssetMenu(fileName = "ArchetypeData", menuName = "Caller Retro Ball/Archetype")]
+    [CreateAssetMenu(fileName = "ArchetypeData", menuName = "RetroBall/Archetype")]
     public sealed class ArchetypeData : DefinitionAsset<ArchetypeDef> { }
 }

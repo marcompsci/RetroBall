@@ -3,6 +3,6 @@ using UnityEngine;
 
 namespace CallerRetroBall.Data
 {
-    [CreateAssetMenu(fileName = "DifficultyData", menuName = "Caller Retro Ball/Difficulty")]
+    [CreateAssetMenu(fileName = "DifficultyData", menuName = "RetroBall/Difficulty")]
     public sealed class DifficultyData : DefinitionAsset<DifficultyDef> { }
 }

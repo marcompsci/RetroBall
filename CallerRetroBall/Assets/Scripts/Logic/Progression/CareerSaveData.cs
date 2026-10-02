@@ -124,6 +124,7 @@ namespace CallerRetroBall.Logic
         public PracticeBests practice = new PracticeBests();
         public SettingsData settings = new SettingsData();
         public RiseSaveData rise = new RiseSaveData();
+        public ClassicSaveData classic = new ClassicSaveData();
         /// <summary>Recent match ids already rewarded (guards against double grants).</summary>
         public List<string> appliedMatchIds = new List<string>();
 
