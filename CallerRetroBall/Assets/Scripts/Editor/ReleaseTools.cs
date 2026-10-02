@@ -44,6 +44,71 @@ namespace CallerRetroBall.EditorTools
         [MenuItem("RetroBall/Release/Build iOS (Device)", priority = 81)]
         public static void BuildDevice() => Build(iOSSdkVersion.DeviceSDK, DeviceOutput);
 
+        // ------------------------------------------------------------------ readiness
+
+        [MenuItem("RetroBall/Release/Check iOS Readiness", priority = 59)]
+        public static void CheckReadinessMenu()
+        {
+            var (report, ready) = CheckIosReadiness();
+            Debug.Log("[RetroBall] iOS readiness:\n" + report);
+            if (!ready && EditorUtility.DisplayDialog("RetroBall: iOS readiness", report + "\n\nFix what can be fixed automatically (icon, launch image, release settings)?", "Fix", "Close"))
+            {
+                GenerateIconAndLaunch();
+                ApplyReleaseSettings();
+                CheckReadinessMenu();
+            }
+            else if (ready)
+            {
+                EditorUtility.DisplayDialog("RetroBall: iOS readiness", report, "OK");
+            }
+        }
+
+        /// <summary>Checks everything an iOS build needs that can be checked from the Editor.</summary>
+        public static (string report, bool ready) CheckIosReadiness()
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            bool ready = true;
+            void Check(bool ok, string good, string bad, bool blocking = true)
+            {
+                lines.Add((ok ? "✓ " : (blocking ? "✗ " : "! ")) + (ok ? good : bad));
+                if (!ok && blocking) ready = false;
+            }
+
+            Check(BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS),
+                  "iOS Build Support module installed",
+                  "iOS Build Support is not installed. Unity Hub ▸ Installs ▸ ⚙ ▸ Add modules ▸ iOS Build Support");
+            Check(Application.platform == RuntimePlatform.OSXEditor, "Running on a Mac", "iOS builds need a Mac with Xcode");
+            Check(Directory.Exists("/Applications/Xcode.app"), "Xcode found in /Applications",
+                  "Xcode not found in /Applications. Install it from the Mac App Store", blocking: false);
+
+            var scenes = EditorBuildSettings.scenes.Where(x => x.enabled).Select(x => x.path).ToList();
+            Check(scenes.Count >= 6 && scenes[0].EndsWith("BootScene.unity", StringComparison.Ordinal),
+                  "Scenes in Build Settings (" + scenes.Count + ", BootScene first)",
+                  "Scenes missing from Build Settings. Run RetroBall ▸ Run Project Setup");
+
+            string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
+            bool placeholder = string.IsNullOrEmpty(id) || id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal);
+            Check(!placeholder, "Bundle ID: " + id,
+                  "Bundle ID is a placeholder (" + id + "). Set your own in Player Settings ▸ iOS ▸ Bundle Identifier, e.g. com.yourname.retroball",
+                  blocking: false);
+            Check(!string.IsNullOrEmpty(PlayerSettings.iOS.appleDeveloperTeamID), "Apple Team ID set",
+                  "No Apple Team ID yet. Fine for the Simulator; for your iPhone pick your team in Xcode ▸ Signing & Capabilities",
+                  blocking: false);
+            Check(PlayerSettings.productName == DefaultContent.GameName, "App name: " + PlayerSettings.productName,
+                  "App name is \"" + PlayerSettings.productName + "\". Apply Release Player Settings sets it to RetroBall");
+            var icons = PlayerSettings.GetIcons(NamedBuildTarget.Unknown, IconKind.Any);
+            Check(icons != null && icons.Length > 0 && icons[0] != null, "App icon assigned",
+                  "No app icon. Use Generate App Icon and Launch Image");
+            Check(PlayerSettings.iOS.targetOSVersionString == "15.0" || string.CompareOrdinal(PlayerSettings.iOS.targetOSVersionString, "15.0") >= 0,
+                  "Minimum iOS " + PlayerSettings.iOS.targetOSVersionString, "Minimum iOS is below 15.0", blocking: false);
+
+            lines.Add("");
+            lines.Add(ready
+                ? "Ready. Use RetroBall ▸ Release ▸ Build iOS (Simulator), then open iOSBuild/Simulator/Unity-iPhone.xcodeproj in Xcode."
+                : "Not ready yet. Fix the ✗ items first (! items are advice).");
+            return (string.Join("\n", lines), ready);
+        }
+
         // ------------------------------------------------------------------ icon + launch image
 
         public static string GenerateIconAndLaunch()

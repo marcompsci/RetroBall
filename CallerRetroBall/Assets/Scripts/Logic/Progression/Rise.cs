@@ -200,6 +200,9 @@ namespace CallerRetroBall.Logic
             r.energy = Math.Max(MinEnergy, Math.Min(100, r.energy - EnergyPerGame + EnergyRecoveryPerGame));
             if (won) r.chemistry = Math.Min(100, r.chemistry + 3);
 
+            // Beating a team unlocks its recruitable players.
+            if (won) CrewEngine.UnlockFrom(r, c, opp);
+
             if (r.stage == RiseStage.Circuit)
             {
                 if (!won) return RiseOutcome.CircuitLoss;

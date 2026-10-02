@@ -72,6 +72,14 @@ namespace CallerRetroBall.Logic
                     ["completed"] = (d.daily ?? new DailySaveData()).completed,
                 },
                 ["tutorialDone"] = d.tutorialDone,
+                ["rival"] = new Dictionary<string, object>
+                {
+                    ["wins"] = (d.rival ?? new RivalSaveData()).wins,
+                    ["losses"] = (d.rival ?? new RivalSaveData()).losses,
+                    ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
+                },
+                ["badgesSeen"] = Strings(d.badgesSeen ?? new List<string>()),
+                ["storySeen"] = Strings(d.storySeen ?? new List<string>()),
                 ["customPlayer"] = EncodeCustom(d.customPlayer ?? new CustomPlayerData()),
                 ["records"] = EncodeRecords(d.records ?? new CareerRecords()),
                 ["history"] = List(d.history ?? new List<MatchHistoryEntry>(), h => new Dictionary<string, object>
@@ -156,6 +164,9 @@ namespace CallerRetroBall.Logic
                 ["seenEvents"] = Strings(r.seenEvents),
                 ["pendingEventId"] = r.pendingEventId,
                 ["seasonsPlayed"] = r.seasonsPlayed,
+                ["teammates"] = Strings(r.teammates ?? new List<string>()),
+                ["recruitable"] = Strings(r.recruitable ?? new List<string>()),
+                ["signed"] = Strings(r.signed ?? new List<string>()),
                 ["season"] = r.season == null ? null : new Dictionary<string, object>
                 {
                     ["seasonNumber"] = r.season.seasonNumber,
@@ -250,6 +261,15 @@ namespace CallerRetroBall.Logic
                     completed = Math.Max(0, Int(dy, "completed", 0)),
                 };
                 d.tutorialDone = Bool(o, "tutorialDone", false);
+                var rv = Obj(o, "rival");
+                d.rival = new RivalSaveData
+                {
+                    wins = Math.Max(0, Int(rv, "wins", 0)),
+                    losses = Math.Max(0, Int(rv, "losses", 0)),
+                    lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
+                };
+                d.badgesSeen = StrList(o, "badgesSeen");
+                d.storySeen = StrList(o, "storySeen");
                 var cp = Obj(o, "customPlayer");
                 d.customPlayer = new CustomPlayerData
                 {
@@ -273,7 +293,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Tutorial ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Rival ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });
@@ -313,6 +333,9 @@ namespace CallerRetroBall.Logic
             r.seenEvents = StrList(o, "seenEvents");
             r.pendingEventId = Str(o, "pendingEventId", null);
             r.seasonsPlayed = Math.Max(0, Int(o, "seasonsPlayed", 0));
+            r.teammates = StrList(o, "teammates");
+            r.recruitable = StrList(o, "recruitable");
+            r.signed = StrList(o, "signed");
 
             var s = Obj(o, "season");
             if (s != null)

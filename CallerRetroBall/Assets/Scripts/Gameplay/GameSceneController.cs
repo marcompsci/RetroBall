@@ -705,6 +705,15 @@ namespace CallerRetroBall.Gameplay
             {
                 _resultApplied = true;
                 rewarded = Career.ApplyMatch(App.Career, summary, grant);
+                int recruitsBefore = App.Career.rise.recruitable.Count;
+                if (rewarded && _request.Mode == GameMode.Rival)
+                {
+                    var rivalOutcome = RivalEngine.ApplyResult(App.Career, summary);
+                    note = rivalOutcome == RivalOutcome.Won
+                        ? "NEON STATIC BEATEN!  +" + RivalEngine.WinBonus + " SP  +" + RivalEngine.WinFans + " FANS"
+                        : "Static wins this one. They'll be back next season.";
+                    if (rivalOutcome == RivalOutcome.Won) title = "STATIC SILENCED";
+                }
                 if (rewarded && _request.Mode == GameMode.Rise)
                 {
                     var outcome = RiseEngine.ApplyResult(App.Career.rise, App.Catalog, summary, App.Career);
@@ -734,6 +743,14 @@ namespace CallerRetroBall.Gameplay
                     note = ClassicText(outcome);
                     if (outcome == ClassicOutcome.Champion) title = "CLASSIC CHAMPS";
                 }
+                if (App.Career.rise.recruitable.Count > recruitsBefore)
+                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "New players can join your crew (Rise hub ▸ YOUR CREW).";
+                var badges = Badges.TakeNew(App.Career);
+                if (badges.Count > 0)
+                {
+                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "BADGE: " + string.Join(", ", badges.ConvertAll(b => b.Title));
+                    Sfx(SfxId.Fanfare, 0.7f);
+                }
                 var records = App.Career.lastNewRecords;
                 if (rewarded && records != null && records.Count > 0)
                 {
@@ -748,7 +765,7 @@ namespace CallerRetroBall.Gameplay
             if (title == "CHAMPIONS" || title == "CLASSIC CHAMPS") Sfx(SfxId.Fanfare);
 
             // Rise and the Classic continue their run instead of offering a rematch.
-            bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament;
+            bool run = _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival;
             _hud.ShowPostGame(title, summary, grant, rewarded, note, run ? "CONTINUE" : null, !run);
         }
 
@@ -784,6 +801,7 @@ namespace CallerRetroBall.Gameplay
             _finalShown = true;
             _controls.SetVisible(false);
             int reward = App.Career != null ? Career.CompleteTutorial(App.Career) : 0;
+            if (App.Career != null) Badges.TakeNew(App.Career);
             if (App.Career != null)
             {
                 App.SaveCareer();
@@ -964,7 +982,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Continue()
         {
-            SceneFlow.GoTo(_request.Mode == GameMode.Rise ? SceneNames.Season : SceneNames.MainMenu);
+            SceneFlow.GoTo(_request.Mode == GameMode.Rise || _request.Mode == GameMode.Rival ? SceneNames.Season : SceneNames.MainMenu);
         }
 
         private void SetPaused(bool paused)
@@ -979,7 +997,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Rematch()
         {
-            if (_request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament) { Continue(); return; }
+            if (_request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival) { Continue(); return; }
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);

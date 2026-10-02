@@ -91,6 +91,17 @@ namespace CallerRetroBall.Logic
 
             FillRoster(setup.RosterA, setup.ArchetypesA, setup.TeamA, c);
             FillRoster(setup.RosterB, setup.ArchetypesB, setup.TeamB, c);
+            if (request.HumanTeammates != null)
+            {
+                for (int i = 0; i < request.HumanTeammates.Count && i + 1 < setup.RosterA.Count; i++)
+                {
+                    var mate = request.HumanTeammates[i];
+                    if (mate == null) continue;
+                    setup.RosterA[i + 1] = mate;
+                    var archetype = c.ArchetypeById(mate.archetypeId);
+                    if (archetype != null && i + 1 < setup.ArchetypesA.Count) setup.ArchetypesA[i + 1] = archetype;
+                }
+            }
             if (request.HumanPlayer != null)
             {
                 setup.RosterA[0] = request.HumanPlayer;

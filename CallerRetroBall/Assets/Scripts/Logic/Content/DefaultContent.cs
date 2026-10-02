@@ -18,6 +18,8 @@ namespace CallerRetroBall.Logic
 
         public const string RookPlayerId = "player.crew.rook";
         public const string PlayerCrewId = "crew.first_callers";
+        public const string RivalCrewId = "crew.neon_static";
+        public const string RivalLeaderId = "player.nst.marlowe";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -54,6 +56,9 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.rooftop_ring", "Rooftop Ring", CourtCircuit.Blacktop,
                 "A fenced court on top of the old cannery. The wind always wins.",
                 "#3A3F4B", "#E0FBFC", "#3D5A80", "#0B132B", "#5BC0BE", 0.40f));
+            c.Courts.Add(Court("court.static_lot", "The Static Lot", CourtCircuit.League,
+                "A parking-lot court under buzzing neon. Neon Static's home.",
+                "#26262E", "#00F5D4", "#7209B7", "#10002B", "#3A0CA3", 0.55f));
             c.Courts.Add(Court("court.boardwalk_slab", "Boardwalk Slab", CourtCircuit.Blacktop,
                 "Sun-bleached concrete between the arcade and the sand.",
                 "#5C5552", "#FFF3B0", "#E09F3E", "#FF9F1C", "#FFBF69", 0.50f));
@@ -212,6 +217,14 @@ namespace CallerRetroBall.Logic
                 P("castellan", "Vic", "Castellan", 0, Archetype.ShotCreator, -2),
                 P("brightwater", "Ike", "Brightwater", 24, Archetype.HustleGuard, -1),
                 P("moreau", "Dax", "Moreau", 44, Archetype.RimRunner, -1));
+
+            // The rival crew: shows up once a season in Rise Mode.
+            AddTeam(c, RivalCrewId, "", "Neon Static", "NST", TeamTier.Rival,
+                "#00F5D4", "#10002B", "#F72585", LogoShape.Diamond, LogoMotif.Bolt, TeamPattern.Diagonal,
+                "court.static_lot", "Turn it up.", false,
+                P("marlowe", "Vex", "Marlowe", 13, Archetype.ShotCreator, 2),
+                P("okonjo", "Ira", "Okonjo", 9, Archetype.LockdownWing, 1),
+                P("delacroix", "Bo", "Delacroix", 50, Archetype.RimRunner, 1));
 
             // The player's crew. Rook is the default avatar; nickname is stored in save data.
             AddTeam(c, PlayerCrewId, "", "First Callers", "FCL", TeamTier.PlayerCrew,

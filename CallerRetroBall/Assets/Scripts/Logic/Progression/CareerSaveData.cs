@@ -167,6 +167,12 @@ namespace CallerRetroBall.Logic
         /// <summary>0..100. Helps teammates' timing a little.</summary>
         public int chemistry = 50;
         public List<string> seenEvents = new List<string>();
+        /// <summary>Your two teammates (player ids). Empty = the original First Callers.</summary>
+        public List<string> teammates = new List<string>();
+        /// <summary>Players unlocked for recruiting by beating their team.</summary>
+        public List<string> recruitable = new List<string>();
+        /// <summary>Players you've paid to sign (swap back in for free).</summary>
+        public List<string> signed = new List<string>();
         public string pendingEventId;
         public int seasonsPlayed;
     }
@@ -199,6 +205,11 @@ namespace CallerRetroBall.Logic
         public bool tutorialDone;
         public CustomPlayerData customPlayer = new CustomPlayerData();
         public CareerRecords records = new CareerRecords();
+        public RivalSaveData rival = new RivalSaveData();
+        /// <summary>Badges already announced.</summary>
+        public List<string> badgesSeen = new List<string>();
+        /// <summary>Story scenes already shown.</summary>
+        public List<string> storySeen = new List<string>();
         public List<MatchHistoryEntry> history = new List<MatchHistoryEntry>();
         public List<SeasonHistoryEntry> seasons = new List<SeasonHistoryEntry>();
         /// <summary>Records broken by the last applied game (not saved; shown on the post-game screen).</summary>

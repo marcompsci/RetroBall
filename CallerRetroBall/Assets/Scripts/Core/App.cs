@@ -66,8 +66,10 @@ namespace CallerRetroBall.Core
             {
                 // Your player (Rook, or the one you created) with training upgrades applied.
                 request.HumanPlayer = PlayerCreator.ForMatch(Career, Catalog);
+                // Your recruited crew (or the original First Callers).
+                request.HumanTeammates = CrewEngine.TeammateDefs(Career, Catalog);
             }
-            if (request.Mode == GameMode.Rise)
+            if (request.Mode == GameMode.Rise || request.Mode == GameMode.Rival)
             {
                 request.StartingStamina = RiseEngine.StartingStamina(Career.rise);
                 request.ChemistryBonus = Career.rise.chemistry / 100f * 0.1f;

@@ -13,6 +13,8 @@ namespace CallerRetroBall.Logic
         Daily = 5,
         /// <summary>How-to-play tutorial (practice rules, guided steps).</summary>
         Tutorial = 6,
+        /// <summary>Rise Mode Rival Challenge vs Neon Static (doesn't count in the standings).</summary>
+        Rival = 7,
     }
 
     /// <summary>
@@ -38,6 +40,8 @@ namespace CallerRetroBall.Logic
         public AttributeSet? HumanAttributes;
         /// <summary>Optional full replacement for the human's player (your created player: look, archetype, number).</summary>
         public PlayerDef HumanPlayer;
+        /// <summary>Optional replacement teammates for the human's side (your recruited crew).</summary>
+        public System.Collections.Generic.List<PlayerDef> HumanTeammates;
         /// <summary>Starting stamina for the human's team, 0..1 (Rise Mode energy).</summary>
         public float StartingStamina = 1f;
         /// <summary>Teammate release-accuracy bonus from crew chemistry (visible in the Rise hub).</summary>

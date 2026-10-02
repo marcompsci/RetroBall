@@ -126,6 +126,8 @@ namespace CallerRetroBall.Logic
         League = 1,
         /// <summary>The player's own crew in Rise Mode.</summary>
         PlayerCrew = 2,
+        /// <summary>The rival crew (Rise Mode Rival Challenges only).</summary>
+        Rival = 3,
     }
 
     public enum LogoShape { Circle = 0, Shield = 1, Diamond = 2, Hexagon = 3, Badge = 4 }

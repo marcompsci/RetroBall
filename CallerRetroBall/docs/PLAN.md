@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 13 | Recruit your crew, Neon Static rival + Rival Challenge, story scenes, 16 badges + trophy room, iOS readiness check | **Done** (278 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 12 | Create-a-player, accessibility (left-handed, large buttons, tap-to-shoot, reduce motion), dunk/layup leaps, animated crowd, 3 music tracks + stingers, records/history/seasons | **Done** (262 logic tests pass; Unity changes not yet compiled in Unity) |
 | 11 | How to Play tutorial, opt-in Game Center (GameKit bridge), local 2-player, Daily Challenge | **Done** (243 logic tests pass incl. a scripted tutorial run and 2-player sim tests; Unity UI and GameKit not yet run) |
 | 10 | Rename to RetroBall; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
@@ -177,6 +178,23 @@
 - **Stats & records** (`Records`): single-game bests with NEW RECORD callouts (announced after the first game),
   current and best win streak, the last 20 games, and per-season Rise history with the result. All of it is shown
   in Locker Room ▸ STATS.
+
+## Phase 13: crew, rivals, story, badges, iOS readiness
+
+- **Recruit your crew** (`CrewEngine`): beating a street crew in Rise unlocks its three players. Beating a league
+  team unlocks its bench player, the fourth roster player who never plays for them, so a recruit is never also
+  on the other side. A signing fee scales with overall rating; afterwards, swaps are free. Two teammate spots,
+  saved in `rise.teammates/recruitable/signed`. Shown in Rise hub ▸ YOUR CREW.
+- **Rival:** Neon Static (new `TeamTier.Rival`, court The Static Lot, led by Vex Marlowe). A Rival Challenge
+  (`GameMode.Rival`) appears once per season from week 5. It isn't in the standings, and a win pays +150 SP
+  and +50 fans.
+- **Story** (`Story`, `StoryView`): seven original scenes with Coach Dee and Vex (intro, circuit cleared, rival
+  intro / beaten / lost, playoffs, champions). Each plays once in the Rise hub, with a typewriter box, portraits,
+  and SKIP.
+- **Badges** (`Badges`): 16 in-game badges, announced once after games; Locker Room ▸ TROPHY shows titles
+  and all badges.
+- **RetroBall ▸ Release ▸ Check iOS Readiness:** iOS module, Mac/Xcode, scenes, bundle ID, team, app name, and
+  icon, with an automatic fix for the icon and release settings.
 
 ## Deviations from the brief (deliberate)
 

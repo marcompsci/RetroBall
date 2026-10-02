@@ -46,6 +46,12 @@ namespace CallerRetroBall.Logic
             if (data.records == null) data.records = new CareerRecords();
             if (data.history == null) data.history = new List<MatchHistoryEntry>();
             if (data.seasons == null) data.seasons = new List<SeasonHistoryEntry>();
+            if (data.rival == null) data.rival = new RivalSaveData();
+            if (data.badgesSeen == null) data.badgesSeen = new List<string>();
+            if (data.storySeen == null) data.storySeen = new List<string>();
+            if (data.rise.teammates == null) data.rise.teammates = new List<string>();
+            if (data.rise.recruitable == null) data.rise.recruitable = new List<string>();
+            if (data.rise.signed == null) data.rise.signed = new List<string>();
             // The creator starts from Rook's look; it only replaces Rook once "created" is set.
             if (data.customPlayer == null || (!data.customPlayer.created && string.IsNullOrEmpty(data.customPlayer.archetypeId)))
                 data.customPlayer = PlayerCreator.FromRook(c);

@@ -27,6 +27,27 @@ namespace CallerRetroBall.UI
 
             var outcome = App.LastRiseOutcome;
             App.LastRiseOutcome = RiseOutcome.None;
+            // Story scenes play first, then whatever the last game changed.
+            PlayStory(() => AfterStory(outcome));
+        }
+
+        private void PlayStory(System.Action then)
+        {
+            string pending = Story.Pending(App.Career);
+            if (pending == null)
+            {
+                then();
+                return;
+            }
+            StoryView.Show(Story.Beat(pending, App.Career.nickname), () =>
+            {
+                Rebuild();
+                PlayStory(then); // several scenes can be due at once (e.g. circuit cleared + rival)
+            });
+        }
+
+        private void AfterStory(RiseOutcome outcome)
+        {
             if (outcome == RiseOutcome.Champion)
                 UiControls.Dialog("CHAMPIONS!", "The First Callers hold " + DefaultContent.ChampionshipName + ". Start the next season when you're ready to defend it.",
                                   ("NICE", ButtonStyle.Primary, ShowPendingEvent));
@@ -63,6 +84,19 @@ namespace CallerRetroBall.UI
             else
             {
                 UiControls.Stat(stats, "CIRCUIT", r.circuitBeaten.Count + "/" + RiseEngine.CircuitOrder.Length);
+            }
+
+            // Rival Challenge: once a season, from week 5. Doesn't count in the standings.
+            if (RivalEngine.ChallengeAvailable(career))
+            {
+                var rivalReq = RivalEngine.Challenge(career, c, career.settings.difficultyId);
+                UiKit.Button(_content, "RIVAL CHALLENGE: NEON STATIC", () =>
+                {
+                    App.PendingMatch = rivalReq;
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, ButtonStyle.Primary, 120f, 40f);
+                UiKit.Size(UiKit.Label(_content, "Doesn't count in the standings. Win for +" + RivalEngine.WinBonus + " SP.  Record vs Static: " +
+                                       career.rival.wins + "-" + career.rival.losses, 28f, Theme.Muted), 50f);
             }
 
             var next = RiseEngine.NextMatch(r, c, career.settings.difficultyId);
@@ -110,6 +144,11 @@ namespace CallerRetroBall.UI
                 CircuitList(r);
             }
 
+            UiKit.Button(_content, "YOUR CREW", ShowCrew, ButtonStyle.Secondary, 110f, 40f);
+            var mates = CrewEngine.TeammateDefs(career, c);
+            UiKit.Size(UiKit.Label(_content, "With " + string.Join(" & ", mates.ConvertAll(m => m.DisplayName)) +
+                                   "  ·  " + CrewEngine.Pool(career, c).Count + " players available", 28f, Theme.Muted), 50f);
+
             var diffs = c.Difficulties;
             int di = Mathf.Max(0, diffs.FindIndex(d => d.id == career.settings.difficultyId));
             UiControls.ChoiceRow(_content, "DIFFICULTY", diffs.ConvertAll(d => d.displayName.ToUpperInvariant()).ToArray(), di, i =>
@@ -150,6 +189,89 @@ namespace CallerRetroBall.UI
                               });
             }
             UiControls.Dialog(card.title.ToUpperInvariant(), card.body, buttons);
+        }
+
+        // ------------------------------------------------------------------ crew
+
+        private GameObject _crewOverlay;
+
+        /// <summary>Your two teammate spots and everyone you can sign or swap in.</summary>
+        private void ShowCrew()
+        {
+            if (_crewOverlay != null) Destroy(_crewOverlay);
+            var c = App.Catalog;
+            var career = App.Career;
+            var canvas = UiKit.CreateScreenCanvas("CrewOverlay", 30);
+            _crewOverlay = canvas.gameObject;
+            var scrim = UiKit.Panel(canvas.transform, Theme.Scrim, name: "Scrim");
+            UiKit.Stretch(scrim.rectTransform);
+            scrim.raycastTarget = true;
+            var safe = UiKit.SafeArea(canvas.transform);
+            var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "Panel");
+            UiKit.Band(panel.rectTransform, 0.04f, 0.96f, 40f);
+            panel.raycastTarget = true;
+            var footer = UiKit.Row(panel.transform, 20f, "Footer");
+            footer.anchorMin = new Vector2(0f, 0f);
+            footer.anchorMax = new Vector2(1f, 0f);
+            footer.pivot = new Vector2(0.5f, 0f);
+            footer.sizeDelta = new Vector2(-80f, 130f);
+            footer.anchoredPosition = new Vector2(0f, 24f);
+            UiKit.Button(footer, "DONE", () =>
+            {
+                Destroy(_crewOverlay);
+                _crewOverlay = null;
+                Rebuild();
+            }, ButtonStyle.Primary, 120f);
+            var body = UiKit.NewRect("Body", panel.transform);
+            UiKit.Stretch(body);
+            body.offsetMin = new Vector2(0f, 170f);
+            var col = UiKit.ScrollColumn(body, 14f, new RectOffset(36, 36, 30, 20));
+
+            UiKit.Size(UiKit.ShadowLabel(col, "YOUR CREW", 60f, Theme.Cream, Theme.Pink, 6f).transform.parent.GetComponent<RectTransform>(), 90f);
+            UiKit.Size(UiKit.Label(col, "SP: " + career.signalPoints + "    Beat a team to unlock its players (league teams: their bench player).",
+                                   28f, Theme.Muted), 70f);
+
+            var mates = CrewEngine.Teammates(career, c);
+            for (int slot = 0; slot < mates.Count; slot++)
+            {
+                var p = c.Player(mates[slot]);
+                UiKit.Size(UiKit.Label(col, "SPOT " + (slot + 1) + ":  " + Describe(p), 34f, Theme.Gold, TextAlignmentOptions.Left, true), 56f);
+            }
+
+            UiKit.Size(UiKit.Label(col, "AVAILABLE", 36f, Theme.Cyan, TextAlignmentOptions.Left, true), 56f);
+            foreach (var id in CrewEngine.Pool(career, c))
+            {
+                if (mates.Contains(id)) continue;
+                var p = c.Player(id);
+                var check = CrewEngine.CanRecruit(career, c, id);
+                bool free = CrewEngine.IsFree(career, c, id);
+                string price = free ? "FREE" : CrewEngine.Cost(p) + " SP";
+                UiKit.Size(UiKit.Label(col, Describe(p) + "   <color=#FFD166>" + price + "</color>", 32f, Theme.Cream, TextAlignmentOptions.Left, false), 52f);
+                var row = UiKit.Row(col, 16f, "Swap " + id);
+                UiKit.Size(row, 90f);
+                for (int slot = 0; slot < CrewEngine.TeammateSlots; slot++)
+                {
+                    int s = slot;
+                    var b = UiKit.Button(row, "PUT IN SPOT " + (slot + 1), () =>
+                    {
+                        if (CrewEngine.Recruit(App.Career, App.Catalog, id, s) == RecruitCheck.Ok)
+                        {
+                            App.SaveCareer();
+                            Core.Haptics.Success();
+                        }
+                        ShowCrew();
+                    }, check == RecruitCheck.Ok ? ButtonStyle.Secondary : ButtonStyle.Ghost, 80f, 28f);
+                    b.interactable = check == RecruitCheck.Ok;
+                }
+            }
+        }
+
+        private string Describe(PlayerDef p)
+        {
+            if (p == null) return "?";
+            var arch = App.Catalog.ArchetypeById(p.archetypeId);
+            return p.DisplayName.ToUpperInvariant() + " #" + p.jerseyNumber + "  ·  " +
+                   (arch?.displayName ?? "").ToUpperInvariant() + "  ·  OVR " + p.attributes.Overall;
         }
 
         private void CircuitList(RiseSaveData r)

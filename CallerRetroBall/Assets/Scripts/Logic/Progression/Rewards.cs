@@ -41,6 +41,7 @@ namespace CallerRetroBall.Logic
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
             if (s.mode == GameMode.Practice || s.mode == GameMode.Versus || s.mode == GameMode.Tutorial) return default;
+            // Rival Challenge: Rise rates (its win bonus is paid by RivalEngine).
 
             var line = s.HumanLine?.stats ?? new PlayerStatLine();
             bool won = s.HumanWon;

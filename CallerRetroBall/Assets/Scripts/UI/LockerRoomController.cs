@@ -18,9 +18,9 @@ namespace CallerRetroBall.UI
         protected override string ScreenTitle => "LOCKER ROOM";
         protected override string BackdropCourtId => "court.pier_nine";
 
-        private enum Tab { Player = 0, Create = 1, Training = 2, Style = 3, Stats = 4 }
+        private enum Tab { Player = 0, Create = 1, Training = 2, Style = 3, Stats = 4, Trophies = 5 }
 
-        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TRAIN", "STYLE", "STATS" };
+        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TRAIN", "STYLE", "STATS", "TROPHY" };
 
         private CustomPlayerData _draft;
         private Texture2D _previewTex;
@@ -46,7 +46,7 @@ namespace CallerRetroBall.UI
             for (int i = 0; i < TabNames.Length; i++)
             {
                 var t = (Tab)i;
-                var b = UiKit.Button(tabs, TabNames[i], () => Show(t), ButtonStyle.Secondary, 100f, 28f);
+                var b = UiKit.Button(tabs, TabNames[i], () => Show(t), ButtonStyle.Secondary, 100f, 24f);
                 _tabImages[i] = b.GetComponent<UnityEngine.UI.Image>();
             }
 
@@ -75,6 +75,7 @@ namespace CallerRetroBall.UI
                 case Tab.Create: BuildCreate(); break;
                 case Tab.Training: BuildTraining(); break;
                 case Tab.Style: BuildStyle(); break;
+                case Tab.Trophies: BuildTrophies(); break;
                 default: BuildCareer(); break;
             }
         }
@@ -445,6 +446,36 @@ namespace CallerRetroBall.UI
             Line("DRIBBLE LANE", p.dribbleLaneTime > 0f ? p.dribbleLaneTime.ToString("0.00") + " s" : "-");
         }
 
+        /// <summary>Trophy room: titles won and every badge (earned in gold, locked ones show how to earn them).</summary>
+        private void BuildTrophies()
+        {
+            var career = App.Career;
+            Header("TITLES");
+            Line("GOLD SIGNAL CUP", career.totals.championships.ToString());
+            Line("FIRST CALL CLASSIC", career.classic.titles.ToString());
+            Line("VS NEON STATIC", career.rival.wins + "-" + career.rival.losses);
+            Line("CIRCUIT", career.rise.stage != RiseStage.Circuit || career.rise.seasonsPlayed > 0 ? "CLEARED" : career.rise.circuitBeaten.Count + "/" + RiseEngine.CircuitOrder.Length);
+
+            Header("BADGES  " + Badges.EarnedCount(career) + "/" + Badges.All.Count);
+            foreach (var b in Badges.All)
+            {
+                bool earned = Badges.IsEarned(b, career);
+                var card = UiKit.Panel(_content, Color.white, Theme.PanelSprite(), true, "Badge " + b.Id);
+                UiKit.Size(card, 110f);
+                var medal = UiKit.Panel(card.transform, Color.white, Theme.DiscSprite(earned ? Theme.Gold : Theme.InkLight, Theme.Shadow), false, "Medal");
+                medal.rectTransform.anchorMin = medal.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                medal.rectTransform.pivot = new Vector2(0f, 0.5f);
+                medal.rectTransform.sizeDelta = new Vector2(80f, 80f);
+                medal.rectTransform.anchoredPosition = new Vector2(20f, 0f);
+                var text = UiKit.Label(card.transform, (earned ? b.Title : "<color=#8D99AE>" + b.Title + "</color>") +
+                                       "\n<size=70%><color=#8D99AE>" + b.Description + "</color></size>",
+                                       34f, earned ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true);
+                UiKit.Stretch(text.rectTransform);
+                text.rectTransform.offsetMin = new Vector2(120f, 6f);
+                text.rectTransform.offsetMax = new Vector2(-20f, -6f);
+            }
+        }
+
         private void Header(string text) =>
             UiKit.Size(UiKit.Label(_content, text, 36f, Theme.Gold, TextAlignmentOptions.Left, true), 60f);
 
@@ -455,6 +486,7 @@ namespace CallerRetroBall.UI
                 case GameMode.Rise: return "RISE";
                 case GameMode.Tournament: return "CLASSIC";
                 case GameMode.Daily: return "DAILY";
+                case GameMode.Rival: return "RIVAL";
                 default: return "QUICK";
             }
         }
