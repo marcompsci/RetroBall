@@ -5,6 +5,8 @@ using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
+// The game's own input struct, not UnityEngine.InputSystem.PlayerInput (the component).
+using PlayerInput = CallerRetroBall.Logic.PlayerInput;
 
 namespace CallerRetroBall.Gameplay
 {
