@@ -35,6 +35,10 @@ public static class Program
                         passed++;
                         Console.WriteLine("  PASS " + name);
                     }
+                    catch (TargetInvocationException ex) when (ex.InnerException is InconclusiveException)
+                    {
+                        Console.WriteLine("  SKIP " + name + " — " + ex.InnerException.Message);
+                    }
                     catch (TargetInvocationException ex)
                     {
                         failed++;

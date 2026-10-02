@@ -58,6 +58,10 @@ namespace CallerRetroBall.Logic
         public bool PassiveOpponents;
         /// <summary>Practice: the human's team keeps the ball after scoring.</summary>
         public bool KeepPossessionAfterScore;
+        public float HumanTeamStartingStamina = 1f;
+        /// <summary>Practice: AI teammates never shoot or drive; drills hand the ball back.</summary>
+        public bool TeammatesOnlyPass;
+        public float ChemistryBonus;
 
         /// <summary>Builds a setup from a request, taking the first three players of each roster.</summary>
         public static MatchSetup FromRequest(MatchRequest request, ContentCatalog c)
@@ -74,6 +78,9 @@ namespace CallerRetroBall.Logic
                 Seed = request.Seed != 0 ? request.Seed : 1,
                 PassiveOpponents = request.Mode == GameMode.Practice,
                 KeepPossessionAfterScore = request.Mode == GameMode.Practice,
+                TeammatesOnlyPass = request.Mode == GameMode.Practice,
+                HumanTeamStartingStamina = request.StartingStamina,
+                ChemistryBonus = request.ChemistryBonus,
             };
             // Practice has no opponent: mirror the player crew so the court still has bodies.
             if (setup.TeamB == null) setup.TeamB = setup.TeamA;
@@ -81,6 +88,17 @@ namespace CallerRetroBall.Logic
 
             FillRoster(setup.RosterA, setup.ArchetypesA, setup.TeamA, c);
             FillRoster(setup.RosterB, setup.ArchetypesB, setup.TeamB, c);
+            if (request.HumanAttributes.HasValue)
+            {
+                // Copy so the shared content definition is never modified.
+                var original = setup.RosterA[0];
+                setup.RosterA[0] = new PlayerDef
+                {
+                    id = original.id, firstName = original.firstName, lastName = original.lastName,
+                    jerseyNumber = original.jerseyNumber, archetypeId = original.archetypeId,
+                    attributes = request.HumanAttributes.Value, appearance = original.appearance,
+                };
+            }
             return setup;
         }
 
@@ -482,6 +500,13 @@ namespace CallerRetroBall.Logic
                    && ChargingIndex < 0 && !MustClear;
         }
 
+        /// <summary>The teammate holding the ball passes it to the human (practice drills, ASK).</summary>
+        public bool PassToHuman()
+        {
+            if (!HumanTeamHasBall || HumanHasBall || ChargingIndex == Ball.HolderIndex) return false;
+            return PassFrom(Ball.HolderIndex, Vec2.Zero, ControlledIndex);
+        }
+
         /// <summary>Who a pass from the human would go to right now (for the receiver marker), or -1.</summary>
         public int PreviewPassTarget(Vec2 aim)
         {
@@ -594,6 +619,7 @@ namespace CallerRetroBall.Logic
             int points = Scoring.PointsFor(zone, Setup.Rules);
 
             var line = Stats[shooter];
+            if (eval.Grade == TimingGrade.Green) line.greenReleases++;
             line.fieldGoalsAttempted++;
             if (zone == ShotZone.BeyondArc) line.arcAttempted++;
 

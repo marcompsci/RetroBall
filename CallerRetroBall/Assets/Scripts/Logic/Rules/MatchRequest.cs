@@ -22,6 +22,16 @@ namespace CallerRetroBall.Logic
         public string DifficultyId = DefaultContent.DefaultDifficultyId;
         /// <summary>0 = use a time-based seed. Set for reproducible test matches.</summary>
         public uint Seed;
+        /// <summary>Rise Mode: 0 = regular/circuit, 1 = semifinal, 2 = final.</summary>
+        public int Round;
+        /// <summary>Stable id for this fixture (Rise Mode), used to build a unique match id.</summary>
+        public string ContextId;
+        /// <summary>Optional ratings for the human's player (training upgrades applied).</summary>
+        public AttributeSet? HumanAttributes;
+        /// <summary>Starting stamina for the human's team, 0..1 (Rise Mode energy).</summary>
+        public float StartingStamina = 1f;
+        /// <summary>Teammate release-accuracy bonus from crew chemistry (visible in the Rise hub).</summary>
+        public float ChemistryBonus;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

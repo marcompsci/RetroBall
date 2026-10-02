@@ -1,0 +1,62 @@
+using System;
+
+namespace CallerRetroBall.Logic
+{
+    /// <summary>Signal Points and Fans for a finished game. Earned only by playing — nothing is sold.</summary>
+    [Serializable]
+    public class RewardTuning
+    {
+        public int winPoints = 120;
+        public int lossPoints = 50;
+        public int pointsPerPoint = 2;
+        public int pointsPerAssist = 3;
+        public int pointsPerRebound = 2;
+        public int pointsPerStealOrBlock = 4;
+        public int maxPerGame = 400;
+        public int fansPerWin = 40;
+        public int fansPerLoss = 10;
+        public int fansPerGreen = 2;
+        public int blowoutMargin = 8;
+        public int blowoutFans = 10;
+        public int playoffWinBonus = 100;
+        public int championshipBonus = 500;
+        /// <summary>Quick Call pays less than Rise Mode so the career stays the main path.</summary>
+        public float quickCallScale = 0.5f;
+
+        public static RewardTuning Default => new RewardTuning();
+    }
+
+    [Serializable]
+    public struct RewardGrant
+    {
+        public int signalPoints;
+        public int fans;
+    }
+
+    public static class Rewards
+    {
+        public static RewardGrant For(MatchSummary s, RewardTuning t)
+        {
+            if (s == null) throw new ArgumentNullException(nameof(s));
+            if (s.mode == GameMode.Practice) return default;
+
+            var line = s.HumanLine?.stats ?? new PlayerStatLine();
+            bool won = s.HumanWon;
+            float sp = (won ? t.winPoints : t.lossPoints)
+                       + line.points * t.pointsPerPoint
+                       + line.assists * t.pointsPerAssist
+                       + line.rebounds * t.pointsPerRebound
+                       + (line.steals + line.blocks) * t.pointsPerStealOrBlock;
+            if (won && s.isPlayoff) sp += t.playoffWinBonus;
+            if (won && s.isFinal) sp += t.championshipBonus;
+            if (s.mode == GameMode.QuickCall) sp *= t.quickCallScale;
+
+            int cap = s.isFinal && won ? t.maxPerGame + t.championshipBonus : t.maxPerGame;
+            int fans = (won ? t.fansPerWin : t.fansPerLoss) + line.greenReleases * t.fansPerGreen
+                       + (won && s.Margin >= t.blowoutMargin ? t.blowoutFans : 0);
+            if (s.mode == GameMode.QuickCall) fans = (int)Math.Round(fans * t.quickCallScale);
+
+            return new RewardGrant { signalPoints = Math.Min(cap, (int)Math.Round(sp)), fans = fans };
+        }
+    }
+}

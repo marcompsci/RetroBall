@@ -57,6 +57,8 @@ namespace CallerRetroBall.Logic
         private float _playUntil;
         private int _screener = -1;
         private bool _screenRolling;
+        private bool _screenSet;
+        private float _screenSetAt;
         private int _giveAndGoPartner = -1;
 
         public PlayCall ActivePlay => _play;
@@ -70,7 +72,7 @@ namespace CallerRetroBall.Logic
         {
             _guarding = new int[Players.Length];
             ResetMatchups();
-            foreach (var p in Players) p.Stamina = 1f;
+            foreach (var p in Players) p.Stamina = p.Team == Setup.HumanTeam ? Math.Max(0f, Math.Min(1f, Setup.HumanTeamStartingStamina)) : 1f;
         }
 
         private void ResetMatchups()
@@ -318,6 +320,7 @@ namespace CallerRetroBall.Logic
             _playTeam = team;
             _screener = -1;
             _screenRolling = false;
+            _screenSet = false;
             _giveAndGoPartner = -1;
             switch (play)
             {
@@ -369,6 +372,17 @@ namespace CallerRetroBall.Logic
             {
                 var screener = Players[_screener];
                 var handler = Players[Ball.HolderIndex];
+                if (!_screenSet)
+                {
+                    // The screen counts once the screener has planted at the spot.
+                    if (Vec2.Distance(screener.Position, _ai[_screener].Target) < 0.4f && _ai[_screener].Intent == AiIntent.Screen)
+                    {
+                        _screenSet = true;
+                        _screenSetAt = Time;
+                        _playUntil = Math.Max(_playUntil, Time + 2.5f);
+                    }
+                    return;
+                }
                 // Defenders who run into the screener get held up.
                 for (int i = 0; i < Players.Length; i++)
                 {
@@ -380,8 +394,9 @@ namespace CallerRetroBall.Logic
                         Events.Add(new MatchEvent(MatchEventType.Screen, _screener, screener.Team));
                     }
                 }
-                // Once the handler comes off the screen, roll to the rim.
-                if (Vec2.Distance(handler.Position, screener.Position) < 1.3f && Time > _playUntil - 2.8f)
+                // Once the handler comes off the screen (or it has been held long enough), roll to the rim.
+                float held = Time - _screenSetAt;
+                if ((held > 0.4f && Vec2.Distance(handler.Position, screener.Position) < 1.3f) || held > 1.8f)
                 {
                     _screenRolling = true;
                     _ai[_screener].NextDecision = Time;
@@ -395,6 +410,7 @@ namespace CallerRetroBall.Logic
             _playTeam = -1;
             _screener = -1;
             _screenRolling = false;
+            _screenSet = false;
             _giveAndGoPartner = -1;
         }
 

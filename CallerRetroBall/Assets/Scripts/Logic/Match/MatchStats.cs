@@ -16,6 +16,8 @@ namespace CallerRetroBall.Logic
         public int steals;
         public int blocks;
         public int turnovers;
+        /// <summary>Releases graded GREEN (made or missed).</summary>
+        public int greenReleases;
 
         public float FieldGoalPercentage => fieldGoalsAttempted == 0 ? 0f : (float)fieldGoalsMade / fieldGoalsAttempted;
     }

@@ -217,6 +217,12 @@ namespace CallerRetroBall.Logic
             if (ChargingIndex == p.Index) return;
             var court = Setup.Court;
             if (GiveAndGoReturn(p)) return;
+            if (Setup.TeammatesOnlyPass && p.Team == Setup.HumanTeam)
+            {
+                s.Intent = AiIntent.Hold;
+                s.Target = p.Position;
+                return;
+            }
 
             if (MustClear && court.ZoneOf(p.Position) != ShotZone.BeyondArc)
             {
@@ -334,7 +340,8 @@ namespace CallerRetroBall.Logic
         {
             var t = Setup.Shot;
             float gh = ShotModel.GreenHalfWidth(p.Def.attributes.shooting, t);
-            if (_rng.NextFloat() < profile.releaseAccuracy)
+            float accuracy = profile.releaseAccuracy + (p.Team == Setup.HumanTeam ? Setup.ChemistryBonus : 0f);
+            if (_rng.NextFloat() < accuracy)
                 return t.greenCenter + (_rng.NextFloat() * 2f - 1f) * gh * 0.8f;
             float side = _rng.NextFloat() < 0.5f ? -1f : 1f;
             float offset = gh + 0.01f + _rng.NextFloat() * 0.25f;

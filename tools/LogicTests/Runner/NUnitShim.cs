@@ -18,6 +18,11 @@ namespace NUnit.Framework
         public TestCaseAttribute(params object[] args) { Arguments = args; }
     }
 
+    public sealed class InconclusiveException : Exception
+    {
+        public InconclusiveException(string message) : base(message) { }
+    }
+
     public sealed class AssertionException : Exception
     {
         public AssertionException(string message) : base(message) { }
@@ -27,6 +32,8 @@ namespace NUnit.Framework
     {
         private static string M(string message, string detail) =>
             string.IsNullOrEmpty(message) ? detail : detail + " — " + message;
+
+        public static void Inconclusive(string message = null) => throw new InconclusiveException(message ?? "Inconclusive");
 
         public static void Fail(string message = null) => throw new AssertionException(message ?? "Assert.Fail");
 
@@ -85,6 +92,16 @@ namespace NUnit.Framework
         private static bool ObjectsEqual(object a, object b)
         {
             if (a == null || b == null) return a == null && b == null;
+            if (a is System.Collections.IEnumerable ea && b is System.Collections.IEnumerable eb && !(a is string) && !(b is string))
+            {
+                var la = new List<object>();
+                var lb = new List<object>();
+                foreach (var x in ea) la.Add(x);
+                foreach (var x in eb) lb.Add(x);
+                if (la.Count != lb.Count) return false;
+                for (int i = 0; i < la.Count; i++) if (!ObjectsEqual(la[i], lb[i])) return false;
+                return true;
+            }
             if (IsNumeric(a) && IsNumeric(b) && !(a is Enum) && !(b is Enum))
             {
                 if (a is float || a is double || b is float || b is double)
