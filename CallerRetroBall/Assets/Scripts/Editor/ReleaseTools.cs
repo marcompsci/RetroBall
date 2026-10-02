@@ -131,7 +131,8 @@ namespace CallerRetroBall.EditorTools
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
             return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, portrait, full screen, no splash.\n" +
-                   "Bundle ID: " + id + (id == "com.retroball.game" ? "  ← placeholder: change it to your own before App Store submission." : "");
+                   "Bundle ID: " + id + (id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal)
+                       ? "  ← placeholder: change it to your own (e.g. com.yourname.retroball) before signing." : "");
         }
 
         // ------------------------------------------------------------------ builds

@@ -165,7 +165,8 @@ namespace CallerRetroBall.EditorTools
             var android = UnityEditor.Build.NamedBuildTarget.Android;
             string currentId = PlayerSettings.GetApplicationIdentifier(ios);
             if (string.IsNullOrEmpty(currentId) || currentId.StartsWith("com.DefaultCompany", StringComparison.Ordinal) ||
-                currentId.StartsWith("com.Company", StringComparison.Ordinal) || currentId == OldPlaceholderBundleId)
+                currentId.StartsWith("com.Company", StringComparison.Ordinal) || currentId == OldPlaceholderBundleId ||
+                currentId.StartsWith("com.Unity-Technologies", StringComparison.Ordinal) || currentId.StartsWith("com.UnityTechnologies", StringComparison.Ordinal))
             {
                 PlayerSettings.SetApplicationIdentifier(ios, PlaceholderBundleId);
                 PlayerSettings.SetApplicationIdentifier(android, PlaceholderBundleId);
