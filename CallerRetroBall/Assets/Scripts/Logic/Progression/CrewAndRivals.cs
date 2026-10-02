@@ -115,6 +115,8 @@ namespace CallerRetroBall.Logic
     {
         public int wins;
         public int losses;
+        /// <summary>Wins over the Sundown Syndicate (also counted in <see cref="wins"/>).</summary>
+        public int sundownWins;
         /// <summary>Rise season of the last Rival Challenge played (0 = none yet).</summary>
         public int lastSeason;
     }
@@ -122,7 +124,8 @@ namespace CallerRetroBall.Logic
     public enum RivalOutcome { None = 0, Won = 1, Lost = 2 }
 
     /// <summary>
-    /// Neon Static, the rival crew. Once a Rise season, from week 5 of the regular season, a Rival
+    /// The rival crews: Neon Static in odd-numbered Rise seasons, the Sundown Syndicate in even ones
+    /// (from Season 2). Once a Rise season, from week 5 of the regular season, a Rival
     /// Challenge appears in the hub. It doesn't count in the standings; winning pays a bonus.
     /// </summary>
     public static class RivalEngine
@@ -142,7 +145,7 @@ namespace CallerRetroBall.Logic
         public static MatchRequest Challenge(CareerSaveData d, ContentCatalog c, string difficultyId)
         {
             if (!ChallengeAvailable(d)) return null;
-            var rival = c.Team(DefaultContent.RivalCrewId);
+            var rival = c.Team(RivalFor(d.rise.season.seasonNumber));
             if (rival == null) return null;
             return new MatchRequest
             {
@@ -155,12 +158,18 @@ namespace CallerRetroBall.Logic
             };
         }
 
+        /// <summary>Which rival crew a Rise season brings: Sundown Syndicate in even seasons, Neon Static otherwise.</summary>
+        public static string RivalFor(int seasonNumber) =>
+            seasonNumber >= 2 && seasonNumber % 2 == 0 ? DefaultContent.Rival2CrewId : DefaultContent.RivalCrewId;
+
         public static RivalOutcome ApplyResult(CareerSaveData d, MatchSummary s)
         {
             if (d == null || s == null || s.mode != GameMode.Rival) return RivalOutcome.None;
             d.rival.lastSeason = d.rise.season != null ? d.rise.season.seasonNumber : d.rival.lastSeason + 1;
+            bool sundown = s.teamAId == DefaultContent.Rival2CrewId || s.teamBId == DefaultContent.Rival2CrewId;
             if (s.HumanWon)
             {
+                if (sundown) d.rival.sundownWins++;
                 d.rival.wins++;
                 d.signalPoints += WinBonus;
                 d.fans += WinFans;
@@ -200,6 +209,13 @@ namespace CallerRetroBall.Logic
             B("badge.every_day", "EVERY DAY", "7-day Daily Challenge streak.", d => d.daily.bestStreak >= 7),
             B("badge.self_made", "SELF MADE", "Create your own player.", d => d.customPlayer != null && d.customPlayer.created),
             B("badge.ready", "READY TO CALL", "Finish How to Play.", d => d.tutorialDone),
+            B("badge.sundown", "SUNDOWN SETTLED", "Beat the Sundown Syndicate.", d => d.rival.sundownWins >= 1),
+            B("badge.two_time", "TWO-TIME", "Win The Gold Signal Cup twice.", d => d.totals.championships >= 2),
+            B("badge.sky_hookup", "SKY HOOKUP", "10 alley-oops (thrown or finished).", d => d.totals.alleyOops >= 10),
+            B("badge.heat_check", "HEAT CHECK", "Heat up 10 times.", d => d.totals.heatUps >= 10),
+            B("badge.your_colors", "YOUR COLORS", "Create your own team.", d => d.customTeam != null && d.customTeam.created),
+            B("badge.caller_cup", "CUP RUN", "Win the Caller Cup.", d => d.cup != null && d.cup.titles >= 1),
+            B("badge.shootout", "SHOOTOUT STAR", "Win a Shootout.", d => d.practice.shootoutWins >= 1),
             B("badge.ladder", "NO CONTINUES NEEDED", "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade.clears > 0),
             B("badge.codes", "CODE BREAKER", "Find every secret code.", d => d.secrets != null && Secrets.All.TrueForAll(x => d.secrets.codesFound.Contains(x.Id))),
         };
@@ -235,7 +251,7 @@ namespace CallerRetroBall.Logic
         }
     }
 
-    public enum StorySpeaker { Coach = 0, Rival = 1, You = 2 }
+    public enum StorySpeaker { Coach = 0, Rival = 1, You = 2, /** Kaia Sol of the Sundown Syndicate (chapter 2). */ Rival2 = 3 }
 
     public struct StoryLine
     {
@@ -258,6 +274,7 @@ namespace CallerRetroBall.Logic
     {
         public const string CoachName = "COACH DEE";
         public const string RivalName = "VEX";
+        public const string Rival2Name = "KAIA";
 
         public const string Intro = "story.intro";
         public const string CircuitCleared = "story.circuit_cleared";
@@ -266,6 +283,11 @@ namespace CallerRetroBall.Logic
         public const string RivalLost = "story.rival_lost";
         public const string Playoffs = "story.playoffs";
         public const string Champions = "story.champions";
+        // Chapter 2 (Rise Season 2 and later).
+        public const string Season2 = "story.s2_open";
+        public const string Rival2Intro = "story.rival2_intro";
+        public const string Rival2Beaten = "story.rival2_beaten";
+        public const string TwoTime = "story.two_time";
 
         public static StoryBeat Beat(string id, string nickname) => Beat(id, nickname, Loc.Language);
 
@@ -276,10 +298,32 @@ namespace CallerRetroBall.Logic
             void C(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Coach, t));
             void V(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival, t));
             void Y(string t) => b.Lines.Add(new StoryLine(StorySpeaker.You, t));
+            void K(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival2, t));
             if (language == Loc.Spanish)
             {
                 switch (id)
                 {
+                    case Season2:
+                        C("Temporada dos. Ya no somos los nuevos, " + me + ". Ahora todos nos tienen estudiados.");
+                        C("Y corre la voz de un equipo nuevo en el muelle del ferrocarril. Juegan al atardecer y no pierden.");
+                        Y("Que nos estudien. Nosotros seguimos anunciando el tiro.");
+                        break;
+                    case Rival2Intro:
+                        K("¿Los First Callers? Pensé que serían más altos.");
+                        K("El Sundown Syndicate no grita. Llegamos, ganamos, y nos vamos antes de que se apaguen las luces.");
+                        Y("Entonces no te vayas temprano.");
+                        C("Kaia lee el juego como un libro. Muévete sin balón y no le des tiempo.");
+                        break;
+                    case Rival2Beaten:
+                        K("...Bien jugado. De verdad.");
+                        K("Pero el sol sale mañana otra vez, " + me + ". Y nosotros también.");
+                        C("Eso es respeto. Te lo ganaste.");
+                        break;
+                    case TwoTime:
+                        C("Dos copas. Ya no es suerte, es un legado.");
+                        Y("¿Y ahora qué, entrenadora?");
+                        C("Ahora defendemos el trono. Cada temporada. Contra todos.");
+                        break;
                     case Intro:
                         C("Así que tú eres " + me + ". Dicen que anuncias tu tiro antes de lanzarlo.");
                         C("Cinco equipos callejeros mandan en el Blacktop Circuit. Gánales a los cinco y la Caller League tendrá que abrirnos la puerta.");
@@ -322,6 +366,27 @@ namespace CallerRetroBall.Logic
             }
             switch (id)
             {
+                case Season2:
+                    C("Season two. We're not the new kids anymore, " + me + ". Everybody's got film on us now.");
+                    C("And there's word of a new crew down at the rail yard. They play at sundown and they don't lose.");
+                    Y("Let them study. We'll keep calling our shots.");
+                    break;
+                case Rival2Intro:
+                    K("The First Callers? Thought you'd be taller.");
+                    K("The Sundown Syndicate doesn't shout. We show up, we win, and we're gone before the lights come on.");
+                    Y("Then don't leave early.");
+                    C("Kaia reads the floor like a book. Move without the ball and don't give her time.");
+                    break;
+                case Rival2Beaten:
+                    K("...Good game. I mean it.");
+                    K("But the sun comes up again tomorrow, " + me + ". So do we.");
+                    C("That's respect. You earned it.");
+                    break;
+                case TwoTime:
+                    C("Two cups. That's not luck anymore. That's a legacy.");
+                    Y("So what now, Coach?");
+                    C("Now we defend the throne. Every season. Against everybody.");
+                    break;
                 case Intro:
                     C("So you're " + me + ". Heard you call your shot before you take it.");
                     C("Five street crews run the Blacktop Circuit. Beat all five and the Caller League has to let us in.");
@@ -371,11 +436,17 @@ namespace CallerRetroBall.Logic
             var r = d.rise;
             if (!Seen(Intro)) return Intro;
             if (r.stage != RiseStage.Circuit && !Seen(CircuitCleared)) return CircuitCleared;
-            if (RivalEngine.ChallengeAvailable(d) && !Seen(RivalIntro)) return RivalIntro;
-            if (d.rival.wins >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
-            if (d.rival.losses >= 1 && d.rival.wins == 0 && !Seen(RivalLost)) return RivalLost;
+            int season = r.season != null ? r.season.seasonNumber : 0;
+            bool sundownSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival2CrewId;
+            if (season >= 2 && r.stage == RiseStage.Season && !Seen(Season2)) return Season2;
+            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !Seen(RivalIntro)) return RivalIntro;
+            if (RivalEngine.ChallengeAvailable(d) && sundownSeason && !Seen(Rival2Intro)) return Rival2Intro;
+            if (d.rival.sundownWins >= 1 && !Seen(Rival2Beaten)) return Rival2Beaten;
+            if (d.rival.wins - d.rival.sundownWins >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
+            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !Seen(RivalLost)) return RivalLost;
             if (r.stage == RiseStage.Playoffs && !Seen(Playoffs)) return Playoffs;
             if (d.totals.championships >= 1 && !Seen(Champions)) return Champions;
+            if (d.totals.championships >= 2 && !Seen(TwoTime)) return TwoTime;
             return null;
         }
 
@@ -384,6 +455,10 @@ namespace CallerRetroBall.Logic
             if (d != null && !string.IsNullOrEmpty(id) && !d.storySeen.Contains(id)) d.storySeen.Add(id);
         }
 
-        public static readonly string[] AllIds = { Intro, CircuitCleared, RivalIntro, RivalBeaten, RivalLost, Playoffs, Champions };
+        public static readonly string[] AllIds =
+        {
+            Intro, CircuitCleared, RivalIntro, RivalBeaten, RivalLost, Playoffs, Champions,
+            Season2, Rival2Intro, Rival2Beaten, TwoTime,
+        };
     }
 }

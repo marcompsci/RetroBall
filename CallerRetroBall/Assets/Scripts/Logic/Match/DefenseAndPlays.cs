@@ -35,6 +35,12 @@ namespace CallerRetroBall.Logic
         // Screens
         public float screenRadius = 0.9f;
         public float screenSlow = 0.45f;
+
+        // Schemes
+        /// <summary>Same kind of basket this many times in a row makes a smart AI change its defence.</summary>
+        public int schemeAdjustAfter = 2;
+        /// <summary>Only AI at or above this decision quality adjusts (Caller and Legend).</summary>
+        public float schemeAdjustMinQuality = 0.6f;
         public float screenSeconds = 0.7f;
 
         // Stamina (0..1)
@@ -267,6 +273,7 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < Players.Length; i++)
             {
                 if (Setup.PassiveOpponents && Players[i].Team != Setup.HumanTeam) continue;
+                if (IsBenched(i)) continue;
                 float dist = Vec2.Distance(Ball.Position, Players[i].Position);
                 if (dist > t.pickupRadius + d.reboundReach) continue;
                 float score = RatingScale.Normalized(Players[i].Def.attributes.rebounding) * 0.6f - dist * 0.8f

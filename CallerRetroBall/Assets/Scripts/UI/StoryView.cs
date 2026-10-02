@@ -25,7 +25,7 @@ namespace CallerRetroBall.UI
         private TextMeshProUGUI _name, _text;
         private UnityEngine.UI.RawImage _portrait;
         private RectTransform _portraitRt;
-        private readonly Texture2D[] _faces = new Texture2D[3];
+        private readonly Texture2D[] _faces = new Texture2D[4];
         private float _openedAt;
 
         /// <summary>Plays <paramref name="beat"/> and marks it seen; <paramref name="onDone"/> runs afterwards.</summary>
@@ -122,14 +122,17 @@ namespace CallerRetroBall.UI
             }
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
-            _name.color = l.Speaker == StorySpeaker.Rival ? Theme.Cyan : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2;
+            _name.color = l.Speaker == StorySpeaker.Rival ? Theme.Cyan
+                        : l.Speaker == StorySpeaker.Rival2 ? (Color)new Color32(0xFF, 0x8C, 0x42, 255)
+                        : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
             _text.text = l.Text;
             _text.maxVisibleCharacters = 0;
             _lineStart = Time.unscaledTime;
             _portrait.texture = Face(l.Speaker);
             // The rival stands on the right, everyone else on the left.
-            _portraitRt.anchorMin = _portraitRt.anchorMax = new Vector2(l.Speaker == StorySpeaker.Rival ? 0.68f : 0.32f, 0.62f);
-            _portrait.uvRect = l.Speaker == StorySpeaker.Rival ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f);
+            _portraitRt.anchorMin = _portraitRt.anchorMax = new Vector2(rival ? 0.68f : 0.32f, 0.62f);
+            _portrait.uvRect = rival ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f);
             Audio.AudioManager.Click();
         }
 
@@ -139,6 +142,7 @@ namespace CallerRetroBall.UI
             {
                 case StorySpeaker.Coach: return Story.CoachName;
                 case StorySpeaker.Rival: return Story.RivalName;
+                case StorySpeaker.Rival2: return Story.Rival2Name;
                 default: return (App.Career?.nickname ?? "ROOK").ToUpperInvariant();
             }
         }
@@ -166,6 +170,13 @@ namespace CallerRetroBall.UI
                     jersey = rival.primary;
                     trim = rival.secondary;
                     accent = rival.accent;
+                    break;
+                case StorySpeaker.Rival2:
+                    var syndicate = c.Team(DefaultContent.Rival2CrewId);
+                    look = c.Player(DefaultContent.Rival2LeaderId)?.appearance ?? new AppearanceDef(3, 2, 0, BodyType.Slim, 1);
+                    jersey = syndicate.primary;
+                    trim = syndicate.secondary;
+                    accent = syndicate.accent;
                     break;
                 default:
                     look = PlayerCreator.BasePlayer(App.Career, c).appearance;

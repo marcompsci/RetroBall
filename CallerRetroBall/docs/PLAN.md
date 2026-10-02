@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 16 | Create-a-team (colours, jerseys, shorts, shoes, logo); Season 2 (Sundown Syndicate rival, 3 courts, story chapter 2, kits, 7 badges); AI defensive schemes; 1-on-1; Shootout; 8-team Caller Cup; App Store launch kit | **Done** (342 logic tests pass; Unity changes not yet compiled; iPhone build in progress with Omari) |
 | 15 | HEAT CHECK, alley-oops, hit-stop, heavy haptics, 120 Hz; CRT filter, title demo, pixel wipes, announcer voice; secret codes, hidden courts/teams, big heads, Arcade Ladder + boss; controller menus and prompts | **Done** (324 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 14 | Instant replay + play of the game, 3-Point Contest and Lockdown drills, King of the Court mode, Spanish language (partial) | **Done** (296 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 13 | Recruit your crew, Neon Static rival + Rival Challenge, story scenes, 16 badges + trophy room, iOS readiness check | **Done** (278 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
@@ -234,6 +235,26 @@
 - **Controllers:** menus are navigable with a gamepad (gold pixel cursor, A select, B back); in matches the
   touch buttons hide when a controller is used and the controls hint shows controller buttons; START pauses.
   Info.plist declares extended-gamepad support.
+
+## Phase 16: create-a-team, Season 2, smarter AI, new modes, launch kit
+
+- **Create-a-team** (Locker Room ▸ TEAM, `CustomTeams`): name, city, scoreboard name, 16-colour palette for
+  jersey / trim / accent / shorts / shoes, 8 jersey patterns, logo shape + icon, home court. Your player and crew
+  play for it in Quick Call, King, Arcade Ladder, 1-on-1, Caller Cup and 2 Player; "Wear it in Rise Mode" dresses
+  the First Callers in it. Kits draw the pattern always and use their own shorts and shoe colours.
+- **Season 2:** the Sundown Syndicate (led by Kaia Sol) is the rival in even Rise seasons; four new story scenes
+  (Season 2 opener, Syndicate intro / beaten, two-time champions) in English and Spanish; courts Sundown Yard,
+  Rain Alley, Snowline Park (all playable in Quick Call); 3 jerseys, 2 shoes, 1 banner; badges for the
+  Syndicate, two titles, 10 alley-oops, 10 heat checks, creating a team, the Caller Cup and the Shootout.
+- **Smarter AI:** every AI team has a defence (man, full pressure, pack the paint, zone). Caller/Legend AI
+  switch out of a zone or pack-line after two threes in a row, and into pack-line after two baskets at the rim;
+  the HUD says when they change.
+- **Modes:** 1-on-1 (teammates sit out at the far corners), Practice ▸ SHOOTOUT (3-point contest against a CPU
+  shooter whose round is simulated with the real shot model), and the Caller Cup (8-team knockout, +300 SP title).
+- **Launch kit:** `docs/LAUNCH_KIT.md` (screenshot sizes and shot list with EN/ES captions, app preview
+  storyboard, TestFlight checklist, privacy answers, launch-day list, press blurb); updated `APP_STORE.md`
+  with the new features and a Spanish (Mexico) listing; **Capture Store Screenshot** saves opaque PNGs; the
+  readiness check and builds write `Logs/RetroBall-release.txt`.
 
 ## Deviations from the brief (deliberate)
 

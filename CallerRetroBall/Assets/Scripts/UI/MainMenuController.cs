@@ -91,6 +91,11 @@ namespace CallerRetroBall.UI
                 App.OpenArcadeOnMenu = false;
                 ShowArcade();
             }
+            else if (App.OpenCupOnMenu)
+            {
+                App.OpenCupOnMenu = false;
+                ShowCup();
+            }
 
             // First-time players are offered the tutorial once per session until they finish it.
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
@@ -254,11 +259,11 @@ namespace CallerRetroBall.UI
             UiKit.Size(oppLabel, 70f);
             UiKit.Button(column, "CHANGE OPPONENT", () => { oppIndex = (oppIndex + 1) % opponents.Count; Refresh(); }, ButtonStyle.Ghost, 100f, 36f);
 
-            // Hidden courts, once unlocked, can host any Quick Call.
+            // Play anywhere: home court, any street court, and hidden courts once unlocked.
             var courts = new List<string> { null };
+            foreach (var court in c.Courts) if (court.circuit == CourtCircuit.Blacktop) courts.Add(court.id);
             foreach (var id in new[] { DefaultContent.SecretCourtId, DefaultContent.BossCourtId })
                 if (Secrets.IsUnlocked(App.Career.secrets, id)) courts.Add(id);
-            if (courts.Count > 1)
             {
                 var courtNames = courts.ConvertAll(id => id == null ? "HOME" : c.Court(id).displayName.ToUpperInvariant()).ToArray();
                 UiControls.ChoiceRow(column, "COURT", courtNames, 0, i => courtChoice = i);
@@ -317,6 +322,9 @@ namespace CallerRetroBall.UI
                 ? "Stage " + (arcade.rung + 1) + " of " + ArcadeEngine.Rungs + "  ·  continues " + arcade.continues
                 : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
             Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
+            Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
+            var cup = App.Career.cup;
+            Mode(column, "CALLER CUP", cup.Active ? "In progress  ·  titles " + cup.titles : "Eight-team knockout. Titles: " + cup.titles, ShowCup, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
         }
@@ -339,7 +347,7 @@ namespace CallerRetroBall.UI
             UiControls.Stat(column, "BEST STREAK", k.best.ToString());
             UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
 
-            var mine = c.TeamsInTier(TeamTier.League).FindAll(t => t.unlockedByDefault);
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
             var next = k.active && c.Team(k.homeTeamId) != null ? KingEngine.NextMatch(k, c, k.homeTeamId, career.settings.difficultyId) : null;
             if (next != null)
             {
@@ -466,7 +474,9 @@ namespace CallerRetroBall.UI
         private void ShowVersus()
         {
             var c = App.Catalog;
-            var league = c.TeamsInTier(TeamTier.League);
+            var league = Secrets.OpponentTeams(c, App.Career.secrets);
+            var mineTeam = c.Team(CustomTeams.TeamId);
+            if (mineTeam != null) league.Insert(0, mineTeam);
             int p1 = 0, p2 = 1;
             var column = OpenOverlay("2 PLAYER", out var footer);
             TextMeshProUGUI p1Label = null, p2Label = null;
@@ -565,6 +575,109 @@ namespace CallerRetroBall.UI
             }
         }
 
+        /// <summary>1-on-1: pick your team and theirs; only the two leaders play.</summary>
+        private void ShowOneOnOne()
+        {
+            var c = App.Catalog;
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
+            var theirs = Secrets.OpponentTeams(c, App.Career.secrets);
+            int a = 0, b = 0;
+            var column = OpenOverlay("1-ON-1", out var footer);
+            UiKit.Size(UiKit.Label(column, "Your player against their leader. Teammates sit out. First to 11 or two minutes.", 30f, Theme.Cream), 90f);
+            UiKit.Size(UiKit.Label(column, "YOUR TEAM", 32f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
+            var mineLabel = UiKit.Label(column, "", 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(mineLabel, 64f);
+            UiKit.Button(column, "CHANGE TEAM", () => { a = (a + 1) % mine.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            var theirLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(theirLabel, 64f);
+            UiKit.Button(column, "CHANGE OPPONENT", () => { b = (b + 1) % theirs.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "TIP OFF", () =>
+            {
+                App.PendingMatch = new MatchRequest
+                {
+                    Mode = GameMode.OneOnOne,
+                    HomeTeamId = mine[a].id,
+                    AwayTeamId = theirs[b].id,
+                    CourtId = mine[a].homeCourtId,
+                    RulesId = "rules.oneonone",
+                    DifficultyId = App.Career.settings.difficultyId,
+                };
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Primary, 130f);
+
+            void Refresh()
+            {
+                if (theirs[b].id == mine[a].id) b = (b + 1) % theirs.Count;
+                var leader = c.Player(theirs[b].rosterPlayerIds[0]);
+                mineLabel.text = mine[a].FullName.ToUpperInvariant();
+                theirLabel.text = Loc.T("VS") + "  " + (leader != null ? leader.DisplayName.ToUpperInvariant() + "  ·  " : "") + theirs[b].abbreviation;
+            }
+            Refresh();
+        }
+
+        /// <summary>The Caller Cup: an eight-team knockout bracket.</summary>
+        private void ShowCup()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            var cup = career.cup;
+            var column = OpenOverlay("CALLER CUP", out var footer);
+            UiKit.Size(UiKit.Label(column, "Eight teams, three rounds, one cup. You're the eighth seed. Lose once and you're out.", 30f, Theme.Cream), 90f);
+            UiControls.Stat(column, "TITLES", cup.titles.ToString());
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+
+            if (cup.bracket.Count == CupEngine.Teams)
+            {
+                for (int round = 1; round <= CupEngine.Rounds; round++)
+                {
+                    var games = cup.games.FindAll(g => g.round == round);
+                    if (games.Count == 0) continue;
+                    UiKit.Size(UiKit.Label(column, CupEngine.RoundName(round), 30f, Theme.Muted, TextAlignmentOptions.Center, true), 44f);
+                    foreach (var g in games)
+                    {
+                        string home = c.Team(g.homeId)?.abbreviation ?? "?";
+                        string away = c.Team(g.awayId)?.abbreviation ?? "?";
+                        bool mine = g.Involves(cup.homeTeamId);
+                        UiKit.Size(UiKit.Label(column, home + (g.played ? "  " + g.homeScore + " - " + g.awayScore + "  " : "  vs  ") + away,
+                                               36f, mine ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Center, true), 52f);
+                    }
+                }
+                if (cup.finished)
+                    UiKit.Size(UiKit.Label(column, "CHAMPION: " + (c.Team(cup.championId)?.FullName ?? "?").ToUpperInvariant(),
+                                           36f, Theme.Cyan, TextAlignmentOptions.Center, true), 60f);
+            }
+
+            var next = CupEngine.NextMatch(cup, c, career.settings.difficultyId);
+            if (next != null)
+            {
+                UiKit.Button(footer, "PLAY", () =>
+                {
+                    App.PendingMatch = next;
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, ButtonStyle.Primary, 130f);
+                return;
+            }
+            var mineTeams = Secrets.PlayableTeams(c, career.secrets);
+            mineTeams.RemoveAll(t => t.tier == TeamTier.Secret);
+            if (mineTeams.Count == 0) return;
+            int pick = 0;
+            var teamLabel = UiKit.Label(column, mineTeams[pick].FullName.ToUpperInvariant(), 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(teamLabel, 64f);
+            if (mineTeams.Count > 1)
+                UiKit.Button(column, "CHANGE TEAM", () =>
+                {
+                    pick = (pick + 1) % mineTeams.Count;
+                    teamLabel.text = mineTeams[pick].FullName.ToUpperInvariant();
+                }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(footer, cup.edition == 0 ? "ENTER" : "NEW CUP", () =>
+            {
+                CupEngine.Start(App.Career.cup, App.Catalog, mineTeams[pick].id);
+                App.SaveCareer();
+                ShowCup();
+            }, ButtonStyle.Primary, 130f);
+        }
+
         private void ShowPractice()
         {
             var column = OpenOverlay("PRACTICE LAB", out var footer);
@@ -574,6 +687,18 @@ namespace CallerRetroBall.UI
             Drill(column, "DRIBBLE LANE", "Weave the cones. Best: " + (best.dribbleLaneTime > 0f ? best.dribbleLaneTime.ToString("0.00") + " s" : "—"), 2);
             Drill(column, "3-POINT CONTEST", "60 seconds, arc shots only. Gold spot = money ball (2). Best: " + best.threePointBest, 3);
             Drill(column, "LOCKDOWN", "Defense: stop 6 possessions. Best: " + best.lockdownBest + " / 6", 4);
+            // Shootout: the 3-point contest head to head with a random league team's best shooter.
+            UiKit.Button(column, "SHOOTOUT", () =>
+            {
+                var league = App.Catalog.TeamsInTier(TeamTier.League);
+                var request = MatchRequest.PracticeDefault();
+                request.Drill = (int)DrillKind.Shootout;
+                request.AwayTeamId = league[new SeededRandom((uint)System.Environment.TickCount | 1u).Range(0, league.Count)].id;
+                request.DifficultyId = App.Career.settings.difficultyId;
+                App.PendingMatch = request;
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Secondary, 130f);
+            UiKit.Size(UiKit.Label(column, "Beat a CPU shooter's 3-point score in 60 seconds. Wins: " + best.shootoutWins, 30f, Theme.Muted), 50f);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
         }
 

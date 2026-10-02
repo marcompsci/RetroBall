@@ -17,40 +17,66 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 ## Promotional text (170)
 
-> Call your shot. Run pick-and-rolls, lock down the lane, and take the First Callers from street courts to The Gold Signal Cup. No ads. No purchases. Fully offline.
+> Heat up, throw the alley-oop, climb the Arcade Ladder, and build your own team. Retro 3v3 hoops with secrets to find. No ads. No purchases. Fully offline.
 
-*(162 characters)*
+*(154 characters)*
 
 ## Description (4000)
 
 > **Call your shot. Build your legacy.**
 >
-> RetroBall is a pixel-art 3v3 half-court basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Thread passes to an open teammate, or call for the ball. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
+> RetroBall is a pixel-art 3v3 half-court basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Hit three in a row and you HEAT UP. Lob it to a cutter at the rim for the ALLEY-OOP. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
 >
-> On defense, jump to contest, reach for steals, switch onto the ball handler, and box out for the rebound. The AI plays the same rules you do. Rookie, Caller, and Legend change how quickly and how smartly it decides, never how good its players are.
+> On defense, jump to contest, reach for steals, switch onto the ball handler, and box out. Every AI team has its own defense (full-court pressure, zones, packing the paint) and the smart ones adjust when you find a weakness.
 >
 > **RISE MODE**
-> Start on The Blacktop Circuit and beat five street crews on their home courts. Earn a spot in The Caller League, play a 10-game season with event cards between games, manage your crew's energy and chemistry, and fight through the playoffs for The Gold Signal Cup.
+> Beat five street crews on The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, rival crews, and story scenes, all the way to The Gold Signal Cup.
 >
-> **BUILD YOUR PLAYER**
-> Earn Signal Points and Fans every game. Train your player's attributes, unlock jersey palettes, shoes, and court banners, and track your career stats.
+> **ARCADE MODES**
+> • Arcade Ladder: six stages, three continues, one secret boss
+> • King of the Court: win until you lose
+> • The Caller Cup: an eight-team knockout
+> • 1-on-1, Quick Call, and a new Daily Challenge every day
 >
-> **FIRST CALL CLASSIC**
-> A four-team knockout for your crew. Two wins and the trophy is yours.
+> **MAKE IT YOURS**
+> Create your player and your own team: name, colours, jersey pattern, shorts, shoes, logo, and home court. Train attributes, unlock kits, and fill your trophy room with badges.
 >
-> **DAILY CHALLENGE & 2 PLAYER**
-> A new challenge every day with streak bonuses, and head-to-head games on one device with a keyboard or two controllers.
+> **SECRETS**
+> Enter old-school codes for big heads, a rainbow ball, hidden courts, and a secret crew. Hints are earned by playing.
 >
 > **PRACTICE LAB**
-> Free Shoot, Passing Targets, and a timed Dribble Lane, each with a personal best to chase.
+> Free Shoot, Passing Targets, Dribble Lane, 3-Point Contest, Lockdown, and the Shootout against a CPU sharpshooter.
+>
+> **PLAY YOUR WAY**
+> • Touch controls or a Bluetooth controller (menus too)
+> • 2 Player on one device
+> • Optional CRT scanlines and 120 Hz on ProMotion iPhones
+> • English and Spanish
+> • Left-handed layout, large buttons, tap-to-shoot, reduce motion, colourblind team patterns
 >
 > **MADE TO RESPECT YOUR TIME**
-> • Games last about two minutes
-> • Fully offline. No account, no ads, no in-app purchases
-> • No tracking or data collection (Game Center is optional)
-> • Haptics, screen shake, UI scale, and colourblind team patterns are all adjustable
+> Games last about two minutes. Fully offline. No account, no ads, no in-app purchases, no tracking. Game Center is optional.
 >
-> All teams, players, courts, and music are original.
+> All teams, players, courts, art, and music are original.
+
+## Spanish (Mexico) localization
+
+Add **Spanish (Mexico)** as a localization in App Store Connect and paste these.
+
+| Field | Text |
+|---|---|
+| Name | RetroBall |
+| Subtitle (30) | Básquet retro 3v3 callejero *(27)* |
+| Promotional text | Ponte al rojo vivo, lanza el alley-oop, sube la Escalera Arcade y crea tu propio equipo. Básquet retro 3v3 con secretos. Sin anuncios ni compras. |
+| Keywords (100) | `baloncesto,basquet,arcade,retro,pixel,3v3,callejero,offline,deportes,cancha,temporada,8-bit` |
+
+> **Anuncia tu tiro. Construye tu leyenda.**
+>
+> RetroBall es un juego de básquet 3v3 de media cancha en pixel art, hecho para jugar con un pulgar en el stick y otro en los botones. Mantén para tirar y suelta en verde. Encesta tres seguidos y te pones AL ROJO VIVO. Lanza el alley-oop a un compañero junto al aro.
+>
+> Modo Ascenso, Escalera Arcade con jefe secreto, Rey de la Cancha, la Caller Cup, 1 contra 1, Reto Diario y 2 jugadores en un dispositivo. Crea tu jugador y tu propio equipo, descubre códigos secretos y llena tu sala de trofeos.
+>
+> Controles táctiles o mando Bluetooth. Sin conexión, sin cuenta, sin anuncios, sin compras y sin rastreo. Todo el contenido es original.
 
 ## Keywords (100)
 
@@ -99,12 +125,14 @@ The app uses no encryption beyond what iOS itself provides. The build post-proce
 
 The 6.9" iPhone screenshots are required; App Store Connect scales them down for smaller iPhones. Take them on an iPhone Pro Max–class simulator with **⌘S**. Use portrait 1320×2868 (6.9"), or 1290×2796 (6.7") if Apple still accepts that size for your submission. Suggested set:
 
-1. A shot release with the GREEN callout
-2. Defense: a block or steal toast
-3. The CALL menu open on offense
-4. The Rise Mode hub with standings
-5. The post-game box score with rewards
-6. Locker Room ▸ Style
+1. A HEAT CHECK player with flames, mid-jumper
+2. An ALLEY-OOP finish (gold pass arrow, then the slam)
+3. The Arcade Ladder with THE GLITCH on its neon court
+4. Locker Room ▸ TEAM (create-a-team) with a custom kit
+5. The Rise Mode hub or a story scene
+6. Defense: a block, with the CRT filter on
+
+Use **RetroBall ▸ Release ▸ Capture Store Screenshot** in Play mode (see `docs/LAUNCH_KIT.md`). Captions for each shot are in the launch kit.
 
 Only show real gameplay. Don't add device frames that show non-Apple hardware, and don't include text that mentions other games or leagues.
 

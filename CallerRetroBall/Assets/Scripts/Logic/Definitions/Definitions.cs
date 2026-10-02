@@ -130,6 +130,8 @@ namespace CallerRetroBall.Logic
         Rival = 3,
         /// <summary>Hidden teams: the arcade boss and code-unlocked crews (Quick Call once unlocked).</summary>
         Secret = 4,
+        /// <summary>Your created team (Locker Room ▸ TEAM).</summary>
+        Custom = 5,
     }
 
     public enum LogoShape { Circle = 0, Shield = 1, Diamond = 2, Hexagon = 3, Badge = 4 }
@@ -157,6 +159,12 @@ namespace CallerRetroBall.Logic
         public string motto;
         public bool unlockedByDefault;
         public List<string> rosterPlayerIds = new List<string>();
+        /// <summary>Custom kit (your created team): jersey pattern always drawn, own shorts and shoe colours.</summary>
+        public bool customKit;
+        /// <summary>Favourite defence when the AI plays this team.</summary>
+        public DefenseScheme scheme;
+        public RgbColor shorts;
+        public RgbColor shoes;
 
         public string Id => id;
         public string FullName => string.IsNullOrEmpty(city) ? nickname : city + " " + nickname;
@@ -291,6 +299,8 @@ namespace CallerRetroBall.Logic
         public List<UpgradeDef> Upgrades = new List<UpgradeDef>();
         public List<CosmeticDef> Cosmetics = new List<CosmeticDef>();
         public List<SeasonConfigDef> Seasons = new List<SeasonConfigDef>();
+        /// <summary>Runtime only: the First Callers' original look while your custom team dresses them.</summary>
+        [NonSerialized] public TeamDef CrewOriginalLook;
 
         public T Find<T>(IEnumerable<T> list, string id) where T : class, IHasId
         {

@@ -68,6 +68,8 @@ namespace CallerRetroBall.Logic
         public bool Demo;
         /// <summary>Secret code: the human's player starts the game heated up.</summary>
         public bool HumanStartsHeated;
+        /// <summary>1-on-1: only slot 0 of each team plays; the others sit out.</summary>
+        public bool OneOnOne;
 
         /// <summary>Builds a setup from a request, taking the first three players of each roster.</summary>
         public static MatchSetup FromRequest(MatchRequest request, ContentCatalog c)
@@ -91,6 +93,7 @@ namespace CallerRetroBall.Logic
                 ChemistryBonus = request.ChemistryBonus,
                 Demo = request.Mode == GameMode.Demo,
                 HumanStartsHeated = request.StartHeated,
+                OneOnOne = request.Mode == GameMode.OneOnOne,
             };
             // Practice has no opponent: mirror the player crew so the court still has bodies.
             if (setup.TeamB == null) setup.TeamB = setup.TeamA;
@@ -208,6 +211,8 @@ namespace CallerRetroBall.Logic
         HeatEnded = 24,
         /// <summary>An alley-oop finish (PlayerIndex = finisher, Value = passer).</summary>
         AlleyOop = 25,
+        /// <summary>The AI changed its defence (Team = defending team, Value = <see cref="DefenseScheme"/>).</summary>
+        SchemeChanged = 26,
     }
 
     public struct MatchEvent
@@ -314,6 +319,7 @@ namespace CallerRetroBall.Logic
             _desired = new Vec2[Players.Length];
             InitAi();
             InitDefense();
+            InitSchemes();
             GameClock = setup.Rules.useGameClock ? setup.Rules.gameClockSeconds : 0f;
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = IndexOf(setup.HumanTeam, 0);
@@ -377,6 +383,9 @@ namespace CallerRetroBall.Logic
                 var d = Players[IndexOf(1 - offenseTeam, slot)];
                 d.Motion = new MotionState(Formation.GuardSpot(man.Position, slot == 0, court), Facing8.N);
             }
+            if (Setup.OneOnOne)
+                foreach (var p in Players)
+                    if (IsBenched(p.Index)) p.Motion = new MotionState(BenchSpot(p), Facing8.S);
             CancelCharge();
             _alleyOop = false;
             EndPlay();
@@ -666,7 +675,7 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < Players.Length; i++)
             {
                 var o = Players[i];
-                if (o.Team == p.Team) continue;
+                if (o.Team == p.Team || IsBenched(i)) continue;
                 float d = Vec2.Distance(o.Position, p.Position);
                 if (d < distance)
                 {
@@ -744,6 +753,7 @@ namespace CallerRetroBall.Logic
                 if (Ball.ShotPoints >= Setup.Rules.beyondArcPoints) line.arcMade++;
                 p.HotStreak++;
                 OnMadeForHeat(p);
+                AdjustScheme(p.Team, Ball.ShotPoints, Ball.ShotType);
                 if (_lastCatcher == shooter && _lastPasser >= 0 && Players[_lastPasser].Team == p.Team
                     && Time - _lastCatchTime <= Setup.Flow.assistWindowSeconds)
                     Stats[_lastPasser].assists++;
@@ -802,7 +812,7 @@ namespace CallerRetroBall.Logic
             _defenders.Clear();
             for (int i = 0; i < Players.Length; i++)
             {
-                if (i == passer) continue;
+                if (i == passer || IsBenched(i)) continue;
                 if (Players[i].Team == p.Team) _candidates.Add(new PassCandidate { PlayerIndex = i, Position = Players[i].Position });
                 else if (!Setup.PassiveOpponents) _defenders.Add(Players[i].Position);
             }
@@ -989,6 +999,7 @@ namespace CallerRetroBall.Logic
                 for (int i = 0; i < Players.Length; i++)
                 {
                     if (Setup.PassiveOpponents && Players[i].Team != Setup.HumanTeam) continue;
+                    if (IsBenched(i)) continue;
                     if (!BallPhysics.CanPickUp(Ball, Players[i].Position, t)) continue;
                     float d = Vec2.Distance(Ball.Position, Players[i].Position);
                     if (d < bestDist)

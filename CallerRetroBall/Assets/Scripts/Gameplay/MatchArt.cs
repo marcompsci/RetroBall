@@ -56,9 +56,10 @@ namespace CallerRetroBall.Gameplay
         public Sprite[,] PlayerFrames(PlayerDef player, TeamDef team) => PlayerFrames(player, team.primary, team.secondary, team.accent, null, TeamPattern.Solid);
 
         /// <summary>Sheet with cosmetic overrides (jersey palette, shoes) and optional colourblind pattern.</summary>
-        public Sprite[,] PlayerFrames(PlayerDef player, RgbColor jersey, RgbColor trim, RgbColor accent, RgbColor? shoes, TeamPattern pattern)
+        public Sprite[,] PlayerFrames(PlayerDef player, RgbColor jersey, RgbColor trim, RgbColor accent, RgbColor? shoes, TeamPattern pattern,
+                                      RgbColor? shorts = null)
         {
-            var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, jersey, trim, accent, shoes, pattern);
+            var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, jersey, trim, accent, shoes, pattern, shorts);
             var tex = Own(TextureFactory.ToTexture(sheet, "sheet:" + player.id));
             var frames = new Sprite[CharacterSpriteGenerator.ViewCount, CharacterSpriteGenerator.FramesPerView];
             for (int v = 0; v < CharacterSpriteGenerator.ViewCount; v++)

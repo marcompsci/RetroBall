@@ -202,6 +202,42 @@ namespace CallerRetroBall.Logic
             ["Clear the Arcade Ladder."] = "Supera la Escalera Arcade.", ["Win 10 games."] = "Gana 10 partidos.", ["Hit 50 green releases."] = "Consigue 50 tiros perfectos.",
             ["Enter codes in Settings ▸ SECRETS."] = "Introduce códigos en Ajustes ▸ SECRETOS.",
             ["KING STREAK"] = "RACHA DE REY", ["LADDER CLEARS"] = "ESCALERAS SUPERADAS",
+
+            // Phase 16: season 2, create-a-team, new modes
+            ["SUNDOWN SETTLED"] = "ATARDECER CERRADO", ["Beat the Sundown Syndicate."] = "Vence al Sundown Syndicate.",
+            ["TWO-TIME"] = "BICAMPEÓN", ["Win The Gold Signal Cup twice."] = "Gana la Gold Signal Cup dos veces.",
+            ["SKY HOOKUP"] = "CONEXIÓN AÉREA", ["10 alley-oops (thrown or finished)."] = "10 alley-oops (pasados o rematados).",
+            ["HEAT CHECK"] = "AL ROJO VIVO", ["Heat up 10 times."] = "Ponte al rojo vivo 10 veces.",
+            ["YOUR COLORS"] = "TUS COLORES", ["Create your own team."] = "Crea tu propio equipo.",
+            ["TEAM"] = "EQUIPO", ["TEAM NAME"] = "NOMBRE DEL EQUIPO", ["CITY (OPTIONAL)"] = "CIUDAD (OPCIONAL)",
+            ["SHORT NAME (SCOREBOARD)"] = "NOMBRE CORTO (MARCADOR)", ["JERSEY"] = "CAMISETA", ["TRIM"] = "RIBETE", ["ACCENT"] = "DETALLE",
+            ["SHORTS"] = "PANTALÓN", ["SHOES"] = "ZAPATILLAS", ["JERSEY PATTERN"] = "DISEÑO DE CAMISETA", ["LOGO SHAPE"] = "FORMA DEL ESCUDO",
+            ["LOGO ICON"] = "ICONO DEL ESCUDO", ["HOME COURT"] = "CANCHA LOCAL", ["WEAR IT IN RISE MODE"] = "USARLO EN MODO ASCENSO",
+            ["CREATE TEAM"] = "CREAR EQUIPO",
+            ["1-ON-1"] = "1 CONTRA 1", ["CALLER CUP"] = "CALLER CUP", ["SHOOTOUT"] = "DUELO DE TRIPLES", ["VS"] = "VS",
+            ["Just you and their best. First to 11."] = "Solo tú contra su mejor jugador. Primero a 11.",
+            ["Your player against their leader. Teammates sit out. First to 11 or two minutes."] =
+                "Tu jugador contra su líder. Los compañeros descansan. Primero a 11 o dos minutos.",
+            ["Eight teams, three rounds, one cup. You're the eighth seed. Lose once and you're out."] =
+                "Ocho equipos, tres rondas, una copa. Eres el octavo cabeza de serie. Si pierdes, quedas fuera.",
+            ["TITLES"] = "TÍTULOS", ["NEW CUP"] = "NUEVA COPA", ["QUARTERFINAL"] = "CUARTOS DE FINAL", ["CUP CHAMPIONS"] = "CAMPEONES DE COPA",
+            ["YOU WIN THE SHOOTOUT"] = "¡GANASTE EL DUELO!", ["CPU WINS"] = "GANA LA CPU",
+            ["DEFENSE:"] = "DEFENSA:", ["FULL PRESSURE"] = "PRESIÓN TOTAL", ["PACK THE PAINT"] = "CERRAR LA PINTURA", ["ZONE"] = "ZONA",
+            ["MAN-TO-MAN"] = "INDIVIDUAL",
+            ["CALLER CUP TITLES"] = "TÍTULOS DE CALLER CUP", ["SHOOTOUT WINS"] = "DUELOS GANADOS", ["ALLEY-OOPS"] = "ALLEY-OOPS",
+            ["HEAT CHECKS"] = "VECES AL ROJO VIVO",
+            ["CUP RUN"] = "CAMPEÓN DE COPA", ["Win the Caller Cup."] = "Gana la Caller Cup.",
+            ["SHOOTOUT STAR"] = "ESTRELLA DEL DUELO", ["Win a Shootout."] = "Gana un Duelo de Triples.",
+            ["Your team is your player and your crew in your colours. Pick it in Quick Call, King of the Court, the Arcade Ladder, and 2 Player."] =
+                "Tu equipo es tu jugador y tu grupo con tus colores. Elígelo en Partido Rápido, Rey de la Cancha, la Escalera Arcade y 2 Jugadores.",
+            ["RED"] = "ROJO", ["ORANGE"] = "NARANJA", ["GOLD"] = "ORO", ["LIME"] = "LIMA", ["GREEN"] = "VERDE", ["TEAL"] = "TURQUESA",
+            ["SKY"] = "CELESTE", ["BLUE"] = "AZUL", ["NAVY"] = "MARINO", ["PURPLE"] = "MORADO", ["PINK"] = "ROSA", ["MAROON"] = "GRANATE",
+            ["BROWN"] = "MARRÓN", ["SILVER"] = "PLATA", ["WHITE"] = "BLANCO", ["BLACK"] = "NEGRO",
+            ["SOLID"] = "LISO", ["STRIPES"] = "RAYAS", ["DOTS"] = "PUNTOS", ["CHEVRONS"] = "GALONES", ["CHECKER"] = "CUADROS",
+            ["DIAGONAL"] = "DIAGONAL", ["RINGS"] = "ANILLOS", ["CROSS"] = "CRUZ",
+            ["CIRCLE"] = "CÍRCULO", ["SHIELD"] = "ESCUDO", ["DIAMOND"] = "ROMBO", ["HEXAGON"] = "HEXÁGONO", ["BADGE"] = "PLACA",
+            ["BOLT"] = "RAYO", ["WAVE"] = "OLA", ["PAW"] = "PATA", ["TREE"] = "ÁRBOL", ["COMET"] = "COMETA", ["DUNE"] = "DUNA",
+            ["OWL"] = "BÚHO", ["CROWN"] = "CORONA", ["BALL"] = "BALÓN", ["SIGNAL"] = "SEÑAL",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>
@@ -215,6 +251,7 @@ namespace CallerRetroBall.Logic
                 "STARTING OVR", "PUT IN SPOT", "STEP ", "NICE!", "DAILY:", "SLAM!", "SWISH", "BADGE:", "CHAMPION:", "NEXT:",
                 "EDITION", "SEASON ", "WEEK ", "STREAK", "BADGES", "DIFFICULTY", "SPOT ", "SEMIFINAL", "FINAL", "BEST",
                 "SECRET CODE HINT FOUND!", "SECRET CODES", "Continues left:", "Next: stage", "Reached stage", "Try the stage again.",
+                "CALLER CUP CHAMPIONS!", "Knocked out. Champion:", "Beat a CPU shooter's 3-point score in 60 seconds. Wins:", "In progress", "Eight-team knockout. Titles:", "BEAT ",
             };
             var es = new Dictionary<string, string>
             {
@@ -228,6 +265,9 @@ namespace CallerRetroBall.Logic
                 ["SECRET CODE HINT FOUND!"] = "¡PISTA DE CÓDIGO SECRETO!", ["SECRET CODES"] = "CÓDIGOS SECRETOS",
                 ["Continues left:"] = "Continues restantes:", ["Next: stage"] = "Siguiente: fase", ["Reached stage"] = "Llegaste a la fase",
                 ["Try the stage again."] = "Repite la fase.",
+                ["CALLER CUP CHAMPIONS!"] = "¡CAMPEONES DE LA CALLER CUP!", ["Knocked out. Champion:"] = "Eliminados. Campeón:",
+                ["Beat a CPU shooter's 3-point score in 60 seconds. Wins:"] = "Supera los triples de un tirador de la CPU en 60 segundos. Victorias:",
+                ["In progress"] = "En curso", ["Eight-team knockout. Titles:"] = "Eliminatoria de ocho equipos. Títulos:", ["BEAT "] = "SUPERA A ",
             };
             var list = new List<KeyValuePair<string, string>>();
             foreach (var k in keys) list.Add(new KeyValuePair<string, string>(k, es[k]));

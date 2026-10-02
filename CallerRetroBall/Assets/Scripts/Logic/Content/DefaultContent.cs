@@ -20,6 +20,9 @@ namespace CallerRetroBall.Logic
         public const string PlayerCrewId = "crew.first_callers";
         public const string RivalCrewId = "crew.neon_static";
         public const string RivalLeaderId = "player.nst.marlowe";
+        /// <summary>Season 2 rival (even-numbered Rise seasons).</summary>
+        public const string Rival2CrewId = "crew.sundown_syndicate";
+        public const string Rival2LeaderId = "player.sds.sol";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -42,6 +45,7 @@ namespace CallerRetroBall.Logic
             AddUpgrades(c);
             AddCosmetics(c);
             AddSeason(c);
+            AddSchemes(c);
             return c;
         }
 
@@ -94,6 +98,17 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.sunspire", "Sunspire Court", CourtCircuit.League,
                 "A glass-roofed arena that turns pink at sunset.",
                 "#D4A373", "#0F1A3C", "#D1127A", "#0F1A3C", "#FF8C1A", 0.90f));
+
+            // Season 2 street courts.
+            c.Courts.Add(Court("court.sundown_yard", "Sundown Yard", CourtCircuit.Blacktop,
+                "A rail-yard court where the sunset turns every rim to copper.",
+                "#5A3E36", "#FFE8D6", "#D1495B", "#3D1E6D", "#FF8C42", 0.50f));
+            c.Courts.Add(Court("court.rain_alley", "Rain Alley", CourtCircuit.Blacktop,
+                "Wet asphalt, neon puddles, and a hoop bolted to a fire escape.",
+                "#2C3440", "#B8F2E6", "#5E60CE", "#0B0F1A", "#5390D9", 0.35f));
+            c.Courts.Add(Court("court.snowline_park", "Snowline Park", CourtCircuit.Blacktop,
+                "Shovelled clear at dawn. Breath clouds and cold fingers.",
+                "#8D99AE", "#FFFFFF", "#457B9D", "#A8DADC", "#F1FAEE", 0.30f));
 
             // Hidden courts (secrets): neon grid floors.
             c.Courts.Add(Court(BossCourtId, "The Glitch Grid", CourtCircuit.Secret,
@@ -240,6 +255,14 @@ namespace CallerRetroBall.Logic
                 P("okonjo", "Ira", "Okonjo", 9, Archetype.LockdownWing, 1),
                 P("delacroix", "Bo", "Delacroix", 50, Archetype.RimRunner, 1));
 
+            // Season 2 rival: shows up in even-numbered Rise seasons.
+            AddTeam(c, Rival2CrewId, "", "Sundown Syndicate", "SDS", TeamTier.Rival,
+                "#FF8C42", "#3D1E6D", "#FFE8D6", LogoShape.Shield, LogoMotif.Dune, TeamPattern.Chevrons,
+                "court.sundown_yard", "Last light, last word.", false,
+                P("sol", "Kaia", "Sol", 7, Archetype.Playmaker, 3),
+                P("brandt", "Otto", "Brandt", 31, Archetype.GlassCleaner, 2),
+                P("ivers", "Nell", "Ivers", 22, Archetype.DeepShooter, 2));
+
             // Secret teams (Arcade Ladder boss and a code-unlocked crew). Original characters.
             AddTeam(c, BossTeamId, "", "The Glitch", "GLT", TeamTier.Secret,
                 "#FF2E88", "#0B0B1A", "#00F0FF", LogoShape.Diamond, LogoMotif.Signal, TeamPattern.Cross,
@@ -271,6 +294,29 @@ namespace CallerRetroBall.Logic
             public int number;
             public Archetype archetype;
             public int offset;
+        }
+
+        /// <summary>Each AI team's favourite defence (they adjust in-game; see MatchSimulation.AdjustScheme).</summary>
+        private static void AddSchemes(ContentCatalog c)
+        {
+            void S(string id, DefenseScheme s)
+            {
+                var t = c.Team(id);
+                if (t != null) t.scheme = s;
+            }
+            S("team.eastbay_voltage", DefenseScheme.Pressure);
+            S("team.baycity_breakers", DefenseScheme.Zone);
+            S("team.harbor_hounds", DefenseScheme.Pressure);
+            S("team.metro_comets", DefenseScheme.PackLine);
+            S("team.desert_drifters", DefenseScheme.Zone);
+            S("team.northline_owls", DefenseScheme.PackLine);
+            S("crew.pier_pressure", DefenseScheme.Pressure);
+            S("crew.underpass_union", DefenseScheme.PackLine);
+            S("crew.rooftop_relay", DefenseScheme.Zone);
+            S(RivalCrewId, DefenseScheme.Pressure);
+            S(Rival2CrewId, DefenseScheme.Zone);
+            S(BossTeamId, DefenseScheme.Pressure);
+            S(SecretCrewId, DefenseScheme.Zone);
         }
 
         private static PlayerSeed P(string slug, string first, string last, int number, Archetype a, int offset, string prefix = null)
@@ -389,6 +435,13 @@ namespace CallerRetroBall.Logic
             });
             c.Rules.Add(new GameRulesDef
             {
+                id = "rules.oneonone",
+                targetScore = 11,
+                useGameClock = true,
+                gameClockSeconds = 120f,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
                 id = "rules.demo",
                 targetScore = 11,
                 useGameClock = true,
@@ -466,15 +519,24 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.gold_rush", "Gold Rush", CosmeticSlot.JerseyPalette, 500, 600, false, "#FFD166", "#1A1A2E"));
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.chalk_brick", "Chalk & Brick", CosmeticSlot.JerseyPalette, 300, 250, false, "#EDE6D6", "#A23E48"));
 
+            // Season 2 kits.
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.rain_slick", "Rain Slick", CosmeticSlot.JerseyPalette, 350, 400, false, "#5390D9", "#0B0F1A"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.snow_day", "Snow Day", CosmeticSlot.JerseyPalette, 300, 350, false, "#F1FAEE", "#457B9D"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.last_light", "Last Light", CosmeticSlot.JerseyPalette, 450, 700, false, "#FF8C42", "#3D1E6D"));
+
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.classic", "Classic Whites", CosmeticSlot.Shoes, 0, 0, true, "#FFFFFF", "#D9D9D9"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.volt_laces", "Volt Laces", CosmeticSlot.Shoes, 150, 40, false, "#1A1A1A", "#FFD400"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.glacier", "Glacier Highs", CosmeticSlot.Shoes, 200, 120, false, "#E0FBFC", "#3D5A80"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.cosmic", "Cosmic Runners", CosmeticSlot.Shoes, 350, 350, false, "#7209B7", "#F72585"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.lava_soles", "Lava Soles", CosmeticSlot.Shoes, 250, 200, false, "#2B2B2B", "#FF4D00"));
 
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.puddle_jumpers", "Puddle Jumpers", CosmeticSlot.Shoes, 250, 300, false, "#B8F2E6", "#5E60CE"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.copper_tops", "Copper Tops", CosmeticSlot.Shoes, 300, 500, false, "#B87333", "#FFE8D6"));
+
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.blacktop", "Blacktop Banner", CosmeticSlot.CourtBanner, 0, 0, true, "#2F2F36", "#FFE066"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.signal_flag", "Signal Flag", CosmeticSlot.CourtBanner, 200, 100, false, "#4CC9F0", "#F72585"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.boardwalk", "Boardwalk Pennant", CosmeticSlot.CourtBanner, 250, 180, false, "#2EC4B6", "#FFBF69"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.banner.sundown", "Sundown Stripe", CosmeticSlot.CourtBanner, 300, 450, false, "#FF8C42", "#D1495B"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.gold_signal", "Gold Signal", CosmeticSlot.CourtBanner, 600, 400, false, "#D4A017", "#1A1A2E"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.fist_pump", "Fist Pump", CosmeticSlot.Celebration, 0, 0, true, "#FFFFFF", "#FFFFFF"));

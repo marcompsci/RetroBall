@@ -18,7 +18,12 @@ namespace CallerRetroBall.Logic
         public int turnovers;
         /// <summary>Releases graded GREEN (made or missed).</summary>
         public int greenReleases;
+        /// <summary>Alley-oops finished.</summary>
         public int alleyOops;
+        /// <summary>Alley-oop lobs thrown that were finished.</summary>
+        public int alleyOopPasses;
+        /// <summary>Times this player heated up (HEAT CHECK).</summary>
+        public int heatUps;
 
         public float FieldGoalPercentage => fieldGoalsAttempted == 0 ? 0f : (float)fieldGoalsMade / fieldGoalsAttempted;
     }

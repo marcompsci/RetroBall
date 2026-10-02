@@ -13,6 +13,6 @@ An original, offline, portrait-first retro arcade 3v3 basketball game for iPhone
 - **Command-line iOS build (macOS, Unity 6 installed):** `tools/build_ios.sh [simulator|device]`
 - **Logic tests without Unity:** `cd tools/LogicTests && dotnet run --project Runner/Runner.csproj`
 
-**Status:** Phases 1–15 implemented. Game logic passes 324 automated tests on .NET. Phases 11–14 compiled in Unity 6000.6.3f1 with 0 errors; Phase 15 has not been compiled in Unity yet. Spanish is partial. There has been no iOS build or device run.
+**Status:** Phases 1–16 implemented. Game logic passes 342 automated tests on .NET. Phases 11–15 compiled in Unity 6000.6.3f1 with 0 errors; Phase 16 has not been compiled in Unity yet. Spanish is partial. There has been no iOS build or device run.
 
 All teams, players, courts, logos, art, and audio are original and generated procedurally in the project.

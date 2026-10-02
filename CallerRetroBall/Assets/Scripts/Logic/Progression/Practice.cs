@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CallerRetroBall.Logic
 {
-    public enum DrillKind { FreeShoot = 0, PassingTargets = 1, DribbleLane = 2, ThreePoint = 3, Lockdown = 4 }
+    public enum DrillKind { FreeShoot = 0, PassingTargets = 1, DribbleLane = 2, ThreePoint = 3, Lockdown = 4, /** 3-point contest head to head with a CPU shooter. */ Shootout = 5 }
 
     /// <summary>
     /// Practice Lab drill scoring on top of a practice <see cref="MatchSimulation"/>
@@ -55,13 +55,28 @@ namespace CallerRetroBall.Logic
             Kind = kind;
             _rng = new SeededRandom(seed);
             if (kind == DrillKind.DribbleLane) BuildCourse(m.Setup.Court);
-            if (kind == DrillKind.ThreePoint) BuildMoneySpots(m.Setup.Court);
+            if (kind == DrillKind.ThreePoint || kind == DrillKind.Shootout) BuildMoneySpots(m.Setup.Court);
             if (kind == DrillKind.PassingTargets) PickTarget(m);
         }
 
         public float TimeLimit => Kind == DrillKind.FreeShoot ? FreeShootSeconds
                                 : Kind == DrillKind.PassingTargets ? PassingSeconds
-                                : Kind == DrillKind.ThreePoint ? ThreePointSeconds : 0f;
+                                : ThreePointStyle ? ThreePointSeconds : 0f;
+
+        /// <summary>Money-ball spots and arc scoring (3-Point Contest and Shootout).</summary>
+        public bool ThreePointStyle => Kind == DrillKind.ThreePoint || Kind == DrillKind.Shootout;
+
+        /// <summary>Shootout: the CPU's score to beat and who set it.</summary>
+        public int CpuScore { get; private set; }
+        public string CpuName { get; private set; }
+
+        public void SetCpu(int score, string name)
+        {
+            CpuScore = score;
+            CpuName = name;
+        }
+
+        public bool ShootoutWon => Kind == DrillKind.Shootout && Finished && ContestPoints > CpuScore;
 
         private void BuildMoneySpots(CourtGeometry c)
         {
@@ -113,7 +128,7 @@ namespace CallerRetroBall.Logic
 
             foreach (var e in m.Events)
             {
-                if (Kind == DrillKind.ThreePoint && e.PlayerIndex == m.ControlledIndex)
+                if (ThreePointStyle && e.PlayerIndex == m.ControlledIndex)
                 {
                     if (e.Type == MatchEventType.ShotReleased)
                     {
@@ -218,6 +233,8 @@ namespace CallerRetroBall.Logic
                     return ContestPoints + " points  ·  " + Makes + " / " + Attempts + " made";
                 case DrillKind.Lockdown:
                     return Stops + " / " + LockdownPossessions + " stops";
+                case DrillKind.Shootout:
+                    return "You " + ContestPoints + "  ·  " + (CpuName ?? "CPU") + " " + CpuScore;
                 default:
                     return Finished ? "Course: " + CourseTime.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s" : "Cone " + NextCone + " / " + Cones.Count;
             }

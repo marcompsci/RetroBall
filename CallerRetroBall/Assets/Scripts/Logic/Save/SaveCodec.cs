@@ -44,12 +44,14 @@ namespace CallerRetroBall.Logic
                     ["points"] = d.totals.points, ["assists"] = d.totals.assists, ["rebounds"] = d.totals.rebounds,
                     ["steals"] = d.totals.steals, ["blocks"] = d.totals.blocks, ["fgm"] = d.totals.fieldGoalsMade,
                     ["fga"] = d.totals.fieldGoalsAttempted, ["greens"] = d.totals.greens, ["championships"] = d.totals.championships,
+                    ["oops"] = d.totals.alleyOops, ["heatUps"] = d.totals.heatUps,
                 },
                 ["practice"] = new Dictionary<string, object>
                 {
                     ["freeShootMakes"] = d.practice.freeShootMakes, ["freeShootStreak"] = d.practice.freeShootStreak,
                     ["passingScore"] = d.practice.passingScore, ["dribbleLaneTime"] = (double)d.practice.dribbleLaneTime,
                     ["threePointBest"] = d.practice.threePointBest, ["lockdownBest"] = d.practice.lockdownBest,
+                    ["shootoutWins"] = d.practice.shootoutWins,
                 },
                 ["settings"] = new Dictionary<string, object>
                 {
@@ -65,6 +67,7 @@ namespace CallerRetroBall.Logic
                 },
                 ["rise"] = EncodeRise(d.rise),
                 ["classic"] = EncodeClassic(d.classic),
+                ["cup"] = EncodeCup(d.cup),
                 ["daily"] = new Dictionary<string, object>
                 {
                     ["lastCompletedDay"] = (d.daily ?? new DailySaveData()).lastCompletedDay,
@@ -91,9 +94,11 @@ namespace CallerRetroBall.Logic
                     ["attractMode"] = d.settings.attractMode,
                 },
                 ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
+                ["customTeam"] = EncodeTeam(d.customTeam ?? new CustomTeamData()),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
+                    ["sundownWins"] = (d.rival ?? new RivalSaveData()).sundownWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -133,6 +138,34 @@ namespace CallerRetroBall.Logic
                     ["clears"] = a.clears, ["bestRung"] = a.bestRung, ["runs"] = a.runs,
                 },
             };
+        }
+
+        private static Dictionary<string, object> EncodeTeam(CustomTeamData t) => new Dictionary<string, object>
+        {
+            ["created"] = t.created, ["city"] = t.city, ["name"] = t.nickname, ["abbr"] = t.abbreviation,
+            ["primary"] = t.primary, ["secondary"] = t.secondary, ["accent"] = t.accent, ["shorts"] = t.shorts, ["shoes"] = t.shoes,
+            ["pattern"] = t.pattern, ["shape"] = t.logoShape, ["motif"] = t.logoMotif, ["court"] = t.homeCourtId, ["rise"] = t.useInRise,
+        };
+
+        private static CustomTeamData DecodeTeam(Dictionary<string, object> o)
+        {
+            var d = new CustomTeamData();
+            if (o == null) return d;
+            d.created = Bool(o, "created", false);
+            d.city = Str(o, "city", "");
+            d.nickname = Str(o, "name", d.nickname);
+            d.abbreviation = Str(o, "abbr", d.abbreviation);
+            d.primary = Int(o, "primary", d.primary);
+            d.secondary = Int(o, "secondary", d.secondary);
+            d.accent = Int(o, "accent", d.accent);
+            d.shorts = Int(o, "shorts", d.shorts);
+            d.shoes = Int(o, "shoes", d.shoes);
+            d.pattern = Int(o, "pattern", 0);
+            d.logoShape = Int(o, "shape", 0);
+            d.logoMotif = Int(o, "motif", d.logoMotif);
+            d.homeCourtId = Str(o, "court", d.homeCourtId);
+            d.useInRise = Bool(o, "rise", false);
+            return d;
         }
 
         private static SecretsSaveData DecodeSecrets(Dictionary<string, object> o)
@@ -199,6 +232,32 @@ namespace CallerRetroBall.Logic
             t.titles = Math.Max(0, Int(o, "titles", 0));
             // A bracket that isn't four teams is unusable: drop it (titles are kept).
             if (t.seeds.Count != 4) { t.seeds.Clear(); t.games.Clear(); t.finished = false; }
+            return t;
+        }
+
+        private static object EncodeCup(CupSaveData t)
+        {
+            t = t ?? new CupSaveData();
+            return new Dictionary<string, object>
+            {
+                ["bracket"] = Strings(t.bracket), ["games"] = List(t.games, EncodeGame), ["home"] = t.homeTeamId,
+                ["edition"] = t.edition, ["championId"] = t.championId, ["finished"] = t.finished, ["titles"] = t.titles,
+            };
+        }
+
+        private static CupSaveData DecodeCup(Dictionary<string, object> o)
+        {
+            var t = new CupSaveData();
+            if (o == null) return t;
+            t.bracket = StrList(o, "bracket");
+            foreach (var item in Arr(o, "games"))
+                if (item is Dictionary<string, object> g) t.games.Add(DecodeGame(g));
+            t.homeTeamId = Str(o, "home", null);
+            t.edition = Math.Max(0, Int(o, "edition", 0));
+            t.championId = Str(o, "championId", null);
+            t.finished = Bool(o, "finished", false);
+            t.titles = Math.Max(0, Int(o, "titles", 0));
+            if (t.bracket.Count != CupEngine.Teams) { t.bracket.Clear(); t.games.Clear(); t.finished = false; }
             return t;
         }
 
@@ -289,6 +348,7 @@ namespace CallerRetroBall.Logic
                     points = Int(t, "points", 0), assists = Int(t, "assists", 0), rebounds = Int(t, "rebounds", 0),
                     steals = Int(t, "steals", 0), blocks = Int(t, "blocks", 0), fieldGoalsMade = Int(t, "fgm", 0),
                     fieldGoalsAttempted = Int(t, "fga", 0), greens = Int(t, "greens", 0), championships = Int(t, "championships", 0),
+                    alleyOops = Math.Max(0, Int(t, "oops", 0)), heatUps = Math.Max(0, Int(t, "heatUps", 0)),
                 };
                 var pr = Obj(o, "practice");
                 d.practice = new PracticeBests
@@ -296,6 +356,7 @@ namespace CallerRetroBall.Logic
                     freeShootMakes = Int(pr, "freeShootMakes", 0), freeShootStreak = Int(pr, "freeShootStreak", 0),
                     passingScore = Int(pr, "passingScore", 0), dribbleLaneTime = (float)Num(pr, "dribbleLaneTime", 0),
                     threePointBest = Math.Max(0, Int(pr, "threePointBest", 0)), lockdownBest = Math.Max(0, Int(pr, "lockdownBest", 0)),
+                    shootoutWins = Math.Max(0, Int(pr, "shootoutWins", 0)),
                 };
                 var st = Obj(o, "settings");
                 d.settings = new SettingsData
@@ -315,6 +376,7 @@ namespace CallerRetroBall.Logic
                 };
                 d.rise = DecodeRise(Obj(o, "rise"));
                 d.classic = DecodeClassic(Obj(o, "classic"));
+                d.cup = DecodeCup(Obj(o, "cup"));
                 var dy = Obj(o, "daily");
                 d.daily = new DailySaveData
                 {
@@ -341,10 +403,13 @@ namespace CallerRetroBall.Logic
                 d.settings.highFrameRate = Bool(disp, "highFrameRate", true);
                 d.settings.attractMode = Bool(disp, "attractMode", true);
                 d.secrets = DecodeSecrets(Obj(o, "secrets"));
+                d.customTeam = DecodeTeam(Obj(o, "customTeam"));
+                CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");
                 d.rival = new RivalSaveData
                 {
                     wins = Math.Max(0, Int(rv, "wins", 0)),
+                    sundownWins = Math.Max(0, Int(rv, "sundownWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };
@@ -373,7 +438,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Arcade ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Cup ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });

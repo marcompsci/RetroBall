@@ -61,6 +61,9 @@ namespace CallerRetroBall.Core
         /// <summary>Set after an Arcade Ladder game so the main menu reopens the ladder.</summary>
         public static bool OpenArcadeOnMenu { get; set; }
 
+        /// <summary>Set after a Caller Cup game so the main menu reopens the bracket.</summary>
+        public static bool OpenCupOnMenu { get; set; }
+
         /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
         public static int SimulationRate { get; private set; } = 60;
 
@@ -81,7 +84,7 @@ namespace CallerRetroBall.Core
         public static MatchRequest PrepareRequest(MatchRequest request)
         {
             if (request == null || Career == null || Catalog == null) return request;
-            if (request.HomeTeamId == DefaultContent.PlayerCrewId)
+            if (CustomTeams.IsYours(request.HomeTeamId))
             {
                 // Your player (Rook, or the one you created) with training upgrades applied.
                 request.HumanPlayer = PlayerCreator.ForMatch(Career, Catalog);
@@ -110,6 +113,7 @@ namespace CallerRetroBall.Core
         {
             SaveStore.Delete();
             Career = Logic.Career.New(Catalog);
+            CustomTeams.Apply(Catalog, Career.customTeam);
             SaveCareer();
             ApplySettings();
         }
@@ -161,6 +165,7 @@ namespace CallerRetroBall.Core
 #endif
 
             Career = SaveStore.Load(Content.Catalog, out var status);
+            CustomTeams.Apply(Content.Catalog, Career.customTeam);
             CareerLoadStatus = status;
             AudioManager.EnsureExists();
             ApplySettings();

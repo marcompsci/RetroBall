@@ -74,11 +74,16 @@ namespace CallerRetroBall.Logic.PixelArt
         /// <param name="shoes">Shoe colour (cosmetic); null = classic white.</param>
         /// <param name="pattern">Jersey pattern drawn in colourblind contrast mode (Solid = none).</param>
         public static PixelCanvas GenerateSheet(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent,
-                                                RgbColor? shoes, TeamPattern pattern)
+                                                RgbColor? shoes, TeamPattern pattern) => GenerateSheet(look, jersey, trim, accent, shoes, pattern, null);
+
+        /// <param name="shorts">Shorts colour (custom kits); null = a shade darker than the jersey.</param>
+        public static PixelCanvas GenerateSheet(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent,
+                                                RgbColor? shoes, TeamPattern pattern, RgbColor? shorts)
         {
             var sheet = new PixelCanvas(FrameWidth * FramesPerView, FrameHeight * ViewCount);
             var p = new Palette(look, jersey, trim, accent);
             if (shoes.HasValue) p.Shoe = shoes.Value;
+            if (shorts.HasValue) p.Shorts = shorts.Value;
             p.Pattern = pattern;
             for (int v = 0; v < ViewCount; v++)
                 for (int f = 0; f < FramesPerView; f++)

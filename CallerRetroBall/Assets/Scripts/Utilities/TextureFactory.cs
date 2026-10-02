@@ -44,7 +44,10 @@ namespace CallerRetroBall.Utilities
 
         public static Texture2D TeamLogo(TeamDef team)
         {
-            string key = "logo:" + team.id;
+            // Keyed by look as well as id: your created team's logo changes when you edit it.
+            string key = "logo:" + team.id + ":" + (int)team.logoShape + ":" + (int)team.logoMotif + ":" +
+                         team.primary.r + "," + team.primary.g + "," + team.primary.b + ":" + team.secondary.r + "," + team.secondary.g + "," + team.secondary.b +
+                         ":" + team.accent.r + "," + team.accent.g + "," + team.accent.b;
             if (Cache.TryGetValue(key, out var cached) && cached != null) return cached;
             var tex = ToTexture(LogoGenerator.Generate(team), key);
             Cache[key] = tex;

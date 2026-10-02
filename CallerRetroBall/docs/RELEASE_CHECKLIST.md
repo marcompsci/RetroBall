@@ -20,6 +20,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ☐ On a device, confirm the launch screen hands off cleanly to the main menu.
 
 ## 4. Build
+- ✅ **RetroBall ▸ Release ▸ Check iOS Readiness**, plus every build result, is also written to `Logs/RetroBall-release.txt` in the project, so you can share it or Claude can read it.
 - ☐ **Simulator:** **RetroBall ▸ Release ▸ Build iOS (Simulator)**, or `tools/build_ios.sh` with the Editor closed. Open `iOSBuild/Simulator/Unity-iPhone.xcodeproj`, pick an iPhone simulator, and press Run.
 - ☐ **Device:** **Build iOS (Device)**, or `tools/build_ios.sh device`. In Xcode, go to **Signing & Capabilities**, choose your team, plug in your iPhone, and press Run.
 - ✅ The post-processor sets the Info.plist keys: `ITSAppUsesNonExemptEncryption = NO`, `UIRequiresFullScreen`, `UIStatusBarHidden`, and the Sports Games category.
@@ -35,7 +36,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ☐ Host the privacy policy and a support page, then paste the URLs.
 - ☐ App Privacy: **Data Not Collected**.
 - ☐ Age rating questionnaire: all **None** / **No**.
-- ☐ Upload screenshots (6.9" iPhone set).
+- ☐ Upload screenshots (6.9" iPhone set, from **RetroBall ▸ Release ▸ Capture Store Screenshot**; see `docs/LAUNCH_KIT.md`).
 - ☐ In Xcode, choose **Product ▸ Archive**, then **Distribute App ▸ App Store Connect ▸ Upload**.
 - ☐ Install the build through TestFlight and play a full Rise season on it.
 - ☐ Submit for review with the review notes from `docs/APP_STORE.md`.

@@ -18,9 +18,11 @@ namespace CallerRetroBall.UI
         protected override string ScreenTitle => "LOCKER ROOM";
         protected override string BackdropCourtId => "court.pier_nine";
 
-        private enum Tab { Player = 0, Create = 1, Training = 2, Style = 3, Stats = 4, Trophies = 5 }
+        private enum Tab { Player = 0, Create = 1, Team = 2, Training = 3, Style = 4, Stats = 5, Trophies = 6 }
 
-        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TEAM", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private CustomTeamData _teamDraft;
+        private Texture2D _teamPreviewTex;
 
         private CustomPlayerData _draft;
         private Texture2D _previewTex;
@@ -28,6 +30,7 @@ namespace CallerRetroBall.UI
         private void OnDestroy()
         {
             if (_previewTex != null) Destroy(_previewTex);
+            if (_teamPreviewTex != null) Destroy(_teamPreviewTex);
         }
 
         private Tab _tab;
@@ -73,6 +76,7 @@ namespace CallerRetroBall.UI
             {
                 case Tab.Player: BuildPlayer(); break;
                 case Tab.Create: BuildCreate(); break;
+                case Tab.Team: BuildTeam(); break;
                 case Tab.Training: BuildTraining(); break;
                 case Tab.Style: BuildStyle(); break;
                 case Tab.Trophies: BuildTrophies(); break;
@@ -223,6 +227,90 @@ namespace CallerRetroBall.UI
                         ("CANCEL", ButtonStyle.Ghost, null)),
                     ButtonStyle.Ghost, 100f, 36f);
             UiKit.Size(UiKit.Label(_content, "Your player stars in Rise Mode, the First Call Classic, Practice, and How to Play.", 28f, Theme.Muted), 70f);
+        }
+
+        // ------------------------------------------------------------------ create a team
+
+        /// <summary>Create-a-team: name, colours, kit (jersey, shorts, shoes, pattern), logo, home court.</summary>
+        private void BuildTeam()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            if (_teamDraft == null)
+            {
+                var from = career.customTeam ?? new CustomTeamData();
+                _teamDraft = new CustomTeamData
+                {
+                    created = from.created, city = from.city, nickname = from.nickname, abbreviation = from.abbreviation,
+                    primary = from.primary, secondary = from.secondary, accent = from.accent, shorts = from.shorts, shoes = from.shoes,
+                    pattern = from.pattern, logoShape = from.logoShape, logoMotif = from.logoMotif, homeCourtId = from.homeCourtId,
+                    useInRise = from.useInRise,
+                };
+            }
+            var d = _teamDraft;
+            CustomTeams.Clamp(d, c);
+
+            // Live preview: your player in the kit, next to the team logo.
+            var me = PlayerCreator.BasePlayer(career, c);
+            var sheet = CharacterSpriteGenerator.GenerateSheet(me.appearance, CustomTeams.Color(d.primary), CustomTeams.Color(d.secondary),
+                                                               CustomTeams.Color(d.accent), CustomTeams.Color(d.shoes), (TeamPattern)d.pattern,
+                                                               CustomTeams.Color(d.shorts));
+            CharacterSpriteGenerator.FrameOrigin(CharacterView.Front, 0, out int fx, out int fy);
+            var frame = new PixelCanvas(CharacterSpriteGenerator.FrameWidth, CharacterSpriteGenerator.FrameHeight);
+            for (int y = 0; y < frame.Height; y++)
+                for (int x = 0; x < frame.Width; x++)
+                    frame.Pixels[y * frame.Width + x] = sheet.Get(fx + x, fy + y);
+            if (_teamPreviewTex != null) Destroy(_teamPreviewTex);
+            _teamPreviewTex = TextureFactory.ToTexture(frame, "ui.team.preview");
+            var stage = UiKit.Panel(_content, Color.white, Theme.PanelSprite(), true, "TeamPreview");
+            UiKit.Size(stage, 340f);
+            var pic = UiKit.Picture(stage.transform, _teamPreviewTex, "Player");
+            UiKit.Place(pic.rectTransform, new Vector2(0.3f, 0.5f), new Vector2(frame.Width * 11f, frame.Height * 11f));
+            var look = new TeamDef
+            {
+                id = "preview", logoShape = (LogoShape)d.logoShape, logoMotif = (LogoMotif)d.logoMotif,
+                primary = CustomTeams.Color(d.primary), secondary = CustomTeams.Color(d.secondary), accent = CustomTeams.Color(d.accent),
+            };
+            var logo = UiKit.Picture(stage.transform, TextureFactory.TeamLogo(look), "Logo");
+            UiKit.Place(logo.rectTransform, new Vector2(0.72f, 0.58f), new Vector2(200f, 200f));
+            string full = string.IsNullOrEmpty(d.city) ? d.nickname : d.city + " " + d.nickname;
+            var name = UiKit.Label(stage.transform, full.ToUpperInvariant() + "\n<color=#8D99AE>" + d.abbreviation + "</color>", 34f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Place(name.rectTransform, new Vector2(0.72f, 0.16f), new Vector2(460f, 100f));
+
+            UiKit.Size(UiKit.Label(_content, "TEAM NAME", 30f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
+            UiControls.TextField(_content, d.nickname, CustomTeams.MaxNameLength, v => { d.nickname = v; Refresh(); });
+            UiKit.Size(UiKit.Label(_content, "CITY (OPTIONAL)", 30f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
+            UiControls.TextField(_content, d.city, CustomTeams.MaxCityLength, v => { d.city = v; Refresh(); });
+            UiKit.Size(UiKit.Label(_content, "SHORT NAME (SCOREBOARD)", 30f, Theme.Muted, TextAlignmentOptions.Left, true), 40f);
+            UiControls.TextField(_content, d.abbreviation, CustomTeams.MaxAbbreviation, v => { d.abbreviation = v; Refresh(); });
+
+            Choice("JERSEY", CustomTeams.PaletteNames, d.primary, i => d.primary = i);
+            Choice("TRIM", CustomTeams.PaletteNames, d.secondary, i => d.secondary = i);
+            Choice("ACCENT", CustomTeams.PaletteNames, d.accent, i => d.accent = i);
+            Choice("SHORTS", CustomTeams.PaletteNames, d.shorts, i => d.shorts = i);
+            Choice("SHOES", CustomTeams.PaletteNames, d.shoes, i => d.shoes = i);
+            Choice("JERSEY PATTERN", CustomTeams.PatternNames, d.pattern, i => d.pattern = i);
+            Choice("LOGO SHAPE", CustomTeams.ShapeNames, d.logoShape, i => d.logoShape = i);
+            Choice("LOGO ICON", CustomTeams.MotifNames, d.logoMotif, i => d.logoMotif = i);
+            var courts = CustomTeams.HomeCourts(c);
+            int ci = Mathf.Max(0, courts.FindIndex(x => x.id == d.homeCourtId));
+            Choice("HOME COURT", courts.ConvertAll(x => x.displayName.ToUpperInvariant()).ToArray(), ci, i => d.homeCourtId = courts[i].id);
+            UiControls.ToggleRow(_content, "WEAR IT IN RISE MODE", d.useInRise, v => d.useInRise = v);
+
+            UiKit.Button(_content, career.customTeam.created ? "SAVE CHANGES" : "CREATE TEAM", () =>
+            {
+                d.created = true;
+                App.Career.customTeam = d;
+                CustomTeams.Apply(App.Catalog, d);
+                _teamDraft = null;
+                App.SaveCareer();
+                Core.Haptics.Success();
+                Audio.AudioManager.Play(SfxId.Fanfare, 0.6f);
+                Refresh();
+            }, ButtonStyle.Primary, 130f);
+            UiKit.Size(UiKit.Label(_content,
+                "Your team is your player and your crew in your colours. Pick it in Quick Call, King of the Court, the Arcade Ladder, and 2 Player.",
+                28f, Theme.Muted), 90f);
         }
 
         private static string[] Numbered(int count)
@@ -450,6 +538,10 @@ namespace CallerRetroBall.UI
             Header("ARCADE");
             Line("KING STREAK", career.king.best.ToString());
             Line("LADDER CLEARS", career.secrets.arcade.clears.ToString());
+            Line("CALLER CUP TITLES", career.cup.titles.ToString());
+            Line("SHOOTOUT WINS", career.practice.shootoutWins.ToString());
+            Line("ALLEY-OOPS", career.totals.alleyOops.ToString());
+            Line("HEAT CHECKS", career.totals.heatUps.ToString());
             Line("BEST STAGE", career.secrets.arcade.bestRung + " / " + ArcadeEngine.Rungs);
         }
 
@@ -514,6 +606,8 @@ namespace CallerRetroBall.UI
                 case GameMode.Rival: return "RIVAL";
                 case GameMode.King: return "KING";
                 case GameMode.Arcade: return "ARCADE";
+                case GameMode.OneOnOne: return "1-ON-1";
+                case GameMode.Cup: return "CUP";
                 default: return "QUICK";
             }
         }

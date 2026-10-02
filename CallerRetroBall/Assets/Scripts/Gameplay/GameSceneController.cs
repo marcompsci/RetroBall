@@ -122,7 +122,17 @@ namespace CallerRetroBall.Gameplay
             var setup = MatchSetup.FromRequest(_request, catalog);
             _match = new MatchSimulation(setup);
             if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
+            {
                 _practice = new PracticeSession((DrillKind)_request.Drill, _match, _request.Seed);
+                if (_practice.Kind == DrillKind.Shootout)
+                {
+                    // The CPU shoots first (simulated); you get the score to beat.
+                    var cpu = Shootout.PickShooter(catalog, _request.AwayTeamId ?? catalog.TeamsInTier(TeamTier.League)[0].id);
+                    int cpuScore = Shootout.SimulateCpu(cpu, catalog.Difficulty(_request.DifficultyId), setup.Shot, _request.Seed,
+                                                        setup.Court.arcRadius + 0.7f);
+                    _practice.SetCpu(cpuScore, cpu != null ? cpu.lastName.ToUpperInvariant() : "CPU");
+                }
+            }
             if (_request.Mode == GameMode.Tutorial) _tutorial = new TutorialSession();
             if (_request.Mode == GameMode.Daily && _request.ContextId != null && _request.ContextId.StartsWith("daily:", System.StringComparison.Ordinal)
                 && int.TryParse(_request.ContextId.Substring(6), out int day))
@@ -167,6 +177,7 @@ namespace CallerRetroBall.Gameplay
                      : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
                      : Demo ? "DEMO PLAY"
+                     : _practice != null && _practice.Kind == DrillKind.Shootout ? "BEAT " + _practice.CpuName + ": " + _practice.CpuScore
                      : _practice != null ? DrillTitle(_practice.Kind)
                      : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.8f);
         }
@@ -203,16 +214,24 @@ namespace CallerRetroBall.Gameplay
                 var primary = team.primary;
                 var trim = team.secondary;
                 // Jersey palettes are for your own crew only.
-                if (p.Team == setup.HumanTeam && team.id == DefaultContent.PlayerCrewId && jersey != null)
+                if (p.Team == setup.HumanTeam && team.id == DefaultContent.PlayerCrewId && jersey != null && !team.customKit)
                 {
                     primary = jersey.colorA;
                     trim = jersey.colorB;
                 }
                 RgbColor? shoeColor = i == _match.ControlledIndex && shoes != null ? shoes.colorA : (RgbColor?)null;
                 var pattern = contrast ? PatternFor(p.Team, setup) : TeamPattern.Solid;
+                RgbColor? shorts = null;
+                if (team.customKit)
+                {
+                    // Your created team: its own shorts, shoes, and jersey pattern.
+                    shorts = team.shorts;
+                    if (shoeColor == null) shoeColor = team.shoes;
+                    if (!contrast) pattern = team.pattern;
+                }
                 // Player 2's ring is cyan so both people can find themselves.
                 var ring = i == _match.SecondControlledIndex ? new Color32(0x4C, 0xC9, 0xF0, 255) : (Color32)ringColor;
-                var frames = _art.PlayerFrames(p.Def, primary, trim, team.accent, shoeColor, pattern);
+                var frames = _art.PlayerFrames(p.Def, primary, trim, team.accent, shoeColor, pattern, shorts);
                 _playerViews[i] = PlayerView.Create(world, p, frames, _art, ring);
                 if (career != null && Secrets.IsOn(career.secrets, Secrets.BigHeads))
                     _playerViews[i].EnableBigHead(_art.HeadFrames(frames, p.Def.appearance));
@@ -504,6 +523,10 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 1.2f), new Color32(0xFF, 0x7E, 0x1F, 255), 24, 4f, 0.6f);
                         Sfx(SfxId.HeatUp, 0.9f);
                         if (e.Team == human || Versus) Haptics.Heavy();
+                        break;
+                    case MatchEventType.SchemeChanged:
+                        // The AI adjusts its defence: tell the person it's now facing something new.
+                        if (e.Team != human || Versus) _hud.Toast(Loc.T("DEFENSE:") + " " + Loc.T(MatchSimulation.SchemeName((DefenseScheme)e.Value)), 1.4f);
                         break;
                     case MatchEventType.HeatEnded:
                         if (_match.IsHumanControlled(e.PlayerIndex)) _hud.Toast("COOLED OFF", 0.9f);
@@ -816,6 +839,7 @@ namespace CallerRetroBall.Gameplay
                 case DrillKind.PassingTargets: return "PASSING TARGETS";
                 case DrillKind.ThreePoint: return "3-POINT CONTEST";
                 case DrillKind.Lockdown: return "LOCKDOWN";
+                case DrillKind.Shootout: return "SHOOTOUT";
                 default: return "DRIBBLE LANE";
             }
         }
@@ -935,6 +959,22 @@ namespace CallerRetroBall.Gameplay
                             break;
                     }
                 }
+                if (rewarded && _request.Mode == GameMode.Cup)
+                {
+                    var cupOutcome = CupEngine.ApplyResult(App.Career.cup, App.Catalog, summary, App.Career, out int cupBonus);
+                    App.OpenCupOnMenu = true;
+                    var nextCup = CupEngine.NextGame(App.Career.cup);
+                    if (cupOutcome == CupOutcome.Champion)
+                    {
+                        title = "CUP CHAMPIONS";
+                        note = "CALLER CUP CHAMPIONS!  +" + cupBonus + " SP";
+                        Sfx(SfxId.Fanfare);
+                    }
+                    else if (cupOutcome == CupOutcome.Advanced && nextCup != null)
+                        note = "Next: " + CupEngine.RoundName(nextCup.round);
+                    else if (cupOutcome == CupOutcome.Eliminated)
+                        note = "Knocked out. Champion: " + (App.Catalog.Team(App.Career.cup.championId)?.FullName ?? "?");
+                }
                 if (rewarded && _request.Mode == GameMode.Tournament)
                 {
                     var outcome = ClassicEngine.ApplyResult(App.Career.classic, App.Catalog, summary);
@@ -1032,12 +1072,15 @@ namespace CallerRetroBall.Gameplay
                     p.Kind == DrillKind.PassingTargets ? p.PassScore : 0,
                     p.Kind == DrillKind.DribbleLane && p.Finished ? p.CourseTime : 0f,
                     p.Kind == DrillKind.ThreePoint ? p.ContestPoints : 0,
-                    p.Kind == DrillKind.Lockdown ? p.Stops : 0);
+                    p.Kind == DrillKind.Lockdown ? p.Stops : 0,
+                    p.ShootoutWon);
                 App.SaveCareer();
             }
             if (best) Haptics.Success();
             Sfx(SfxId.Whistle, 0.7f);
-            _hud.ShowPracticeEnd(DrillTitle(_practice.Kind), _practice.ResultText().ToUpperInvariant(), best);
+            string endTitle = _practice.Kind == DrillKind.Shootout ? (_practice.ShootoutWon ? "YOU WIN THE SHOOTOUT" : "CPU WINS") : DrillTitle(_practice.Kind);
+            if (_practice.ShootoutWon) Sfx(SfxId.Fanfare, 0.8f);
+            _hud.ShowPracticeEnd(endTitle, _practice.ResultText().ToUpperInvariant(), best);
         }
 
         // ------------------------------------------------------------------ practice markers
@@ -1045,7 +1088,7 @@ namespace CallerRetroBall.Gameplay
         private void BuildPracticeMarkers(Transform world)
         {
             // Dribble Lane cones, or the 3-Point Contest's money-ball spots.
-            var spots = _practice.Kind == DrillKind.ThreePoint ? _practice.MoneySpots : _practice.Cones;
+            var spots = _practice.ThreePointStyle ? _practice.MoneySpots : _practice.Cones;
             _cones = new SpriteRenderer[spots.Count];
             for (int i = 0; i < _cones.Length; i++)
             {
@@ -1075,7 +1118,7 @@ namespace CallerRetroBall.Gameplay
             {
                 for (int i = 0; i < _cones.Length; i++)
                 {
-                    if (_practice.Kind == DrillKind.ThreePoint)
+                    if (_practice.ThreePointStyle)
                     {
                         // The money-ball spot glows gold; the rest are faint.
                         _cones[i].color = i == _practice.MoneySpot ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : new Color(1f, 1f, 1f, 0.25f);
@@ -1301,7 +1344,7 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>Modes that continue a run (no rematch button).</summary>
         private bool IsRun => _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival
-                              || _request.Mode == GameMode.King || _request.Mode == GameMode.Arcade;
+                              || _request.Mode == GameMode.King || _request.Mode == GameMode.Arcade || _request.Mode == GameMode.Cup;
 
         private void Rematch()
         {

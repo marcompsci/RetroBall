@@ -140,9 +140,10 @@ namespace CallerRetroBall.Logic
                         r.Error("Team '" + t.id + "' references missing player '" + pid + "'.");
                         continue;
                     }
-                    if (playerOwner.TryGetValue(pid, out var other))
+                    // Your created team shares your crew's players by design.
+                    if (t.tier != TeamTier.Custom && playerOwner.TryGetValue(pid, out var other))
                         r.Error("Player '" + pid + "' is on both '" + other + "' and '" + t.id + "'.");
-                    else
+                    else if (t.tier != TeamTier.Custom)
                         playerOwner[pid] = t.id;
                     if (!jerseyNumbers.Add(p.jerseyNumber))
                         r.Error("Team '" + t.id + "' has duplicate jersey number " + p.jerseyNumber + ".");

@@ -193,6 +193,9 @@ namespace CallerRetroBall.Logic
         {
             var list = c.TeamsInTier(TeamTier.League).FindAll(t => t.unlockedByDefault);
             foreach (var t in c.TeamsInTier(TeamTier.Secret)) if (IsUnlocked(s, t.id)) list.Add(t);
+            // Your created team (once it's been added to the catalog) goes first.
+            var mine = c.Team(CustomTeams.TeamId);
+            if (mine != null) list.Insert(0, mine);
             return list;
         }
 

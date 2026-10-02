@@ -21,6 +21,10 @@ namespace CallerRetroBall.Logic
         Arcade = 9,
         /// <summary>Attract-mode demo on the title screen: AI vs AI, nobody controls a player.</summary>
         Demo = 10,
+        /// <summary>1-on-1: your player against theirs; teammates sit out.</summary>
+        OneOnOne = 11,
+        /// <summary>The Caller Cup: an eight-team knockout (quarterfinals, semifinals, final).</summary>
+        Cup = 12,
     }
 
     /// <summary>

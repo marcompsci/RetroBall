@@ -51,6 +51,7 @@ namespace CallerRetroBall.EditorTools
         {
             var (report, ready) = CheckIosReadiness();
             Debug.Log("[RetroBall] iOS readiness:\n" + report);
+            WriteReport("iOS readiness (" + (ready ? "READY" : "NOT READY") + ")\n" + report);
             if (!ready && EditorUtility.DisplayDialog("RetroBall: iOS readiness", report + "\n\nFix what can be fixed automatically (icon, launch image, release settings)?", "Fix", "Close"))
             {
                 GenerateIconAndLaunch();
@@ -234,7 +235,11 @@ namespace CallerRetroBall.EditorTools
             var summary = report.summary;
             if (summary.result != BuildResult.Succeeded)
             {
-                Fail("iOS build " + summary.result + " with " + summary.totalErrors + " error(s). See the Console.");
+                var errors = report.steps.SelectMany(st => st.messages)
+                    .Where(m => m.type == LogType.Error || m.type == LogType.Exception)
+                    .Select(m => "  - " + m.content.Split('\n')[0]).Distinct().Take(12).ToArray();
+                Fail("iOS build " + summary.result + " with " + summary.totalErrors + " error(s). See the Console." +
+                     (errors.Length > 0 ? "\n" + string.Join("\n", errors) : ""));
                 return;
             }
 
@@ -242,12 +247,32 @@ namespace CallerRetroBall.EditorTools
                          "Open Unity-iPhone.xcodeproj, choose your team under Signing & Capabilities, pick " +
                          (sdk == iOSSdkVersion.SimulatorSDK ? "an iPhone simulator" : "your iPhone") + ", and press Run.";
             Debug.Log("[CallerRetroBall] " + msg);
+            WriteReport("BUILD OK\n" + msg);
             if (!Application.isBatchMode) EditorUtility.DisplayDialog("RetroBall", msg, "OK");
+        }
+
+        /// <summary>
+        /// Appends a line to Logs/RetroBall-release.txt in the project, so readiness checks and build
+        /// results can be read later (and shared) without copying them out of a dialog.
+        /// </summary>
+        public static void WriteReport(string text)
+        {
+            try
+            {
+                Directory.CreateDirectory("Logs");
+                File.AppendAllText(Path.Combine("Logs", "RetroBall-release.txt"),
+                    "=== " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  Unity " + Application.unityVersion + "\n" + text + "\n\n");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[CallerRetroBall] Could not write the release report: " + e.Message);
+            }
         }
 
         private static void Fail(string message)
         {
             Debug.LogError("[CallerRetroBall] " + message);
+            WriteReport("FAILED\n" + message);
             if (Application.isBatchMode) EditorApplication.Exit(1);
             else EditorUtility.DisplayDialog("RetroBall", message, "OK");
         }

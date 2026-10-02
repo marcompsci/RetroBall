@@ -120,6 +120,9 @@ namespace CallerRetroBall.Logic
         public int fieldGoalsAttempted;
         public int greens;
         public int championships;
+        /// <summary>Alley-oops you threw or finished.</summary>
+        public int alleyOops;
+        public int heatUps;
     }
 
     [Serializable]
@@ -132,6 +135,7 @@ namespace CallerRetroBall.Logic
         public float dribbleLaneTime;
         public int threePointBest;
         public int lockdownBest;
+        public int shootoutWins;
     }
 
     public enum RiseStage { Circuit = 0, Season = 1, Playoffs = 2, Complete = 3 }
@@ -210,6 +214,7 @@ namespace CallerRetroBall.Logic
         public SettingsData settings = new SettingsData();
         public RiseSaveData rise = new RiseSaveData();
         public ClassicSaveData classic = new ClassicSaveData();
+        public CupSaveData cup = new CupSaveData();
         public DailySaveData daily = new DailySaveData();
         /// <summary>Finished the how-to-play tutorial at least once.</summary>
         public bool tutorialDone;
@@ -218,6 +223,7 @@ namespace CallerRetroBall.Logic
         public RivalSaveData rival = new RivalSaveData();
         public KingSaveData king = new KingSaveData();
         public SecretsSaveData secrets = new SecretsSaveData();
+        public CustomTeamData customTeam = new CustomTeamData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Story scenes already shown.</summary>

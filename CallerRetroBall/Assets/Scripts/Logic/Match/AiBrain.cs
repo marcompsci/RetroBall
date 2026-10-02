@@ -77,6 +77,12 @@ namespace CallerRetroBall.Logic
                 if (IsHumanControlled(i)) continue;
                 var p = Players[i];
                 var s = _ai[i];
+                if (IsBenched(i))
+                {
+                    s.Intent = AiIntent.Stand;
+                    s.Target = p.Position;
+                    continue;
+                }
 
                 if (Setup.PassiveOpponents && p.Team != Setup.HumanTeam)
                 {
@@ -400,20 +406,22 @@ namespace CallerRetroBall.Logic
                 if (ChargingIndex == man.Index && dist < 1.8f && _rng.NextFloat() > profile.errorRate)
                     Jump(p.Index);
                 else if (dist < Setup.Defense.stealRange
-                         && _rng.NextFloat() < p.Tendencies.gambleForSteals * 0.25f * profile.decisionQuality)
+                         && _rng.NextFloat() < p.Tendencies.gambleForSteals * 0.25f * profile.decisionQuality
+                                               * (_scheme[p.Team] == DefenseScheme.Pressure ? 2f : 1f))
                     TrySteal(p.Index);
 
                 // On the ball: tight, and closer still when he's rising up to shoot.
                 s.Intent = AiIntent.Guard;
                 var toHoop = court.Hoop - man.Position;
-                float gap = ChargingIndex == man.Index ? 0.7f : 1.2f;
+                float gap = ChargingIndex == man.Index ? 0.7f : SchemeOnBallGap(p.Team);
                 s.Target = toHoop.SqrMagnitude > 0.01f ? court.Clamp(man.Position + toHoop.Normalized * gap) : man.Position;
                 return;
             }
 
             // Help when the ball handler gets deep; mistakes (errorRate) mean late rotations.
-            if (holder != null && court.DistanceToHoop(holder.Position) < 3.5f
-                && _rng.NextFloat() < p.Tendencies.helpDefense * (1f - profile.errorRate))
+            bool packed = _scheme[p.Team] == DefenseScheme.PackLine || _scheme[p.Team] == DefenseScheme.Zone;
+            if (holder != null && !IsBenched(p.Index) && court.DistanceToHoop(holder.Position) < (packed ? 4.5f : 3.5f)
+                && _rng.NextFloat() < p.Tendencies.helpDefense * (1f - profile.errorRate) * (_scheme[p.Team] == DefenseScheme.Pressure ? 0.6f : 1f))
             {
                 s.Intent = AiIntent.Help;
                 var toHoop = court.Hoop - holder.Position;
@@ -424,7 +432,7 @@ namespace CallerRetroBall.Logic
 
             // Guard the man (positions snapshot at decision time → realistic reaction lag).
             s.Intent = AiIntent.Guard;
-            s.Target = Formation.GuardSpot(man.Position, false, court);
+            s.Target = SchemeGuardSpot(p, man, holder);
         }
 
         // ------------------------------------------------------------------ helpers

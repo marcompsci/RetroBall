@@ -24,6 +24,7 @@ namespace CallerRetroBall.Logic
         /// <summary>Call after a made basket by <paramref name="shooter"/>.</summary>
         private void OnMadeForHeat(PlayerRuntimeState shooter)
         {
+            if (shooter.HotStreak == Setup.Shot.heatThreshold) Stats[shooter.Index].heatUps++;
             if (shooter.HotStreak == Setup.Shot.heatThreshold)
                 Events.Add(new MatchEvent(MatchEventType.HeatUp, shooter.Index, shooter.Team, shooter.HotStreak));
             // Scoring on a heated-up team cools them off.
@@ -79,6 +80,7 @@ namespace CallerRetroBall.Logic
             if (toHoop.SqrMagnitude > 0.01f) p.Motion.facing = Movement.FacingOf(toHoop);
             ChargeType = ShotType.Dunk;
             Stats[finisher].alleyOops++;
+            if (passer >= 0) Stats[passer].alleyOopPasses++;
             Events.Add(new MatchEvent(MatchEventType.AlleyOop, finisher, p.Team, passer));
             ReleaseShot(finisher, Setup.Shot.greenCenter);
         }

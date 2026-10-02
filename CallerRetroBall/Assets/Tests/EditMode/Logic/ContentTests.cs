@@ -39,12 +39,14 @@ namespace CallerRetroBall.Tests
         }
 
         [Test]
-        public void BlacktopCircuit_HasFiveCourtsAndFiveCrews()
+        public void BlacktopCircuit_HasFiveCrews_EachOnAStreetCourt()
         {
             int courts = 0;
             foreach (var c in _catalog.Courts) if (c.circuit == CourtCircuit.Blacktop) courts++;
-            Assert.AreEqual(5, courts);
-            Assert.AreEqual(5, _catalog.TeamsInTier(TeamTier.Circuit).Count);
+            Assert.AreEqual(8, courts, "five circuit courts plus three Season 2 street courts");
+            var crews = _catalog.TeamsInTier(TeamTier.Circuit);
+            Assert.AreEqual(5, crews.Count);
+            foreach (var crew in crews) Assert.AreEqual(CourtCircuit.Blacktop, _catalog.Court(crew.homeCourtId).circuit, crew.id);
         }
 
         [Test]
