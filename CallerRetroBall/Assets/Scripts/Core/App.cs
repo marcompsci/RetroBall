@@ -78,7 +78,7 @@ namespace CallerRetroBall.Core
             AudioManager.ApplySettings();
         }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
         /// <summary>Development only: lots of currency and every cosmetic unlocked.</summary>
         public static void DevUnlockAll()
         {
@@ -107,7 +107,7 @@ namespace CallerRetroBall.Core
                                  ". Run 'Caller Retro Ball ▸ Run Project Setup' to generate editable assets.");
             }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             var report = ContentValidator.Validate(Content.Catalog);
             if (!report.IsValid) Debug.LogError("[CallerRetroBall] " + report);
             else if (report.Warnings.Count > 0) Debug.LogWarning("[CallerRetroBall] " + report);

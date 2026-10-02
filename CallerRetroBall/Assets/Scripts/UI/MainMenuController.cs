@@ -106,6 +106,7 @@ namespace CallerRetroBall.UI
             var mine = league.FindAll(t => t.unlockedByDefault);
             int myIndex = 0;
             int oppIndex = 0;
+            TextMeshProUGUI oppLabel = null; // assigned below; declared first so Refresh() can see it
             var opponents = new List<TeamDef>();
 
             UiKit.Size(UiKit.Label(column, "PICK YOUR TEAM", 36f, Theme.Gold, TextAlignmentOptions.Center, true), 60f);
@@ -124,7 +125,7 @@ namespace CallerRetroBall.UI
                 UiKit.Place(name.rectTransform, new Vector2(0.5f, 0.15f), new Vector2(360f, 60f));
             }
 
-            var oppLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            oppLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
             UiKit.Size(oppLabel, 70f);
             UiKit.Button(column, "CHANGE OPPONENT", () => { oppIndex = (oppIndex + 1) % opponents.Count; Refresh(); }, ButtonStyle.Ghost, 100f, 36f);
 

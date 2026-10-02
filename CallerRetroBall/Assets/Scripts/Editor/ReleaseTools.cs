@@ -125,7 +125,7 @@ namespace CallerRetroBall.EditorTools
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             // Unity 6 lets every licence turn off the "Made with Unity" splash.
             PlayerSettings.SplashScreen.show = false;
-            // Release builds strip the dev-only cheats and checks (they're behind DEVELOPMENT_BUILD).
+            // Release builds strip the dev-only cheats and checks (they're behind UNITY_EDITOR || DEBUG).
             EditorUserBuildSettings.development = false;
             AssetDatabase.SaveAssets();
 

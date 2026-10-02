@@ -74,7 +74,7 @@ namespace CallerRetroBall.UI
                     ("CANCEL", ButtonStyle.Ghost, null)),
                 ButtonStyle.Ghost, 110f, 40f);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             UiKit.Button(column, "DEV: UNLOCK ALL", () => App.DevUnlockAll(), ButtonStyle.Ghost, 90f, 30f);
 #endif
 
