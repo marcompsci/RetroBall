@@ -71,6 +71,9 @@ namespace CallerRetroBall.Gameplay
             _info.rectTransform.anchorMin = _info.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _info.rectTransform.pivot = new Vector2(0.5f, 1f);
             _info.rectTransform.sizeDelta = new Vector2(1000f, 60f);
+            _info.enableAutoSizing = true; // long lines (controls hint) shrink to fit
+            _info.fontSizeMin = 20f;
+            _info.fontSizeMax = 36f;
             _info.rectTransform.anchoredPosition = new Vector2(0f, -172f);
 
             BuildCallMenu(safe);

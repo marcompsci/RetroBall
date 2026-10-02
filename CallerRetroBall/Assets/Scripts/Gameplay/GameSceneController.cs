@@ -418,6 +418,9 @@ namespace CallerRetroBall.Gameplay
                 string time = _practice.TimeLimit > 0f ? Mathf.CeilToInt(_practice.TimeLeft) + "s  ·  " : _practice.Elapsed.ToString("0.0") + "s  ·  ";
                 return time + _practice.ResultText().ToUpperInvariant();
             }
+            // On a computer, show the keyboard controls for the first seconds of a match.
+            if (!Application.isMobilePlatform && _match.Time < 8f)
+                return "WASD MOVE · K SHOOT (HOLD) · J PASS · L STEAL · C CALL · ESC PAUSE";
             if (_match.ActivePlay != PlayCall.None && _match.ActivePlayTeam == _match.Setup.HumanTeam) return PlayName(_match.ActivePlay);
             if (_match.IsBoxingOut(_match.ControlledIndex)) return "BOX OUT";
             return "";

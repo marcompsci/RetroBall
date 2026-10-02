@@ -81,8 +81,8 @@ namespace CallerRetroBall.UI
             var safe = UiKit.SafeArea(canvas.transform);
             var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "Panel");
             UiKit.Band(panel.rectTransform, 0.08f, 0.92f, 48f);
-            var column = UiKit.Column(panel.transform, 22f, new RectOffset(40, 40, 40, 40));
-            UiKit.Stretch(column);
+            // Scrolls, so every button stays reachable on short screens or a landscape Game view.
+            var column = UiKit.ScrollColumn(panel.transform, 20f, new RectOffset(40, 40, 36, 40));
             UiKit.Size(UiKit.ShadowLabel(column, title, 64f, Theme.Cream, Theme.Pink, 6f).transform.parent.GetComponent<RectTransform>(), 100f);
             return column;
         }
@@ -111,7 +111,7 @@ namespace CallerRetroBall.UI
 
             UiKit.Size(UiKit.Label(column, "PICK YOUR TEAM", 36f, Theme.Gold, TextAlignmentOptions.Center, true), 60f);
             var teamRow = UiKit.Row(column, 20f, "Teams");
-            UiKit.Size(teamRow, 300f);
+            UiKit.Size(teamRow, 250f);
             var cards = new List<Image>();
             for (int i = 0; i < mine.Count; i++)
             {
@@ -150,6 +150,8 @@ namespace CallerRetroBall.UI
                 };
                 SceneFlow.GoTo(SceneNames.Game);
             }, ButtonStyle.Primary, 140f);
+            UiKit.Size(UiKit.Label(column, "Touch: stick + SHOOT / PASS / DEF / CALL\nKeyboard: WASD move · K shoot (hold) · J pass · L steal · C call · Esc pause",
+                                   28f, Theme.Muted), 90f);
             UiKit.Button(column, "BACK", CloseOverlay, ButtonStyle.Ghost, 100f, 40f);
 
             void Refresh()
