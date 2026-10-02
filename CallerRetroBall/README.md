@@ -4,7 +4,9 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: all seven phases implemented; not yet compiled in the Unity Editor.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis) compiles on .NET and passes 192 automated tests. The Unity-side scripts pass a syntax check and a name-resolution check, but nobody has opened the project in Unity, built it for iOS, or played it on a device yet. Expect a few compile fixes on first open. See [Known limitations](#known-limitations).
+> **Status: Phases 1–8 implemented (8 = release prep); not yet compiled in the Unity Editor.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis, app icon and launch art) compiles on .NET and passes 198 automated tests. The Unity-side scripts pass a syntax check and a name-resolution check, but nobody has opened the project in Unity, built it for iOS, or played it on a device yet. Expect a few compile fixes on first open. See [Known limitations](#known-limitations).
+
+![App icon and launch image](docs/images/icon_and_launch.png)
 
 ## Requirements
 
@@ -66,19 +68,22 @@ cd ../tools/LogicTests
 dotnet run --project Runner/Runner.csproj
 ```
 
-This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **192 passed, 0 failed**.
+This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **198 passed, 0 failed**.
 
 `tools/SyntaxCheck` parses every C# file under `Assets/`. It does not resolve Unity APIs, so it is not a substitute for compiling in Unity.
 
 ## iOS build
 
-1. **File ▸ Build Profiles ▸ iOS ▸ Switch Platform.**
-2. **Player Settings:** replace the placeholder bundle ID `com.callerretroball.game` with your own, set your Team ID, and check Version (`1.0.0`) and Build number. Orientation is portrait only; minimum iOS is 15.
-3. **Build** into a folder such as `iOSBuild/`. Open `Unity-iPhone.xcodeproj` in Xcode.
-4. In Xcode, select the **Unity-iPhone** target ▸ **Signing & Capabilities**, choose your team, and let Xcode manage signing.
-5. **Simulator:** in Player Settings set **Target SDK ▸ Simulator SDK** before building, then pick an iPhone simulator in Xcode and Run. **Device:** use Device SDK, plug in the phone, and Run.
-6. The haptics plugin (`Assets/Plugins/iOS/CallerHaptics.mm`) is compiled by Xcode automatically. It only uses UIKit feedback generators.
-7. Before submitting: add your own app icon and launch screen, fill in App Store Connect privacy answers (the game collects no data), and test on a real device. None of this has been done yet.
+Full steps, from the first build to App Store submission, are in [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md). Store metadata, the privacy label, and the age-rating answers are in [`docs/APP_STORE.md`](docs/APP_STORE.md).
+
+The short version:
+
+1. **Player Settings:** replace the placeholder bundle ID `com.callerretroball.game` with your own, and set your Team ID.
+2. Run **Caller Retro Ball ▸ Release ▸ Generate App Icon and Launch Image**, then **Apply Release Player Settings**.
+3. Run **Caller Retro Ball ▸ Release ▸ Build iOS (Simulator)** or **Build iOS (Device)**. From Terminal, close the Editor and run `tools/build_ios.sh [simulator|device]`. Either way the output goes to `iOSBuild/…`.
+4. Open `iOSBuild/<Simulator|Device>/Unity-iPhone.xcodeproj`, choose your team under **Signing & Capabilities**, pick a simulator or your iPhone, and press **Run**.
+
+The build post-processor writes the Info.plist keys (no non-exempt encryption, full screen, hidden status bar, Sports Games category). `Assets/Plugins/iOS/PrivacyInfo.xcprivacy` declares no tracking and no collected data.
 
 ## Project architecture
 
@@ -90,15 +95,15 @@ Assets/Scripts/
     Match/                    MatchSimulation (partial: core, defense & plays), AiBrain, shot/pass models, stats
     Progression/              rewards, career, season & playoffs, Rise Mode, practice drills
     Save/                     MiniJson + versioned SaveCodec
-    PixelArt/ Audio/          procedural sprites, logos, courts, sounds, music
+    PixelArt/ Audio/          procedural sprites, logos, courts, app icon, launch image, sounds, music
   Data/          ScriptableObject wrappers + ContentDatabase (falls back to built-in defaults)
   Core/          App hub, SceneFlow, SaveStore (atomic writes + backups), Haptics, Game Center interface
   UI/            Code-built uGUI/TMP kit, controls, menu screens (main, Rise hub, Locker Room, Settings)
   Gameplay/      Match controller, views, camera rig, HUD, post-game
   Input/         Floating joystick and hold/release action buttons
   Audio/         AudioManager (pooled voices, synthesised clips)
-  Editor/        ProjectSetup
-Assets/Plugins/iOS/   CallerHaptics.mm
+  Editor/        ProjectSetup, ReleaseTools (icon, launch image, iOS builds), IosPostProcess (Info.plist)
+Assets/Plugins/iOS/   CallerHaptics.mm, PrivacyInfo.xcprivacy
 Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 ```
 
@@ -117,7 +122,7 @@ Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 - Not tuned by hand: balance numbers come from AI-vs-AI simulations (AI field-goal rate about 29 % Rookie, 38 % Caller, 56 % Legend), not from people playing.
 - Celebrations and dribble moves are collectible tags with no animation yet.
 - The URP asset must be assigned by hand (setup step 4).
-- No app icon, launch screen art, or localisation.
+- The app icon and launch image are generated, but not yet checked in Xcode or on a device. There is no localisation (English only).
 - No Game Center implementation (interface only), by design for the offline MVP.
 
 ## Asset and licence disclosure

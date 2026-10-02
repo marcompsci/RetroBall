@@ -154,8 +154,9 @@ namespace CallerRetroBall.EditorTools
             PlayerSettings.productName = "Caller Retro Ball";
             if (string.IsNullOrEmpty(PlayerSettings.companyName) || PlayerSettings.companyName == "DefaultCompany")
                 PlayerSettings.companyName = "Caller Retro Ball Dev";
-            if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" || PlayerSettings.bundleVersion == "1.0")
-                PlayerSettings.bundleVersion = "0.1.0";
+            if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" ||
+                PlayerSettings.bundleVersion == "1.0" || PlayerSettings.bundleVersion == "0.1.0")
+                PlayerSettings.bundleVersion = ReleaseTools.ReleaseVersion;
 
             // Only replace Unity's default identifier; never clobber one the developer set.
             var ios = UnityEditor.Build.NamedBuildTarget.iOS;

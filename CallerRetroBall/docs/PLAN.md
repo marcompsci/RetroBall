@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 8 | Release prep: app icon, launch image, release settings, iOS build tooling, Info.plist, privacy manifest, App Store kit | **Done** (198 logic tests pass; icon previewed; no build run yet) |
 
 ## Phase 1 — what exists
 
@@ -100,6 +101,18 @@
   scene and a practice drill build without errors.
 - Rewrote README (setup, controls, iOS build, architecture, limitations, asset disclosure) and completed DESIGN.
 - Added `docs/QA_CHECKLIST.md` for a manual pass on device.
+
+## Phase 8 — release prep
+
+- **Art:** `AppIconGenerator`, an original 64x64 pixel basketball with gold "signal" arcs on a dithered sunset, scaled to an
+  opaque 1024x1024 icon. The launch image is the main-menu backdrop with the ball emblem and no text.
+- **Editor:** `ReleaseTools`, with menu items to generate and assign the icon and launch image, apply release Player Settings
+  (1.0.0 / build 1, iOS 15+, portrait, full screen, no Unity splash), and build Simulator or Device Xcode projects.
+  The same builds run headless via `tools/build_ios.sh`. `IosPostProcess` sets the Info.plist keys.
+- **iOS:** `PrivacyInfo.xcprivacy` (no tracking, no data collected).
+- **Docs:** `docs/APP_STORE.md` (metadata within Apple's character limits, privacy policy text, privacy label, age rating,
+  export compliance, screenshot plan, review notes) and `docs/RELEASE_CHECKLIST.md`.
+- **Version:** the menus now show the Player Settings version (`Application.version`) instead of a hard-coded string.
 
 ## Deviations from the brief (deliberate)
 

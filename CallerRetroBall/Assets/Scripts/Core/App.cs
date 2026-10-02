@@ -14,7 +14,8 @@ namespace CallerRetroBall.Core
     /// </summary>
     public static class App
     {
-        public const string Version = "1.0.0";
+        /// <summary>The Player Settings version (set by ProjectSetup / ReleaseTools), shown on menus.</summary>
+        public static string Version => Application.version;
 
         public static ContentDatabase Content { get; private set; }
 
