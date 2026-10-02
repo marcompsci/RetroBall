@@ -226,6 +226,21 @@ namespace CallerRetroBall.Logic
             ["MAN-TO-MAN"] = "INDIVIDUAL",
             ["CALLER CUP TITLES"] = "TÍTULOS DE CALLER CUP", ["SHOOTOUT WINS"] = "DUELOS GANADOS", ["ALLEY-OOPS"] = "ALLEY-OOPS",
             ["HEAT CHECKS"] = "VECES AL ROJO VIVO",
+            ["PARTY GAMES"] = "JUEGOS DE FIESTA", ["H-O-R-S-E VS CPU"] = "H-O-R-S-E CONTRA CPU", ["H-O-R-S-E VS FRIEND"] = "H-O-R-S-E CONTRA AMIGO",
+            ["21"] = "21", ["AROUND THE WORLD"] = "LA VUELTA AL MUNDO", ["H-O-R-S-E"] = "H-O-R-S-E",
+            ["H-O-R-S-E, 21, Around the World, and the Shootout."] = "H-O-R-S-E, 21, La vuelta al mundo y el Duelo de Triples.",
+            ["Pass the phone: P1 and P2 take turns with the same player."] = "Pásense el teléfono: J1 y J2 se turnan con el mismo jugador.",
+            ["1-on-1 to exactly 21. Make it, take it. Go over and you bust back to 13."] =
+                "1 contra 1 a 21 exactos. Quien anota, repite. Si te pasas, vuelves a 13.",
+            ["SHARE HIGHLIGHT"] = "COMPARTIR JUGADA", ["SAVING HIGHLIGHT..."] = "GUARDANDO JUGADA...",
+            ["COULDN'T RECORD THE HIGHLIGHT"] = "NO SE PUDO GRABAR LA JUGADA", ["COULDN'T SAVE THE HIGHLIGHT"] = "NO SE PUDO GUARDAR LA JUGADA",
+            ["DRAFT DAY"] = "DÍA DEL DRAFT", ["DRAFT PICK WAITING"] = "ELECCIÓN DE DRAFT PENDIENTE", ["LEAGUE HISTORY"] = "HISTORIA DE LA LIGA",
+            ["OFF-SEASON"] = "PRETEMPORADA", ["YEAR"] = "AÑO", ["LATER"] = "DESPUÉS", ["CHAMPIONS"] = "CAMPEONES", ["MOST TITLES"] = "MÁS TÍTULOS",
+            ["HALL OF FAME"] = "SALÓN DE LA FAMA", ["RIVAL CHALLENGE:"] = "DESAFÍO RIVAL:",
+            ["Pick one prospect. They join your crew for free and grow every season they play."] =
+                "Elige un prospecto. Se une a tu equipo gratis y mejora cada temporada que juega.",
+            ["No champions yet. Finish a Rise season."] = "Aún no hay campeones. Termina una temporada de Ascenso.",
+            ["Empty for now. Legends retire after a few seasons."] = "Vacío por ahora. Las leyendas se retiran tras varias temporadas.",
             ["CUP RUN"] = "CAMPEÓN DE COPA", ["Win the Caller Cup."] = "Gana la Caller Cup.",
             ["SHOOTOUT STAR"] = "ESTRELLA DEL DUELO", ["Win a Shootout."] = "Gana un Duelo de Triples.",
             ["Your team is your player and your crew in your colours. Pick it in Quick Call, King of the Court, the Arcade Ladder, and 2 Player."] =

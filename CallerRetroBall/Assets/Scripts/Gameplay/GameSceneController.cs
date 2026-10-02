@@ -46,6 +46,13 @@ namespace CallerRetroBall.Gameplay
         private float _shootPoseUntil;
         private int _lastLabelState = -1;
         private PracticeSession _practice;
+        // Phase 17: H-O-R-S-E.
+        private HorseSession _horse;
+        private int _horseSeen;
+        private SpriteRenderer _horseMarker;
+        // Phase 17: highlight GIFs.
+        private bool _capturing;
+        private readonly System.Collections.Generic.List<byte[]> _gifFrames = new System.Collections.Generic.List<byte[]>();
         private TutorialSession _tutorial;
         private DailyChallenge _daily;
         private readonly InputBuffer _buffer2 = new InputBuffer();
@@ -121,7 +128,14 @@ namespace CallerRetroBall.Gameplay
             MaxStepsPerFrame = rate / 12;
             var setup = MatchSetup.FromRequest(_request, catalog);
             _match = new MatchSimulation(setup);
-            if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
+            if (_request.Mode == GameMode.Practice && _request.Drill == (int)DrillKind.Horse)
+            {
+                bool friend = _request.ContextId == "horse:friend";
+                string oppTeam = _request.AwayTeamId ?? catalog.TeamsInTier(TeamTier.League)[0].id;
+                _horse = new HorseSession(friend ? HorseOpponent.Friend : HorseOpponent.Cpu, setup.Court, setup.Shot, setup.Rules,
+                                          friend ? null : Shootout.PickShooter(catalog, oppTeam), catalog.Difficulty(_request.DifficultyId), _request.Seed);
+            }
+            else if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
             {
                 _practice = new PracticeSession((DrillKind)_request.Drill, _match, _request.Seed);
                 if (_practice.Kind == DrillKind.Shootout)
@@ -161,6 +175,7 @@ namespace CallerRetroBall.Gameplay
             }
             _hud.ReplayRequested += () => StartReplay(_lastHighlight);
             _hud.PlayOfTheGameRequested += () => StartReplay(_recorder.BestPlay);
+            _hud.ShareRequested += ShareHighlight;
             if (settings != null && settings.leftHanded) _hud.SetCallMenuLeft(true);
             _hud.ContinueRequested += Continue;
             _hud.PauseRequested += () => SetPaused(true);
@@ -177,6 +192,7 @@ namespace CallerRetroBall.Gameplay
                      : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
                      : Demo ? "DEMO PLAY"
+                     : _horse != null ? "H-O-R-S-E: " + _horse.Name(0) + " SHOOTS FIRST"
                      : _practice != null && _practice.Kind == DrillKind.Shootout ? "BEAT " + _practice.CpuName + ": " + _practice.CpuScore
                      : _practice != null ? DrillTitle(_practice.Kind)
                      : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.8f);
@@ -251,6 +267,15 @@ namespace CallerRetroBall.Gameplay
             _receiverArrow.enabled = false;
 
             if (_practice != null) BuildPracticeMarkers(world);
+            if (_horse != null)
+            {
+                var go = new GameObject("HorseSpot");
+                go.transform.SetParent(world, false);
+                _horseMarker = go.AddComponent<SpriteRenderer>();
+                _horseMarker.sprite = _art.Ring;
+                _horseMarker.sortingOrder = -9000;
+                _horseMarker.enabled = false;
+            }
 
             var cam = Camera.main;
             if (cam == null) cam = new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
@@ -297,6 +322,7 @@ namespace CallerRetroBall.Gameplay
                 _match.Step(FixedStep, input, input2);
                 _recorder.Capture(_match);
                 _practice?.Update(_match, FixedStep);
+                _horse?.Update(_match);
                 if (_tutorial != null)
                 {
                     _tutorial.Update(_match);
@@ -330,6 +356,7 @@ namespace CallerRetroBall.Gameplay
 
             if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
             else if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
+            else if (_horse != null && _horse.Finished && !_finalShown) ShowHorseEnd();
             else if (_match.IsOver && !_finalShown)
             {
                 if (Demo) Quit();
@@ -524,6 +551,10 @@ namespace CallerRetroBall.Gameplay
                         Sfx(SfxId.HeatUp, 0.9f);
                         if (e.Team == human || Versus) Haptics.Heavy();
                         break;
+                    case MatchEventType.Bust:
+                        _hud.Toast("BUST! BACK TO " + e.Value, 1.4f);
+                        Sfx(SfxId.Error, 0.7f);
+                        break;
                     case MatchEventType.SchemeChanged:
                         // The AI adjusts its defence: tell the person it's now facing something new.
                         if (e.Team != human || Versus) _hud.Toast(Loc.T("DEFENSE:") + " " + Loc.T(MatchSimulation.SchemeName((DefenseScheme)e.Value)), 1.4f);
@@ -706,6 +737,7 @@ namespace CallerRetroBall.Gameplay
                 _hud.SetInfo(InfoLine());
             }
             SyncPracticeMarkers();
+            SyncHorse();
             UpdateControlLabels();
         }
 
@@ -790,7 +822,7 @@ namespace CallerRetroBall.Gameplay
         }
 
         private bool CanCall() =>
-            _practice == null && _match.OffenseTeam == _match.Setup.HumanTeam && _match.HumanTeamHasBall
+            _practice == null && _horse == null && _match.OffenseTeam == _match.Setup.HumanTeam && _match.HumanTeamHasBall
             && !_match.MustClear && _match.Phase == MatchPhase.Live && _match.ActivePlay == PlayCall.None;
 
         private string InfoLine()
@@ -803,6 +835,12 @@ namespace CallerRetroBall.Gameplay
             }
             if (Versus && _match.Time < 10f)
                 return "P1: WASD · K SHOOT · J PASS · L STEAL · C CALL     P2: ARROWS · NUM1 SHOOT · NUM2 PASS · NUM3 STEAL · NUM0 CALL";
+            if (_horse != null)
+            {
+                string turn = _horse.IsCpuTurn ? _horse.Name(1) + " IS SHOOTING..."
+                            : (_horse.Opponent == HorseOpponent.Friend ? _horse.Name(_horse.Shooter) + ": " : "") + (_horse.Matching ? "MATCH THE SHOT (GOLD RING)" : "SET A SHOT");
+                return _horse.Name(0) + " " + Pad(_horse.LettersOf(0)) + "  ·  " + _horse.Name(1) + " " + Pad(_horse.LettersOf(1)) + "  ·  " + turn;
+            }
             if (_practice != null)
             {
                 string time = _practice.TimeLimit > 0f ? Mathf.CeilToInt(_practice.TimeLeft) + "s  ·  " : _practice.Elapsed.ToString("0.0") + "s  ·  ";
@@ -840,6 +878,8 @@ namespace CallerRetroBall.Gameplay
                 case DrillKind.ThreePoint: return "3-POINT CONTEST";
                 case DrillKind.Lockdown: return "LOCKDOWN";
                 case DrillKind.Shootout: return "SHOOTOUT";
+                case DrillKind.AroundTheWorld: return "AROUND THE WORLD";
+                case DrillKind.Horse: return "H-O-R-S-E";
                 default: return "DRIBBLE LANE";
             }
         }
@@ -1058,6 +1098,46 @@ namespace CallerRetroBall.Gameplay
             _hud.ShowPracticeEnd("TUTORIAL COMPLETE", reward > 0 ? "+" + reward + " SP · YOU'RE READY" : "YOU'RE READY TO PLAY", false);
         }
 
+        private static string Pad(string letters) => letters.Length == 0 ? "-" : letters;
+
+        private void SyncHorse()
+        {
+            if (_horse == null) return;
+            if (_horse.Version != _horseSeen)
+            {
+                _horseSeen = _horse.Version;
+                if (!string.IsNullOrEmpty(_horse.LastCall))
+                {
+                    _hud.Toast(_horse.LastCall, 1.6f);
+                    Sfx(_horse.LastCall.Contains("GETS") ? SfxId.Whistle : SfxId.Click, 0.7f);
+                }
+            }
+            bool show = _horse.Matching || _horse.IsCpuTurn;
+            _horseMarker.enabled = show;
+            if (show)
+            {
+                var at = _horse.Matching ? _horse.SpotToMatch : _horse.LastCpuSpot;
+                _horseMarker.transform.position = CourtSpace.ToWorldSnapped(at);
+                _horseMarker.color = new Color32(0xFF, 0xD1, 0x66, 255);
+            }
+        }
+
+        private void ShowHorseEnd()
+        {
+            _finalShown = true;
+            _controls.SetVisible(false);
+            bool youWon = _horse.Winner == 0;
+            if (App.Career != null && _horse.Opponent == HorseOpponent.Cpu)
+            {
+                Career.RecordPractice(App.Career, 0, 0, 0, 0f, 0, 0, false, 0f, youWon);
+                App.SaveCareer();
+            }
+            if (youWon || _horse.Opponent == HorseOpponent.Friend) Sfx(SfxId.Fanfare, 0.8f);
+            Audio.AudioManager.Voice("H-O-R-S-E!");
+            _hud.ShowPracticeEnd(_horse.Name(_horse.Winner) + " WINS",
+                                 _horse.Name(0) + " " + Pad(_horse.LettersOf(0)) + "  ·  " + _horse.Name(1) + " " + Pad(_horse.LettersOf(1)), youWon);
+        }
+
         private void ShowPracticeEnd()
         {
             _finalShown = true;
@@ -1073,7 +1153,8 @@ namespace CallerRetroBall.Gameplay
                     p.Kind == DrillKind.DribbleLane && p.Finished ? p.CourseTime : 0f,
                     p.Kind == DrillKind.ThreePoint ? p.ContestPoints : 0,
                     p.Kind == DrillKind.Lockdown ? p.Stops : 0,
-                    p.ShootoutWon);
+                    p.ShootoutWon,
+                    p.Kind == DrillKind.AroundTheWorld && p.Finished ? p.CourseTime : 0f);
                 App.SaveCareer();
             }
             if (best) Haptics.Success();
@@ -1088,7 +1169,8 @@ namespace CallerRetroBall.Gameplay
         private void BuildPracticeMarkers(Transform world)
         {
             // Dribble Lane cones, or the 3-Point Contest's money-ball spots.
-            var spots = _practice.ThreePointStyle ? _practice.MoneySpots : _practice.Cones;
+            var spots = _practice.ThreePointStyle ? _practice.MoneySpots
+                      : _practice.Kind == DrillKind.AroundTheWorld ? _practice.WorldSpots : _practice.Cones;
             _cones = new SpriteRenderer[spots.Count];
             for (int i = 0; i < _cones.Length; i++)
             {
@@ -1118,6 +1200,13 @@ namespace CallerRetroBall.Gameplay
             {
                 for (int i = 0; i < _cones.Length; i++)
                 {
+                    if (_practice.Kind == DrillKind.AroundTheWorld)
+                    {
+                        // Done spots green, the current one gold, the rest faint.
+                        _cones[i].color = i < _practice.WorldSpot ? new Color(0.3f, 0.9f, 0.5f, 0.5f)
+                                        : i == _practice.WorldSpot ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : new Color(1f, 1f, 1f, 0.25f);
+                        continue;
+                    }
                     if (_practice.ThreePointStyle)
                     {
                         // The money-ball spot glows gold; the rest are faint.
@@ -1149,7 +1238,7 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Big plays by a person (dunks, greens, blocks, steals) can be replayed.</summary>
         private void NoteHighlight(MatchEvent e)
         {
-            if (_practice != null || _tutorial != null || Demo || e.PlayerIndex < 0) return;
+            if (_practice != null || _horse != null || _tutorial != null || Demo || e.PlayerIndex < 0) return;
             // Alley-oops count if either end (passer or finisher) is a person; the clip is saved when the dunk lands.
             if (e.Type == MatchEventType.AlleyOop && (_match.IsHumanControlled(e.PlayerIndex) || _match.IsHumanControlled(e.Value)))
             {
@@ -1220,6 +1309,77 @@ namespace CallerRetroBall.Gameplay
             _meter.Idle();
             _receiverArrow.enabled = false;
             _cameraRig.Follow(f.BallPosition, dt, false);
+        }
+
+        /// <summary>Plays the play of the game once more while recording it, then saves a GIF and opens the share sheet.</summary>
+        private void ShareHighlight()
+        {
+            if (_capturing || _recorder.BestPlay == null) return;
+            _capturing = true;
+            _gifFrames.Clear();
+            StartReplay(_recorder.BestPlay);
+            StartCoroutine(CaptureHighlight());
+        }
+
+        private System.Collections.IEnumerator CaptureHighlight()
+        {
+            int w = HighlightClip.Width, h = HighlightClip.HeightFor(Screen.width, Screen.height);
+            var screen = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+            var small = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point };
+            var read = new Texture2D(w, h, TextureFormat.RGB24, false);
+            float nextAt = 0f;
+            while (Replaying && _gifFrames.Count < HighlightClip.MaxFrames)
+            {
+                yield return new WaitForEndOfFrame();
+                if (_replayT < nextAt) continue;
+                nextAt += 1f / HighlightClip.Fps;
+                ScreenCapture.CaptureScreenshotIntoRenderTexture(screen);
+                Graphics.Blit(screen, small);
+                var prev = RenderTexture.active;
+                RenderTexture.active = small;
+                read.ReadPixels(new Rect(0, 0, w, h), 0, 0, false);
+                read.Apply(false);
+                RenderTexture.active = prev;
+                var raw = read.GetRawTextureData();
+                // GIF rows go top to bottom; flip unless the capture already came out top-down.
+                var frame = new byte[w * h * 3];
+                bool flip = !SystemInfo.graphicsUVStartsAtTop;
+                for (int y = 0; y < h; y++)
+                    System.Buffer.BlockCopy(raw, (flip ? h - 1 - y : y) * w * 3, frame, y * w * 3, w * 3);
+                _gifFrames.Add(frame);
+            }
+            Destroy(screen);
+            Destroy(small);
+            Destroy(read);
+            if (Replaying) EndReplay();
+
+            if (_gifFrames.Count < 2)
+            {
+                _capturing = false;
+                _hud.Toast("COULDN'T RECORD THE HIGHLIGHT", 1.4f);
+                yield break;
+            }
+            _hud.Toast("SAVING HIGHLIGHT...", 1.2f);
+            var frames = new System.Collections.Generic.List<byte[]>(_gifFrames);
+            _gifFrames.Clear();
+            string folder = System.IO.Path.Combine(Application.persistentDataPath, "Highlights");
+            string path = System.IO.Path.Combine(folder, HighlightClip.FileName(System.DateTime.Now));
+            // Encode off the main thread (pure C#), then share on the main thread.
+            var task = System.Threading.Tasks.Task.Run(() =>
+            {
+                System.IO.Directory.CreateDirectory(folder);
+                System.IO.File.WriteAllBytes(path, GifEncoder.Encode(w, h, frames, 100 / HighlightClip.Fps));
+            });
+            while (!task.IsCompleted) yield return null;
+            _capturing = false;
+            if (task.IsFaulted)
+            {
+                _hud.Toast("COULDN'T SAVE THE HIGHLIGHT", 1.4f);
+                Debug.LogWarning("[RetroBall] Highlight GIF failed: " + task.Exception?.GetBaseException().Message);
+                yield break;
+            }
+            Haptics.Success();
+            Share.File(path, "My play of the game in RetroBall");
         }
 
         private void EndReplay()

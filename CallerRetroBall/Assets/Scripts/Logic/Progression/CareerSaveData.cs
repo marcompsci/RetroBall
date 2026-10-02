@@ -136,6 +136,9 @@ namespace CallerRetroBall.Logic
         public int threePointBest;
         public int lockdownBest;
         public int shootoutWins;
+        /// <summary>Around the World best time in seconds (0 = never finished).</summary>
+        public float aroundWorldTime;
+        public int horseWins;
     }
 
     public enum RiseStage { Circuit = 0, Season = 1, Playoffs = 2, Complete = 3 }
@@ -215,6 +218,7 @@ namespace CallerRetroBall.Logic
         public RiseSaveData rise = new RiseSaveData();
         public ClassicSaveData classic = new ClassicSaveData();
         public CupSaveData cup = new CupSaveData();
+        public DynastySaveData dynasty = new DynastySaveData();
         public DailySaveData daily = new DailySaveData();
         /// <summary>Finished the how-to-play tutorial at least once.</summary>
         public bool tutorialDone;

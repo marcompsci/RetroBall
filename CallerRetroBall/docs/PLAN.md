@@ -9,6 +9,7 @@
 | 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
 | 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
 | 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
+| 17 | Party games (H-O-R-S-E vs CPU/friend, 21, Around the World), Dynasty mode (aging, retirements, Hall of Fame, draft, league history), shareable highlight GIFs, iPhone build support (release log, UnityCheck) | **Done** (357 logic tests pass; compiles against Unity 6000.6.3f1 reference assemblies with 0 errors via tools/UnityCheck; not yet run on iPhone) |
 | 16 | Create-a-team (colours, jerseys, shorts, shoes, logo); Season 2 (Sundown Syndicate rival, 3 courts, story chapter 2, kits, 7 badges); AI defensive schemes; 1-on-1; Shootout; 8-team Caller Cup; App Store launch kit | **Done** (342 logic tests pass; Unity changes not yet compiled; iPhone build in progress with Omari) |
 | 15 | HEAT CHECK, alley-oops, hit-stop, heavy haptics, 120 Hz; CRT filter, title demo, pixel wipes, announcer voice; secret codes, hidden courts/teams, big heads, Arcade Ladder + boss; controller menus and prompts | **Done** (324 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 14 | Instant replay + play of the game, 3-Point Contest and Lockdown drills, King of the Court mode, Spanish language (partial) | **Done** (296 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
@@ -255,6 +256,25 @@
   storyboard, TestFlight checklist, privacy answers, launch-day list, press blurb); updated `APP_STORE.md`
   with the new features and a Spanish (Mexico) listing; **Capture Store Screenshot** saves opaque PNGs; the
   readiness check and builds write `Logs/RetroBall-release.txt`.
+
+## Phase 17: party games, Dynasty, highlights, iPhone prep
+
+- **Party games** (PLAY ▸ PARTY GAMES): H-O-R-S-E against the CPU (its shots use the real shot model from a
+  league team's best shooter) or a friend (pass the phone); 21 (1-on-1 to exactly 21, make it take it, bust
+  back to 13); Around the World (seven mid-range spots in order, timed); the Shootout. Shooting games hand the
+  ball straight back where you stand (`MatchSimulation.ResumeWithBall`).
+- **Dynasty** (`DynastyEngine`): when a Rise season ends, START NEXT SEASON runs an off-season. Players age
+  (≤23 grow +2, 24–26 +1, 27–29 hold, 30–32 −1, 33+ −2, plus a little luck), veterans retire (35, or sometimes
+  33+), great careers (peak 78+, 4+ seasons) enter the Hall of Fame, teams draft generated rookies into the
+  open spots, and you pick one of three prospects for your crew. LEAGUE HISTORY lists champions by season,
+  titles by team and the Hall of Fame. Your own player never declines. Everything is saved and rebuilt on
+  launch (`DynastyEngine.Apply`).
+- **Share highlights:** post-game SHARE HIGHLIGHT replays the play of the game, records it at 15 fps / 270 px
+  wide, encodes an animated GIF with an original encoder (`GifEncoder`, tested by decoding it back), saves it in
+  the app's Highlights folder and opens the iOS share sheet (`RetroShare.mm`; Save Image needs
+  `NSPhotoLibraryAddUsageDescription`, set by the build post-processor).
+- **iPhone prep:** iOS readiness checks, builds and screenshots are logged to `Logs/RetroBall-release.txt`;
+  `tools/UnityCheck` compiles every assembly against Unity's own reference assemblies before delivery.
 
 ## Deviations from the brief (deliberate)
 

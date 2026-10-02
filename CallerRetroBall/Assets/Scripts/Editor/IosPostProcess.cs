@@ -28,6 +28,8 @@ namespace CallerRetroBall.EditorTools
             // Lets ProMotion iPhones run the game at 120 Hz (Settings ▸ HIGH FRAME RATE).
             root.SetBoolean("CADisableMinimumFrameDurationOnPhone", true);
             root.SetString("LSApplicationCategoryType", "public.app-category.sports-games");
+            // The share sheet's "Save Image" writes highlight GIFs to Photos (add-only access).
+            root.SetString("NSPhotoLibraryAddUsageDescription", "Save your RetroBall highlights to Photos.");
             // Bluetooth / MFi controllers (Xbox, PlayStation, Switch Pro and similar extended gamepads).
             root.SetBoolean("GCSupportsControllerUserInteraction", true);
             if (root["GCSupportedGameControllers"] == null)

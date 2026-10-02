@@ -213,6 +213,8 @@ namespace CallerRetroBall.Logic
         AlleyOop = 25,
         /// <summary>The AI changed its defence (Team = defending team, Value = <see cref="DefenseScheme"/>).</summary>
         SchemeChanged = 26,
+        /// <summary>"21" bust rule: went over the target (Team = who busted, Value = new score).</summary>
+        Bust = 27,
     }
 
     public struct MatchEvent
@@ -354,6 +356,24 @@ namespace CallerRetroBall.Logic
             if (Ball.IsHeld && Players[Ball.HolderIndex].Team != Players[playerIndex].Team) return;
             CancelCharge();
             GiveBall(playerIndex, announce: true, fromCheck: false);
+        }
+
+        /// <summary>
+        /// Shooting games: puts the ball straight back in <paramref name="player"/>'s hands where they stand
+        /// and goes live (no check-ball reset), so reps flow without walking back to the top.
+        /// </summary>
+        public void ResumeWithBall(int player)
+        {
+            if (Phase == MatchPhase.Final || player < 0 || player >= Players.Length || _finalPending) return;
+            CancelCharge();
+            _alleyOop = false;
+            _reboundable = false;
+            _lastShotWasMiss = false;
+            OffenseTeam = Players[player].Team;
+            GiveBall(player, announce: false, fromCheck: true);
+            MustClear = false;
+            ShotClock = Setup.Rules.shotClockSeconds;
+            if (Phase != MatchPhase.Live) GoLive();
         }
 
         /// <summary>Restarts play with a check ball for <paramref name="team"/> (tutorial steps, tools).</summary>
@@ -761,6 +781,11 @@ namespace CallerRetroBall.Logic
                 _lastCatcher = -1;
 
                 Events.Add(new MatchEvent(MatchEventType.ShotMade, shooter, p.Team, Ball.ShotPoints));
+                if (Setup.Rules.bustRule && Score[p.Team] > Setup.Rules.targetScore)
+                {
+                    Score[p.Team] = Setup.Rules.bustScore;
+                    Events.Add(new MatchEvent(MatchEventType.Bust, shooter, p.Team, Score[p.Team]));
+                }
 
                 // Ball drops through the net and is dead.
                 Ball.Phase = BallPhase.Loose;
@@ -772,7 +797,7 @@ namespace CallerRetroBall.Logic
                 var end = Scoring.Evaluate(Score[0], Score[1], GameClock, Setup.Rules);
                 _finalPending = end != GameOverReason.None;
                 // Possession changes after a made basket (practice keeps it for more reps).
-                GoDead(Setup.KeepPossessionAfterScore ? p.Team : 1 - p.Team, Setup.Flow.deadBallAfterMake);
+                GoDead(Setup.KeepPossessionAfterScore || Setup.Rules.makeItTakeIt ? p.Team : 1 - p.Team, Setup.Flow.deadBallAfterMake);
                 return;
             }
 

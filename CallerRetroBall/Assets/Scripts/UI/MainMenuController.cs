@@ -323,6 +323,7 @@ namespace CallerRetroBall.UI
                 : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
             Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
             Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
+            Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
             var cup = App.Career.cup;
             Mode(column, "CALLER CUP", cup.Active ? "In progress  ·  titles " + cup.titles : "Eight-team knockout. Titles: " + cup.titles, ShowCup, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
@@ -617,6 +618,52 @@ namespace CallerRetroBall.UI
             Refresh();
         }
 
+        /// <summary>Party games: quick shooting games, solo or pass-the-phone.</summary>
+        private void ShowParty()
+        {
+            var column = OpenOverlay("PARTY GAMES", out var footer);
+            var best = App.Career.practice;
+            var league = App.Catalog.TeamsInTier(TeamTier.League);
+            string RandomTeam() => league[new SeededRandom((uint)System.Environment.TickCount | 1u).Range(0, league.Count)].id;
+
+            Mode(column, "H-O-R-S-E VS CPU", "Set a shot, make them match it. Spell HORSE and you lose. Wins: " + best.horseWins, () =>
+                StartParty(DrillKind.Horse, "horse:cpu", RandomTeam()), ButtonStyle.Primary);
+            Mode(column, "H-O-R-S-E VS FRIEND", "Pass the phone: P1 and P2 take turns with the same player.", () =>
+                StartParty(DrillKind.Horse, "horse:friend", null), ButtonStyle.Secondary);
+            Mode(column, "21", "1-on-1 to exactly 21. Make it, take it. Go over and you bust back to 13.", () =>
+            {
+                var mine = Secrets.PlayableTeams(App.Catalog, App.Career.secrets);
+                var opp = league.Find(t => t.id != mine[0].id) ?? league[0];
+                App.PendingMatch = new MatchRequest
+                {
+                    Mode = GameMode.OneOnOne,
+                    HomeTeamId = mine[0].id,
+                    AwayTeamId = opp.id,
+                    CourtId = mine[0].homeCourtId,
+                    RulesId = "rules.21",
+                    DifficultyId = App.Career.settings.difficultyId,
+                };
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Secondary);
+            Mode(column, "AROUND THE WORLD", "Make one from each of 7 spots, corner to corner. Best: " +
+                 (best.aroundWorldTime > 0f ? best.aroundWorldTime.ToString("0.0") + " s" : "—"), () =>
+                StartParty(DrillKind.AroundTheWorld, null, null), ButtonStyle.Secondary);
+            Mode(column, "SHOOTOUT", "Beat a CPU shooter's 3-point score. Wins: " + best.shootoutWins, () =>
+                StartParty(DrillKind.Shootout, null, RandomTeam()), ButtonStyle.Secondary);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+        }
+
+        private static void StartParty(DrillKind drill, string context, string opponentTeamId)
+        {
+            var request = MatchRequest.PracticeDefault();
+            request.Drill = (int)drill;
+            request.ContextId = context;
+            request.AwayTeamId = opponentTeamId;
+            request.DifficultyId = App.Career.settings.difficultyId;
+            App.PendingMatch = request;
+            SceneFlow.GoTo(SceneNames.Game);
+        }
+
         /// <summary>The Caller Cup: an eight-team knockout bracket.</summary>
         private void ShowCup()
         {
@@ -688,6 +735,7 @@ namespace CallerRetroBall.UI
             Drill(column, "DRIBBLE LANE", "Weave the cones. Best: " + (best.dribbleLaneTime > 0f ? best.dribbleLaneTime.ToString("0.00") + " s" : "—"), 2);
             Drill(column, "3-POINT CONTEST", "60 seconds, arc shots only. Gold spot = money ball (2). Best: " + best.threePointBest, 3);
             Drill(column, "LOCKDOWN", "Defense: stop 6 possessions. Best: " + best.lockdownBest + " / 6", 4);
+            Drill(column, "AROUND THE WORLD", "Make one from each of 7 spots. Best: " + (best.aroundWorldTime > 0f ? best.aroundWorldTime.ToString("0.0") + " s" : "—"), (int)DrillKind.AroundTheWorld);
             // Shootout: the 3-point contest head to head with a random league team's best shooter.
             UiKit.Button(column, "SHOOTOUT", () =>
             {

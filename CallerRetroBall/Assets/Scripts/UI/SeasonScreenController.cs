@@ -90,12 +90,13 @@ namespace CallerRetroBall.UI
             if (RivalEngine.ChallengeAvailable(career))
             {
                 var rivalReq = RivalEngine.Challenge(career, c, career.settings.difficultyId);
-                UiKit.Button(_content, "RIVAL CHALLENGE: NEON STATIC", () =>
+                var rivalTeam = c.Team(rivalReq?.AwayTeamId);
+                UiKit.Button(_content, Loc.T("RIVAL CHALLENGE:") + " " + (rivalTeam?.FullName ?? "?").ToUpperInvariant(), () =>
                 {
                     App.PendingMatch = rivalReq;
                     SceneFlow.GoTo(SceneNames.Game);
                 }, ButtonStyle.Primary, 120f, 40f);
-                UiKit.Size(UiKit.Label(_content, "Doesn't count in the standings. Win for +" + RivalEngine.WinBonus + " SP.  Record vs Static: " +
+                UiKit.Size(UiKit.Label(_content, "Doesn't count in the standings. Win for +" + RivalEngine.WinBonus + " SP.  Rival record: " +
                                        career.rival.wins + "-" + career.rival.losses, 28f, Theme.Muted), 50f);
             }
 
@@ -126,12 +127,7 @@ namespace CallerRetroBall.UI
             }
             else if (r.stage == RiseStage.Complete)
             {
-                UiKit.Button(_content, "START NEXT SEASON", () =>
-                {
-                    RiseEngine.StartNextSeason(r, c);
-                    App.SaveCareer();
-                    Rebuild();
-                }, ButtonStyle.Primary, 150f);
+                UiKit.Button(_content, "START NEXT SEASON", StartNextSeason, ButtonStyle.Primary, 150f);
             }
 
             if (r.season != null && r.stage != RiseStage.Circuit)
@@ -144,7 +140,10 @@ namespace CallerRetroBall.UI
                 CircuitList(r);
             }
 
+            if (career.dynasty.draftPool.Count > 0)
+                UiKit.Button(_content, "DRAFT PICK WAITING", ShowDraft, ButtonStyle.Primary, 110f, 40f);
             UiKit.Button(_content, "YOUR CREW", ShowCrew, ButtonStyle.Secondary, 110f, 40f);
+            UiKit.Button(_content, "LEAGUE HISTORY", ShowHistory, ButtonStyle.Ghost, 100f, 36f);
             var mates = CrewEngine.TeammateDefs(career, c);
             UiKit.Size(UiKit.Label(_content, "With " + string.Join(" & ", mates.ConvertAll(m => m.DisplayName)) +
                                    "  ·  " + CrewEngine.Pool(career, c).Count + " players available", 28f, Theme.Muted), 50f);
@@ -189,6 +188,133 @@ namespace CallerRetroBall.UI
                               });
             }
             UiControls.Dialog(Loc.T(card.title).ToUpperInvariant(), Loc.T(card.body), buttons);
+        }
+
+        // ------------------------------------------------------------------ dynasty
+
+        /// <summary>Off-season first (aging, retirements, Hall of Fame, your draft pick), then the new season.</summary>
+        private void StartNextSeason()
+        {
+            var career = App.Career;
+            var c = App.Catalog;
+            var report = DynastyEngine.OffSeason(career, c);
+            if (report == null)
+            {
+                RiseEngine.StartNextSeason(career.rise, c);
+                App.SaveCareer();
+                Rebuild();
+                return;
+            }
+            App.SaveCareer();
+            string champ = c.Team(report.ChampionId)?.FullName ?? "?";
+            string body = "Champion: " + champ + ".\n" +
+                          (report.Retired.Count > 0 ? "Retired: " + Short(report.Retired) + ".\n" : "Nobody retired.\n") +
+                          (report.HallOfFame.Count > 0 ? "Hall of Fame: " + string.Join(", ", report.HallOfFame) + "!\n" : "") +
+                          (report.Improved.Count > 0 ? "Rising: " + Short(report.Improved) + "." : "");
+            UiControls.Dialog(Loc.T("OFF-SEASON") + " · " + Loc.T("YEAR") + " " + report.Year, body,
+                              ("DRAFT DAY", ButtonStyle.Primary, ShowDraft));
+        }
+
+        private static string Short(System.Collections.Generic.List<string> names) =>
+            names.Count <= 3 ? string.Join(", ", names) : string.Join(", ", names.GetRange(0, 3)) + " +" + (names.Count - 3);
+
+        /// <summary>Draft day: take one of three prospects for your crew (free to put on the floor).</summary>
+        private void ShowDraft()
+        {
+            var c = App.Catalog;
+            var career = App.Career;
+            var col = OpenPanel("DRAFT DAY", out var footer);
+            UiKit.Size(UiKit.Label(col, "Pick one prospect. They join your crew for free and grow every season they play.", 30f, Theme.Cream), 90f);
+            foreach (var id in new System.Collections.Generic.List<string>(career.dynasty.draftPool))
+            {
+                var p = c.Player(id);
+                if (p == null) continue;
+                var arch = c.ArchetypeById(p.archetypeId);
+                int age = DynastyEngine.AgeOf(career.dynasty, id);
+                UiKit.Size(UiKit.Label(col, p.DisplayName.ToUpperInvariant() + "  #" + p.jerseyNumber +
+                                       "\n<size=75%><color=#8D99AE>" + (arch?.displayName ?? "") + "  ·  AGE " + age + "  ·  OVR " + p.attributes.Overall + "</color></size>",
+                                       36f, Theme.Gold, TextAlignmentOptions.Left, true), 100f);
+                UiKit.Button(col, "DRAFT " + p.lastName.ToUpperInvariant(), () =>
+                {
+                    DynastyEngine.Draft(App.Career, App.Catalog, id);
+                    RiseEngine.StartNextSeason(App.Career.rise, App.Catalog);
+                    App.SaveCareer();
+                    Core.Haptics.Success();
+                    Audio.AudioManager.Play(SfxId.Fanfare, 0.7f);
+                    ClosePanel();
+                    Rebuild();
+                }, ButtonStyle.Secondary, 100f, 36f);
+            }
+            UiKit.Button(footer, "LATER", () =>
+            {
+                // The pick waits in the hub; the season can still start.
+                if (App.Career.rise.stage == RiseStage.Complete) RiseEngine.StartNextSeason(App.Career.rise, App.Catalog);
+                App.SaveCareer();
+                ClosePanel();
+                Rebuild();
+            }, ButtonStyle.Ghost, 120f, 40f);
+        }
+
+        /// <summary>League history: champions by year, titles by team, and the Hall of Fame.</summary>
+        private void ShowHistory()
+        {
+            var c = App.Catalog;
+            var d = App.Career.dynasty;
+            var col = OpenPanel("LEAGUE HISTORY", out var footer);
+            UiKit.Button(footer, "DONE", ClosePanel, ButtonStyle.Primary, 120f);
+            UiKit.Size(UiKit.Label(col, "CHAMPIONS", 36f, Theme.Cyan, TextAlignmentOptions.Left, true), 56f);
+            if (d.champions.Count == 0) UiKit.Size(UiKit.Label(col, "No champions yet. Finish a Rise season.", 30f, Theme.Muted), 50f);
+            for (int i = d.champions.Count - 1; i >= 0; i--)
+            {
+                var ch = d.champions[i];
+                bool you = ch.teamId == DefaultContent.PlayerCrewId;
+                UiKit.Size(UiKit.Label(col, "SEASON " + ch.season + "   " + (c.Team(ch.teamId)?.FullName ?? "?").ToUpperInvariant(), 32f,
+                                       you ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true), 48f);
+            }
+            var titles = DynastyEngine.TitlesByTeam(d);
+            if (titles.Count > 0)
+            {
+                UiKit.Size(UiKit.Label(col, "MOST TITLES", 36f, Theme.Cyan, TextAlignmentOptions.Left, true), 56f);
+                foreach (var kv in titles)
+                    UiKit.Size(UiKit.Label(col, (c.Team(kv.Key)?.FullName ?? "?").ToUpperInvariant() + "   " + kv.Value, 32f, Theme.Cream, TextAlignmentOptions.Left, true), 48f);
+            }
+            UiKit.Size(UiKit.Label(col, "HALL OF FAME", 36f, Theme.Cyan, TextAlignmentOptions.Left, true), 56f);
+            if (d.hall.Count == 0) UiKit.Size(UiKit.Label(col, "Empty for now. Legends retire after a few seasons.", 30f, Theme.Muted), 50f);
+            foreach (var h in d.hall)
+                UiKit.Size(UiKit.Label(col, h.name.ToUpperInvariant() + "\n<size=70%><color=#8D99AE>" + h.team + "  ·  " + h.seasons + " SEASONS  ·  PEAK " + h.peak +
+                                       "  ·  YEAR " + h.year + "</color></size>", 32f, Theme.Gold, TextAlignmentOptions.Left, true), 80f);
+        }
+
+        private RectTransform OpenPanel(string title, out RectTransform footer)
+        {
+            ClosePanel();
+            var canvas = UiKit.CreateScreenCanvas("HubPanel", 30);
+            _crewOverlay = canvas.gameObject;
+            var scrim = UiKit.Panel(canvas.transform, Theme.Scrim, name: "Scrim");
+            UiKit.Stretch(scrim.rectTransform);
+            scrim.raycastTarget = true;
+            var safe = UiKit.SafeArea(canvas.transform);
+            var panel = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "Panel");
+            UiKit.Band(panel.rectTransform, 0.04f, 0.96f, 40f);
+            panel.raycastTarget = true;
+            footer = UiKit.Row(panel.transform, 20f, "Footer");
+            footer.anchorMin = new Vector2(0f, 0f);
+            footer.anchorMax = new Vector2(1f, 0f);
+            footer.pivot = new Vector2(0.5f, 0f);
+            footer.sizeDelta = new Vector2(-80f, 130f);
+            footer.anchoredPosition = new Vector2(0f, 24f);
+            var body = UiKit.NewRect("Body", panel.transform);
+            UiKit.Stretch(body);
+            body.offsetMin = new Vector2(0f, 170f);
+            var col = UiKit.ScrollColumn(body, 14f, new RectOffset(36, 36, 30, 20));
+            UiKit.Size(UiKit.ShadowLabel(col, title, 60f, Theme.Cream, Theme.Pink, 6f).transform.parent.GetComponent<RectTransform>(), 90f);
+            return col;
+        }
+
+        private void ClosePanel()
+        {
+            if (_crewOverlay != null) Destroy(_crewOverlay);
+            _crewOverlay = null;
         }
 
         // ------------------------------------------------------------------ crew

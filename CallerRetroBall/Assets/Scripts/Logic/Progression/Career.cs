@@ -52,6 +52,7 @@ namespace CallerRetroBall.Logic
             if (data.secrets == null) data.secrets = new SecretsSaveData();
             if (data.customTeam == null) data.customTeam = new CustomTeamData();
             if (data.cup == null) data.cup = new CupSaveData();
+            if (data.dynasty == null) data.dynasty = new DynastySaveData();
             if (data.secrets.codesFound == null) data.secrets.codesFound = new List<string>();
             if (data.secrets.hintsRevealed == null) data.secrets.hintsRevealed = new List<string>();
             if (data.secrets.unlocked == null) data.secrets.unlocked = new List<string>();
@@ -221,10 +222,13 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Records drill results; returns true if any personal best improved.</summary>
         public static bool RecordPractice(CareerSaveData data, int makes, int bestStreak, int passingScore, float dribbleTime,
-                                          int threePoint = 0, int lockdownStops = 0, bool shootoutWon = false)
+                                          int threePoint = 0, int lockdownStops = 0, bool shootoutWon = false,
+                                          float aroundWorldTime = 0f, bool horseWon = false)
         {
             var p = data.practice;
             bool improved = false;
+            if (horseWon) { p.horseWins++; improved = true; }
+            if (aroundWorldTime > 0f && (p.aroundWorldTime <= 0f || aroundWorldTime < p.aroundWorldTime)) { p.aroundWorldTime = aroundWorldTime; improved = true; }
             if (shootoutWon) { p.shootoutWins++; improved = true; }
             if (threePoint > p.threePointBest) { p.threePointBest = threePoint; improved = true; }
             if (lockdownStops > p.lockdownBest) { p.lockdownBest = lockdownStops; improved = true; }

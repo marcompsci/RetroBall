@@ -52,6 +52,7 @@ namespace CallerRetroBall.Logic
                     ["passingScore"] = d.practice.passingScore, ["dribbleLaneTime"] = (double)d.practice.dribbleLaneTime,
                     ["threePointBest"] = d.practice.threePointBest, ["lockdownBest"] = d.practice.lockdownBest,
                     ["shootoutWins"] = d.practice.shootoutWins,
+                    ["aroundWorld"] = (double)d.practice.aroundWorldTime, ["horseWins"] = d.practice.horseWins,
                 },
                 ["settings"] = new Dictionary<string, object>
                 {
@@ -68,6 +69,7 @@ namespace CallerRetroBall.Logic
                 ["rise"] = EncodeRise(d.rise),
                 ["classic"] = EncodeClassic(d.classic),
                 ["cup"] = EncodeCup(d.cup),
+                ["dynasty"] = EncodeDynasty(d.dynasty ?? new DynastySaveData()),
                 ["daily"] = new Dictionary<string, object>
                 {
                     ["lastCompletedDay"] = (d.daily ?? new DailySaveData()).lastCompletedDay,
@@ -235,6 +237,63 @@ namespace CallerRetroBall.Logic
             return t;
         }
 
+        private static object EncodeDynasty(DynastySaveData y) => new Dictionary<string, object>
+        {
+            ["year"] = y.year,
+            ["last"] = y.lastSeasonProcessed,
+            ["players"] = List(y.players, p => new Dictionary<string, object>
+            {
+                ["id"] = p.id, ["age"] = p.age, ["delta"] = p.delta, ["peak"] = p.peak, ["seasons"] = p.seasons, ["retired"] = p.retired,
+            }),
+            ["rookies"] = List(y.rookies, r => new Dictionary<string, object>
+            {
+                ["id"] = r.id, ["first"] = r.first, ["last"] = r.last, ["number"] = r.number, ["arch"] = r.archetype,
+                ["skin"] = r.skin, ["hair"] = r.hair, ["hairColor"] = r.hairColor, ["body"] = r.body, ["height"] = r.height, ["offset"] = r.offset,
+            }),
+            ["swaps"] = List(y.swaps, s => new Dictionary<string, object> { ["team"] = s.teamId, ["old"] = s.oldId, ["new"] = s.newId }),
+            ["hall"] = List(y.hall, h => new Dictionary<string, object>
+            {
+                ["name"] = h.name, ["team"] = h.team, ["peak"] = h.peak, ["seasons"] = h.seasons, ["year"] = h.year,
+            }),
+            ["champions"] = List(y.champions, ch => new Dictionary<string, object> { ["season"] = ch.season, ["team"] = ch.teamId }),
+            ["draft"] = Strings(y.draftPool),
+        };
+
+        private static DynastySaveData DecodeDynasty(Dictionary<string, object> o)
+        {
+            var y = new DynastySaveData();
+            if (o == null) return y;
+            y.year = Math.Max(0, Int(o, "year", 0));
+            y.lastSeasonProcessed = Math.Max(0, Int(o, "last", 0));
+            foreach (var item in Arr(o, "players"))
+                if (item is Dictionary<string, object> p && Str(p, "id", null) != null)
+                    y.players.Add(new DynastyPlayer
+                    {
+                        id = Str(p, "id", null), age = Math.Max(16, Math.Min(50, Int(p, "age", 25))), delta = Math.Max(-12, Math.Min(10, Int(p, "delta", 0))),
+                        peak = Int(p, "peak", 0), seasons = Math.Max(0, Int(p, "seasons", 0)), retired = Bool(p, "retired", false),
+                    });
+            foreach (var item in Arr(o, "rookies"))
+                if (item is Dictionary<string, object> r && Str(r, "id", null) != null)
+                    y.rookies.Add(new RookieData
+                    {
+                        id = Str(r, "id", null), first = Str(r, "first", "Rookie"), last = Str(r, "last", ""), number = Math.Max(0, Math.Min(99, Int(r, "number", 0))),
+                        archetype = Math.Max(0, Math.Min(11, Int(r, "arch", 0))), skin = Int(r, "skin", 0), hair = Int(r, "hair", 0),
+                        hairColor = Int(r, "hairColor", 0), body = Math.Max(0, Math.Min(2, Int(r, "body", 1))), height = Math.Max(0, Math.Min(2, Int(r, "height", 1))),
+                        offset = Math.Max(-10, Math.Min(5, Int(r, "offset", 0))),
+                    });
+            foreach (var item in Arr(o, "swaps"))
+                if (item is Dictionary<string, object> s)
+                    y.swaps.Add(new RosterSwap { teamId = Str(s, "team", null), oldId = Str(s, "old", null), newId = Str(s, "new", null) });
+            foreach (var item in Arr(o, "hall"))
+                if (item is Dictionary<string, object> h)
+                    y.hall.Add(new HallEntry { name = Str(h, "name", "?"), team = Str(h, "team", ""), peak = Int(h, "peak", 0), seasons = Int(h, "seasons", 0), year = Int(h, "year", 0) });
+            foreach (var item in Arr(o, "champions"))
+                if (item is Dictionary<string, object> ch)
+                    y.champions.Add(new ChampionEntry { season = Int(ch, "season", 0), teamId = Str(ch, "team", null) });
+            y.draftPool = StrList(o, "draft");
+            return y;
+        }
+
         private static object EncodeCup(CupSaveData t)
         {
             t = t ?? new CupSaveData();
@@ -357,6 +416,7 @@ namespace CallerRetroBall.Logic
                     passingScore = Int(pr, "passingScore", 0), dribbleLaneTime = (float)Num(pr, "dribbleLaneTime", 0),
                     threePointBest = Math.Max(0, Int(pr, "threePointBest", 0)), lockdownBest = Math.Max(0, Int(pr, "lockdownBest", 0)),
                     shootoutWins = Math.Max(0, Int(pr, "shootoutWins", 0)),
+                    aroundWorldTime = Math.Max(0f, (float)Num(pr, "aroundWorld", 0)), horseWins = Math.Max(0, Int(pr, "horseWins", 0)),
                 };
                 var st = Obj(o, "settings");
                 d.settings = new SettingsData
@@ -377,6 +437,7 @@ namespace CallerRetroBall.Logic
                 d.rise = DecodeRise(Obj(o, "rise"));
                 d.classic = DecodeClassic(Obj(o, "classic"));
                 d.cup = DecodeCup(Obj(o, "cup"));
+                d.dynasty = DecodeDynasty(Obj(o, "dynasty"));
                 var dy = Obj(o, "daily");
                 d.daily = new DailySaveData
                 {

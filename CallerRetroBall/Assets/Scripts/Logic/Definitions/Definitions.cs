@@ -204,6 +204,11 @@ namespace CallerRetroBall.Logic
         public bool checkBallAfterScore = true;
         /// <summary>Tie at the horn → next basket wins.</summary>
         public bool suddenDeathOnTie = true;
+        /// <summary>"21": go over the target and you drop back to <see cref="bustScore"/>.</summary>
+        public bool bustRule;
+        public int bustScore = 13;
+        /// <summary>Make it, take it: the scorer keeps the ball.</summary>
+        public bool makeItTakeIt;
 
         public string Id => id;
     }

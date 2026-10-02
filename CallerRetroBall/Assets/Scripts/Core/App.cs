@@ -112,6 +112,8 @@ namespace CallerRetroBall.Core
         public static void ResetCareer()
         {
             SaveStore.Delete();
+            // Dynasty mode changes ratings and rosters in memory: start from clean content.
+            Content = ContentDatabase.Load();
             Career = Logic.Career.New(Catalog);
             CustomTeams.Apply(Catalog, Career.customTeam);
             SaveCareer();
@@ -165,6 +167,7 @@ namespace CallerRetroBall.Core
 #endif
 
             Career = SaveStore.Load(Content.Catalog, out var status);
+            DynastyEngine.Apply(Content.Catalog, Career.dynasty);
             CustomTeams.Apply(Content.Catalog, Career.customTeam);
             CareerLoadStatus = status;
             AudioManager.EnsureExists();

@@ -20,6 +20,8 @@ namespace CallerRetroBall.Gameplay
         public event Action<PlayCall> PlayChosen;
         public event Action ReplayRequested;
         public event Action PlayOfTheGameRequested;
+        /// <summary>Make a GIF of the play of the game and share / save it.</summary>
+        public event Action ShareRequested;
 
         private TextMeshProUGUI _teamA, _teamB, _scoreA, _scoreB, _clock, _shotClock, _toast;
         private GameObject _pausePanel;
@@ -278,7 +280,11 @@ namespace CallerRetroBall.Gameplay
                 UiKit.Size(UiKit.Label(_finalColumn, note, 36f, Theme.Gold, TextAlignmentOptions.Center, true), 110f);
 
             if (PlayOfTheGameRequested != null && HasPlayOfTheGame)
+            {
                 UiKit.Button(_finalColumn, "PLAY OF THE GAME", () => PlayOfTheGameRequested?.Invoke(), ButtonStyle.Secondary, 110f, 40f);
+                if (ShareRequested != null)
+                    UiKit.Button(_finalColumn, "SHARE HIGHLIGHT", () => ShareRequested?.Invoke(), ButtonStyle.Ghost, 100f, 36f);
+            }
             if (continueLabel != null)
                 UiKit.Button(_finalColumn, continueLabel, () => ContinueRequested?.Invoke(), ButtonStyle.Primary, 140f);
             if (allowRematch)

@@ -435,6 +435,15 @@ namespace CallerRetroBall.Logic
             });
             c.Rules.Add(new GameRulesDef
             {
+                id = "rules.21",
+                targetScore = 21,
+                useGameClock = false,
+                bustRule = true,
+                bustScore = 13,
+                makeItTakeIt = true,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
                 id = "rules.oneonone",
                 targetScore = 11,
                 useGameClock = true,
