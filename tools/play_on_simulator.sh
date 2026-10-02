@@ -24,8 +24,11 @@ if [[ ! -x "$UNITY" ]]; then note "STOPPED: Unity $VERSION (the project's versio
 if [[ ! -d "/Applications/Unity/Hub/Editor/$VERSION/PlaybackEngines/iOSSupport" ]]; then
   note "STOPPED: Unity $VERSION has no iOS Build Support. Unity Hub > Installs > $VERSION > gear > Add modules > iOS Build Support."; exit 1
 fi
-if pgrep -f "Unity.app/Contents/MacOS/Unity" | xargs -I{} ps -o args= -p {} 2>/dev/null | grep -v -- "-batchmode" | grep -q "Unity.app/Contents/MacOS/Unity"; then
-  note "STOPPED: the Unity Editor is still open. Quit it (Cmd+Q) — Unity Hub can stay open — and run this again."; exit 1
+# Only stop if an Editor really has THIS project open (Unity Hub, other projects and helpers are fine).
+OPEN="$(ps -axo pid=,args= | grep "Unity.app/Contents/MacOS/Unity " | grep -v -- "-batchmode" | grep -i -- "-projectpath $PROJECT" | grep -v grep)"
+if [[ -n "$OPEN" ]]; then
+  note "STOPPED: Unity has this project open. Quit the Unity Editor (Cmd+Q) and run this again.
+$OPEN"; exit 1
 fi
 if ! xcode-select -p >/dev/null 2>&1; then note "STOPPED: Xcode command line tools not set up. Run: sudo xcode-select -s /Applications/Xcode.app"; exit 1; fi
 
@@ -33,8 +36,10 @@ echo "1/3  Unity: writing the Xcode project (a few minutes)..."
 "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
   -executeMethod CallerRetroBall.EditorTools.ReleaseTools.BuildSimulator -logFile "$LOGS/unity_build_simulator.log"
 XCPROJ="$PROJECT/iOSBuild/Simulator/Unity-iPhone.xcodeproj"
-if grep -q "another Unity instance is running" "$LOGS/unity_build_simulator.log" 2>/dev/null; then
-  note "STOPPED: Unity has this project open. Quit Unity (Cmd+Q) and run this again."
+if grep -qi "another Unity instance is running\|multiple Unity instances" "$LOGS/unity_build_simulator.log" 2>/dev/null; then
+  note "STOPPED: Unity says the project is open in another Unity window. Quit the Unity Editor (Cmd+Q) and run this again.
+Unity processes:
+$(ps -axo pid=,args= | grep 'Unity.app/Contents/MacOS/Unity' | grep -v grep | cut -c1-200)"
   exit 1
 fi
 if [[ ! -d "$XCPROJ" ]]; then
