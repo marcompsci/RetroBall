@@ -1,4 +1,4 @@
-# Caller Retro Ball — Design (living document; completed in Phase 7)
+# Caller Retro Ball — Design
 
 ## Vision
 A 90-second-to-fun, one-more-game retro arcade 3v3 half-court basketball game for iPhone.
@@ -44,9 +44,29 @@ Quick Cutter, Playmaker, Shot Creator, Hustle Guard, Stretch Forward. Each has a
 strengths and weaknesses, a description, and AI tendencies (shoot, drive, pass, cut, screen, crash boards,
 help defense, gamble for steals, preferred range). See `Assets/Scripts/Logic/Content/Archetypes.cs`.
 
+## Controls and feel
+- One human player (slot 0) at all times. Offense: SHOOT (hold/release meter), PASS (or ASK when a teammate has it), CALL. Defense: STEAL, JUMP, SWITCH on the same three buttons.
+- Presses are buffered for 0.15 s so a tap just before catching the ball still counts.
+- Shot meter grades: GREEN, CLEAN LOOK, CONTESTED, TOO EARLY, TOO LATE. Green widens with Shooting and is the best outcome but never guaranteed.
+- Feedback: toasts (SWISH, STEAL!, BLOCKED!, BOARD!), procedural SFX, light/medium/success haptics, a small camera shake on blocks (Settings can turn shake and haptics off).
+
+## Defense, rebounding, plays (`DefenseTuning`)
+- **Steal:** must be within 1.3 m of the handler; chance from Defense vs. the handler's Playmaking; 1 s cooldown; a miss leaves you stunned for 0.5 s.
+- **Jump / block:** a jumping defender contests as if 45 % closer. Blocks need range and timing; chance grows with Defense and height and is capped at 60 %.
+- **Switch:** take the ball handler; your old matchup goes to the nearest teammate.
+- **Box-out:** standing between your man and the rim near a miss gives a rebound bonus; rebounders are weighted by Rebounding, distance, box-out, and a little luck.
+- **Stamina:** drains with sprinting, recovers when idle, and slows a tired player slightly. Rise energy sets starting stamina (never below 60 %).
+- **Plays:** Pick & Roll (screener plants, then rolls once the handler uses it), Give & Go (pass, cut, return pass), Clear Out (teammates widen to the corners). The AI calls pick-and-rolls too.
+
+## Progression
+- **Rewards:** win 120 / loss 50 SP plus stats (2/pt, 3/ast, 2/reb, 4/stl-or-blk), capped at 400 per game; playoff and title bonuses. Fans from wins, greens, and blowouts. Quick Call pays half; Practice pays nothing.
+- **Upgrades:** eight attribute upgrades, cost = base × growth^level, one game of "training time" between purchases, each capped (never above 99).
+- **Cosmetics:** jersey palettes, shoes, court banners (visible in games), celebrations and dribble moves (collectible tags). Some need a fan count.
+- **Rise Mode:** Circuit (3 crews in order) → 8-team league, 10-game schedule, other games simulated from team strength (seeded) → top 4 → semis → final. Event cards appear after about every other league game and trade energy, chemistry, SP, and fans. Chemistry adds up to +10 % to teammates' release accuracy.
+
 ## Data model
 Static definitions live in `Logic` as `*Def` classes and are wrapped by `*Data` ScriptableObjects.
-Runtime state is kept separate: `CareerSaveData`, `SeasonSaveData`, `MatchStats`, `PlayerRuntimeState`, and `TeamRuntimeState` arrive in Phases 3–5.
+Runtime state is kept separate: `MatchSimulation` / `PlayerRuntimeState` / `MatchStats` for a game, `MatchSummary` after it, and `CareerSaveData` (settings, wallet, upgrades, cosmetics, totals, practice bests, `RiseSaveData` with `SeasonSaveData`) on disk. The save is versioned (`version = 1`); unknown fields are ignored and missing ones get defaults.
 
 ## Fairness
 Difficulty changes only reaction time, decision quality, shot selection threshold, release accuracy, and error rate.

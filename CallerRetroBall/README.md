@@ -2,117 +2,129 @@
 
 *Call your shot. Build your legacy.*
 
-An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls and a skill-based shot meter, and has a light season and progression loop. All teams, players, courts, logos, and art are original to this project.
+An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phase 3 of 7.** Menus, league content, and playable 3v3 games: shoot with a timing meter, pass and call for the ball, score, beat the game and shot clocks, and play against AI at three difficulty levels. Steals, blocks, box-outs, and the post-game screen with rewards arrive in Phase 4. See [`docs/PLAN.md`](docs/PLAN.md).
+> **Status: all seven phases implemented; not yet compiled in the Unity Editor.** The engine-free game logic (rules, AI, shot and pass models, defense, progression, save, season, Rise Mode, drills, audio synthesis) compiles on .NET and passes 192 automated tests. The Unity-side scripts pass a syntax check and a name-resolution check, but nobody has opened the project in Unity, built it for iOS, or played it on a device yet. Expect a few compile fixes on first open. See [Known limitations](#known-limitations).
 
 ## Requirements
 
 | | |
 |---|---|
 | Unity | **Unity 6 LTS** (6000.0 or newer 6.x LTS) with the **iOS Build Support** module |
-| Packages | Declared in `Packages/manifest.json`: URP 17, Input System 1.11, uGUI 2.0 (includes TextMeshPro), Test Framework 1.4, 2D Sprite. Unity may upgrade these to the versions that match your editor. |
-| iOS builds | macOS + Xcode (current release) + an Apple Developer account for device builds |
-
-Cinemachine is not used. A small custom camera fits a single-hoop half court better.
+| Packages | Declared in `Packages/manifest.json`: URP 17, Input System 1.11, uGUI 2.0 (includes TextMeshPro), Test Framework 1.4, 2D Sprite. Unity may upgrade these to match your editor. |
+| iOS builds | macOS, current Xcode, and an Apple Developer account for device builds |
 
 ## First-time setup
 
-1. In **Unity Hub**, choose **Add ▸ Add project from disk** and select this `CallerRetroBall` folder. Open it with Unity 6 LTS.
-2. If the Input System asks whether to enable the new input backend, choose **Yes**. The editor will restart.
-3. On first open, the editor runs **Caller Retro Ball ▸ Run Project Setup** by itself. You can also run it from the menu at any time. It:
-   - creates the six scenes in `Assets/Scenes` and adds them to Build Settings, with Boot first;
-   - imports the TextMeshPro Essential Resources;
+1. In **Unity Hub**, choose **Add ▸ Add project from disk**, select this `CallerRetroBall` folder, and open it with Unity 6 LTS.
+2. If the Input System asks to enable the new input backend, choose **Yes**. The editor restarts.
+3. On first open the editor runs **Caller Retro Ball ▸ Run Project Setup** automatically (you can rerun it from the menu). It:
+   - creates the six scenes in `Assets/Scenes` and adds them to Build Settings, Boot first;
+   - imports TextMeshPro Essential Resources;
    - applies portrait-only, iOS 15+ Player Settings;
-   - writes the default league content to editable ScriptableObjects in `Assets/Resources/Data/…`;
+   - writes default league content to editable ScriptableObjects in `Assets/Resources/Data/…`;
    - validates the content and logs a report.
-4. **URP 2D (manual, about 1 minute):** go to **Assets ▸ Create ▸ Rendering ▸ URP Asset (with 2D Renderer)** and save it to `Assets/Settings`. Then assign it in **Project Settings ▸ Graphics** and **Project Settings ▸ Quality**. The game also runs without this step; URP is needed for later lighting and effects.
+4. **URP 2D (manual, about a minute):** **Assets ▸ Create ▸ Rendering ▸ URP Asset (with 2D Renderer)**, save it to `Assets/Settings`, then assign it in **Project Settings ▸ Graphics** and **▸ Quality**. The game also runs on the built-in pipeline.
 5. Open `Assets/Scenes/BootScene.unity` and press **Play**. For a phone-shaped preview, set the Game view to an iPhone portrait resolution such as 1179×2556.
 
-### Menu commands
+**Menu commands** (Caller Retro Ball menu): Run Project Setup (safe to rerun), Rebuild Scenes (overwrite), Regenerate Content Assets (overwrite), Validate Content.
 
-- **Run Project Setup:** safe to run again. It never overwrites existing scenes or content.
-- **Rebuild Scenes (overwrite):** regenerates the six scenes.
-- **Regenerate Content Assets (overwrite):** resets every content asset to the built-in defaults.
-- **Validate Content:** checks for duplicate IDs, out-of-range ratings, broken references, unfair difficulty settings, and colour clashes.
+## Modes
 
-## Running tests
+- **Quick Call (PLAY):** pick one of your two unlocked teams, cycle the opponent, choose difficulty, tip off. Pays half rewards.
+- **Rise Mode:** play as the First Callers. Beat three street crews in The Blacktop Circuit, join The Caller League for a 10-game season (event cards between games, energy and chemistry), then a four-team bracket for The Gold Signal Cup. Next season starts from the hub.
+- **Practice Lab:** Free Shoot (60 s), Passing Targets (45 s), Dribble Lane (5 cones, timed). Personal bests are saved. No rewards.
+- **Locker Room:** nickname, trained ratings, upgrades (Signal Points + a game played between purchases), cosmetics shop and equip, career stats and practice bests.
+- **Settings:** music and SFX volume, haptics, screen shake, UI scale, colourblind team patterns, difficulty, reset save (with confirmation), credits and licences.
 
-**In Unity:** open **Window ▸ General ▸ Test Runner**.
-- **EditMode** covers the logic tests (content, validator, scoring, colours, pixel art, determinism) plus project-structure checks.
-- **PlayMode** covers the boot flow and scene-transition guard.
-
-**Without Unity (logic only):** the engine-free logic and its tests also compile and run on .NET 8:
-
-```bash
-cd tools/LogicTests
-dotnet run --project Runner/Runner.csproj
-```
-
-This builds `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9, the same API level Unity uses, with warnings treated as errors. It then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim.
-
-`tools/SyntaxCheck` parses every C# file under `Assets/` and reports syntax errors. It doesn't resolve Unity APIs, so it is not a substitute for compiling in Unity.
-
-## Controls (Phase 3)
+## Controls
 
 | Action | Touch | Keyboard / gamepad (Editor, controllers) |
 |---|---|---|
-| Move | Floating thumbstick: touch anywhere in the lower-left area | WASD / arrow keys / left stick |
-| Shoot: hold to fill the meter, release in the green | SHOOT button | K (hold) / gamepad A |
-| Pass (aim with the stick), or ASK for the ball when a teammate has it | PASS / ASK button | J / gamepad X |
-| Defense (steal / contest) | DEF button | L |
-| Call a play | CALL button | — |
-| Pause | II button (top-left) | Esc |
-| Debug: knock the ball loose | — | B (Editor and development builds only) |
+| Move | Floating thumbstick anywhere in the lower-left area | WASD / arrows / left stick |
+| Shoot: hold to fill the meter, release in the green | SHOOT | K (hold) / A |
+| Pass (aim with the stick); ASK when a teammate has the ball | PASS / ASK | J / X |
+| Call a play: Pick & Roll, Give & Go, Clear Out | CALL (offense, your team has the ball) | C / Y |
+| Steal | STEAL (on defense) | L / B |
+| Jump to contest or block | JUMP (the SHOOT button on defense) | K / A |
+| Switch onto the ball handler | SWITCH (the PASS button on defense) | J / X |
+| Pause | II (top-left) | Esc |
+| Debug: knock the ball loose | — | B key (Editor and development builds only) |
 
-You always control your own player. After a steal or defensive rebound, SHOOT reads CLEAR until you take the ball back beyond the arc. DEF and CALL are dimmed until Phase 4 and flash "SOON" when pressed. Leaving the app, or switching away from it, pauses the match.
+After a steal or defensive rebound, SHOOT reads CLEAR until you take the ball back beyond the arc. Leaving or switching away from the app pauses the match.
 
-## iOS build (outline; fully documented in Phase 7)
+## Running tests
 
-1. Go to **File ▸ Build Profiles** (or **Build Settings**) ▸ **iOS** ▸ **Switch Platform**.
-2. In **Player Settings**, replace the placeholder bundle ID `com.callerretroball.game` with your own, and set your Team ID.
-3. Build to a folder such as `iOSBuild/`, open the `.xcodeproj` in Xcode, sign it, and run it on a device.
+**In Unity:** **Window ▸ General ▸ Test Runner**.
+- **EditMode:** all logic tests plus project-structure checks.
+- **PlayMode:** boot flow, scene transitions, match start-up, every menu scene building without errors, and a practice drill start.
+
+**Without Unity (logic only):**
+
+```bash
+cd ../tools/LogicTests
+dotnet run --project Runner/Runner.csproj
+```
+
+This compiles `Assets/Scripts/Logic` as .NET Standard 2.1 / C# 9 (Unity's API level) with warnings as errors, then runs every test in `Assets/Tests/EditMode/Logic` through a small NUnit-compatible shim. Current result: **192 passed, 0 failed**.
+
+`tools/SyntaxCheck` parses every C# file under `Assets/`. It does not resolve Unity APIs, so it is not a substitute for compiling in Unity.
+
+## iOS build
+
+1. **File ▸ Build Profiles ▸ iOS ▸ Switch Platform.**
+2. **Player Settings:** replace the placeholder bundle ID `com.callerretroball.game` with your own, set your Team ID, and check Version (`1.0.0`) and Build number. Orientation is portrait only; minimum iOS is 15.
+3. **Build** into a folder such as `iOSBuild/`. Open `Unity-iPhone.xcodeproj` in Xcode.
+4. In Xcode, select the **Unity-iPhone** target ▸ **Signing & Capabilities**, choose your team, and let Xcode manage signing.
+5. **Simulator:** in Player Settings set **Target SDK ▸ Simulator SDK** before building, then pick an iPhone simulator in Xcode and Run. **Device:** use Device SDK, plug in the phone, and Run.
+6. The haptics plugin (`Assets/Plugins/iOS/CallerHaptics.mm`) is compiled by Xcode automatically. It only uses UIKit feedback generators.
+7. Before submitting: add your own app icon and launch screen, fill in App Store Connect privacy answers (the game collects no data), and test on a real device. None of this has been done yet.
 
 ## Project architecture
 
 ```
 Assets/Scripts/
-  Logic/        Engine-free C# (noEngineReferences): content definitions, default league
-                content, validator, scoring rules, deterministic RNG, procedural pixel art.
-                Unit-tested inside and outside Unity.
-  Data/         ScriptableObject wrappers around Logic definitions + ContentDatabase loader
-                (falls back to built-in defaults if assets are missing).
-  Core/         App service hub, SceneFlow (guarded fade transitions), BootController.
-  UI/           Code-built uGUI/TextMeshPro kit, safe-area fitter, theme, menu screens.
-  Gameplay/     Match controller, views (players, ball, court), camera rig, HUD + pause.
-  Input/        Touch controls: floating joystick and hold/release action buttons.
-  AI/ Progression/ Save/ Audio/   Filled in Phases 3–6.
-  Editor/       ProjectSetup: scenes, build settings, player settings, content assets.
-Assets/Tests/EditMode/Logic   Engine-free tests (also run by tools/LogicTests)
-Assets/Tests/EditMode/Unity   Editor-only checks
-Assets/Tests/PlayMode         Boot, scene-flow, and match start-up tests
+  Logic/         Engine-free C# (noEngineReferences), unit-tested inside and outside Unity:
+    Definitions/ Content/     data model, default league content, validator
+    Rules/ Math/ Court/       scoring, deterministic RNG, geometry
+    Match/                    MatchSimulation (partial: core, defense & plays), AiBrain, shot/pass models, stats
+    Progression/              rewards, career, season & playoffs, Rise Mode, practice drills
+    Save/                     MiniJson + versioned SaveCodec
+    PixelArt/ Audio/          procedural sprites, logos, courts, sounds, music
+  Data/          ScriptableObject wrappers + ContentDatabase (falls back to built-in defaults)
+  Core/          App hub, SceneFlow, SaveStore (atomic writes + backups), Haptics, Game Center interface
+  UI/            Code-built uGUI/TMP kit, controls, menu screens (main, Rise hub, Locker Room, Settings)
+  Gameplay/      Match controller, views, camera rig, HUD, post-game
+  Input/         Floating joystick and hold/release action buttons
+  Audio/         AudioManager (pooled voices, synthesised clips)
+  Editor/        ProjectSetup
+Assets/Plugins/iOS/   CallerHaptics.mm
+Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 ```
 
 **Key decisions**
 
-- **Logic is split from the engine.** Rules and content live in a separate assembly with no Unity dependency, so they stay deterministic and can be tested anywhere. Gameplay randomness uses `SeededRandom`, never `UnityEngine.Random`.
-- **Every screen's UI is built in code** from `UiKit`. That gives one consistent look and no fragile prefabs.
-- **No hidden AI boosts.** Difficulty changes only reaction time, decision quality, and error rate. The validator rejects any AI movement multiplier above 1.0.
-- **Treat content definitions as read-only at runtime.** In the Editor they are live ScriptableObject data, so changing one would change the asset.
+- **Logic is separate from the engine.** Rules, AI, and progression are deterministic, seeded, and testable anywhere. Gameplay never uses `UnityEngine.Random`.
+- **All UI is built in code** from `UiKit`, so there are no fragile prefabs and one consistent look.
+- **No hidden AI boosts.** Difficulty changes only reaction time, decision quality, shot selection, release accuracy, and error rate. The validator rejects anything else.
+- **Rewards are applied once.** Every match has an id; `Career.ApplyMatch` ignores ids it has already seen, so a rematch, scene reload, or double tap can't grant twice.
+- **Save is local and forgiving.** Versioned JSON in `persistentDataPath/career.json`, written via temp file + move. A corrupt file is backed up and replaced with a fresh career, and the player is told.
+- **Game Center** sits behind `IGameCenterService`. Only a no-op implementation ships.
 
-## Known limitations (Phase 3)
+## Known limitations
 
-- You can't steal, contest, block, or box out yet (Phase 4); AI defenders still contest shots by position.
-- The final card shows only the score; the box score, player of the game, and rewards screen arrive in Phase 4.
-- CALL (play calling) arrives in Phase 4.
-- Settings, save data, Locker Room editing, and Rise Mode progression are still placeholders.
-- The URP asset has to be assigned by hand (setup step 4).
-- The Unity-side scripts were syntax-checked but haven't yet been compiled inside the Unity Editor. Please report any compile errors from your first open.
+- **Not compiled in Unity yet.** The Unity layer has passed a syntax check and a name-resolution check only. No Editor run, iOS build, simulator run, or device test has happened.
+- Not tuned by hand: balance numbers come from AI-vs-AI simulations (AI field-goal rate about 29 % Rookie, 38 % Caller, 56 % Legend), not from people playing.
+- Celebrations and dribble moves are collectible tags with no animation yet.
+- The URP asset must be assigned by hand (setup step 4).
+- No app icon, launch screen art, or localisation.
+- No Game Center implementation (interface only), by design for the offline MVP.
 
 ## Asset and licence disclosure
 
-- **Art:** every sprite, logo, and backdrop is generated procedurally at runtime from code in `Assets/Scripts/Logic/PixelArt`. No external images are used.
-- **Font:** Liberation Sans, the TextMeshPro default font. It ships with Unity's TextMeshPro and uses the SIL Open Font License 1.1.
-- **Audio:** none yet. Any placeholder tones added later will be generated in-project.
-- **Names and branding:** all league, team, player, court, and event names are fictional and original. There are no real leagues, teams, players, brands, or likenesses.
-- **Privacy:** no ads, analytics, tracking, accounts, network access, or in-app purchases.
+- **Art:** every sprite, logo, court, and backdrop is generated procedurally from code in `Assets/Scripts/Logic/PixelArt`. No external images.
+- **Audio:** every sound effect and the music loop are synthesised at runtime by `AudioSynth`. No recordings or samples.
+- **Font:** Liberation Sans, TextMeshPro's default font, SIL Open Font License 1.1.
+- **Code:** all original. The iOS haptics plugin is original and uses only Apple's public UIKit APIs.
+- **Names:** every league, team, player, court, and event name is fictional and original. No real leagues, teams, players, brands, arenas, or likenesses.
+- **Privacy:** no ads, analytics, tracking, accounts, network access, or in-app purchases. Progress stays on the device.

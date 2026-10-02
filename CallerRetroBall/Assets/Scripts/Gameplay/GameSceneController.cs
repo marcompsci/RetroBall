@@ -46,6 +46,7 @@ namespace CallerRetroBall.Gameplay
         private SpriteRenderer _targetArrow;
         private PlayCall _pendingCall;
         private bool _resultApplied;
+        private float _nextInfoAt;
 
         public MatchSimulation Match => _match;
         public bool IsPaused => _paused;
@@ -353,7 +354,12 @@ namespace CallerRetroBall.Gameplay
 
             _cameraRig.Follow(_match.Controlled.Position, Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
             _hud.Sync(_match);
-            _hud.SetInfo(InfoLine());
+            // The info line builds a string, so refresh it ~10x a second rather than every frame.
+            if (Time.unscaledTime >= _nextInfoAt)
+            {
+                _nextInfoAt = Time.unscaledTime + 0.1f;
+                _hud.SetInfo(InfoLine());
+            }
             SyncPracticeMarkers();
             UpdateControlLabels();
         }

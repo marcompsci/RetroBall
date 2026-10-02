@@ -5,10 +5,10 @@
 | 1 | Audit, architecture, data model, default content, validator, scene skeleton, boot flow, menu shell | **Done** (logic tests pass in .NET; Unity compile pending first open) |
 | 2 | Court rendering, player sprites, movement, ball possession, camera, joystick + action buttons | **Done** (99 logic tests pass in .NET; Unity compile pending first open) |
 | 3 | Passing, shot meter + shot model, scoring, game/shot clocks, possession, basic AI | **Done** (133 logic tests pass in .NET, incl. full AI-vs-AI games at every difficulty; Unity compile pending first open) |
-| 4 | Defense (steal/contest/block), rebounds + box-out, match state machine, post-game stats & rewards | Next |
-| 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | |
-| 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | |
-| 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | |
+| 4 | Defense (steal/contest/block), rebounds + box-out, match state machine, post-game stats & rewards | **Done** (logic tested; Unity compile pending) |
+| 5 | Quick Call team select, Practice Lab drills, Rise Mode season/standings/bracket, versioned save | **Done** (logic tested; Unity compile pending) |
+| 6 | Locker Room, upgrades, cosmetics, Settings (audio, haptics, shake, UI scale, colourblind, difficulty, reset), audio hooks | **Done** (logic tested; Unity compile pending) |
+| 7 | Test pass, performance cleanup, full README/DESIGN, manual QA checklist, final report | **Done** (192 logic tests pass; QA checklist written but not yet run) |
 
 ## Phase 1 — what exists
 
@@ -77,6 +77,29 @@
 - **Practice Lab:** opponents are passive, no shot clock, you keep the ball after scoring.
 - Balance snapshot (20 AI-vs-AI games per level, AI team only): FG% Rookie 33 / Caller 38 /
   Legend 51; 0 shot-clock violations by the AI.
+
+## Phases 4–6 — what exists
+
+- **Defense & plays** (`DefenseAndPlays.cs`, `DefenseTuning`): matchups, steal with cooldown and stun on a miss,
+  jump to contest and block, switch onto the handler, box-outs and weighted rebounding, stamina, and
+  three play calls (Pick & Roll, Give & Go, Clear Out). AI defenders jump at shooters and gamble for steals
+  by archetype; AI offenses run pick-and-rolls.
+- **Progression** (`Progression/`): `MatchSummary`, `Rewards`, `Career` (apply once per match id, upgrades,
+  cosmetics, practice bests), `SeasonEngine` (8 teams, 10 games, tie-breakers, playoffs), `RiseEngine`
+  (circuit, season, playoffs, energy, chemistry, six event cards), `PracticeSession` (three drills).
+- **Save** (`Save/`, `Core/SaveStore`): MiniJson + versioned `SaveCodec`; atomic writes; corrupt files backed up.
+- **Audio** (`AudioSynth`, `AudioManager`): 12 synthesised SFX and a 32-beat chiptune loop.
+- **Unity:** defense buttons, CALL menu, jump lift and BOX OUT line, post-game box score with player of the game
+  and rewards, Rise hub (stage, objective, energy, chemistry, next game, standings, bracket, event modal),
+  Quick Call and Practice pickers, Locker Room tabs, full Settings, iOS haptics plugin, colourblind jersey
+  patterns, cosmetic jersey/shoe/banner colours in games.
+
+## Phase 7 — what was done
+
+- Removed empty folders; throttled the per-frame HUD info string; added PlayMode tests that every menu
+  scene and a practice drill build without errors.
+- Rewrote README (setup, controls, iOS build, architecture, limitations, asset disclosure) and completed DESIGN.
+- Added `docs/QA_CHECKLIST.md` for a manual pass on device.
 
 ## Deviations from the brief (deliberate)
 
