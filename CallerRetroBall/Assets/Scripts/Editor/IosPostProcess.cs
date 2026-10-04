@@ -42,7 +42,7 @@ namespace CallerRetroBall.EditorTools
             if (!hasScheme)
             {
                 var type = urlTypes.AddDict();
-                type.SetString("CFBundleURLName", "com.marcompsci.retroball.kit");
+                type.SetString("CFBundleURLName", "com.phoronomicstudios.retroball.kit");
                 type.CreateArray("CFBundleURLSchemes").AddString("retroball");
             }
             if (root["GCSupportedGameControllers"] == null)

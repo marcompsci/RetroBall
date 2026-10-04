@@ -13,7 +13,7 @@ App Store Connect ▸ **Apps ▸ ＋ ▸ New App**:
 | Platform | iOS |
 | Name | RetroBall. If Apple says the name is taken, try **RetroBall: Street Hoops** or **RetroBall Arcade** (30 characters max). |
 | Primary language | English (U.S.) |
-| Bundle ID | `com.marcompsci.retroball`. It's in the list because Xcode registered it when you ran the game on your iPhone. |
+| Bundle ID | `com.phoronomicstudios.retroball`. Register it first at developer.apple.com ▸ Certificates, Identifiers & Profiles ▸ Identifiers ▸ ＋ ▸ App IDs ▸ App (Explicit; tick Game Center and iCloud). The old `com.marcompsci.retroball` belongs to the free personal team and doesn't appear in the list. |
 | SKU | `retroball-ios-1` |
 | User access | Full access |
 

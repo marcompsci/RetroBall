@@ -46,6 +46,7 @@ namespace CallerRetroBall.EditorTools
         public static void BuildDevice()
         {
             ApplyTeamFromCommandLine();
+            EnsureBundleId();
             Build(iOSSdkVersion.DeviceSDK, DeviceOutput);
         }
 
@@ -58,11 +59,12 @@ namespace CallerRetroBall.EditorTools
         public static void BuildAppStore()
         {
             ApplyTeamFromCommandLine();
+            EnsureBundleId();
             int build = int.TryParse(PlayerSettings.iOS.buildNumber, out int b) && b >= 1 ? b + 1 : 1;
             PlayerSettings.iOS.buildNumber = build.ToString();
             EditorUserBuildSettings.iOSXcodeBuildConfig = XcodeBuildConfig.Release;
             AssetDatabase.SaveAssets();
-            WriteReport("APP STORE BUILD: version " + ReleaseVersion + " build " + build +
+            WriteReport("APP STORE BUILD: " + PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS) + " version " + ReleaseVersion + " build " + build +
                         (string.IsNullOrEmpty(PlayerSettings.iOS.appleDeveloperTeamID) ? "" : ", team " + PlayerSettings.iOS.appleDeveloperTeamID));
             Build(iOSSdkVersion.DeviceSDK, AppStoreOutput);
         }
@@ -220,12 +222,23 @@ namespace CallerRetroBall.EditorTools
 
         // ------------------------------------------------------------------ player settings
 
-        /// <summary>Used when the project still has Unity's template bundle ID. Must be unique in your Apple account.</summary>
-        public const string DefaultBundleId = "com.marcompsci.retroball";
+        /// <summary>
+        /// The App Store bundle ID, registered to the paid Phoronomic Studios team. (The first one,
+        /// com.marcompsci.retroball, belongs to the free personal team, so App Store Connect can't use it.)
+        /// </summary>
+        public const string DefaultBundleId = "com.phoronomicstudios.retroball";
+        public const string OldPersonalBundleId = "com.marcompsci.retroball";
 
         public static bool IsPlaceholderId(string id) =>
-            string.IsNullOrEmpty(id) || id == "com.retroball.game" || id.StartsWith("com.Unity", StringComparison.Ordinal)
+            string.IsNullOrEmpty(id) || id == "com.retroball.game" || id == OldPersonalBundleId || id.StartsWith("com.Unity", StringComparison.Ordinal)
             || id.StartsWith("com.DefaultCompany", StringComparison.Ordinal);
+
+        /// <summary>Moves the project off a placeholder (or the old personal-team) bundle ID.</summary>
+        private static void EnsureBundleId()
+        {
+            if (IsPlaceholderId(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS)))
+                PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, DefaultBundleId);
+        }
 
         public static string ApplyReleaseSettings()
         {

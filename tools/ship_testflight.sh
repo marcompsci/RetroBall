@@ -5,7 +5,7 @@
 #   bash ~/RetroBall-push/tools/ship_testflight.sh --export-only   # build + archive + .ipa, no upload
 #   TEAM=ABCDE12345 bash ~/RetroBall-push/tools/ship_testflight.sh # pick the Apple team explicitly
 #
-# Before the first upload: create the app in App Store Connect with bundle ID com.marcompsci.retroball
+# Before the first upload: create the app in App Store Connect with bundle ID com.phoronomicstudios.retroball
 # (docs/SUBMISSION.md, step 1). Quit the Unity Editor first. Xcode must be signed in to your paid
 # Apple Developer account (Xcode ▸ Settings ▸ Accounts). Logs go to <project>/Logs/.
 set -uo pipefail
@@ -33,19 +33,21 @@ OPEN="$(ps -axo pid=,args= | grep "Unity.app/Contents/MacOS/Unity " | grep -v --
 if [[ -n "$OPEN" ]]; then note "STOPPED: Unity has this project open. Quit the Unity Editor (Cmd+Q) and run this again."; exit 1; fi
 if ! command -v xcodebuild >/dev/null; then note "STOPPED: xcodebuild not found. Install Xcode, open it once, and accept the licence."; exit 1; fi
 
-# Team: $TEAM, else Unity's Signing Team ID, else the team you last picked in Xcode for the device build.
+# Team: $TEAM, else tools/apple_team.txt, else Unity's Signing Team ID. It must be the PAID team
+# (the one that owns com.phoronomicstudios.*), not the free personal team used for early device tests.
+TEAMFILE="$(cd "$(dirname "$0")" && pwd)/apple_team.txt"
+if [[ -z "${TEAM:-}" && -f "$TEAMFILE" ]]; then TEAM="$(tr -d '[:space:]' < "$TEAMFILE")"; fi
 if [[ -z "${TEAM:-}" ]]; then
   TEAM="$(sed -n 's/^  appleDeveloperTeamID: *//p' "$PROJECT/ProjectSettings/ProjectSettings.asset" | tr -d '[:space:]')"
 fi
-if [[ -z "$TEAM" ]]; then
-  for p in "$PROJECT/iOSBuild/AppStore" "$PROJECT/iOSBuild/Device"; do
-    t="$(grep -o 'DEVELOPMENT_TEAM = [A-Z0-9]\{10\};' "$p/Unity-iPhone.xcodeproj/project.pbxproj" 2>/dev/null | head -1 | grep -o '[A-Z0-9]\{10\}')"
-    if [[ -n "$t" ]]; then TEAM="$t"; break; fi
-  done
+if [[ ! "${TEAM:-}" =~ ^[A-Z0-9]{10}$ ]]; then
+  note "STOPPED: no Apple Team ID for the paid team. Find it at developer.apple.com ▸ Account ▸ Membership details
+(10 letters/digits; also shown as the App ID Prefix on the com.phoronomicstudios identifiers), then either put it in
+~/RetroBall-push/tools/apple_team.txt or run:  TEAM=YOURTEAMID bash ~/RetroBall-push/tools/ship_testflight.sh"
+  exit 1
 fi
-if [[ ! "$TEAM" =~ ^[A-Z0-9]{10}$ ]]; then
-  note "STOPPED: no Apple Team ID. Find it at developer.apple.com ▸ Account ▸ Membership details (10 letters/digits), then run:
-  TEAM=YOURTEAMID bash ~/RetroBall-push/tools/ship_testflight.sh"
+if [[ "$TEAM" == "X6LZQ3FS36" ]]; then
+  note "STOPPED: X6LZQ3FS36 is the free personal team (it owns com.marcompsci.retroball). Use the paid team's ID instead (see above)."
   exit 1
 fi
 echo "Team: $TEAM"
@@ -100,7 +102,7 @@ STATUS=$?
 if [[ $STATUS -ne 0 ]]; then
   HINT=""
   if grep -qiE "no suitable application records|Cannot determine the Apple ID|app record" "$LOGS/xcodebuild_export.log"; then
-    HINT="App Store Connect has no app with bundle ID com.marcompsci.retroball yet. Create it first (docs/SUBMISSION.md, step 1), then run this again."
+    HINT="App Store Connect has no app with bundle ID com.phoronomicstudios.retroball yet. Create it first (docs/SUBMISSION.md, step 1), then run this again."
   elif grep -qiE "bundle version must be higher|has already been uploaded|redundant binary" "$LOGS/xcodebuild_export.log"; then
     HINT="That build number was already uploaded. Just run this again: it raises the build number every time."
   fi
