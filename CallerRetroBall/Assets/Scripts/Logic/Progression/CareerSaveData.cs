@@ -240,6 +240,8 @@ namespace CallerRetroBall.Logic
         public KingSaveData king = new KingSaveData();
         public SecretsSaveData secrets = new SecretsSaveData();
         public CustomTeamData customTeam = new CustomTeamData();
+        /// <summary>Kit Studio: Home / Away / Alt kits for your team.</summary>
+        public KitSaveData kits = new KitSaveData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Coach tips already shown.</summary>

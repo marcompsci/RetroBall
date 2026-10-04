@@ -115,7 +115,7 @@ namespace CallerRetroBall.UI
                     logo.rectTransform.sizeDelta = new Vector2(130f, 130f);
                     logo.rectTransform.anchoredPosition = new Vector2(20f, 0f);
                 }
-                string round = next.Round == 2 ? "FINAL" : (next.Round == 1 ? "SEMIFINAL" : "NEXT GAME");
+                string round = next.Round == 2 ? "FINAL  ·  FULL COURT 5 ON 5" : (next.Round == 1 ? "SEMIFINAL" : "NEXT GAME");
                 var text = UiKit.Label(card.transform, "<color=#FFD166>" + round + "</color>\nVS " + (opp?.FullName ?? "?").ToUpperInvariant() +
                                        (court != null ? "\n<size=70%><color=#8D99AE>" + court.displayName + "</color></size>" : ""),
                                        36f, Theme.Cream, TextAlignmentOptions.Left, true);

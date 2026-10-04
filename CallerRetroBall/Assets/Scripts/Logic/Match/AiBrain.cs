@@ -222,6 +222,18 @@ namespace CallerRetroBall.Logic
         {
             if (ChargingIndex == p.Index) return;
             var court = Setup.Court;
+            if (MustInbound)
+            {
+                // Full Court inbound: get it in to the most open teammate.
+                int inbound = SelectPassTarget(p.Index, Vec2.Zero);
+                if (inbound >= 0) PassFrom(p.Index, Vec2.Zero, inbound);
+                else
+                {
+                    s.Intent = AiIntent.Hold;
+                    s.Target = p.Position;
+                }
+                return;
+            }
             if (GiveAndGoReturn(p)) return;
             if (Setup.TeammatesOnlyPass && p.Team == Setup.HumanTeam)
             {
@@ -358,6 +370,7 @@ namespace CallerRetroBall.Logic
         private void DecideOffBall(PlayerRuntimeState p, AiState s)
         {
             if (PlayIntentFor(p, s)) return;
+            if (FastBreakSpot(p, s)) return;
             if (Time < s.IntentUntil) return; // finishing a cut
             var court = Setup.Court;
             int defIndex = DefenderOf(p.Index);
@@ -419,6 +432,8 @@ namespace CallerRetroBall.Logic
                 s.Target = toHoop.SqrMagnitude > 0.01f ? court.Clamp(man.Position + toHoop.Normalized * gap) : man.Position;
                 return;
             }
+
+            if (GetBack(p, s, holder)) return;
 
             // Help when the ball handler gets deep; mistakes (errorRate) mean late rotations.
             bool packed = _scheme[p.Team] == DefenseScheme.PackLine || _scheme[p.Team] == DefenseScheme.Zone;

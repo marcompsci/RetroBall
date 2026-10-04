@@ -12,6 +12,8 @@ namespace CallerRetroBall.Logic
     public static class FullCourt
     {
         public const int TeamSize = 5;
+        /// <summary>Bench players per team (subs come on when someone's tired).</summary>
+        public const int BenchSize = 2;
         public const string RulesId = "rules.fullcourt";
         /// <summary>Length of each half (baseline to the half-court line), metres.</summary>
         public const float HalfLength = 12f;

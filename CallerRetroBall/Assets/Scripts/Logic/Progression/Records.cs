@@ -21,7 +21,7 @@ namespace CallerRetroBall.Logic
             var line = s.HumanLine?.stats ?? new PlayerStatLine();
 
             // Full Court scores 2s and 3s, so its points don't compare with the half-court record.
-            if (s.mode != GameMode.FullCourt) Check(ref r.points, line.points, "POINTS", broken);
+            if (s.mode != GameMode.FullCourt && !s.fullCourt) Check(ref r.points, line.points, "POINTS", broken);
             Check(ref r.assists, line.assists, "ASSISTS", broken);
             Check(ref r.rebounds, line.rebounds, "REBOUNDS", broken);
             Check(ref r.steals, line.steals, "STEALS", broken);

@@ -184,6 +184,9 @@ namespace CallerRetroBall.Logic
                 DifficultyId = difficultyId,
                 Round = round,
                 ContextId = context,
+                // The Gold Signal Cup final is played Full Court, 5 on 5.
+                FullCourt = round >= 2,
+                RulesId = round >= 2 ? FullCourt.RulesId : DefaultContent.DefaultRulesId,
             };
         }
 

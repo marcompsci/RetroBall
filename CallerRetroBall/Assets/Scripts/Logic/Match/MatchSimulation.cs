@@ -76,6 +76,11 @@ namespace CallerRetroBall.Logic
         public int TeamSize = MatchSimulation.PlayersPerTeam;
         /// <summary>Half-court 3-on-3: the team that scores keeps the ball ("winners' ball").</summary>
         public bool WinnersBall;
+        /// <summary>Full Court: two players on each bench (tired AI players sub out at dead balls).</summary>
+        public List<PlayerDef> BenchA = new List<PlayerDef>();
+        public List<PlayerDef> BenchB = new List<PlayerDef>();
+        /// <summary>Finds an archetype by id (bench players coming on).</summary>
+        public Func<string, ArchetypeDef> ArchetypeLookup;
 
         /// <summary>Builds a setup from a request, taking the first three (Full Court: five) players of each roster.</summary>
         public static MatchSetup FromRequest(MatchRequest request, ContentCatalog c)
@@ -83,7 +88,7 @@ namespace CallerRetroBall.Logic
             if (request == null) throw new ArgumentNullException(nameof(request));
             if (c == null) throw new ArgumentNullException(nameof(c));
 
-            bool full = request.Mode == GameMode.FullCourt;
+            bool full = request.Mode == GameMode.FullCourt || request.FullCourt;
             bool drills = request.Mode == GameMode.Practice || request.Mode == GameMode.Tutorial;
             string rulesId = full && (request.RulesId == null || request.RulesId == DefaultContent.DefaultRulesId) ? Logic.FullCourt.RulesId : request.RulesId;
             var setup = new MatchSetup
@@ -96,6 +101,7 @@ namespace CallerRetroBall.Logic
                 Court = full ? Logic.FullCourt.Geometry() : CourtGeometry.Default,
                 // Half-court 3-on-3 is winners' ball; Full Court and 1-on-1 alternate possessions.
                 WinnersBall = !full && !drills && request.Mode != GameMode.OneOnOne,
+                ArchetypeLookup = c.ArchetypeById,
                 Difficulty = c.Difficulty(request.DifficultyId),
                 Seed = request.Seed != 0 ? request.Seed : 1,
                 PassiveOpponents = (request.Mode == GameMode.Practice && request.Drill != (int)DrillKind.Lockdown) || request.Mode == GameMode.Tutorial,
@@ -115,6 +121,11 @@ namespace CallerRetroBall.Logic
 
             FillRoster(setup.RosterA, setup.ArchetypesA, setup.TeamA, c, setup.TeamSize);
             FillRoster(setup.RosterB, setup.ArchetypesB, setup.TeamB, c, setup.TeamSize);
+            if (full)
+            {
+                FillBench(setup.BenchA, setup.RosterA, setup.TeamA, c);
+                FillBench(setup.BenchB, setup.RosterB, setup.TeamB, c);
+            }
             if (request.HumanTeammates != null)
             {
                 for (int i = 0; i < request.HumanTeammates.Count && i + 1 < Math.Min(setup.RosterA.Count, MatchSimulation.PlayersPerTeam); i++)
@@ -144,6 +155,23 @@ namespace CallerRetroBall.Logic
                 };
             }
             return setup;
+        }
+
+        /// <summary>Two bench players: the team's own extras first, then generated reserves.</summary>
+        private static void FillBench(List<PlayerDef> bench, List<PlayerDef> roster, TeamDef team, ContentCatalog c)
+        {
+            bool Used(string id) => roster.Exists(p => p.id == id) || bench.Exists(p => p.id == id);
+            foreach (var id in team.rosterPlayerIds)
+            {
+                if (bench.Count == Logic.FullCourt.BenchSize) return;
+                var p = c.Player(id);
+                if (p != null && !Used(p.id)) bench.Add(p);
+            }
+            foreach (var extra in Logic.FullCourt.Reserves(team, c, Logic.FullCourt.TeamSize + Logic.FullCourt.BenchSize))
+            {
+                if (bench.Count == Logic.FullCourt.BenchSize) return;
+                if (!Used(extra.id)) bench.Add(extra);
+            }
         }
 
         private static void FillRoster(List<PlayerDef> roster, List<ArchetypeDef> archetypes, TeamDef team, ContentCatalog c, int size)
@@ -236,6 +264,10 @@ namespace CallerRetroBall.Logic
         SchemeChanged = 26,
         /// <summary>"21" bust rule: went over the target (Team = who busted, Value = new score).</summary>
         Bust = 27,
+        /// <summary>Full Court violation (Team = offence that lost the ball, Value = <see cref="ViolationKind"/>).</summary>
+        Violation = 28,
+        /// <summary>Full Court substitution (PlayerIndex = the slot that changed player).</summary>
+        Substitution = 29,
     }
 
     public struct MatchEvent
@@ -347,6 +379,7 @@ namespace CallerRetroBall.Logic
             InitAi();
             InitDefense();
             InitSchemes();
+            InitBench();
             GameClock = setup.Rules.useGameClock ? setup.Rules.gameClockSeconds : 0f;
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = Index(setup.HumanTeam, 0);
@@ -422,12 +455,20 @@ namespace CallerRetroBall.Logic
         private void PlaceFullCourt(int offenseTeam)
         {
             var c = Setup.Court;
-            float baseY = Time <= 0f ? Logic.FullCourt.MidY + 1.5f : c.depth - 1.0f;
-            Vec2[] spots =
-            {
-                new Vec2(0f, baseY), new Vec2(-4.5f, baseY - 3f), new Vec2(4.5f, baseY - 3f),
-                new Vec2(-3f, baseY - 7f), new Vec2(3f, baseY - 7f),
-            };
+            bool tip = Time <= 0f;
+            float baseY = tip ? Logic.FullCourt.MidY + 1.5f : c.depth - 1.0f;
+            Vec2[] spots = tip
+                ? new[]
+                {
+                    new Vec2(0f, baseY), new Vec2(-4.5f, baseY - 3f), new Vec2(4.5f, baseY - 3f),
+                    new Vec2(-3f, baseY - 7f), new Vec2(3f, baseY - 7f),
+                }
+                : new[]
+                {
+                    // Inbound: slot 0 on the baseline, a guard stepping up to take it, the rest spread.
+                    new Vec2(1.2f, c.depth - 0.3f), new Vec2(-2.5f, c.depth - 3.5f), new Vec2(4.5f, c.depth - 5f),
+                    new Vec2(-3f, c.depth - 9f), new Vec2(3f, c.depth - 10f),
+                };
             for (int slot = 0; slot < TeamSize; slot++)
             {
                 var o = Players[Index(offenseTeam, slot)];
@@ -486,6 +527,7 @@ namespace CallerRetroBall.Logic
         {
             OffenseTeam = offenseTeam;
             var court = Setup.Court;
+            if (Setup.FullCourt && Time > 0f) MakeSubstitutions();
             if (Setup.FullCourt) PlaceFullCourt(offenseTeam);
             else
             {
@@ -512,6 +554,7 @@ namespace CallerRetroBall.Logic
             MustClear = false;
             _reboundable = false;
             ShotClock = Setup.Rules.shotClockSeconds;
+            StartFullCourtPossession(inbound: Time > 0f);
             Phase = MatchPhase.CheckBall;
             PhaseTimer = Setup.Flow.checkBallSeconds;
             ResetAiTimers();
@@ -558,6 +601,7 @@ namespace CallerRetroBall.Logic
             Events.Clear();
             if (dt <= 0f) return;
             Time += dt;
+            if (_bench.Count > 0) RestBench(dt);
 
             switch (Phase)
             {
@@ -605,6 +649,8 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < Players.Length; i++)
             {
                 if (i == ChargingIndex) { _desired[i] = Vec2.Zero; continue; }
+                // The inbounder stays on the baseline until the pass is away.
+                if (MustInbound && Ball.IsHeld && i == Ball.HolderIndex) { _desired[i] = Vec2.Zero; continue; }
                 if (i == ControlledIndex && !Setup.Demo) { _desired[i] = FrameMove(input.Move); continue; }
                 if (i == SecondControlledIndex) { _desired[i] = FrameMove(_input2.Move); continue; }
                 _desired[i] = AiDesired(Players[i]);
@@ -612,6 +658,8 @@ namespace CallerRetroBall.Logic
             Integrate(dt, freezeAll: false);
 
             StepBall(dt);
+            UpdateFullCourtRules(dt);
+            if (Phase != MatchPhase.Live) return;
 
             if (MustClear && Ball.IsHeld && Players[Ball.HolderIndex].Team == OffenseTeam
                 && Setup.Court.ZoneOf(Players[Ball.HolderIndex].Position) == ShotZone.BeyondArc)
@@ -702,7 +750,7 @@ namespace CallerRetroBall.Logic
         public bool CanShoot(int playerIndex)
         {
             return Phase == MatchPhase.Live && Ball.IsHeld && Ball.HolderIndex == playerIndex
-                   && ChargingIndex < 0 && !MustClear;
+                   && ChargingIndex < 0 && !MustClear && !MustInbound;
         }
 
         /// <summary>The teammate holding the ball passes it to the human (practice drills, ASK).</summary>
@@ -1003,6 +1051,7 @@ namespace CallerRetroBall.Logic
             _lastPasser = passer;
             OnPassForPlays(passer, receiver);
             Events.Add(new MatchEvent(MatchEventType.PassThrown, passer, from.Team, (int)type));
+            MustInbound = false; // the inbound pass is away
             OnAiPassed(passer);
             return true;
         }
@@ -1166,6 +1215,7 @@ namespace CallerRetroBall.Logic
                 // Change of possession on a live ball: take it back beyond the arc first (half court only;
                 // in Full Court the other basket is already the far end).
                 MustClear = !Setup.FullCourt && Setup.Court.ZoneOf(p.Position) != ShotZone.BeyondArc;
+                StartFullCourtPossession(inbound: false);
                 _lastPasser = -1;
                 _lastCatcher = -1;
                 EndPlay();

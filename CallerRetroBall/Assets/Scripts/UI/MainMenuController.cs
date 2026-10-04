@@ -66,6 +66,10 @@ namespace CallerRetroBall.UI
             column.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 
             UiKit.Button(column, "PLAY", ShowPlayMenu, ButtonStyle.Primary, 150f, 64f);
+            // In season (October, December, Easter week, early July): a shortcut to that Holiday Game.
+            var season = Holidays.InSeason(System.DateTime.Now);
+            if (season != HolidayTheme.None)
+                UiKit.Button(column, Holidays.Get(season).Name, () => ShowHolidays(season), ButtonStyle.Secondary, 110f, 44f);
             UiKit.Button(column, "RISE MODE", () => SceneFlow.GoTo(SceneNames.Season), ButtonStyle.Secondary, 120f, 52f);
             UiKit.Button(column, "PRACTICE LAB", ShowPractice, ButtonStyle.Secondary, 120f, 52f);
             UiKit.Button(column, "LOCKER ROOM", () => SceneFlow.GoTo(SceneNames.LockerRoom), ButtonStyle.Secondary, 120f, 52f);
@@ -282,7 +286,7 @@ namespace CallerRetroBall.UI
 
             // Play anywhere: home court, any street court, and hidden courts once unlocked.
             var courts = new List<string> { null };
-            foreach (var court in c.Courts) if (court.circuit == CourtCircuit.Blacktop) courts.Add(court.id);
+            foreach (var court in c.Courts) if (court.circuit == CourtCircuit.Blacktop || court.circuit == CourtCircuit.Holiday) courts.Add(court.id);
             foreach (var id in new[] { DefaultContent.SecretCourtId, DefaultContent.BossCourtId })
                 if (Secrets.IsUnlocked(App.Career.secrets, id)) courts.Add(id);
             {
@@ -332,6 +336,7 @@ namespace CallerRetroBall.UI
             var column = OpenOverlay("PLAY", out var footer);
             Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);
             Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
+            Mode(column, "HOLIDAY GAMES", "Christmas, Halloween, Easter and Fourth of July courts.", () => ShowHolidays(), ButtonStyle.Secondary);
 
             var today = DailyChallenges.For(App.Today, App.Catalog);
             bool done = DailyChallenges.CompletedToday(App.Career.daily, App.Today);
@@ -673,6 +678,44 @@ namespace CallerRetroBall.UI
                 };
                 SceneFlow.GoTo(SceneNames.Game);
             }, ButtonStyle.Primary, 130f);
+
+            void Refresh()
+            {
+                if (theirs[b].id == mine[a].id) b = (b + 1) % theirs.Count;
+                mineLabel.text = mine[a].FullName.ToUpperInvariant();
+                theirLabel.text = Loc.T("VS") + "  " + theirs[b].FullName.ToUpperInvariant();
+            }
+            Refresh();
+        }
+
+        /// <summary>Holiday Games: a game on a decorated court (Quick Call rules), the one in season first.</summary>
+        private void ShowHolidays(HolidayTheme highlight = HolidayTheme.None)
+        {
+            var c = App.Catalog;
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
+            var theirs = Secrets.OpponentTeams(c, App.Career.secrets);
+            int a = 0, b = new SeededRandom((uint)System.Environment.TickCount | 1u).Range(0, theirs.Count);
+            if (highlight == HolidayTheme.None) highlight = Holidays.InSeason(System.DateTime.Now);
+            var column = OpenOverlay("HOLIDAY GAMES", out var footer);
+            TextMeshProUGUI mineLabel = null, theirLabel = null; // declared first so Refresh() can see them
+            mineLabel = UiKit.Label(column, "", 36f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(mineLabel, 56f);
+            UiKit.Button(column, "CHANGE TEAM", () => { a = (a + 1) % mine.Count; Refresh(); }, ButtonStyle.Ghost, 80f, 30f);
+            theirLabel = UiKit.Label(column, "", 36f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(theirLabel, 56f);
+            UiKit.Button(column, "CHANGE OPPONENT", () => { b = (b + 1) % theirs.Count; Refresh(); }, ButtonStyle.Ghost, 80f, 30f);
+            var order = new List<HolidayGame>(Holidays.All);
+            order.Sort((x, y) => (y.Theme == highlight ? 1 : 0) - (x.Theme == highlight ? 1 : 0));
+            foreach (var h in order)
+            {
+                var game = h;
+                Mode(column, game.Name, (game.Theme == highlight ? Loc.T("IN SEASON NOW") + "  ·  " : "") + Loc.T(game.Blurb), () =>
+                {
+                    App.PendingMatch = Holidays.Request(game.Theme, mine[a].id, theirs[b].id, App.Career.settings.difficultyId);
+                    SceneFlow.GoTo(SceneNames.Game);
+                }, game.Theme == highlight ? ButtonStyle.Primary : ButtonStyle.Secondary);
+            }
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
 
             void Refresh()
             {

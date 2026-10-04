@@ -32,6 +32,19 @@ namespace CallerRetroBall.EditorTools
             root.SetString("NSPhotoLibraryAddUsageDescription", "Save your RetroBall highlights to Photos.");
             // Bluetooth / MFi controllers (Xbox, PlayStation, Switch Pro and similar extended gamepads).
             root.SetBoolean("GCSupportsControllerUserInteraction", true);
+            // retroball://kit/... links (kit QR codes) open the app straight into the Kit Studio.
+            var urlTypes = root["CFBundleURLTypes"] as PlistElementArray ?? root.CreateArray("CFBundleURLTypes");
+            bool hasScheme = false;
+            foreach (var t in urlTypes.values)
+                if (t is PlistElementDict d && d["CFBundleURLSchemes"] is PlistElementArray schemes)
+                    foreach (var sch in schemes.values)
+                        if (sch is PlistElementString str && str.value == "retroball") hasScheme = true;
+            if (!hasScheme)
+            {
+                var type = urlTypes.AddDict();
+                type.SetString("CFBundleURLName", "com.marcompsci.retroball.kit");
+                type.CreateArray("CFBundleURLSchemes").AddString("retroball");
+            }
             if (root["GCSupportedGameControllers"] == null)
                 root.CreateArray("GCSupportedGameControllers").AddDict().SetString("ProfileName", "ExtendedGamepad");
             plist.WriteToFile(plistPath);

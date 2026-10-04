@@ -71,7 +71,12 @@ namespace CallerRetroBall.Gameplay
                                       RgbColor? shorts = null)
         {
             var sheet = CharacterSpriteGenerator.GenerateSheet(player.appearance, jersey, trim, accent, shoes, pattern, shorts);
-            var tex = Own(TextureFactory.ToTexture(sheet, "sheet:" + player.id));
+            return Slice(sheet, player.id);
+        }
+
+        private Sprite[,] Slice(PixelCanvas sheet, string id)
+        {
+            var tex = Own(TextureFactory.ToTexture(sheet, "sheet:" + id));
             var frames = new Sprite[CharacterSpriteGenerator.ViewCount, CharacterSpriteGenerator.FramesPerView];
             for (int v = 0; v < CharacterSpriteGenerator.ViewCount; v++)
                 for (int f = 0; f < CharacterSpriteGenerator.FramesPerView; f++)
@@ -84,6 +89,10 @@ namespace CallerRetroBall.Gameplay
                 }
             return frames;
         }
+
+        /// <summary>Sheet in a Kit Studio kit.</summary>
+        public Sprite[,] PlayerFrames(PlayerDef player, KitLook kit) =>
+            Slice(CharacterSpriteGenerator.GenerateSheet(player.appearance, kit), player.id);
 
         /// <summary>
         /// BIG HEADS secret: for each frame, a sprite of everything from the head row up, pivoted at

@@ -62,6 +62,8 @@ namespace CallerRetroBall.Logic
         public int Drill = -1;
         /// <summary>Secret code ALWAYS HOT: your player starts heated up.</summary>
         public bool StartHeated;
+        /// <summary>Play this game Full Court 5-on-5 whatever the mode (the Rise Mode final).</summary>
+        public bool FullCourt;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

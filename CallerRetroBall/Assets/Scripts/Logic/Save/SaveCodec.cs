@@ -102,6 +102,7 @@ namespace CallerRetroBall.Logic
                 },
                 ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
                 ["customTeam"] = EncodeTeam(d.customTeam ?? new CustomTeamData()),
+                ["kits"] = EncodeKits(d.kits ?? new KitSaveData()),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -158,6 +159,40 @@ namespace CallerRetroBall.Logic
             ["primary"] = t.primary, ["secondary"] = t.secondary, ["accent"] = t.accent, ["shorts"] = t.shorts, ["shoes"] = t.shoes,
             ["pattern"] = t.pattern, ["shape"] = t.logoShape, ["motif"] = t.logoMotif, ["court"] = t.homeCourtId, ["rise"] = t.useInRise,
         };
+
+        // Kits are stored as their share codes (compact, versioned, checksummed) plus a name.
+        private static Dictionary<string, object> EncodeKits(KitSaveData k)
+        {
+            var slots = new List<object>();
+            if (k.slots != null)
+                foreach (var kit in k.slots)
+                    if (kit != null) slots.Add(new Dictionary<string, object> { ["name"] = kit.name, ["code"] = Kits.Encode(kit.Clone()) });
+            return new Dictionary<string, object> { ["designed"] = k.designed, ["wear"] = k.wear, ["autoAway"] = k.autoAway, ["slots"] = slots };
+        }
+
+        private static KitSaveData DecodeKits(Dictionary<string, object> o)
+        {
+            var k = new KitSaveData();
+            if (o == null) return k;
+            k.designed = Bool(o, "designed", false);
+            k.wear = Math.Max(0, Math.Min(Kits.SlotCount - 1, Int(o, "wear", 0)));
+            k.autoAway = Bool(o, "autoAway", true);
+            foreach (var item in Arr(o, "slots"))
+            {
+                if (!(item is Dictionary<string, object> slot)) continue;
+                if (!Kits.TryDecode(Str(slot, "code", null), out var kit)) continue;
+                kit.name = Str(slot, "name", Kits.SlotNames[Math.Min(k.slots.Count, Kits.SlotCount - 1)]);
+                Kits.Clamp(kit);
+                k.slots.Add(kit);
+            }
+            // A save with missing or unreadable kits goes back to the old look rather than half a set.
+            if (k.slots.Count != Kits.SlotCount)
+            {
+                k.slots.Clear();
+                k.designed = false;
+            }
+            return k;
+        }
 
         private static CustomTeamData DecodeTeam(Dictionary<string, object> o)
         {
@@ -484,6 +519,7 @@ namespace CallerRetroBall.Logic
                 d.tipsSeen = StrList(o, "tipsSeen");
                 d.secrets = DecodeSecrets(Obj(o, "secrets"));
                 d.customTeam = DecodeTeam(Obj(o, "customTeam"));
+                d.kits = DecodeKits(Obj(o, "kits"));
                 CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");
                 d.rival = new RivalSaveData

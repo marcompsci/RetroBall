@@ -61,6 +61,20 @@ namespace CallerRetroBall.Core
         /// <summary>Set after an Arcade Ladder game so the main menu reopens the ladder.</summary>
         public static bool OpenArcadeOnMenu { get; set; }
 
+        /// <summary>A kit shared through a retroball://kit/ link, waiting for the Locker Room's Kit Studio.</summary>
+        public static KitData PendingKit { get; set; }
+
+        /// <summary>Opened from a retroball://kit/ link (a scanned kit QR code or a tapped link).</summary>
+        private static void OnDeepLink(string url)
+        {
+            if (string.IsNullOrEmpty(url) || !Kits.TryDecode(url, out var kit)) return;
+            PendingKit = kit;
+            if (Career == null || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == SceneNames.LockerRoom) return;
+            UiControls.Dialog("A FRIEND'S KIT", "Someone shared a RetroBall kit with you. Open it in the Kit Studio?",
+                ("OPEN KIT STUDIO", ButtonStyle.Primary, () => SceneFlow.GoTo(SceneNames.LockerRoom)),
+                ("LATER", ButtonStyle.Ghost, null));
+        }
+
         /// <summary>Pass-and-play Shootout in progress (kept between player 1's and player 2's rounds).</summary>
         public static ShootoutDuel PendingDuel { get; set; }
 
@@ -208,6 +222,10 @@ namespace CallerRetroBall.Core
             ControllerCursor.EnsureExists();
             PowerMonitor.EnsureExists();
             ScreenReader.EnsureExists();
+
+            Application.deepLinkActivated -= OnDeepLink;
+            Application.deepLinkActivated += OnDeepLink;
+            if (!string.IsNullOrEmpty(Application.absoluteURL)) OnDeepLink(Application.absoluteURL);
         }
 
         // Supports "Enter Play Mode" without domain reload: static state is reset each play session.
@@ -221,6 +239,7 @@ namespace CallerRetroBall.Core
             GameCenterSync.ResetSession();
             CareerFromCloud = false;
             PendingDuel = null;
+            PendingKit = null;
         }
     }
 }

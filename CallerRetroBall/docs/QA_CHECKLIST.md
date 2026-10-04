@@ -102,3 +102,13 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Full Court: tip-off at half court; after a basket the other team inbounds under that basket and brings it up. The camera follows the ball up and down; both hoops are drawn; shots at the bottom hoop arc into it.
 - [ ] Full Court: on a steal or defensive rebound nobody jumps or teleports; the stick still moves your player the same way on screen at both ends.
 - [ ] Full Court post-game box score lists all ten players (scrolls).
+
+## Phase 20
+- [ ] Locker Room ▸ KIT: the preview loops (idle, run both ways, back view, jumper). Every colour chip opens the picker; palette taps and RGB sliders preview live; CANCEL restores.
+- [ ] Each style row changes the preview (sleeves, collar, stripes, chest, pattern, shorts length/stripe/waistband, shoe height/stripe/laces/sole). Locked styles list how to unlock them.
+- [ ] RANDOMIZE, UNDO (several steps, across slots), RESET, presets. SAVE KITS, leave, come back: kits kept. Scroll position stays put after RANDOMIZE/UNDO.
+- [ ] In a game your crew wears the chosen kit; against a team in a similar colour the Away kit goes on with a toast.
+- [ ] SHARE KIT: QR + code. Scanning the QR with another iPhone's camera offers to open RetroBall and loads the kit into ALT. COPY CODE → ENTER CODE → PASTE → LOAD KIT works; a mistyped code says it doesn't read.
+- [ ] TRADING CARD: card shows your player, kit, OVR, stats; SHARE CARD saves to Photos / AirDrop.
+- [ ] Play ▸ HOLIDAY GAMES: all four courts load with decorations; the in-season one (October = Halloween) is on top and on the main menu.
+- [ ] Full Court: after a basket the inbounder stands on the baseline and must pass ("INBOUND" label); 8-second and backcourt violations are called; tired AI players sub out ("SUB: … IN"); the box score lists subs; the Rise final is Full Court.

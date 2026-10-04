@@ -140,6 +140,7 @@ namespace CallerRetroBall.Tests
                 Assert.Greater(bottomY, m.Setup.Court.depth - 3f, "and the bottom hoop");
                 int points = 0;
                 for (int i = 0; i < m.Players.Length; i++) points += m.Stats[i].points;
+                foreach (var b in m.Bench) points += b.Line.points; // subs keep their own lines
                 Assert.AreEqual(m.Score[0] + m.Score[1], points);
             }
         }

@@ -170,7 +170,11 @@ namespace CallerRetroBall.Logic
         public string FullName => string.IsNullOrEmpty(city) ? nickname : city + " " + nickname;
     }
 
-    public enum CourtCircuit { Blacktop = 0, League = 1, Practice = 2, /** Hidden courts unlocked by secrets: neon grid floor. */ Secret = 3 }
+    public enum CourtCircuit { Blacktop = 0, League = 1, Practice = 2, /** Hidden courts unlocked by secrets: neon grid floor. */ Secret = 3,
+        /** Seasonal courts for the Holiday Games (always open). */ Holiday = 4 }
+
+    /// <summary>Holiday decorations a court is drawn with.</summary>
+    public enum HolidayTheme { None = 0, Christmas = 1, Halloween = 2, Easter = 3, FourthOfJuly = 4 }
 
     [Serializable]
     public class CourtDef : IHasId
@@ -186,6 +190,8 @@ namespace CallerRetroBall.Logic
         public RgbColor skyBottom;
         /// <summary>Crowd density 0..1 for silhouette generation.</summary>
         public float crowdDensity;
+        /// <summary>Holiday decorations (Holiday courts only).</summary>
+        public HolidayTheme theme;
 
         public string Id => id;
     }

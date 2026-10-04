@@ -79,12 +79,17 @@ namespace CallerRetroBall.Logic.PixelArt
         /// <param name="shorts">Shorts colour (custom kits); null = a shade darker than the jersey.</param>
         public static PixelCanvas GenerateSheet(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent,
                                                 RgbColor? shoes, TeamPattern pattern, RgbColor? shorts)
+            => GenerateSheet(look, KitLook.Classic(jersey, trim, accent, shoes, pattern, shorts));
+
+        /// <summary>A sheet in a Kit Studio kit: jersey cut, collar, stripes, chest, pattern, shorts and shoe styles.</summary>
+        public static PixelCanvas GenerateSheet(AppearanceDef look, KitLook kit)
         {
             var sheet = new PixelCanvas(FrameWidth * FramesPerView, FrameHeight * ViewCount);
-            var p = new Palette(look, jersey, trim, accent);
-            if (shoes.HasValue) p.Shoe = shoes.Value;
-            if (shorts.HasValue) p.Shorts = shorts.Value;
-            p.Pattern = pattern;
+            var p = new Palette(look, kit.Jersey, kit.Trim, kit.Accent);
+            p.Shoe = kit.Shoe;
+            p.Shorts = kit.Shorts;
+            p.Pattern = kit.Pattern;
+            p.Kit = kit;
             for (int v = 0; v < ViewCount; v++)
                 for (int f = 0; f < FramesPerView; f++)
                 {
@@ -103,6 +108,7 @@ namespace CallerRetroBall.Logic.PixelArt
         {
             public RgbColor Skin, SkinShade, Hair, Jersey, JerseyShade, Shorts, Trim, Accent, Shoe, Sole, Eye;
             public TeamPattern Pattern;
+            public KitLook Kit;
 
             public Palette(AppearanceDef look, RgbColor jersey, RgbColor trim, RgbColor accent)
             {
@@ -118,6 +124,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 Sole = new RgbColor(0x9A, 0x9A, 0xA4);
                 Eye = new RgbColor(0x1A, 0x1A, 0x1A);
                 Pattern = TeamPattern.Solid;
+                Kit = KitLook.Classic(jersey, trim, accent, null, TeamPattern.Solid, null);
             }
         }
 
@@ -176,10 +183,17 @@ namespace CallerRetroBall.Logic.PixelArt
                 DrawLeg(c, cx + hipHalf - 1, 0, legTop, p, liftR);
             }
 
-            // ---- shorts
+            // ---- shorts (length, side stripe and waistband come from the kit)
+            var kit = p.Kit;
+            if (kit.Length == ShortsLength.Long) shortsBottom -= 2;
+            else if (kit.Length == ShortsLength.Short) shortsBottom += 1;
             Rect(c, torsoLeft, shortsBottom, torsoW, torsoBottom - shortsBottom, p.Shorts);
-            Rect(c, torsoLeft, shortsBottom, 1, torsoBottom - shortsBottom, p.Trim);
-            Rect(c, torsoLeft + torsoW - 1, shortsBottom, 1, torsoBottom - shortsBottom, p.Trim);
+            if (kit.ShortsStripe)
+            {
+                Rect(c, torsoLeft, shortsBottom, 1, torsoBottom - shortsBottom, kit.ShortsTrim);
+                Rect(c, torsoLeft + torsoW - 1, shortsBottom, 1, torsoBottom - shortsBottom, kit.ShortsTrim);
+            }
+            if (kit.Waistband) Rect(c, torsoLeft, torsoBottom - 1, torsoW, 1, kit.ShortsTrim);
             if (view != CharacterView.Side) Rect(c, cx, shortsBottom, 1, 2, p.JerseyShade); // leg split
 
             // ---- jersey
@@ -193,20 +207,42 @@ namespace CallerRetroBall.Logic.PixelArt
                     for (int x = torsoLeft; x < torsoLeft + torsoW; x++)
                         if (PatternHit(p.Pattern, x - torsoLeft, y - torsoBottom)) c.Set(x, y, ink);
             }
+            // Side stripes down both edges of the jersey (front and back).
+            if (kit.Sides != SideStripe.None && view != CharacterView.Side)
+            {
+                Rect(c, torsoLeft, torsoBottom + 1, 1, torsoTop - torsoBottom, p.Trim);
+                Rect(c, torsoLeft + torsoW - 1, torsoBottom + 1, 1, torsoTop - torsoBottom, p.Trim);
+                if (kit.Sides == SideStripe.Double && torsoW >= 6)
+                {
+                    Rect(c, torsoLeft + 1, torsoBottom + 1, 1, torsoTop - torsoBottom - 1, p.Accent);
+                    Rect(c, torsoLeft + torsoW - 2, torsoBottom + 1, 1, torsoTop - torsoBottom - 1, p.Accent);
+                }
+            }
             if (view == CharacterView.Front)
             {
-                c.Set(cx - 1, torsoTop, p.Trim);                                              // neckline V
-                c.Set(cx, torsoTop, p.Trim);
-                c.Set(cx, torsoTop - 1, p.Trim);
-                Rect(c, cx - 1, torsoBottom + 2, 2, 2, p.Accent);                          // chest mark
+                if (kit.Collar == CollarStyle.V)
+                {
+                    c.Set(cx - 1, torsoTop, p.Trim);                                          // neckline V
+                    c.Set(cx, torsoTop, p.Trim);
+                    c.Set(cx, torsoTop - 1, p.Trim);
+                }
+                else if (kit.Collar == CollarStyle.Crew)
+                {
+                    Rect(c, cx - 2, torsoTop, 4, 1, p.Trim);                                  // round collar
+                }
+                if (kit.Chest == ChestMark.Band) Rect(c, torsoLeft, torsoBottom + 3, torsoW, 1, p.Accent);
+                else if (kit.Chest == ChestMark.Number) Rect(c, cx - 1, torsoBottom + 1, 3, 3, p.Trim);
+                else Rect(c, cx - 1, torsoBottom + 2, 2, 2, p.Accent);                     // chest mark
             }
             else if (view == CharacterView.Back)
             {
+                if (kit.Collar == CollarStyle.Crew) Rect(c, cx - 2, torsoTop, 4, 1, p.Trim);
                 Rect(c, cx - 1, torsoBottom + 1, 3, 3, p.Trim);                            // number block
             }
             else
             {
                 Rect(c, torsoLeft + torsoW - 1, torsoBottom + 1, 1, torsoTop - torsoBottom, p.Trim); // side seam
+                if (kit.Chest == ChestMark.Band) Rect(c, torsoLeft, torsoBottom + 3, torsoW - 1, 1, p.Accent);
             }
 
             // ---- arms (sleeveless jerseys: skin), swing opposite to legs
@@ -228,6 +264,24 @@ namespace CallerRetroBall.Logic.PixelArt
                 Rect(c, torsoLeft + torsoW, armTop - 4 + armSwing, 2, 5, p.Skin);
                 c.Set(torsoLeft - 2, armTop - 4 - armSwing, p.SkinShade);                     // hands
                 c.Set(torsoLeft + torsoW + 1, armTop - 4 + armSwing, p.SkinShade);
+            }
+            if (!shooting && kit.Cut != JerseyCut.Tank)
+            {
+                // Sleeves: a tee covers the top two rows of each arm, long sleeves all but the hand.
+                int sleeve = kit.Cut == JerseyCut.Tee ? 2 : 4;
+                if (view == CharacterView.Side)
+                {
+                    int armX = cx + (armSwing > 0 ? 0 : -1);
+                    int armBottom = armTop - 4 + Math.Abs(armSwing);
+                    int armRows = 5 - Math.Abs(armSwing);
+                    int rows = Math.Min(sleeve, armRows - 1);
+                    Rect(c, armX, armBottom + armRows - rows, 2, rows, p.Jersey);
+                }
+                else
+                {
+                    Rect(c, torsoLeft - 2, armTop - 4 - armSwing + 5 - sleeve, 2, sleeve, p.Jersey);
+                    Rect(c, torsoLeft + torsoW, armTop - 4 + armSwing + 5 - sleeve, 2, sleeve, p.Jersey);
+                }
             }
 
             // ---- neck & head
@@ -253,15 +307,20 @@ namespace CallerRetroBall.Logic.PixelArt
             if (shooting)
             {
                 int top = Math.Min(FrameHeight - 1, headTop + 2);
+                // Raised arms: sleeves from the shoulder up (tee: 2 rows, long sleeve: all but the hand).
+                int sleeve = kit.Cut == JerseyCut.Tee ? 2 : (kit.Cut == JerseyCut.LongSleeve ? top - armTop + 1 : 0);
                 if (view == CharacterView.Side)
                 {
                     Rect(c, cx + 1, armTop - 1, 2, top - armTop + 2, p.Skin);
+                    Rect(c, cx + 1, armTop - 1, 2, sleeve, p.Jersey);
                     c.Set(cx + 2, top, p.SkinShade);
                 }
                 else
                 {
                     Rect(c, torsoLeft - 1, armTop - 1, 2, top - armTop + 2, p.Skin);
                     Rect(c, torsoLeft + torsoW - 1, armTop - 1, 2, top - armTop + 2, p.Skin);
+                    Rect(c, torsoLeft - 1, armTop - 1, 2, sleeve, p.Jersey);
+                    Rect(c, torsoLeft + torsoW - 1, armTop - 1, 2, sleeve, p.Jersey);
                     c.Set(torsoLeft - 1, top, p.SkinShade);
                     c.Set(torsoLeft + torsoW, top, p.SkinShade);
                 }
@@ -288,10 +347,16 @@ namespace CallerRetroBall.Logic.PixelArt
         {
             int shoeBottom = floor + liftRows;
             var skin = shade ? p.SkinShade : p.Skin;
-            Rect(c, x, shoeBottom + 2, 2, legTop - (shoeBottom + 2) + 1, skin);
-            Rect(c, x, shoeBottom, 2, 2, p.Shoe);
-            Rect(c, x, shoeBottom, 2, 1, p.Sole);
+            var kit = p.Kit;
+            // Low tops are two rows tall; mids three, highs four (up the ankle).
+            int shoeH = kit.Top == ShoeTop.High ? 4 : (kit.Top == ShoeTop.Mid ? 3 : 2);
+            shoeH = Math.Min(shoeH, legTop - shoeBottom);
+            Rect(c, x, shoeBottom + shoeH, 2, legTop - (shoeBottom + shoeH) + 1, skin);
+            Rect(c, x, shoeBottom, 2, shoeH, p.Shoe);
+            Rect(c, x, shoeBottom, 2, 1, kit.Sole);
             if (!shade) c.Set(x + 2, shoeBottom, p.Shoe); // toe
+            if (shoeH >= 2) c.Set(x + 1, shoeBottom + shoeH - 1, kit.Laces);  // laces (same as the shoe on classic kits)
+            if (kit.ShoeStripeOn && shoeH >= 2) c.Set(x, shoeBottom + 1, kit.ShoeStripe);
         }
 
         private static void DrawHair(PixelCanvas c, CharacterView view, int style, int left, int w, int bottom, int top, Palette p)

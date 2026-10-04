@@ -42,6 +42,8 @@ namespace CallerRetroBall.Logic
         public List<SummaryLine> lines = new List<SummaryLine>();
         public bool isPlayoff;
         public bool isFinal;
+        /// <summary>Played Full Court 5-on-5 (scores 2s and 3s).</summary>
+        public bool fullCourt;
 
         public bool HumanWon => winner == humanTeam;
         public int HumanScore => humanTeam == 0 ? scoreA : scoreB;
@@ -79,6 +81,7 @@ namespace CallerRetroBall.Logic
                 humanTeam = m.Setup.HumanTeam,
                 winner = Scoring.Winner(m.Score[0], m.Score[1]),
                 reason = m.EndReason,
+                fullCourt = m.Setup.FullCourt,
             };
             int potgTeam = s.winner < 0 ? s.humanTeam : s.winner;
             s.playerOfTheGame = m.Stats.PlayerOfTheGame(potgTeam, m.TeamSize);
@@ -93,6 +96,22 @@ namespace CallerRetroBall.Logic
                     jerseyNumber = p.Def.jerseyNumber,
                     isHuman = p.IsHuman,
                     stats = m.Stats[p.Index],
+                });
+            }
+            // Full Court: bench players who came on get their own lines.
+            int benchIndex = 100;
+            foreach (var b in m.Bench)
+            {
+                if (!b.Played) continue;
+                s.lines.Add(new SummaryLine
+                {
+                    playerIndex = benchIndex++,
+                    team = b.Team,
+                    playerId = b.Def.id,
+                    name = b.Def.DisplayName,
+                    jerseyNumber = b.Def.jerseyNumber,
+                    isHuman = false,
+                    stats = b.Line,
                 });
             }
             return s;

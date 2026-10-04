@@ -146,9 +146,31 @@ namespace CallerRetroBall.Logic
                 "Nothing but grid lines and the hum of an old console.",
                 "#120E24", "#FFE066", "#8AFF80", "#000000", "#1B1036", 0.40f));
 
+            // Holiday Games courts.
+            Holiday(c, Holidays.ChristmasCourtId, "Candy Cane Court", HolidayTheme.Christmas,
+                "Fresh snow on the blacktop, lights on every fence, and a tree behind the hoop.",
+                "#5B7083", "#FFFFFF", "#C1121F", "#0B2545", "#13315C", 0.6f);
+            Holiday(c, Holidays.HalloweenCourtId, "Pumpkin Patch Court", HolidayTheme.Halloween,
+                "Jack-o'-lanterns on the sideline and bats under a big orange moon.",
+                "#2E1F3E", "#FF8C1A", "#5A189A", "#10002B", "#3C096C", 0.55f);
+            Holiday(c, Holidays.EasterCourtId, "Egg Hunt Court", HolidayTheme.Easter,
+                "Spring grass, pastel paint, and painted eggs hidden along the baseline.",
+                "#7FB77E", "#FFFDF5", "#F4A6C0", "#BDE0FE", "#FFF1A8", 0.5f);
+            Holiday(c, Holidays.FourthCourtId, "Firework Court", HolidayTheme.FourthOfJuly,
+                "Stars in the paint, stripes on the lines, and fireworks over the stands.",
+                "#14213D", "#F4F1DE", "#C1121F", "#03045E", "#1D3557", 0.65f);
+
             c.Courts.Add(Court(PracticeCourtId, "Practice Lab", CourtCircuit.Practice,
                 "An empty rec-centre court with chalk targets on the floor.",
                 "#8D99AE", "#EDF2F4", "#2B2D42", "#2B2D42", "#8D99AE", 0f));
+        }
+
+        private static void Holiday(ContentCatalog c, string id, string name, HolidayTheme theme, string description,
+                                    string floor, string lines, string paint, string skyTop, string skyBottom, float crowd)
+        {
+            var court = Court(id, name, CourtCircuit.Holiday, description, floor, lines, paint, skyTop, skyBottom, crowd);
+            court.theme = theme;
+            c.Courts.Add(court);
         }
 
         private static CourtDef Court(string id, string name, CourtCircuit circuit, string description,

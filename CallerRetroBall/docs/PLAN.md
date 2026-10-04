@@ -331,6 +331,29 @@
 - **Winners' ball:** every half-court 3-on-3 game (Quick Call, Rise, King, Cup, Arcade, 2 Player and the
   rest) keeps the ball with the team that scores. Full Court and 1-on-1 still alternate.
 
+## Phase 20: Kit Studio, Holiday Games, Full Court rules, sharing
+
+- **Kit Studio** (Locker Room ▸ KIT): Home / Away / Alt kits. Jersey: colour, trim, accent, cut (tank, tee,
+  long sleeve), collar (V, crew, none), side stripes, chest (logo, band, number), pattern. Shorts: colour, trim,
+  length (classic, long, short), side stripe, waistband. Shoes: colour, sole, laces, stripe, height (low, mid,
+  high). 64-colour palette + RGB sliders (32 steps a channel, the grid kits are stored on). Live looping
+  preview, RANDOMIZE (harmonious schemes, unlocked styles only), UNDO, RESET, presets from owned shop items.
+  Long sleeves, high tops, long shorts, double stripes, chest number and four patterns unlock by playing.
+  Your team wears the kit in every game; the Away kit goes on automatically when colours clash (ΔE check).
+  The classic look is pixel-identical to the old sprites (tested).
+- **Sharing (offline):** a kit is a 33-character code (15-bit colours + styles + CRC-8, so every single-character
+  typo is caught) and a QR code (own encoder: byte mode, level M, versions 1–10, checked against OpenCV's
+  decoder) for `retroball://kit/<code>`; the iPhone camera opens the app straight into the Kit Studio. ENTER
+  CODE / PASTE loads a friend's kit. TRADING CARD draws your player in your kit with OVR, role and stats
+  (PNG via the share sheet).
+- **Holiday Games** (Play ▸ HOLIDAY GAMES): Christmas (snow, candy-cane lines, trees, lights), Halloween
+  (pumpkins, bats, moon), Easter (eggs, flowers, bunting) and Fourth of July (stars in the paint, striped
+  lines, fireworks) courts; the one in season (all of October, Dec 1–26, Easter week, Jul 1–7) gets a main
+  menu button. Holiday courts are also in the Quick Call court list.
+- **Full Court polish:** inbound pass from the baseline after a basket (5-second count), backcourt and
+  eight-second violations, fast-break lanes and get-back defence, two-player benches with substitutions at
+  dead balls when AI players tire (subs keep their own box-score lines), and the Rise Mode final is Full Court.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

@@ -51,6 +51,7 @@ namespace CallerRetroBall.Logic
             if (data.king.order == null) data.king.order = new List<string>();
             if (data.secrets == null) data.secrets = new SecretsSaveData();
             if (data.customTeam == null) data.customTeam = new CustomTeamData();
+            if (data.kits == null) data.kits = new KitSaveData();
             if (data.cup == null) data.cup = new CupSaveData();
             if (data.dynasty == null) data.dynasty = new DynastySaveData();
             if (data.tipsSeen == null) data.tipsSeen = new List<string>();

@@ -69,6 +69,18 @@ namespace CallerRetroBall.Gameplay
             return sr;
         }
 
+        /// <summary>A different player in this slot (Full Court substitution).</summary>
+        public void SetFrames(Sprite[,] frames)
+        {
+            _frames = frames;
+            if (_head != null)
+            {
+                Destroy(_head.gameObject);
+                _head = null;
+                _heads = null;
+            }
+        }
+
         /// <summary>Draws a recorded replay frame instead of live state (presentation only).</summary>
         public void SyncReplay(float dt, ReplayPlayer f, bool controlled)
         {

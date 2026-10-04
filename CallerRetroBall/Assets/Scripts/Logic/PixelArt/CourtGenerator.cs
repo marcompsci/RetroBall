@@ -113,8 +113,178 @@ namespace CallerRetroBall.Logic.PixelArt
             CourtArc(c, g, new Vec2(0f, g.depth), 1.8f, 90f, 270f, line);
 
             DrawCrowd(c, g, court, rng, drawPeople);
+            if (court.theme != HolidayTheme.None) DrawHoliday(c, g, court, seed);
             if (bannerA.HasValue) DrawBanner(c, g, bannerA.Value, bannerB ?? bannerA.Value);
             return c;
+        }
+
+        // ------------------------------------------------------------------ holiday decorations
+
+        private static readonly RgbColor HolidayRed = RgbColor.FromHex("#D62828");
+        private static readonly RgbColor HolidayGreen = RgbColor.FromHex("#2D6A4F");
+        private static readonly RgbColor HolidayGold = RgbColor.FromHex("#FFD166");
+        private static readonly RgbColor Snow = RgbColor.FromHex("#F8FBFF");
+
+        /// <summary>Christmas, Halloween, Easter and Fourth of July dressing: floor, lines, sidelines and stands.</summary>
+        private static void DrawHoliday(PixelCanvas c, CourtGeometry g, CourtDef court, uint seed)
+        {
+            var rng = new SeededRandom(seed ^ 0x5EA5u);
+            CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
+            int baseline = (int)Math.Round(baselinePy);
+            int wallBottom = baseline + 2, wallTop = c.Height - 1;
+            int side = (int)Math.Round(SideMargin * PixelsPerMeter);
+            int courtTop = (int)Math.Round(TopMargin * PixelsPerMeter);
+            var line = court.lines;
+            switch (court.theme)
+            {
+                case HolidayTheme.Christmas:
+                    // Candy-cane lines, snow on the floor and in drifts along the sidelines, trees, string lights.
+                    Restripe(c, line, 0, baseline + 1, 6, HolidayRed);
+                    for (int i = 0; i < c.Width * baseline / 150; i++)
+                    {
+                        int x = rng.Range(0, c.Width), y = rng.Range(0, baseline);
+                        if (!c.Get(x, y).Equals(line) && !c.Get(x, y).Equals(HolidayRed)) c.Set(x, y, Snow.WithAlpha(170));
+                    }
+                    for (int y = courtTop; y < baseline; y += 3)
+                    {
+                        c.FillRect(0, y, 3 + rng.Range(0, 4), 3, Snow);
+                        int w = 3 + rng.Range(0, 4);
+                        c.FillRect(c.Width - w, y, w, 3, Snow);
+                    }
+                    for (int y = courtTop + 20; y < baseline - 12; y += 48)
+                    {
+                        Tree(c, side / 2, y);
+                        Tree(c, c.Width - side / 2 - 1, y + 24);
+                    }
+                    Lights(c, wallTop - 2, new[] { HolidayRed, HolidayGreen, HolidayGold, RgbColor.FromHex("#4CC9F0") });
+                    for (int i = 0; i < 40; i++) c.Set(rng.Range(0, c.Width), rng.Range(wallBottom + 26, wallTop - 4), Snow);
+                    break;
+
+                case HolidayTheme.Halloween:
+                    // Orange moon, bats over the stands, jack-o'-lanterns down both sidelines.
+                    c.FillCircle(22f, wallTop - 9f, 7.5f, RgbColor.FromHex("#FFB347"));
+                    c.FillCircle(25f, wallTop - 7f, 2.5f, RgbColor.FromHex("#F4A13C"));
+                    for (int i = 0; i < 9; i++) Bat(c, 40 + i * 24 + rng.Range(-4, 5), wallTop - 4 - rng.Range(0, 8));
+                    for (int y = courtTop + 8; y < baseline - 6; y += 30)
+                    {
+                        Pumpkin(c, side / 2, y);
+                        Pumpkin(c, c.Width - side / 2 - 1, y + 15);
+                    }
+                    Restripe(c, line, 0, baseline + 1, 8, RgbColor.FromHex("#7B2CBF"));
+                    break;
+
+                case HolidayTheme.Easter:
+                    // Flowers in the grass, painted eggs on the sidelines and baseline, pastel bunting.
+                    RgbColor[] pastel = { RgbColor.FromHex("#F4A6C0"), RgbColor.FromHex("#BDE0FE"), RgbColor.FromHex("#FFF1A8"),
+                                          RgbColor.FromHex("#CDB4DB"), RgbColor.FromHex("#B9FBC0") };
+                    for (int i = 0; i < c.Width * baseline / 60; i++)
+                    {
+                        int x = rng.Range(0, c.Width), y = rng.Range(0, baseline);
+                        if (x >= side && x < c.Width - side && rng.NextFloat() < 0.7f) continue; // mostly off the playing floor
+                        c.Set(x, y, pastel[rng.Range(0, pastel.Length)]);
+                    }
+                    for (int y = courtTop + 6; y < baseline - 8; y += 22)
+                    {
+                        Egg(c, side / 2 - 2, y, pastel[(y / 22) % pastel.Length], pastel[(y / 22 + 2) % pastel.Length]);
+                        Egg(c, c.Width - side / 2 - 2, y + 11, pastel[(y / 22 + 1) % pastel.Length], pastel[(y / 22 + 3) % pastel.Length]);
+                    }
+                    for (int x = side + 6; x < c.Width - side - 6; x += 26) Egg(c, x, baseline - 9, pastel[(x / 26) % pastel.Length], RgbColor.White);
+                    Bunting(c, wallTop - 1, pastel);
+                    break;
+
+                case HolidayTheme.FourthOfJuly:
+                    // Stars in the paint, red-and-white striped lines, fireworks and bunting over the stands.
+                    Restripe(c, line, 0, baseline + 1, 4, HolidayRed);
+                    CourtToPixel(g, new Vec2(-g.paintWidth * 0.5f, g.paintLength), out float pl, out float pb);
+                    CourtToPixel(g, new Vec2(g.paintWidth * 0.5f, 0f), out float pr, out float pt);
+                    for (int y = (int)pb + 4; y < (int)pt - 3; y += 9)
+                        for (int x = (int)pl + 5 + ((y / 9) % 2) * 5; x < (int)pr - 4; x += 10) Star(c, x, y, RgbColor.White);
+                    RgbColor[] fire = { HolidayRed, RgbColor.White, RgbColor.FromHex("#4CC9F0"), HolidayGold };
+                    for (int i = 0; i < 6; i++)
+                        Burst(c, 20 + i * (c.Width - 40) / 5, wallTop - 8 - rng.Range(0, 6), 5 + rng.Range(0, 3), fire[i % fire.Length]);
+                    Bunting(c, wallTop - 1, new[] { HolidayRed, RgbColor.White, RgbColor.FromHex("#1D4ED8") });
+                    break;
+            }
+        }
+
+        /// <summary>Recolours every <paramref name="period"/>-pixel half of the court lines (candy-cane / stars-and-stripes).</summary>
+        private static void Restripe(PixelCanvas c, RgbColor line, int y0, int y1, int period, RgbColor alt)
+        {
+            for (int y = Math.Max(0, y0); y < Math.Min(c.Height, y1); y++)
+                for (int x = 0; x < c.Width; x++)
+                    if (c.Get(x, y).Equals(line) && (x + y) % period < period / 2) c.Set(x, y, alt);
+        }
+
+        private static void Tree(PixelCanvas c, int cx, int y)
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                int half = (9 - row) / 2;
+                c.FillRect(cx - half, y + 2 + row, half * 2 + 1, 1, HolidayGreen);
+            }
+            c.FillRect(cx, y, 1, 2, RgbColor.FromHex("#7F5539"));
+            c.Set(cx, y + 11, HolidayGold);
+            c.Set(cx - 1, y + 5, HolidayRed);
+            c.Set(cx + 2, y + 4, HolidayGold);
+        }
+
+        private static void Pumpkin(PixelCanvas c, int cx, int y)
+        {
+            c.FillCircle(cx + 0.5f, y + 3.5f, 3.6f, RgbColor.FromHex("#FF8C1A"));
+            c.FillRect(cx, y + 7, 1, 2, HolidayGreen);
+            var face = RgbColor.FromHex("#FFE066");
+            c.Set(cx - 1, y + 4, face);
+            c.Set(cx + 2, y + 4, face);
+            c.FillRect(cx - 1, y + 2, 4, 1, face);
+        }
+
+        private static void Bat(PixelCanvas c, int x, int y)
+        {
+            var ink = RgbColor.FromHex("#C77DFF");
+            c.FillRect(x + 2, y, 2, 2, ink);
+            c.Set(x, y + 1, ink); c.Set(x + 1, y, ink);
+            c.Set(x + 4, y, ink); c.Set(x + 5, y + 1, ink);
+        }
+
+        private static void Egg(PixelCanvas c, int x, int y, RgbColor shell, RgbColor stripe)
+        {
+            c.FillRect(x + 1, y, 3, 6, shell);
+            c.FillRect(x, y + 1, 5, 3, shell);
+            c.FillRect(x, y + 2, 5, 1, stripe);
+        }
+
+        private static void Star(PixelCanvas c, int x, int y, RgbColor col)
+        {
+            c.Set(x, y + 2, col);
+            c.FillRect(x - 2, y + 1, 5, 1, col);
+            c.Set(x, y + 1, col);
+            c.Set(x - 1, y, col);
+            c.Set(x + 1, y, col);
+        }
+
+        private static void Burst(PixelCanvas c, int cx, int cy, int r, RgbColor col)
+        {
+            for (int k = 0; k < 12; k++)
+            {
+                double a = k * Math.PI / 6.0;
+                for (int d = 2; d <= r; d += 1 + (d % 2))
+                    c.Set(cx + (int)Math.Round(Math.Cos(a) * d), cy + (int)Math.Round(Math.Sin(a) * d), col);
+            }
+            c.Set(cx, cy, RgbColor.White);
+        }
+
+        private static void Lights(PixelCanvas c, int y, RgbColor[] colors)
+        {
+            var wire = RgbColor.FromHex("#1B4332");
+            for (int x = 0; x < c.Width; x++) c.Set(x, y + ((x / 8) % 2 == 0 ? 0 : -1), wire);
+            for (int x = 3, i = 0; x < c.Width; x += 8, i++) c.FillRect(x, y - 2, 2, 2, colors[i % colors.Length]);
+        }
+
+        private static void Bunting(PixelCanvas c, int top, RgbColor[] colors)
+        {
+            for (int x = 0, i = 0; x < c.Width; x += 8, i++)
+                for (int row = 0; row < 4; row++)
+                    c.FillRect(x + row, top - row, 7 - row * 2, 1, colors[i % colors.Length]);
         }
 
         // ------------------------------------------------------------------ full court

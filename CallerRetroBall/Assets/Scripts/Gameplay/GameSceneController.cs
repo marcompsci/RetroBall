@@ -125,6 +125,22 @@ namespace CallerRetroBall.Gameplay
         /// <summary>The rim the offence attacks, as drawn (Full Court: whichever end that is right now).</summary>
         private Vector3 HoopWorld => CourtSpace.ToWorldSnapped(_match.Setup.Court.Hoop, CourtSpace.RimHeight);
         private bool FullCourtGame => _match != null && _match.Setup.FullCourt;
+        /// <summary>What each slot wears (kept so a substitute can be drawn in the same kit).</summary>
+        private KitLook[] _dress;
+
+        /// <summary>Full Court substitution: draw the new player in the slot's kit.</summary>
+        private void RedrawPlayer(int index)
+        {
+            if (index < 0 || index >= _playerViews.Length) return;
+            var p = _match.Players[index];
+            var frames = _art.PlayerFrames(p.Def, _dress[index]);
+            _playerViews[index].SetFrames(frames);
+            if (App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.BigHeads))
+                _playerViews[index].EnableBigHead(_art.HeadFrames(frames, p.Def.appearance));
+        }
+
+        /// <summary>Shown once at tip-off when your Away kit was picked automatically.</summary>
+        private string _kitNote;
 
         public MatchSimulation Match => _match;
         public bool IsPaused => _paused;
@@ -269,6 +285,7 @@ namespace CallerRetroBall.Gameplay
             }
 
             _playerViews = new PlayerView[_match.Players.Length];
+            _dress = new KitLook[_match.Players.Length];
             var ringColor = new Color(1f, 0.82f, 0.4f, 1f);
             bool contrast = career != null && career.settings.colorblindContrast;
             var filter = career != null ? ColorAccess.Normalize(career.settings.colorFilter) : ColorFilter.Off;
@@ -277,6 +294,16 @@ namespace CallerRetroBall.Gameplay
             var homeJersey = setup.TeamA.primary;
             if (setup.HumanTeam == 0 && setup.TeamA.id == DefaultContent.PlayerCrewId && !setup.TeamA.customKit && Cosmetic(career?.equippedJersey) != null)
                 homeJersey = Cosmetic(career?.equippedJersey).colorA;
+            // Kit Studio: your team wears your kit (or your Away kit when it would clash with the opponent).
+            KitData myKit = null;
+            int kitTeam = CustomTeams.IsYours(setup.TeamA.id) ? 0 : (CustomTeams.IsYours(setup.TeamB.id) ? 1 : -1);
+            if (career != null && kitTeam >= 0 && !Demo)
+            {
+                var other = kitTeam == 0 ? setup.TeamB : setup.TeamA;
+                myKit = Kits.ForMatch(career.kits, other.primary, filter, out bool toAway);
+                if (myKit != null && toAway && !Demo) _kitNote = "AWAY KIT ON: COLORS CLASHED";
+                if (myKit != null && kitTeam == 0) homeJersey = Kits.Unpack(myKit.jersey);
+            }
             var awayJersey = setup.TeamB.primary;
             var awayTrim = setup.TeamB.secondary;
             bool awayAlternate = ColorAccess.ResolveAwayKit(homeJersey, ref awayJersey, ref awayTrim, filter);
@@ -311,7 +338,15 @@ namespace CallerRetroBall.Gameplay
                 }
                 // Player 2's ring is cyan so both people can find themselves.
                 var ring = i == _match.SecondControlledIndex ? new Color32(0x4C, 0xC9, 0xF0, 255) : (Color32)ringColor;
-                var frames = _art.PlayerFrames(p.Def, primary, trim, team.accent, shoeColor, pattern, shorts);
+                KitLook dress;
+                if (myKit != null && p.Team == kitTeam)
+                {
+                    dress = Kits.Look(myKit);
+                    if (contrast) dress.Pattern = PatternFor(p.Team, setup); // Team Patterns still wins for readability
+                }
+                else dress = KitLook.Classic(primary, trim, team.accent, shoeColor, pattern, shorts);
+                _dress[i] = dress;
+                var frames = _art.PlayerFrames(p.Def, dress);
                 _playerViews[i] = PlayerView.Create(world, p, frames, _art, ring);
                 if (career != null && Secrets.IsOn(career.secrets, Secrets.BigHeads))
                     _playerViews[i].EnableBigHead(_art.HeadFrames(frames, p.Def.appearance));
@@ -766,8 +801,17 @@ namespace CallerRetroBall.Gameplay
                         _hud.Toast("SHOT CLOCK", 1.2f);
                         Sfx(SfxId.Whistle, 0.7f);
                         break;
+                    case MatchEventType.Violation:
+                        // Full Court: backcourt, 8 seconds, or 5-second inbound.
+                        _hud.Toast(MatchSimulation.ViolationName((ViolationKind)e.Value), 1.3f);
+                        Sfx(SfxId.Whistle, 0.8f);
+                        break;
+                    case MatchEventType.Substitution:
+                        RedrawPlayer(e.PlayerIndex);
+                        if (e.Team == human) _hud.Toast("SUB: " + _match.Players[e.PlayerIndex].Def.lastName.ToUpperInvariant() + " IN", 1.1f);
+                        break;
                     case MatchEventType.CheckBall:
-                        if (!Demo) _hud.Toast(e.Team == human ? "YOUR BALL" : "DEFENSE", 0.9f);
+                        if (!Demo) _hud.Toast(e.Team == human ? (_match.MustInbound && _match.HumanHasBall ? "INBOUND: PASS IT IN" : "YOUR BALL") : "DEFENSE", 0.9f);
                         break;
                 }
             }
@@ -778,6 +822,11 @@ namespace CallerRetroBall.Gameplay
         {
             CourtSpace.Flip = _match.Flipped;
             float now = Time.unscaledTime;
+            if (_kitNote != null && _match.Time > 1.9f)
+            {
+                _hud.Toast(_kitNote, 1.6f);
+                _kitNote = null;
+            }
             if (_leaper >= 0 && now - _leapStart >= _leapDuration) _leaper = -1;
             SyncCrowd(now);
             var move = UpdateDribbleMove(now);
@@ -864,12 +913,12 @@ namespace CallerRetroBall.Gameplay
             bool canShoot, canPass;
             if (offense && _match.HumanHasBall)
             {
-                shoot = _match.MustClear ? "CLEAR" : "SHOOT";
-                pass = "PASS";
+                shoot = _match.MustClear ? "CLEAR" : (_match.MustInbound ? "WAIT" : "SHOOT");
+                pass = _match.MustInbound ? "INBOUND" : "PASS";
                 def = "DEF";
-                canShoot = !_match.MustClear;
+                canShoot = !_match.MustClear && !_match.MustInbound;
                 canPass = true;
-                _controls.Shoot.UnavailableHint = "TAKE IT BACK";
+                _controls.Shoot.UnavailableHint = _match.MustInbound ? "PASS IT IN" : "TAKE IT BACK";
             }
             else if (offense)
             {

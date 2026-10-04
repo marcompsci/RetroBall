@@ -18,9 +18,10 @@ namespace CallerRetroBall.UI
         protected override string ScreenTitle => "LOCKER ROOM";
         protected override string BackdropCourtId => "court.pier_nine";
 
-        private enum Tab { Player = 0, Create = 1, Team = 2, Training = 3, Style = 4, Stats = 5, Trophies = 6 }
+        private enum Tab { Player = 0, Create = 1, Team = 2, Kit = 3, Training = 4, Style = 5, Stats = 6, Trophies = 7 }
 
-        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TEAM", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TEAM", "KIT", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private KitStudio _kitStudio;
         private CustomTeamData _teamDraft;
         private Texture2D _teamPreviewTex;
 
@@ -31,6 +32,7 @@ namespace CallerRetroBall.UI
         {
             if (_previewTex != null) Destroy(_previewTex);
             if (_teamPreviewTex != null) Destroy(_teamPreviewTex);
+            _kitStudio?.Dispose();
         }
 
         private Tab _tab;
@@ -56,7 +58,34 @@ namespace CallerRetroBall.UI
             var holder = UiKit.NewRect("TabBody", Body);
             UiKit.Band(holder, 0f, 0.865f, 0f);
             _content = UiKit.ScrollColumn(holder, 16f, new RectOffset(48, 48, 12, 48));
+            // A kit shared by a friend (scanned QR / link) opens straight in the Kit Studio.
+            if (App.PendingKit != null)
+            {
+                _kitStudio = new KitStudio(_content, RebuildKeepingScroll);
+                _kitStudio.LoadShared(App.PendingKit);
+                App.PendingKit = null;
+                Show(Tab.Kit);
+                Audio.AudioManager.Play(SfxId.Coin, 0.7f);
+                return;
+            }
             Show(Tab.Player);
+        }
+
+        /// <summary>Rebuilds the tab without jumping back to the top of the list.</summary>
+        private void RebuildKeepingScroll()
+        {
+            var scroll = _content.GetComponentInParent<UnityEngine.UI.ScrollRect>();
+            float pos = scroll != null ? scroll.verticalNormalizedPosition : 1f;
+            Refresh();
+            if (scroll != null) StartCoroutine(RestoreScroll(scroll, pos));
+        }
+
+        // The old rows are destroyed at the end of the frame, so put the scroll back once they're gone.
+        private System.Collections.IEnumerator RestoreScroll(UnityEngine.UI.ScrollRect scroll, float pos)
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            if (scroll != null) scroll.verticalNormalizedPosition = pos;
         }
 
         private void Show(Tab tab)
@@ -77,6 +106,10 @@ namespace CallerRetroBall.UI
                 case Tab.Player: BuildPlayer(); break;
                 case Tab.Create: BuildCreate(); break;
                 case Tab.Team: BuildTeam(); break;
+                case Tab.Kit:
+                    if (_kitStudio == null) _kitStudio = new KitStudio(_content, RebuildKeepingScroll);
+                    _kitStudio.Build();
+                    break;
                 case Tab.Training: BuildTraining(); break;
                 case Tab.Style: BuildStyle(); break;
                 case Tab.Trophies: BuildTrophies(); break;
@@ -416,6 +449,9 @@ namespace CallerRetroBall.UI
             var career = App.Career;
             var slots = new[] { CosmeticSlot.JerseyPalette, CosmeticSlot.Shoes, CosmeticSlot.CourtBanner, CosmeticSlot.Celebration, CosmeticSlot.DribbleMove };
             string[] slotNames = { "JERSEY PALETTE", "SHOES", "COURT BANNER", "CELEBRATION", "DRIBBLE MOVE" };
+            if (career.kits.designed)
+                UiKit.Size(UiKit.Label(_content, "Your KIT tab design is what your team wears. Jerseys and shoes you own here show up there as presets.",
+                                       28f, Theme.Cyan), 80f);
             for (int s = 0; s < slots.Length; s++)
             {
                 var items = c.Cosmetics.FindAll(x => x.slot == slots[s]);
