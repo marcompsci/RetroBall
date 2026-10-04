@@ -1,6 +1,6 @@
 # Game Center setup
 
-Game Center in RetroBall is **optional and off by default**. The player turns it on in **Settings ▸ Game Center ▸ Sign in**. Without it, the game works exactly the same offline.
+Game Center in Retro Hoops is **optional and off by default**. The player turns it on in **Settings ▸ Game Center ▸ Sign in**. Without it, the game works exactly the same offline.
 
 ## What's in the project
 

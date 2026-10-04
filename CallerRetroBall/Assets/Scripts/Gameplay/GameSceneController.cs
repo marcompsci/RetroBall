@@ -28,8 +28,8 @@ namespace CallerRetroBall.Gameplay
         private float FixedStep = 1f / 60f;
         private int MaxStepsPerFrame = 5;
         // Profiler markers (visible in Unity's Profiler and Xcode Instruments' signposts).
-        private static readonly Unity.Profiling.ProfilerMarker StepMarker = new Unity.Profiling.ProfilerMarker("RetroBall.SimStep");
-        private static readonly Unity.Profiling.ProfilerMarker ViewsMarker = new Unity.Profiling.ProfilerMarker("RetroBall.SyncViews");
+        private static readonly Unity.Profiling.ProfilerMarker StepMarker = new Unity.Profiling.ProfilerMarker("Retro Hoops.SimStep");
+        private static readonly Unity.Profiling.ProfilerMarker ViewsMarker = new Unity.Profiling.ProfilerMarker("Retro Hoops.SyncViews");
 
         private MatchRequest _request;
         private MatchSimulation _match;
@@ -1705,11 +1705,11 @@ namespace CallerRetroBall.Gameplay
             if (task.IsFaulted)
             {
                 _hud.Toast("COULDN'T SAVE THE HIGHLIGHT", 1.4f);
-                Debug.LogWarning("[RetroBall] Highlight GIF failed: " + task.Exception?.GetBaseException().Message);
+                Debug.LogWarning("[Retro Hoops] Highlight GIF failed: " + task.Exception?.GetBaseException().Message);
                 yield break;
             }
             Haptics.Success();
-            Share.File(path, "My play of the game in RetroBall");
+            Share.File(path, "My play of the game in Retro Hoops");
         }
 
         private void EndReplay()

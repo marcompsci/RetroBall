@@ -183,6 +183,6 @@ namespace CallerRetroBall.Logic
         public static int HeightFor(int screenW, int screenH) =>
             Math.Max(2, (int)Math.Round(Width * (screenH / (double)Math.Max(1, screenW)) / 2.0) * 2);
 
-        public static string FileName(DateTime now) => "RetroBall_" + now.ToString("yyyyMMdd_HHmmss", System.Globalization.CultureInfo.InvariantCulture) + ".gif";
+        public static string FileName(DateTime now) => "RetroHoops_" + now.ToString("yyyyMMdd_HHmmss", System.Globalization.CultureInfo.InvariantCulture) + ".gif";
     }
 }

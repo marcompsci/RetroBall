@@ -29,21 +29,23 @@ namespace CallerRetroBall.EditorTools
             root.SetBoolean("CADisableMinimumFrameDurationOnPhone", true);
             root.SetString("LSApplicationCategoryType", "public.app-category.sports-games");
             // The share sheet's "Save Image" writes highlight GIFs to Photos (add-only access).
-            root.SetString("NSPhotoLibraryAddUsageDescription", "Save your RetroBall highlights to Photos.");
+            root.SetString("NSPhotoLibraryAddUsageDescription", "Save your Retro Hoops highlights to Photos.");
             // Bluetooth / MFi controllers (Xbox, PlayStation, Switch Pro and similar extended gamepads).
             root.SetBoolean("GCSupportsControllerUserInteraction", true);
-            // retroball://kit/... links (kit QR codes) open the app straight into the Kit Studio.
+            // retrohoops://kit/... (and older retroball://kit/...) links (kit QR codes) open the app straight into the Kit Studio.
             var urlTypes = root["CFBundleURLTypes"] as PlistElementArray ?? root.CreateArray("CFBundleURLTypes");
             bool hasScheme = false;
             foreach (var t in urlTypes.values)
                 if (t is PlistElementDict d && d["CFBundleURLSchemes"] is PlistElementArray schemes)
                     foreach (var sch in schemes.values)
-                        if (sch is PlistElementString str && str.value == "retroball") hasScheme = true;
+                        if (sch is PlistElementString str && str.value == "retrohoops") hasScheme = true;
             if (!hasScheme)
             {
                 var type = urlTypes.AddDict();
                 type.SetString("CFBundleURLName", "com.phoronomicstudios.retroball.kit");
-                type.CreateArray("CFBundleURLSchemes").AddString("retroball");
+                var schemes = type.CreateArray("CFBundleURLSchemes");
+                schemes.AddString("retrohoops");
+                schemes.AddString("retroball"); // links shared before the rename
             }
             if (root["GCSupportedGameControllers"] == null)
                 root.CreateArray("GCSupportedGameControllers").AddDict().SetString("ProfileName", "ExtendedGamepad");

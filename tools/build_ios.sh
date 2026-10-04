@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the RetroBall Xcode project from the command line (macOS).
+# Builds the Retro Hoops Xcode project from the command line (macOS).
 #   tools/build_ios.sh            -> iOS Simulator build in CallerRetroBall/iOSBuild/Simulator
 #   tools/build_ios.sh device     -> device build in CallerRetroBall/iOSBuild/Device
 # Close the project in the Unity Editor first (Unity can't open one project twice).

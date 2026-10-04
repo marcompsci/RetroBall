@@ -79,7 +79,7 @@ namespace CallerRetroBall.Core
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
             if (op == null)
             {
-                Debug.LogError("[SceneFlow] Scene '" + sceneName + "' is not in Build Settings. Run 'RetroBall ▸ Run Project Setup'.");
+                Debug.LogError("[SceneFlow] Scene '" + sceneName + "' is not in Build Settings. Run 'Retro Hoops ▸ Run Project Setup'.");
             }
             else
             {

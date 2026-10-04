@@ -27,7 +27,7 @@ namespace CallerRetroBall.Logic
     }
 
     /// <summary>
-    /// RetroBall's soundtrack. The first three tracks are the original loops from <see cref="AudioSynth"/>
+    /// Retro Hoops's soundtrack. The first three tracks are the original loops from <see cref="AudioSynth"/>
     /// (menus, matches, Rise hub); the rest are full songs written here by a small composer: a pulse
     /// lead melody over chord tones, a triangle bass, a pulse arpeggio and noise drums, in an A-A-B-A
     /// form that loops seamlessly. Every note is generated from the song's numbers, so nothing is

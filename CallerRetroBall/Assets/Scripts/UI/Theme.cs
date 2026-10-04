@@ -7,10 +7,10 @@ namespace CallerRetroBall.UI
 {
     public enum ButtonStyle { Primary = 0, Secondary = 1, Ghost = 2 }
 
-    /// <summary>Original RetroBall UI palette and generated pixel skin.</summary>
+    /// <summary>Original Retro Hoops UI palette and generated pixel skin.</summary>
     public static class Theme
     {
-        public const string Title = "RETROBALL";
+        public const string Title = "RETRO HOOPS";
         public const string Tagline = "Call your shot. Build your legacy.";
 
         public static readonly Color Ink = new Color32(0x1A, 0x1A, 0x2E, 255);

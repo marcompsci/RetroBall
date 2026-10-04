@@ -355,8 +355,10 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ share codes
 
-        /// <summary>Deep link that opens RetroBall and offers the kit (scan the QR with the iPhone camera).</summary>
-        public const string LinkPrefix = "retroball://kit/";
+        /// <summary>Deep link that opens Retro Hoops and offers the kit (scan the QR with the iPhone camera).</summary>
+        public const string LinkPrefix = "retrohoops://kit/";
+        /// <summary>Links from before the game was renamed still open.</summary>
+        public const string OldLinkPrefix = "retroball://kit/";
         private const string Alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32
         private const int CodeVersion = 1;
 
@@ -388,7 +390,7 @@ namespace CallerRetroBall.Logic
             return sb.ToString();
         }
 
-        /// <summary>Reads a code or a retroball://kit/ link. Forgiving: case, dashes, spaces, I/L/O typos.</summary>
+        /// <summary>Reads a code or a retrohoops://kit/ (or old retroball://kit/) link. Forgiving: case, dashes, spaces, I/L/O typos.</summary>
         public static bool TryDecode(string text, out KitData kit)
         {
             kit = null;
@@ -396,6 +398,11 @@ namespace CallerRetroBall.Logic
             string s = text.Trim();
             int link = s.IndexOf(LinkPrefix, StringComparison.OrdinalIgnoreCase);
             if (link >= 0) s = s.Substring(link + LinkPrefix.Length);
+            else
+            {
+                link = s.IndexOf(OldLinkPrefix, StringComparison.OrdinalIgnoreCase);
+                if (link >= 0) s = s.Substring(link + OldLinkPrefix.Length);
+            }
             var values = new List<int>();
             foreach (char raw in s)
             {

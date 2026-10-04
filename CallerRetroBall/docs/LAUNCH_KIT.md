@@ -1,6 +1,6 @@
 # Launch kit
 
-This is everything for getting RetroBall from a working build to the App Store. Store text is in `APP_STORE.md`, and the step-by-step build checklist is in `RELEASE_CHECKLIST.md`.
+This is everything for getting Retro Hoops from a working build to the App Store. Store text is in `APP_STORE.md`, and the step-by-step build checklist is in `RELEASE_CHECKLIST.md`.
 
 Apple's specs below were checked against App Store Connect Help in October 2026. Re-check them before you upload, because they change from time to time.
 
@@ -15,7 +15,7 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 **How to take them in Unity**
 1. Open the **Game** view. In the resolution menu, add a fixed resolution of **1320 × 2868** and select it.
 2. Press **Play** and set up the moment you want.
-3. Choose **RetroBall ▸ Release ▸ Capture Store Screenshot** (or press ⌘⇧K).
+3. Choose **Retro Hoops ▸ Release ▸ Capture Store Screenshot** (or press ⌘⇧K).
 4. The images save to `StoreScreenshots/` in the project, as opaque PNGs (no transparency).
 5. Every capture is also logged in `Logs/RetroBall-release.txt`.
 
@@ -51,7 +51,7 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 
 | Time | Shot | On-screen text |
 |---|---|---|
-| 0–2 s | The title logo bobs, and CRT scanlines fade in | RETROBALL |
+| 0–2 s | The title logo bobs, and CRT scanlines fade in | RETRO HOOPS |
 | 2–6 s | Check ball, crossover, then a green release (SWISH) | Hold. Release on green. |
 | 6–10 s | Three makes in a row: HEATING UP, then HEAT CHECK! flames | Heat up. |
 | 10–14 s | A gold arrow on a cutter, then the alley-oop slam with hit-stop | Throw the oop. |
@@ -96,4 +96,4 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 
 ## 6. Press blurb (copy and paste)
 
-> **RetroBall** is an original pixel-art 3v3 street basketball game for iPhone. Heat up after three straight buckets, throw alley-oops, climb a six-stage Arcade Ladder to a secret boss, and build your own team's colours, kit and logo. It's fully offline, with no ads, no purchases and no tracking. English and Spanish, touch or controller.
+> **Retro Hoops** is an original pixel-art 3v3 street basketball game for iPhone. Heat up after three straight buckets, throw alley-oops, climb a six-stage Arcade Ladder to a secret boss, and build your own team's colours, kit and logo. It's fully offline, with no ads, no purchases and no tracking. English and Spanish, touch or controller.

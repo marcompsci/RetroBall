@@ -6,8 +6,8 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 | Field | Value |
 |---|---|
-| Name (30) | RetroBall |
-| Subtitle (30) | Retro 3v3 & 5v5 basketball *(26)* |
+| Name (30) | Retro Hoops |
+| Subtitle (30) | 3v3 & 5v5 street basketball *(27)* |
 | Bundle ID | `com.phoronomicstudios.retroball` (paid team; `com.marcompsci.retroball` belongs to the personal team and can't be used) |
 | SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
@@ -25,7 +25,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 > **Call your shot. Build your legacy.**
 >
-> RetroBall is a pixel-art basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Hit three in a row and you HEAT UP. Lob it to a cutter for the ALLEY-OOP. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
+> Retro Hoops is a pixel-art basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Hit three in a row and you HEAT UP. Lob it to a cutter for the ALLEY-OOP. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
 >
 > On defense, contest, reach for steals, switch onto the ball handler, and box out. Every AI team has its own defense, and the smart ones adjust when you find a weakness.
 >
@@ -77,14 +77,14 @@ Add **Spanish (Mexico)** as a localization in App Store Connect and paste these.
 
 | Field | Text |
 |---|---|
-| Name | RetroBall |
+| Name | Retro Hoops |
 | Subtitle (30) | Básquet retro 3v3 callejero *(27)* |
 | Promotional text | Ponte al rojo vivo, lanza el alley-oop, sube la Escalera Arcade y crea tu propio equipo. Básquet retro 3v3 con secretos. Sin anuncios ni compras. |
 | Keywords (100) | `baloncesto,basquet,arcade,retro,pixel,3v3,callejero,offline,deportes,cancha,temporada,8-bit` |
 
 > **Anuncia tu tiro. Construye tu leyenda.**
 >
-> RetroBall es un juego de básquet 3v3 de media cancha en pixel art, hecho para jugar con un pulgar en el stick y otro en los botones. Mantén para tirar y suelta en verde. Encesta tres seguidos y te pones AL ROJO VIVO. Lanza el alley-oop a un compañero junto al aro.
+> Retro Hoops es un juego de básquet 3v3 de media cancha en pixel art, hecho para jugar con un pulgar en el stick y otro en los botones. Mantén para tirar y suelta en verde. Encesta tres seguidos y te pones AL ROJO VIVO. Lanza el alley-oop a un compañero junto al aro.
 >
 > Modo Franquicia (traspasos, agencia libre, draft y tope salarial), Fin de Semana de las Estrellas con concurso de clavadas y de triples, Cancha completa 5 contra 5, constructor de canchas, estudio de uniformes y nueve temas chiptune originales. Modo Ascenso, Escalera Arcade con jefe secreto, Rey de la Cancha, la Caller Cup, 1 contra 1, Reto Diario y 2 jugadores en un dispositivo. Crea tu jugador y tu propio equipo, descubre códigos secretos y llena tu sala de trofeos.
 >
@@ -108,7 +108,7 @@ basketball,arcade,retro,pixel,3v3,5v5,hoops,streetball,offline,sports,franchise,
 
 ### Privacy policy text (ready to host)
 
-> RetroBall does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved on your device and, if iCloud Sync is on, in your own iCloud account through Apple's iCloud service, where the developer can't see it. Optional Game Center scores and achievements are handled by Apple's Game Center. Contact: **YOU: your email**.
+> Retro Hoops does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved on your device and, if iCloud Sync is on, in your own iCloud account through Apple's iCloud service, where the developer can't see it. Optional Game Center scores and achievements are handled by Apple's Game Center. Contact: **YOU: your email**.
 
 ## App Privacy ("nutrition label")
 
@@ -148,7 +148,7 @@ The 6.9" iPhone screenshots are required; App Store Connect scales them down for
 9. The Music Player with the level meter moving
 10. The Rise Mode hub with the ALL-STAR WEEKEND button
 
-Use **RetroBall ▸ Release ▸ Capture Store Screenshot** in Play mode (see `docs/LAUNCH_KIT.md`). Captions for each shot are in the launch kit.
+Use **Retro Hoops ▸ Release ▸ Capture Store Screenshot** in Play mode (see `docs/LAUNCH_KIT.md`). Captions for each shot are in the launch kit.
 
 Only show real gameplay. Don't add device frames that show non-Apple hardware, and don't include text that mentions other games or leagues.
 

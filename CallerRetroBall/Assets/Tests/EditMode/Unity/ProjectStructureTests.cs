@@ -14,7 +14,7 @@ namespace CallerRetroBall.Tests
         public void AllScenes_AreInBuildSettings_BootFirst()
         {
             var paths = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToList();
-            Assert.Greater(paths.Count, 0, "Run 'RetroBall ▸ Run Project Setup' first.");
+            Assert.Greater(paths.Count, 0, "Run 'Retro Hoops ▸ Run Project Setup' first.");
             Assert.AreEqual("Assets/Scenes/" + SceneNames.Boot + ".unity", paths[0]);
             foreach (var name in SceneNames.All)
                 Assert.IsTrue(paths.Contains("Assets/Scenes/" + name + ".unity"), name + " missing from Build Settings");
@@ -34,7 +34,7 @@ namespace CallerRetroBall.Tests
         {
             var db = ContentDatabase.Load();
             Assert.AreEqual(0, db.FallbackKinds.Count,
-                "Missing assets for: " + string.Join(", ", db.FallbackKinds) + ". Run 'RetroBall ▸ Run Project Setup'.");
+                "Missing assets for: " + string.Join(", ", db.FallbackKinds) + ". Run 'Retro Hoops ▸ Run Project Setup'.");
         }
     }
 }

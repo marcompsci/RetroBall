@@ -50,7 +50,7 @@ namespace CallerRetroBall.Core
             if (saving == _saving) return;
             _saving = saving;
             App.ApplyFrameRate();
-            Debug.Log("[RetroBall] Power saving " + (saving ? "on" : "off") + " (low power " + low + ", thermal " + thermal + ")");
+            Debug.Log("[Retro Hoops] Power saving " + (saving ? "on" : "off") + " (low power " + low + ", thermal " + thermal + ")");
         }
 
         private void OnGUI()

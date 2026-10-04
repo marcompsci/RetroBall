@@ -17,7 +17,7 @@
 | 13 | Recruit your crew, Neon Static rival + Rival Challenge, story scenes, 16 badges + trophy room, iOS readiness check | **Done** (278 logic tests pass; Unity changes not yet compiled; iPhone build still to do with Omari) |
 | 12 | Create-a-player, accessibility (left-handed, large buttons, tap-to-shoot, reduce motion), dunk/layup leaps, animated crowd, 3 music tracks + stingers, records/history/seasons | **Done** (262 logic tests pass; Unity changes not yet compiled in Unity) |
 | 11 | How to Play tutorial, opt-in Game Center (GameKit bridge), local 2-player, Daily Challenge | **Done** (243 logic tests pass incl. a scripted tutorial run and 2-player sim tests; Unity UI and GameKit not yet run) |
-| 10 | Rename to RetroBall; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
+| 10 | Rename to Retro Hoops; content: 2 courts + crews, 4 event cards, 7 cosmetics, First Call Classic tournament | **Done** (224 logic tests pass; Unity UI not yet seen running) |
 | 9 | Polish: celebrations, dribble moves, pixel bursts, dunk SLAM + shake, crowd ambience, score bounce, reward count-up | **Done** (207 logic tests pass; not yet seen running) |
 | 8 | Release prep: app icon, launch image, release settings, iOS build tooling, Info.plist, privacy manifest, App Store kit | **Done** (198 logic tests pass; icon previewed; no build run yet) |
 
@@ -137,9 +137,9 @@
   Call, and the deprecated `DEVELOPMENT_BUILD` define replaced by `DEBUG`. The overlays now scroll, and the keyboard
   controls show on screen.
 
-## Phase 10 — RetroBall + content
+## Phase 10 — Retro Hoops + content
 
-- Renamed the game to **RetroBall** everywhere players see it: the app name (`productName`), Settings credits,
+- Renamed the game to **Retro Hoops** everywhere players see it: the app name (`productName`), Settings credits,
   Editor menus, docs, and the App Store kit. The placeholder bundle ID is now `com.retroball.game`. Code
   folders and namespaces keep their `CallerRetroBall` names so Unity references don't break.
 - **Blacktop Circuit:** two new courts (Rooftop Ring, Boardwalk Slab) and two crews (Rooftop Relay, Boardwalk
@@ -198,7 +198,7 @@
   and SKIP.
 - **Badges** (`Badges`): 16 in-game badges, announced once after games; Locker Room ▸ TROPHY shows titles
   and all badges.
-- **RetroBall ▸ Release ▸ Check iOS Readiness:** iOS module, Mac/Xcode, scenes, bundle ID, team, app name, and
+- **Retro Hoops ▸ Release ▸ Check iOS Readiness:** iOS module, Mac/Xcode, scenes, bundle ID, team, app name, and
   icon, with an automatic fix for the icon and release settings.
 
 ## Phase 14: replay, drills, King of the Court, Spanish

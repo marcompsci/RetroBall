@@ -375,7 +375,7 @@ namespace CallerRetroBall.UI
             Heading("LOCKED");
             foreach (var b in Legacy.Brands)
                 if (s.fans < b.MinFans) Line(b.Name + "  ·  " + b.MinFans + " " + Loc.T("fans"), Theme.Muted, 24f, 40f);
-            Line("All brands here are invented for RetroBall.", Theme.Muted, 22f, 40f);
+            Line("All brands here are invented for Retro Hoops.", Theme.Muted, 22f, 40f);
         }
 
         // ------------------------------------------------------------------ history

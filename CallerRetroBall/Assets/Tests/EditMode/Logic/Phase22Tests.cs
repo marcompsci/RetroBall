@@ -422,4 +422,19 @@ namespace CallerRetroBall.Tests
             Assert.IsTrue(back.customCup.Active);
         }
     }
+
+    /// <summary>The rename to Retro Hoops.</summary>
+    public class RenameTests
+    {
+        [Test]
+        public void GameIsRetroHoops_AndOldKitLinksStillOpen()
+        {
+            Assert.AreEqual("Retro Hoops", DefaultContent.GameName);
+            StringAssert.Contains("retrohoops://", Kits.LinkPrefix);
+            string code = Kits.Encode(Kits.Randomize(5, null));
+            Assert.IsTrue(Kits.TryDecode(Kits.LinkPrefix + code, out _));
+            Assert.IsTrue(Kits.TryDecode("retroball://kit/" + code, out _), "links shared before the rename");
+            Assert.Greater(CallerRetroBall.Logic.PixelArt.TitleLogoGenerator.Width, 90, "RETRO HOOPS is wider than RETROBALL");
+        }
+    }
 }

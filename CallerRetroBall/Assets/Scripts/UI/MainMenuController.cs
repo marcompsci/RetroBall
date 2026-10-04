@@ -48,7 +48,7 @@ namespace CallerRetroBall.UI
                                     32f, Theme.Cream, TextAlignmentOptions.Center, true);
             UiKit.Band(strip.rectTransform, 0.965f, 1f, 24f);
 
-            // Pixel-art "RETROBALL" logo (drawn in code), scaled with crisp pixels.
+            // Pixel-art "RETRO HOOPS" logo (drawn in code), scaled with crisp pixels.
             var logoTex = _logoTex = Utilities.TextureFactory.ToTexture(Logic.PixelArt.TitleLogoGenerator.Generate(), "ui.title.logo");
             var holder = UiKit.NewRect("TitleLogo", Body);
             UiKit.Band(holder, 0.75f, 0.955f, 32f);
@@ -130,7 +130,7 @@ namespace CallerRetroBall.UI
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
             {
                 _tutorialOffered = true;
-                void Offer() => UiControls.Dialog("NEW TO RETROBALL?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
+                void Offer() => UiControls.Dialog("NEW TO RETRO HOOPS?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
                                                   ("PLAY TUTORIAL", ButtonStyle.Primary, StartTutorial),
                                                   ("MAYBE LATER", ButtonStyle.Ghost, null));
                 if (!App.Career.storySeen.Contains(Story.Welcome)) StoryView.Show(Story.Beat(Story.Welcome, App.Career.nickname), Offer);

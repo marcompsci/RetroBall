@@ -47,10 +47,10 @@ namespace CallerRetroBall.EditorTools
 
         public static string ScenePath(string sceneName) => ScenesFolder + "/" + sceneName + ".unity";
 
-        [MenuItem("RetroBall/Run Project Setup", priority = 0)]
+        [MenuItem("Retro Hoops/Run Project Setup", priority = 0)]
         public static void RunFromMenu() => Run(interactive: true);
 
-        [MenuItem("RetroBall/Rebuild Scenes (overwrite)", priority = 20)]
+        [MenuItem("Retro Hoops/Rebuild Scenes (overwrite)", priority = 20)]
         public static void RebuildScenes()
         {
             if (!EditorUtility.DisplayDialog("Rebuild scenes?",
@@ -62,7 +62,7 @@ namespace CallerRetroBall.EditorTools
             EditorSceneManager.OpenScene(ScenePath(SceneNames.Boot));
         }
 
-        [MenuItem("RetroBall/Regenerate Content Assets (overwrite)", priority = 21)]
+        [MenuItem("Retro Hoops/Regenerate Content Assets (overwrite)", priority = 21)]
         public static void RegenerateContent()
         {
             if (!EditorUtility.DisplayDialog("Regenerate content?",
@@ -73,7 +73,7 @@ namespace CallerRetroBall.EditorTools
             Debug.Log("[CallerRetroBall] Regenerated " + written + " content assets.");
         }
 
-        [MenuItem("RetroBall/Validate Content", priority = 40)]
+        [MenuItem("Retro Hoops/Validate Content", priority = 40)]
         public static void ValidateContentMenu()
         {
             var report = ContentValidator.Validate(ContentDatabase.Load().Catalog);
@@ -104,7 +104,7 @@ namespace CallerRetroBall.EditorTools
 
             Debug.Log("[CallerRetroBall] Project setup finished:\n  • " + string.Join("\n  • ", log));
             if (interactive)
-                EditorUtility.DisplayDialog("RetroBall", "Project setup finished. See the Console for details.\n\nPress Play in BootScene to start.", "OK");
+                EditorUtility.DisplayDialog("Retro Hoops", "Project setup finished. See the Console for details.\n\nPress Play in BootScene to start.", "OK");
         }
 
         // ------------------------------------------------------------------ folders
@@ -155,7 +155,7 @@ namespace CallerRetroBall.EditorTools
         {
             PlayerSettings.productName = DefaultContent.GameName;
             if (string.IsNullOrEmpty(PlayerSettings.companyName) || PlayerSettings.companyName == "DefaultCompany")
-                PlayerSettings.companyName = "RetroBall Dev";
+                PlayerSettings.companyName = "Retro Hoops Dev";
             if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" ||
                 PlayerSettings.bundleVersion == "1.0" || PlayerSettings.bundleVersion == "0.1.0")
                 PlayerSettings.bundleVersion = ReleaseTools.ReleaseVersion;

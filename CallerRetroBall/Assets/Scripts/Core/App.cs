@@ -61,16 +61,16 @@ namespace CallerRetroBall.Core
         /// <summary>Set after an Arcade Ladder game so the main menu reopens the ladder.</summary>
         public static bool OpenArcadeOnMenu { get; set; }
 
-        /// <summary>A kit shared through a retroball://kit/ link, waiting for the Locker Room's Kit Studio.</summary>
+        /// <summary>A kit shared through a retrohoops://kit/ link, waiting for the Locker Room's Kit Studio.</summary>
         public static KitData PendingKit { get; set; }
 
-        /// <summary>Opened from a retroball://kit/ link (a scanned kit QR code or a tapped link).</summary>
+        /// <summary>Opened from a retrohoops://kit/ link (a scanned kit QR code or a tapped link).</summary>
         private static void OnDeepLink(string url)
         {
             if (string.IsNullOrEmpty(url) || !Kits.TryDecode(url, out var kit)) return;
             PendingKit = kit;
             if (Career == null || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == SceneNames.LockerRoom) return;
-            UiControls.Dialog("A FRIEND'S KIT", "Someone shared a RetroBall kit with you. Open it in the Kit Studio?",
+            UiControls.Dialog("A FRIEND'S KIT", "Someone shared a Retro Hoops kit with you. Open it in the Kit Studio?",
                 ("OPEN KIT STUDIO", ButtonStyle.Primary, () => SceneFlow.GoTo(SceneNames.LockerRoom)),
                 ("LATER", ButtonStyle.Ghost, null));
         }
@@ -209,7 +209,7 @@ namespace CallerRetroBall.Core
             {
                 Debug.LogWarning("[CallerRetroBall] Using built-in default content for: " +
                                  string.Join(", ", Content.FallbackKinds) +
-                                 ". Run 'RetroBall ▸ Run Project Setup' to generate editable assets.");
+                                 ". Run 'Retro Hoops ▸ Run Project Setup' to generate editable assets.");
             }
 
 #if UNITY_EDITOR || DEBUG

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the RetroBall Xcode project for a real iPhone and opens it in Xcode (macOS).
+# Builds the Retro Hoops Xcode project for a real iPhone and opens it in Xcode (macOS).
 #
 #   bash ~/RetroBall-push/tools/open_for_iphone.sh            # project at ~/RetroBall
 #

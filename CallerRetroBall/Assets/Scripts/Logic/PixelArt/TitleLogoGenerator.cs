@@ -3,14 +3,14 @@ using System;
 namespace CallerRetroBall.Logic.PixelArt
 {
     /// <summary>
-    /// The "RETROBALL" title logo, drawn in code with an original chunky pixel font:
-    /// "RETRO" in a dithered sunset gradient with a basketball for the final O, "BALL" in
-    /// basketball orange, a chrome shine line, a hard outline, a deep drop shadow, and
-    /// 80s speed stripes underneath. Row 0 is the bottom row.
+    /// The "RETRO HOOPS" title logo, drawn in code with an original chunky pixel font:
+    /// "RETRO" in a dithered sunset gradient, "HOOPS" in basketball orange with a basketball for
+    /// the first O, a chrome shine line, a hard outline, a deep drop shadow, and 80s speed
+    /// stripes underneath. Row 0 is the bottom row.
     /// </summary>
     public static class TitleLogoGenerator
     {
-        private const int GlyphW = 7, GlyphH = 9, Spacing = 2, WordGap = 3, BallSize = 11;
+        private const int GlyphW = 7, GlyphH = 9, Spacing = 2, WordGap = 7, BallSize = 11;
         private const int Pad = 2;        // outline + room
         private const int ShadowDepth = 2;
         private const int StripeRows = 8;
@@ -36,33 +36,42 @@ namespace CallerRetroBall.Logic.PixelArt
         {
             "#######", "#######", "..###..", "..###..", "..###..", "..###..", "..###..", "..###..", "..###..",
         };
-        private static readonly string[] B =
+
+        private static readonly string[] O =
         {
-            "######.", "##...##", "##...##", "##..##.", "######.", "##...##", "##...##", "##...##", "######.",
+            ".#####.", "##...##", "##...##", "##...##", "##...##", "##...##", "##...##", "##...##", ".#####.",
         };
-        private static readonly string[] A =
+        private static readonly string[] H =
         {
-            "..###..", ".##.##.", "##...##", "##...##", "#######", "#######", "##...##", "##...##", "##...##",
+            "##...##", "##...##", "##...##", "##...##", "#######", "#######", "##...##", "##...##", "##...##",
         };
-        private static readonly string[] L =
+        private static readonly string[] P =
         {
-            "##.....", "##.....", "##.....", "##.....", "##.....", "##.....", "##.....", "#######", "#######",
+            "######.", "##...##", "##...##", "##...##", "######.", "##.....", "##.....", "##.....", "##.....",
+        };
+        private static readonly string[] S =
+        {
+            ".######", "##.....", "##.....", ".#####.", ".....##", ".....##", ".....##", "##...##", ".#####.",
         };
 
-        public static int Width => Pad * 2 + ShadowDepth + 4 * (GlyphW + Spacing) + BallSize + WordGap + 4 * GlyphW + 3 * Spacing;
+        // RETRO + gap + H, ball, O, P, S.
+        public static int Width => Pad * 2 + ShadowDepth + 5 * (GlyphW + Spacing) - Spacing + WordGap + 4 * (GlyphW + Spacing) + BallSize;
         public static int Height => Pad * 2 + ShadowDepth + BallSize + StripeRows;
 
         public static PixelCanvas Generate()
         {
             var c = new PixelCanvas(Width, Height);
-            // Fill mask: 1 = RETRO (sunset), 2 = BALL (orange). Built first, then outlined and shadowed.
+            // Fill mask: 1 = RETRO (sunset), 2 = HOOPS (orange). Built first, then outlined and shadowed.
             var mask = new byte[c.Width * c.Height];
             int baseY = Pad + ShadowDepth + StripeRows; // bottom row of the letters
             int x = Pad;
-            foreach (var g in new[] { R, E, T, R }) { Stamp(mask, c.Width, g, x, baseY, 1); x += GlyphW + Spacing; }
+            foreach (var g in new[] { R, E, T, R, O }) { Stamp(mask, c.Width, g, x, baseY, 1); x += GlyphW + Spacing; }
+            x += WordGap - Spacing;
+            Stamp(mask, c.Width, H, x, baseY, 2);
+            x += GlyphW + Spacing;
             int ballX = x;
-            x += BallSize + WordGap;
-            foreach (var g in new[] { B, A, L, L }) { Stamp(mask, c.Width, g, x, baseY, 2); x += GlyphW + Spacing; }
+            x += BallSize + Spacing;
+            foreach (var g in new[] { O, P, S }) { Stamp(mask, c.Width, g, x, baseY, 2); x += GlyphW + Spacing; }
 
             // Speed stripes under the word: cyan, pink, gold, each a little shorter.
             int stripeTop = baseY - ShadowDepth - 3;

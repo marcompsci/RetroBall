@@ -26,23 +26,23 @@ namespace CallerRetroBall.EditorTools
         public const string AppStoreOutput = "iOSBuild/AppStore";
         public const string ReleaseVersion = "1.0.0";
 
-        [MenuItem("RetroBall/Release/Generate App Icon and Launch Image", priority = 60)]
+        [MenuItem("Retro Hoops/Release/Generate App Icon and Launch Image", priority = 60)]
         public static void GenerateIconAndLaunchMenu()
         {
             string report = GenerateIconAndLaunch();
-            EditorUtility.DisplayDialog("RetroBall", report, "OK");
+            EditorUtility.DisplayDialog("Retro Hoops", report, "OK");
         }
 
-        [MenuItem("RetroBall/Release/Apply Release Player Settings", priority = 61)]
+        [MenuItem("Retro Hoops/Release/Apply Release Player Settings", priority = 61)]
         public static void ApplyReleaseSettingsMenu()
         {
-            EditorUtility.DisplayDialog("RetroBall", ApplyReleaseSettings(), "OK");
+            EditorUtility.DisplayDialog("Retro Hoops", ApplyReleaseSettings(), "OK");
         }
 
-        [MenuItem("RetroBall/Release/Build iOS (Simulator)", priority = 80)]
+        [MenuItem("Retro Hoops/Release/Build iOS (Simulator)", priority = 80)]
         public static void BuildSimulator() => Build(iOSSdkVersion.SimulatorSDK, SimulatorOutput);
 
-        [MenuItem("RetroBall/Release/Build iOS (Device)", priority = 81)]
+        [MenuItem("Retro Hoops/Release/Build iOS (Device)", priority = 81)]
         public static void BuildDevice()
         {
             ApplyTeamFromCommandLine();
@@ -55,7 +55,7 @@ namespace CallerRetroBall.EditorTools
         /// needs a new one), Release configuration, writes iOSBuild/AppStore. tools/ship_testflight.sh then
         /// archives and uploads it with xcodebuild. Pass -teamId XXXXXXXXXX on the command line to set the team.
         /// </summary>
-        [MenuItem("RetroBall/Release/Build iOS (App Store)", priority = 82)]
+        [MenuItem("Retro Hoops/Release/Build iOS (App Store)", priority = 82)]
         public static void BuildAppStore()
         {
             ApplyTeamFromCommandLine();
@@ -84,17 +84,17 @@ namespace CallerRetroBall.EditorTools
 
         // ------------------------------------------------------------------ readiness
 
-        [MenuItem("RetroBall/Release/Check iOS Readiness", priority = 59)]
+        [MenuItem("Retro Hoops/Release/Check iOS Readiness", priority = 59)]
         public static void CheckReadinessMenu() => CheckReadiness(offerFix: true);
 
         private static void CheckReadiness(bool offerFix)
         {
             var (report, ready) = CheckIosReadiness();
-            Debug.Log("[RetroBall] iOS readiness:\n" + report);
+            Debug.Log("[Retro Hoops] iOS readiness:\n" + report);
             WriteReport("iOS readiness (" + (ready ? "READY" : "NOT READY") + ")\n" + report);
             // Fix once (icon, launch image, release settings incl. bundle ID), then show the result with just OK,
             // so things only you can do (installing a module, restarting Unity) don't loop the dialog.
-            if (offerFix && EditorUtility.DisplayDialog("RetroBall: iOS readiness",
+            if (offerFix && EditorUtility.DisplayDialog("Retro Hoops: iOS readiness",
                     report + "\n\nFix what can be fixed automatically (icon, launch image, release settings, bundle ID)?", "Fix", "Close"))
             {
                 GenerateIconAndLaunch();
@@ -103,7 +103,7 @@ namespace CallerRetroBall.EditorTools
             }
             else if (!offerFix)
             {
-                EditorUtility.DisplayDialog("RetroBall: iOS readiness", report, "OK");
+                EditorUtility.DisplayDialog("Retro Hoops: iOS readiness", report, "OK");
             }
         }
 
@@ -128,7 +128,7 @@ namespace CallerRetroBall.EditorTools
             var scenes = EditorBuildSettings.scenes.Where(x => x.enabled).Select(x => x.path).ToList();
             Check(scenes.Count >= 6 && scenes[0].EndsWith("BootScene.unity", StringComparison.Ordinal),
                   "Scenes in Build Settings (" + scenes.Count + ", BootScene first)",
-                  "Scenes missing from Build Settings. Run RetroBall ▸ Run Project Setup");
+                  "Scenes missing from Build Settings. Run Retro Hoops ▸ Run Project Setup");
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
             bool placeholder = IsPlaceholderId(id);
@@ -139,7 +139,7 @@ namespace CallerRetroBall.EditorTools
                   "No Apple Team ID yet. Fine for the Simulator; for your iPhone pick your team in Xcode ▸ Signing & Capabilities",
                   blocking: false);
             Check(PlayerSettings.productName == DefaultContent.GameName, "App name: " + PlayerSettings.productName,
-                  "App name is \"" + PlayerSettings.productName + "\". Apply Release Player Settings sets it to RetroBall");
+                  "App name is \"" + PlayerSettings.productName + "\". Apply Release Player Settings sets it to Retro Hoops");
             var icons = PlayerSettings.GetIcons(NamedBuildTarget.Unknown, IconKind.Any);
             Check(icons != null && icons.Length > 0 && icons[0] != null, "App icon assigned",
                   "No app icon. Use Generate App Icon and Launch Image");
@@ -148,7 +148,7 @@ namespace CallerRetroBall.EditorTools
 
             lines.Add("");
             lines.Add(ready
-                ? "Ready. Use RetroBall ▸ Release ▸ Build iOS (Simulator), then open iOSBuild/Simulator/Unity-iPhone.xcodeproj in Xcode."
+                ? "Ready. Use Retro Hoops ▸ Release ▸ Build iOS (Simulator), then open iOSBuild/Simulator/Unity-iPhone.xcodeproj in Xcode."
                 : "Not ready yet. Fix the ✗ items first (! items are advice).");
             return (string.Join("\n", lines), ready);
         }
@@ -275,7 +275,7 @@ namespace CallerRetroBall.EditorTools
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {
-                Fail("No scenes in Build Settings. Run 'RetroBall ▸ Run Project Setup' first.");
+                Fail("No scenes in Build Settings. Run 'Retro Hoops ▸ Run Project Setup' first.");
                 return;
             }
 
@@ -315,11 +315,11 @@ namespace CallerRetroBall.EditorTools
                          (sdk == iOSSdkVersion.SimulatorSDK ? "an iPhone simulator" : "your iPhone") + ", and press Run.";
             Debug.Log("[CallerRetroBall] " + msg);
             WriteReport("BUILD OK\n" + msg);
-            if (!Application.isBatchMode) EditorUtility.DisplayDialog("RetroBall", msg, "OK");
+            if (!Application.isBatchMode) EditorUtility.DisplayDialog("Retro Hoops", msg, "OK");
         }
 
         /// <summary>
-        /// Appends a line to Logs/RetroBall-release.txt in the project, so readiness checks and build
+        /// Appends a line to Logs/Retro Hoops-release.txt in the project, so readiness checks and build
         /// results can be read later (and shared) without copying them out of a dialog.
         /// </summary>
         public static void WriteReport(string text)
@@ -327,7 +327,7 @@ namespace CallerRetroBall.EditorTools
             try
             {
                 Directory.CreateDirectory("Logs");
-                File.AppendAllText(Path.Combine("Logs", "RetroBall-release.txt"),
+                File.AppendAllText(Path.Combine("Logs", "Retro Hoops-release.txt"),
                     "=== " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  Unity " + Application.unityVersion + "\n" + text + "\n\n");
             }
             catch (System.Exception e)
@@ -341,7 +341,7 @@ namespace CallerRetroBall.EditorTools
             Debug.LogError("[CallerRetroBall] " + message);
             WriteReport("FAILED\n" + message);
             if (Application.isBatchMode) EditorApplication.Exit(1);
-            else EditorUtility.DisplayDialog("RetroBall", message, "OK");
+            else EditorUtility.DisplayDialog("Retro Hoops", message, "OK");
         }
     }
 }

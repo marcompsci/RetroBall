@@ -12,7 +12,7 @@ namespace CallerRetroBall.UI
 {
     /// <summary>
     /// Sharing from the Kit Studio, all offline: a kit as a short code and a QR (the iPhone camera opens
-    /// RetroBall straight into the kit), entering a friend's code, and a trading card image of your player.
+    /// Retro Hoops straight into the kit), entering a friend's code, and a trading card image of your player.
     /// </summary>
     public static class KitShare
     {
@@ -28,7 +28,7 @@ namespace CallerRetroBall.UI
             var pic = UiKit.Picture(column, qrTex, "QR");
             UiKit.Size(pic, 520f, 520f);
             pic.gameObject.AddComponent<AspectRatioFitter>().aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
-            UiKit.Size(UiKit.Label(column, "Scan with an iPhone camera to open it in RetroBall, or send the code.", 28f, Theme.Muted), 70f);
+            UiKit.Size(UiKit.Label(column, "Scan with an iPhone camera to open it in Retro Hoops, or send the code.", 28f, Theme.Muted), 70f);
             UiKit.Size(UiKit.Label(column, Kits.Pretty(code), 34f, Theme.Gold, TextAlignmentOptions.Center, true), 100f);
             UiKit.Button(column, "COPY CODE", () =>
             {
@@ -38,8 +38,8 @@ namespace CallerRetroBall.UI
             }, ButtonStyle.Secondary, 100f, 38f);
             UiKit.Button(column, "SHARE", () =>
             {
-                string path = SavePng(qr, "retroball-kit-qr.png", 2);
-                if (path != null) Share.File(path, "My RetroBall kit: " + link);
+                string path = SavePng(qr, "retrohoops-kit-qr.png", 2);
+                if (path != null) Share.File(path, "My Retro Hoops kit: " + link);
             }, ButtonStyle.Secondary, 100f, 38f);
             UiKit.Button(column, "CLOSE", () => Close(root, qrTex), ButtonStyle.Ghost, 100f, 38f);
         }
@@ -48,7 +48,7 @@ namespace CallerRetroBall.UI
         public static void EnterCode(Action<KitData> onKit)
         {
             var (root, column) = Modal("ENTER A KIT CODE");
-            UiKit.Size(UiKit.Label(column, "Paste a code a friend sent you (or a retroball://kit/ link).", 28f, Theme.Muted), 70f);
+            UiKit.Size(UiKit.Label(column, "Paste a code a friend sent you (or a retrohoops://kit/ link).", 28f, Theme.Muted), 70f);
             string text = "";
             TMP_InputField field = null;
             field = UiControls.TextField(column, "", 80, v => text = v);
@@ -101,8 +101,8 @@ namespace CallerRetroBall.UI
             UiKit.Size(pic, 820f, 820f * TradingCard.Width / TradingCard.Height);
             UiKit.Button(column, "SHARE CARD", () =>
             {
-                string path = SavePng(card, "retroball-card.png", 8);
-                if (path != null) Share.File(path, "My RetroBall card");
+                string path = SavePng(card, "retrohoops-card.png", 8);
+                if (path != null) Share.File(path, "My Retro Hoops card");
             }, ButtonStyle.Primary, 110f, 42f);
             UiKit.Button(column, "CLOSE", () => Close(root, tex), ButtonStyle.Ghost, 100f, 38f);
         }
@@ -159,7 +159,7 @@ namespace CallerRetroBall.UI
             }
             catch (Exception e)
             {
-                Debug.LogWarning("[RetroBall] Couldn't save " + fileName + ": " + e.Message);
+                Debug.LogWarning("[Retro Hoops] Couldn't save " + fileName + ": " + e.Message);
                 return null;
             }
             finally

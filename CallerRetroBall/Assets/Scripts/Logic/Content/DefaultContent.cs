@@ -4,7 +4,7 @@ namespace CallerRetroBall.Logic
 {
     /// <summary>
     /// The handcrafted MVP content for The Caller League — every name, colour, and
-    /// line of copy here is original to RetroBall. The editor setup tool
+    /// line of copy here is original to Retro Hoops. The editor setup tool
     /// writes these into ScriptableObject assets; the runtime falls back to this
     /// class if the assets are missing, so the game is always playable.
     /// </summary>
@@ -14,7 +14,7 @@ namespace CallerRetroBall.Logic
         public const string ChampionshipName = "The Gold Signal Cup";
         public const string CircuitName = "The Blacktop Circuit";
         public const string RookieTournamentName = "First Call Classic";
-        public const string GameName = "RetroBall";
+        public const string GameName = "Retro Hoops";
 
         public const string RookPlayerId = "player.crew.rook";
         public const string PlayerCrewId = "crew.first_callers";

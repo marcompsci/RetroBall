@@ -7,7 +7,7 @@ namespace CallerRetroBall.Logic
     /// <summary>
     /// Minimal QR Code encoder (ISO/IEC 18004): byte mode, error correction level M, versions 1–10
     /// (up to 213 bytes), automatic mask choice. Used to share Kit Studio kits as a scannable image:
-    /// the iPhone camera opens the retroball://kit/ link. Original implementation; unit-tested and
+    /// the iPhone camera opens the retrohoops://kit/ link. Original implementation; unit-tested and
     /// checked against a reference decoder.
     /// </summary>
     public sealed class QrCode

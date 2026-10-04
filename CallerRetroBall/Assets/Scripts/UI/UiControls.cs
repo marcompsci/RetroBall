@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>Code-built form controls in the RetroBall style: slider, toggle, text field, dialogs.</summary>
+    /// <summary>Code-built form controls in the Retro Hoops style: slider, toggle, text field, dialogs.</summary>
     public static class UiControls
     {
         /// <summary>Label + slider row (0..1 by default). Returns the slider.</summary>

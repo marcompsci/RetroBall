@@ -3,6 +3,6 @@ using UnityEngine;
 
 namespace CallerRetroBall.Data
 {
-    [CreateAssetMenu(fileName = "CosmeticData", menuName = "RetroBall/Cosmetic")]
+    [CreateAssetMenu(fileName = "CosmeticData", menuName = "Retro Hoops/Cosmetic")]
     public sealed class CosmeticData : DefinitionAsset<CosmeticDef> { }
 }

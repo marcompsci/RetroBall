@@ -16,7 +16,7 @@ namespace CallerRetroBall.Logic.PixelArt
         public (string label, string value)[] Stats = new (string, string)[0];
         /// <summary>Optional 32×32 team logo.</summary>
         public PixelCanvas Logo;
-        public string Footer = "RETROBALL";
+        public string Footer = "RETRO HOOPS";
     }
 
     /// <summary>

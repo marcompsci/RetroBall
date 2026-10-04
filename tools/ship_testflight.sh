@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds RetroBall for the App Store, archives it, and uploads it to App Store Connect (TestFlight).
+# Builds Retro Hoops for the App Store, archives it, and uploads it to App Store Connect (TestFlight).
 #
 #   bash ~/RetroBall-push/tools/ship_testflight.sh                 # build, archive, upload
 #   bash ~/RetroBall-push/tools/ship_testflight.sh --export-only   # build + archive + .ipa, no upload
@@ -113,7 +113,7 @@ $HINT"
 fi
 
 if [[ $UPLOAD -eq 1 ]]; then
-  note "UPLOADED: RetroBall build $BUILD (team $TEAM). It shows in App Store Connect ▸ TestFlight after Apple finishes processing (usually 10-30 minutes; you get an email)."
+  note "UPLOADED: Retro Hoops build $BUILD (team $TEAM). It shows in App Store Connect ▸ TestFlight after Apple finishes processing (usually 10-30 minutes; you get an email)."
 else
   note "EXPORTED: $(ls "$EXPORT"/*.ipa 2>/dev/null) (build $BUILD). Not uploaded. Run without --export-only to upload."
 fi

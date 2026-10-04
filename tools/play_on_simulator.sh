@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One command from Unity project to RetroBall running in the iOS Simulator (macOS).
+# One command from Unity project to Retro Hoops running in the iOS Simulator (macOS).
 #
 #   bash ~/RetroBall-push/tools/play_on_simulator.sh            # project at ~/RetroBall
 #   bash ~/RetroBall-push/tools/play_on_simulator.sh /path/to/project
@@ -61,7 +61,7 @@ $(grep -E 'error:|BUILD FAILED' "$LOGS/xcodebuild_simulator.log" | head -25)"
   exit 1
 fi
 
-echo "3/3  Simulator: booting an iPhone and launching RetroBall..."
+echo "3/3  Simulator: booting an iPhone and launching Retro Hoops..."
 DEVICE="$(xcrun simctl list devices available | grep -E 'iPhone' | grep -m1 -E 'Booted' | grep -oE '[0-9A-F-]{36}')"
 if [[ -z "$DEVICE" ]]; then
   DEVICE="$(xcrun simctl list devices available | grep -E 'iPhone .*Pro Max' | grep -m1 -oE '[0-9A-F-]{36}')"

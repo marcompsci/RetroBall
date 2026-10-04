@@ -132,7 +132,7 @@ namespace CallerRetroBall.UI
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning("[RetroBall] Screen reader update failed: " + e.Message);
+                Debug.LogWarning("[Retro Hoops] Screen reader update failed: " + e.Message);
             }
         }
 

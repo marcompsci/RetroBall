@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// The Music Player: every track on the RetroBall soundtrack with PLAY, a pixel level meter, and
+    /// The Music Player: every track on the Retro Hoops soundtrack with PLAY, a pixel level meter, and
     /// which track plays on the menus and in matches (or shuffle). All music is synthesised in code.
     /// </summary>
     public sealed class MusicPlayer : MonoBehaviour
@@ -121,7 +121,7 @@ namespace CallerRetroBall.UI
                 }, t == playing ? ButtonStyle.Primary : ButtonStyle.Secondary, 90f, 26f);
                 UiKit.Size(b, 90f, 190f);
             }
-            UiKit.Size(UiKit.Label(_list, "Every track is written and played by RetroBall's own chip synth. Songs are composed the first time you play them.", 24f, Theme.Muted), 80f);
+            UiKit.Size(UiKit.Label(_list, "Every track is written and played by Retro Hoops' own chip synth. Songs are composed the first time you play them.", 24f, Theme.Muted), 80f);
         }
 
         private bool _wasLoading;

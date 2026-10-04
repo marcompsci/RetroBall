@@ -164,7 +164,7 @@ namespace CallerRetroBall.Core
             }
             string value = CloudSave.Wrap(App.Career, System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(), SystemInfo.deviceModel);
             if (value != null) Set(value);
-            else Debug.LogWarning("[RetroBall] Career is too large for iCloud key-value storage; not synced.");
+            else Debug.LogWarning("[Retro Hoops] Career is too large for iCloud key-value storage; not synced.");
         }
 
         private void OnDestroy()

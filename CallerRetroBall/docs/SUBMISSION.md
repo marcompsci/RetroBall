@@ -1,4 +1,4 @@
-# Shipping RetroBall: TestFlight, then the App Store
+# Shipping Retro Hoops: TestFlight, then the App Store
 
 You need the paid Apple Developer Program (done) and Xcode signed in to it (**Xcode ▸ Settings ▸ Accounts**). The steps below go in order. Steps 1, 2 and 6 happen on the App Store Connect website ([appstoreconnect.apple.com](https://appstoreconnect.apple.com)). Step 3 is one command on your Mac.
 
@@ -11,7 +11,7 @@ App Store Connect ▸ **Apps ▸ ＋ ▸ New App**:
 | Field | Value |
 |---|---|
 | Platform | iOS |
-| Name | RetroBall. If Apple says the name is taken, try **RetroBall: Street Hoops** or **RetroBall Arcade** (30 characters max). |
+| Name | **Retro Hoops** (the name on the App Store record; "RetroBall" was already taken). |
 | Primary language | English (U.S.) |
 | Bundle ID | `com.phoronomicstudios.retroball`. Register it first at developer.apple.com ▸ Certificates, Identifiers & Profiles ▸ Identifiers ▸ ＋ ▸ App IDs ▸ App (Explicit; tick Game Center and iCloud). The old `com.marcompsci.retroball` belongs to the free personal team and doesn't appear in the list. |
 | SKU | `retroball-ios-1` |
@@ -54,7 +54,7 @@ Every result is appended to `Logs/RetroBall-release.txt`. The detailed logs are 
 
 | Item | What to enter |
 |---|---|
-| Screenshots | **6.9" iPhone** set: 1320×2868, 1290×2796 or 1260×2736 portrait. Use 3–10 from **RetroBall ▸ Release ▸ Capture Store Screenshot** (see `LAUNCH_KIT.md`). The app is iPhone-only, so no iPad screenshots are needed. |
+| Screenshots | **6.9" iPhone** set: 1320×2868, 1290×2796 or 1260×2736 portrait. Use 3–10 from **Retro Hoops ▸ Release ▸ Capture Store Screenshot** (see `LAUNCH_KIT.md`). The app is iPhone-only, so no iPad screenshots are needed. |
 | Promotional text, description, keywords, subtitle | Copy from `docs/APP_STORE.md`, then add the Spanish (Mexico) localization from the same file. |
 | Support URL and Privacy Policy URL | **You** host these. A simple page is fine, and `docs/APP_STORE.md` has a privacy policy draft. |
 | Category | Games ▸ Sports (secondary: Games ▸ Arcade) |
@@ -63,7 +63,7 @@ Every result is appended to `Logs/RetroBall-release.txt`. The detailed logs are 
 
 ### Age rating (App Information ▸ Age Rating ▸ Edit)
 
-Apple's questionnaire was expanded in 2025 and again in 2026 with a social-media question. For RetroBall, answer **None** or **No** to everything:
+Apple's questionnaire was expanded in 2025 and again in 2026 with a social-media question. For Retro Hoops, answer **None** or **No** to everything:
 
 - No violence, mature themes, gambling, contests, horror, profanity, alcohol or drug references, or medical content.
 - No user-generated content, messaging or chat, or unrestricted web access.
