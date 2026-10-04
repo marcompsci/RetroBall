@@ -95,6 +95,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Crown: return Crown;
                 case LogoMotif.Ball: return Ball;
                 case LogoMotif.Signal: return Signal;
+                case LogoMotif.Crane: return Crane;
                 default: return Ball;
             }
         }
@@ -113,6 +114,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "...###......",
             "..##........",
             ".#..........",
+            "............",
+        };
+
+        // A folded paper bird: two wings up, beak to the left.
+        private static readonly string[] Crane =
+        {
+            "............",
+            "...#.....#..",
+            "...##...##..",
+            "...###.###..",
+            "....#####...",
+            "#...#####...",
+            ".##+######..",
+            "..+++#####..",
+            "....+++###..",
+            "......+++#..",
+            "........++..",
             "............",
         };
 

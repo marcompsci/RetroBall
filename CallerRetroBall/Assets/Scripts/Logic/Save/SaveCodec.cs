@@ -44,7 +44,7 @@ namespace CallerRetroBall.Logic
                     ["points"] = d.totals.points, ["assists"] = d.totals.assists, ["rebounds"] = d.totals.rebounds,
                     ["steals"] = d.totals.steals, ["blocks"] = d.totals.blocks, ["fgm"] = d.totals.fieldGoalsMade,
                     ["fga"] = d.totals.fieldGoalsAttempted, ["greens"] = d.totals.greens, ["championships"] = d.totals.championships,
-                    ["oops"] = d.totals.alleyOops, ["heatUps"] = d.totals.heatUps,
+                    ["oops"] = d.totals.alleyOops, ["heatUps"] = d.totals.heatUps, ["versus"] = d.totals.versusGames,
                 },
                 ["practice"] = new Dictionary<string, object>
                 {
@@ -96,6 +96,9 @@ namespace CallerRetroBall.Logic
                     ["attractMode"] = d.settings.attractMode,
                     ["showFps"] = d.settings.showFps,
                     ["coachTips"] = d.settings.coachTips,
+                    ["colorFilter"] = d.settings.colorFilter,
+                    ["captions"] = d.settings.captions,
+                    ["icloud"] = d.settings.icloudSync,
                 },
                 ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
                 ["customTeam"] = EncodeTeam(d.customTeam ?? new CustomTeamData()),
@@ -104,6 +107,7 @@ namespace CallerRetroBall.Logic
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
                     ["sundownWins"] = (d.rival ?? new RivalSaveData()).sundownWins,
                     ["tideWins"] = (d.rival ?? new RivalSaveData()).tideWins,
+                    ["cranesWins"] = (d.rival ?? new RivalSaveData()).cranesWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -416,6 +420,7 @@ namespace CallerRetroBall.Logic
                     steals = Int(t, "steals", 0), blocks = Int(t, "blocks", 0), fieldGoalsMade = Int(t, "fgm", 0),
                     fieldGoalsAttempted = Int(t, "fga", 0), greens = Int(t, "greens", 0), championships = Int(t, "championships", 0),
                     alleyOops = Math.Max(0, Int(t, "oops", 0)), heatUps = Math.Max(0, Int(t, "heatUps", 0)),
+                    versusGames = Math.Max(0, Int(t, "versus", 0)),
                 };
                 var pr = Obj(o, "practice");
                 d.practice = new PracticeBests
@@ -473,6 +478,9 @@ namespace CallerRetroBall.Logic
                 d.settings.attractMode = Bool(disp, "attractMode", true);
                 d.settings.showFps = Bool(disp, "showFps", false);
                 d.settings.coachTips = Bool(disp, "coachTips", true);
+                d.settings.colorFilter = (int)ColorAccess.Normalize(Int(disp, "colorFilter", 0));
+                d.settings.captions = Bool(disp, "captions", false);
+                d.settings.icloudSync = Bool(disp, "icloud", true);
                 d.tipsSeen = StrList(o, "tipsSeen");
                 d.secrets = DecodeSecrets(Obj(o, "secrets"));
                 d.customTeam = DecodeTeam(Obj(o, "customTeam"));
@@ -483,6 +491,7 @@ namespace CallerRetroBall.Logic
                     wins = Math.Max(0, Int(rv, "wins", 0)),
                     sundownWins = Math.Max(0, Int(rv, "sundownWins", 0)),
                     tideWins = Math.Max(0, Int(rv, "tideWins", 0)),
+                    cranesWins = Math.Max(0, Int(rv, "cranesWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

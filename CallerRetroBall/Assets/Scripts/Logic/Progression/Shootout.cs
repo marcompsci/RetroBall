@@ -49,4 +49,38 @@ namespace CallerRetroBall.Logic
             return score;
         }
     }
+
+    /// <summary>
+    /// Pass-and-play Shootout: player 1 shoots a 60-second round, hands the phone over, then player 2
+    /// tries to beat it. Higher score wins; equal scores are a tie. Nothing is saved to the career.
+    /// </summary>
+    public sealed class ShootoutDuel
+    {
+        public const string ContextId = "shootout:friend";
+
+        /// <summary>Each player's points (-1 = hasn't shot yet).</summary>
+        public readonly int[] Points = { -1, -1 };
+
+        /// <summary>0 = player 1 is up, 1 = player 2 is up, 2 = done.</summary>
+        public int Round => Points[0] < 0 ? 0 : (Points[1] < 0 ? 1 : 2);
+        public bool Finished => Round == 2;
+
+        /// <summary>0 or 1 when finished with a winner; -1 while playing or on a tie.</summary>
+        public int Winner => !Finished || Points[0] == Points[1] ? -1 : (Points[0] > Points[1] ? 0 : 1);
+
+        public void Record(int points)
+        {
+            if (Finished) return;
+            Points[Round] = Math.Max(0, points);
+        }
+
+        public string Name(int who) => who == 0 ? "P1" : "P2";
+
+        /// <summary>The line shown when a round starts.</summary>
+        public string Intro => Round == 0 ? "P1: SET THE SCORE" : Round == 1 ? "P2: BEAT P1'S " + Points[0] : "";
+
+        public string ResultLine => "P1 " + Math.Max(0, Points[0]) + "  ·  P2 " + Math.Max(0, Points[1]);
+
+        public string ResultTitle => Winner < 0 ? (Finished ? "TIE GAME" : "") : Name(Winner) + " WINS THE SHOOTOUT";
+    }
 }

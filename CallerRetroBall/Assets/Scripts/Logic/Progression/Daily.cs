@@ -144,6 +144,29 @@ namespace CallerRetroBall.Logic
             save == null ? 0 : (save.lastCompletedDay >= today - 1 ? save.streak : 0);
     }
 
+    /// <summary>One Game Center achievement: id, App Store Connect text and points, and when it's earned.</summary>
+    public sealed class AchievementInfo
+    {
+        public string Id;
+        public string Title;
+        public string Description;
+        /// <summary>Game Center points (each ≤ 100, all together ≤ 1000).</summary>
+        public int Points;
+        public Func<CareerSaveData, bool> Earned;
+    }
+
+    /// <summary>One Game Center leaderboard: id, name, sort order, and the career value it reports.</summary>
+    public sealed class LeaderboardInfo
+    {
+        public string Id;
+        public string Name;
+        /// <summary>True when a lower score is better (times).</summary>
+        public bool LowIsBetter;
+        /// <summary>How App Store Connect should format the score.</summary>
+        public string Format;
+        public Func<CareerSaveData, long> Score;
+    }
+
     /// <summary>Game Center achievement and leaderboard ids, and what has been earned (pure, testable).</summary>
     public static class Achievements
     {
@@ -156,40 +179,116 @@ namespace CallerRetroBall.Logic
         public const string ClassicChampion = "retroball.ach.classic_champion";
         public const string DailyWeek = "retroball.ach.daily_streak_7";
         public const string TutorialDone = "retroball.ach.tutorial_done";
+        // Phase 19.
+        public const string HeatCheck = "retroball.ach.heat_check";
+        public const string AlleyOop = "retroball.ach.alley_oop";
+        public const string GlitchBeaten = "retroball.ach.glitch_beaten";
+        public const string FirstCode = "retroball.ach.first_code";
+        public const string AllCodes = "retroball.ach.all_codes";
+        public const string KingFive = "retroball.ach.king_five";
+        public const string CallerCup = "retroball.ach.caller_cup";
+        public const string AllRivals = "retroball.ach.all_rivals";
+        public const string Shootout = "retroball.ach.shootout";
+        public const string Horse = "retroball.ach.horse";
+        public const string AroundWorld = "retroball.ach.around_world";
+        public const string CouchGame = "retroball.ach.couch_game";
+        public const string YourColors = "retroball.ach.your_colors";
+        public const string LongHaul = "retroball.ach.long_haul";
 
         public const string BoardWins = "retroball.lb.career_wins";
         public const string BoardGreens = "retroball.lb.career_greens";
         public const string BoardDailyStreak = "retroball.lb.daily_best_streak";
+        // Phase 19.
+        public const string BoardKing = "retroball.lb.king_streak";
+        public const string BoardArcade = "retroball.lb.arcade_clears";
+        public const string BoardShootout = "retroball.lb.shootout_wins";
+        public const string BoardAroundWorld = "retroball.lb.around_world";
+        public const string BoardWinStreak = "retroball.lb.win_streak";
+        public const string BoardPoints = "retroball.lb.game_points";
 
-        public static readonly string[] AllAchievements =
+        public static readonly List<AchievementInfo> All = new List<AchievementInfo>
         {
-            FirstWin, FirstGreen, TenWins, HundredGreens, CircuitCleared, CupChampion, ClassicChampion, DailyWeek, TutorialDone,
+            A(FirstWin, "First W", "Win any game.", 10, d => d.totals.wins >= 1),
+            A(FirstGreen, "Called It", "Hit your first GREEN release.", 10, d => d.totals.greens >= 1),
+            A(TenWins, "Double Digits", "Win 10 games.", 30, d => d.totals.wins >= 10),
+            A(HundredGreens, "Green Machine", "Hit 100 GREEN releases.", 50, d => d.totals.greens >= 100),
+            A(CircuitCleared, "Off the Blacktop", "Clear The Blacktop Circuit.", 50,
+              d => d.rise != null && (d.rise.stage != RiseStage.Circuit || d.rise.seasonsPlayed > 0)),
+            A(CupChampion, "Gold Signal", "Win The Gold Signal Cup.", 80, d => d.totals.championships > 0),
+            A(ClassicChampion, "First Call", "Win the First Call Classic.", 40, d => d.classic != null && d.classic.titles > 0),
+            A(DailyWeek, "Every Day", "Reach a 7-day Daily Challenge streak.", 50, d => d.daily != null && d.daily.bestStreak >= 7),
+            A(TutorialDone, "Ready to Call", "Finish How to Play.", 10, d => d.tutorialDone),
+            A(HeatCheck, "Heating Up", "Hit three in a row and HEAT UP.", 20, d => d.totals.heatUps >= 1),
+            A(AlleyOop, "Up Top", "Throw or finish an alley-oop.", 20, d => d.totals.alleyOops >= 1),
+            A(GlitchBeaten, "Game Over, Glitch", "Clear the Arcade Ladder.", 80, d => d.secrets != null && d.secrets.arcade != null && d.secrets.arcade.clears > 0),
+            A(FirstCode, "Old-School", "Enter a secret code.", 20, d => d.secrets != null && d.secrets.codesFound.Count > 0),
+            A(AllCodes, "Code Breaker", "Find every secret code.", 80,
+              d => d.secrets != null && Secrets.All.TrueForAll(x => d.secrets.codesFound.Contains(x.Id))),
+            A(KingFive, "Hold the Court", "Win 5 straight in King of the Court.", 50, d => d.king != null && d.king.best >= 5),
+            A(CallerCup, "Cup Run", "Win the Caller Cup.", 60, d => d.cup != null && d.cup.titles >= 1),
+            A(AllRivals, "Every Rival", "Beat Neon Static, the Sundown Syndicate, the Midnight Tide and the Paper Cranes.", 100, RivalEngine.BeatEveryRival),
+            A(Shootout, "Sharpshooter", "Win a Shootout.", 20, d => d.practice.shootoutWins >= 1),
+            A(Horse, "Spell It Out", "Win a game of H-O-R-S-E against the CPU.", 20, d => d.practice.horseWins >= 1),
+            A(AroundWorld, "World Tour", "Finish Around the World.", 20, d => d.practice.aroundWorldTime > 0f),
+            A(CouchGame, "Couch Rivals", "Play a 2 Player game.", 10, d => d.totals.versusGames >= 1),
+            A(YourColors, "Your Colors", "Create your own team.", 10, d => d.customTeam != null && d.customTeam.created),
+            A(LongHaul, "Long Haul", "Play five Rise seasons.", 50, d => d.rise != null && d.rise.seasonsPlayed >= 5),
         };
+
+        public static readonly List<LeaderboardInfo> Boards = new List<LeaderboardInfo>
+        {
+            L(BoardWins, "Career Wins", false, "Integer", d => d.totals.wins),
+            L(BoardGreens, "Green Releases", false, "Integer", d => d.totals.greens),
+            L(BoardDailyStreak, "Best Daily Streak", false, "Integer", d => d.daily?.bestStreak ?? 0),
+            L(BoardKing, "King of the Court Streak", false, "Integer", d => d.king?.best ?? 0),
+            L(BoardArcade, "Arcade Ladder Clears", false, "Integer", d => d.secrets?.arcade?.clears ?? 0),
+            L(BoardShootout, "Shootout Wins", false, "Integer", d => d.practice.shootoutWins),
+            L(BoardAroundWorld, "Around the World", true, "Elapsed time (to the hundredth of a second)", d => Hundredths(d.practice.aroundWorldTime)),
+            L(BoardWinStreak, "Best Win Streak", false, "Integer", d => d.records?.bestWinStreak ?? 0),
+            L(BoardPoints, "Most Points in a Game", false, "Integer", d => d.records?.points ?? 0),
+        };
+
+        public static readonly string[] AllAchievements = All.ConvertAll(a => a.Id).ToArray();
+
+        private static AchievementInfo A(string id, string title, string desc, int points, Func<CareerSaveData, bool> earned) =>
+            new AchievementInfo { Id = id, Title = title, Description = desc, Points = points, Earned = earned };
+
+        private static LeaderboardInfo L(string id, string name, bool low, string format, Func<CareerSaveData, long> score) =>
+            new LeaderboardInfo { Id = id, Name = name, LowIsBetter = low, Format = format, Score = score };
+
+        /// <summary>Game Center "elapsed time to the hundredth" scores are hundredths of a second.</summary>
+        public static long Hundredths(float seconds) => seconds <= 0f ? 0 : (long)Math.Round(seconds * 100.0);
+
+        public static int TotalPoints
+        {
+            get
+            {
+                int sum = 0;
+                foreach (var a in All) sum += a.Points;
+                return sum;
+            }
+        }
 
         public static List<string> Earned(CareerSaveData d)
         {
             var list = new List<string>();
             if (d == null) return list;
-            var t = d.totals;
-            if (t.wins >= 1) list.Add(FirstWin);
-            if (t.greens >= 1) list.Add(FirstGreen);
-            if (t.wins >= 10) list.Add(TenWins);
-            if (t.greens >= 100) list.Add(HundredGreens);
-            if (d.rise != null && (d.rise.stage != RiseStage.Circuit || d.rise.seasonsPlayed > 0)) list.Add(CircuitCleared);
-            if (t.championships > 0) list.Add(CupChampion);
-            if (d.classic != null && d.classic.titles > 0) list.Add(ClassicChampion);
-            if (d.daily != null && d.daily.bestStreak >= 7) list.Add(DailyWeek);
-            if (d.tutorialDone) list.Add(TutorialDone);
+            foreach (var a in All)
+            {
+                bool earned;
+                try { earned = a.Earned(d); }
+                catch (NullReferenceException) { earned = false; } // partial or very old saves
+                if (earned) list.Add(a.Id);
+            }
             return list;
         }
 
+        /// <summary>Every leaderboard's score. Zero means "nothing to report yet" (never sent).</summary>
         public static List<KeyValuePair<string, long>> Scores(CareerSaveData d)
         {
             var list = new List<KeyValuePair<string, long>>();
             if (d == null) return list;
-            list.Add(new KeyValuePair<string, long>(BoardWins, d.totals.wins));
-            list.Add(new KeyValuePair<string, long>(BoardGreens, d.totals.greens));
-            list.Add(new KeyValuePair<string, long>(BoardDailyStreak, d.daily?.bestStreak ?? 0));
+            foreach (var b in Boards) list.Add(new KeyValuePair<string, long>(b.Id, Math.Max(0, b.Score(d))));
             return list;
         }
     }

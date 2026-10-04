@@ -61,6 +61,9 @@ namespace CallerRetroBall.Core
         /// <summary>Set after an Arcade Ladder game so the main menu reopens the ladder.</summary>
         public static bool OpenArcadeOnMenu { get; set; }
 
+        /// <summary>Pass-and-play Shootout in progress (kept between player 1's and player 2's rounds).</summary>
+        public static ShootoutDuel PendingDuel { get; set; }
+
         /// <summary>Set after a Caller Cup game so the main menu reopens the bracket.</summary>
         public static bool OpenCupOnMenu { get; set; }
 
@@ -106,13 +109,31 @@ namespace CallerRetroBall.Core
 
         public static void SaveCareer()
         {
-            if (Career != null) SaveStore.Save(Career);
+            if (Career == null) return;
+            if (SaveStore.Save(Career)) CloudSync.NotifySaved();
+        }
+
+        /// <summary>True when this launch loaded the career from iCloud (the menu says so once).</summary>
+        public static bool CareerFromCloud { get; set; }
+
+        /// <summary>Swaps in another career (loaded from iCloud), rebuilding the content it changes.</summary>
+        public static void ReplaceCareer(CareerSaveData data)
+        {
+            if (data == null) return;
+            // Dynasty mode and your custom team change content in memory: start from clean content.
+            Content = ContentDatabase.Load();
+            Career = data;
+            DynastyEngine.Apply(Catalog, Career.dynasty);
+            CustomTeams.Apply(Catalog, Career.customTeam);
+            SaveStore.Save(Career);
+            ApplySettings();
         }
 
         /// <summary>Settings ▸ Reset: wipes the save and starts a fresh career.</summary>
         public static void ResetCareer()
         {
             SaveStore.Delete();
+            CloudSync.Erase();
             // Dynasty mode changes ratings and rosters in memory: start from clean content.
             Content = ContentDatabase.Load();
             Career = Logic.Career.New(Catalog);
@@ -169,6 +190,13 @@ namespace CallerRetroBall.Core
 #endif
 
             Career = SaveStore.Load(Content.Catalog, out var status);
+            CloudSync.EnsureExists();
+            Career = CloudSync.AtBoot(Career, Content.Catalog, out bool fromCloud);
+            if (fromCloud)
+            {
+                CareerFromCloud = true;
+                SaveStore.Save(Career);
+            }
             DynastyEngine.Apply(Content.Catalog, Career.dynasty);
             CustomTeams.Apply(Content.Catalog, Career.customTeam);
             CareerLoadStatus = status;
@@ -179,6 +207,7 @@ namespace CallerRetroBall.Core
             SceneFlow.EnsureExists();
             ControllerCursor.EnsureExists();
             PowerMonitor.EnsureExists();
+            ScreenReader.EnsureExists();
         }
 
         // Supports "Enter Play Mode" without domain reload: static state is reset each play session.
@@ -190,6 +219,8 @@ namespace CallerRetroBall.Core
             Career = null;
             TextureFactory.ClearCache();
             GameCenterSync.ResetSession();
+            CareerFromCloud = false;
+            PendingDuel = null;
         }
     }
 }

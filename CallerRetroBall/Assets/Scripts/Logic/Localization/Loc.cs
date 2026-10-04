@@ -120,8 +120,8 @@ namespace CallerRetroBall.Logic
                 "Los patrones dan a cada equipo un dibujo distinto en la camiseta, no solo un color.",
             ["Difficulty changes how fast and how well the AI decides. It never boosts their ratings."] =
                 "La dificultad cambia lo rápido y lo bien que decide la IA. Nunca sube sus valoraciones.",
-            ["This deletes your career, Rise Mode progress, upgrades, and cosmetics on this device. It can't be undone."] =
-                "Esto borra tu carrera, el progreso del Modo Ascenso, las mejoras y los cosméticos en este dispositivo. No se puede deshacer.",
+            ["This deletes your career, Rise Mode progress, upgrades, and cosmetics on this device and in iCloud. It can't be undone."] =
+                "Esto borra tu carrera, el progreso del Modo Ascenso, las mejoras y los cosméticos en este dispositivo y en iCloud. No se puede deshacer.",
             ["Game Center is only available in the iPhone app."] = "Game Center solo está disponible en la app de iPhone.",
 
             // Tutorial
@@ -269,7 +269,40 @@ namespace CallerRetroBall.Logic
             ["DIAGONAL"] = "DIAGONAL", ["RINGS"] = "ANILLOS", ["CROSS"] = "CRUZ",
             ["CIRCLE"] = "CÍRCULO", ["SHIELD"] = "ESCUDO", ["DIAMOND"] = "ROMBO", ["HEXAGON"] = "HEXÁGONO", ["BADGE"] = "PLACA",
             ["BOLT"] = "RAYO", ["WAVE"] = "OLA", ["PAW"] = "PATA", ["TREE"] = "ÁRBOL", ["COMET"] = "COMETA", ["DUNE"] = "DUNA",
-            ["OWL"] = "BÚHO", ["CROWN"] = "CORONA", ["BALL"] = "BALÓN", ["SIGNAL"] = "SEÑAL",
+            ["OWL"] = "BÚHO", ["CROWN"] = "CORONA", ["BALL"] = "BALÓN", ["SIGNAL"] = "SEÑAL", ["CRANE"] = "GRULLA",
+
+            // Phase 19: Season 4, accessibility, iCloud, 2 Player.
+            ["GROUNDED"] = "ATERRIZADOS", ["Beat the Paper Cranes."] = "Vence a los Paper Cranes.",
+            ["NO RIVALS LEFT"] = "SIN RIVALES", ["Beat all four rival crews."] = "Vence a los cuatro equipos rivales.",
+            ["COUCH RIVALS"] = "RIVALES DE SOFÁ", ["Play a 2 Player game."] = "Juega una partida de 2 jugadores.",
+            ["FOUR CUPS"] = "CUATRO COPAS", ["Win The Gold Signal Cup four times."] = "Gana la Gold Signal Cup cuatro veces.",
+            ["RIVAL DOWN"] = "RIVAL DERROTADO", ["They win this one. They'll be back next season."] = "Esta vez ganan ellos. Volverán la próxima temporada.",
+            ["COLOR FILTER"] = "FILTRO DE COLOR", ["RED-GREEN"] = "ROJO-VERDE", ["BLUE-YELLOW"] = "AZUL-AMARILLO",
+            ["Color filter changes the shot meter colors and gives the away team its other kit when the two teams would look alike."] =
+                "El filtro de color cambia los colores del medidor de tiro y da al equipo visitante su otra equipación cuando los dos equipos se parecen.",
+            ["CAPTIONS"] = "SUBTÍTULOS",
+            ["Captions show the announcer's calls on screen. They're also on when Closed Captions is on in iOS Settings. VoiceOver reads the menus."] =
+                "Los subtítulos muestran las frases del locutor en pantalla. También se activan con los subtítulos de iOS. VoiceOver lee los menús.",
+            ["ICLOUD"] = "ICLOUD", ["ICLOUD SYNC"] = "SINCRONIZAR CON ICLOUD",
+            ["iCloud sync is only available in the iPhone app."] = "La sincronización con iCloud solo está disponible en la app de iPhone.",
+            ["Keeps your career in your own iCloud, so a new iPhone picks up where you left off. Settings stay per device."] =
+                "Guarda tu carrera en tu propio iCloud, así un iPhone nuevo sigue donde lo dejaste. Los ajustes son de cada dispositivo.",
+            ["Sign in to iCloud in the iPhone Settings app to sync your career."] = "Inicia sesión en iCloud en la app Ajustes del iPhone para sincronizar tu carrera.",
+            ["WELCOME BACK"] = "BIENVENIDO DE NUEVO", ["Your career was loaded from iCloud."] = "Tu carrera se cargó desde iCloud.",
+            ["NEWER CAREER IN ICLOUD"] = "CARRERA MÁS NUEVA EN ICLOUD", ["LOAD FROM ICLOUD"] = "CARGAR DE ICLOUD", ["KEEP THIS ONE"] = "QUEDARME CON ESTA",
+            ["SHOOTOUT VS FRIEND"] = "DUELO DE TRIPLES VS AMIGO",
+            ["Pass the phone: P1 sets a 60-second score, P2 tries to beat it."] = "Pásate el teléfono: J1 marca una puntuación en 60 segundos y J2 intenta superarla.",
+            ["P2: GO"] = "J2: ¡VAMOS!", ["NEW DUEL"] = "NUEVO DUELO", ["PASS THE PHONE TO P2"] = "PÁSALE EL TELÉFONO A J2", ["TIE GAME"] = "EMPATE",
+            ["P1: SET THE SCORE"] = "J1: MARCA LA PUNTUACIÓN", ["P1 WINS THE SHOOTOUT"] = "J1 GANA EL DUELO", ["P2 WINS THE SHOOTOUT"] = "J2 GANA EL DUELO",
+            ["Head to head on one iPhone: lay it flat between you, or use controllers."] = "Cara a cara en un iPhone: déjalo plano entre los dos, o usa mandos.",
+            ["One iPhone: lay it flat between you. P1 plays from the bottom edge, P2 from the top.\n" +
+             "Controllers: with two, P1 gets the first; with one, it's P2's (P1 uses touch).\n" +
+             "Keyboard: P1 WASD · K J L C, P2 arrows · Num1 Num2 Num3 Num0."] =
+                "Un iPhone: déjalo plano entre los dos. J1 juega desde el borde de abajo y J2 desde el de arriba.\n" +
+                "Mandos: con dos, J1 usa el primero; con uno, es de J2 (J1 usa la pantalla).\n" +
+                "Teclado: J1 WASD · K J L C, J2 flechas · Num1 Num2 Num3 Num0.",
+            ["Optional. Posts your best marks to leaderboards and unlocks achievements. The game works the same without it."] =
+                "Opcional. Publica tus mejores marcas en las clasificaciones y desbloquea logros. El juego funciona igual sin él.",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>
@@ -279,7 +312,7 @@ namespace CallerRetroBall.Logic
         {
             string[] keys =
             {
-                "PLAYER OF THE GAME", "NEW RECORD", "DAILY COMPLETE!", "NEON STATIC BEATEN!", "TITLES WON", "STANDINGS",
+                "PLAYER OF THE GAME", "NEW RECORD", "DAILY COMPLETE!", "NEON STATIC BEATEN!", "RIVAL BEATEN!", "TITLES WON", "STANDINGS",
                 "STARTING OVR", "PUT IN SPOT", "STEP ", "NICE!", "DAILY:", "SLAM!", "SWISH", "BADGE:", "CHAMPION:", "NEXT:",
                 "EDITION", "SEASON ", "WEEK ", "STREAK", "BADGES", "DIFFICULTY", "SPOT ", "SEMIFINAL", "FINAL", "BEST",
                 "SECRET CODE HINT FOUND!", "SECRET CODES", "Continues left:", "Next: stage", "Reached stage", "Try the stage again.",
@@ -288,7 +321,7 @@ namespace CallerRetroBall.Logic
             var es = new Dictionary<string, string>
             {
                 ["PLAYER OF THE GAME"] = "JUGADOR DEL PARTIDO", ["NEW RECORD"] = "NUEVO RÉCORD", ["DAILY COMPLETE!"] = "¡RETO CUMPLIDO!",
-                ["NEON STATIC BEATEN!"] = "¡NEON STATIC VENCIDO!", ["TITLES WON"] = "TÍTULOS GANADOS", ["STANDINGS"] = "CLASIFICACIÓN",
+                ["NEON STATIC BEATEN!"] = "¡NEON STATIC VENCIDO!", ["RIVAL BEATEN!"] = "¡RIVAL VENCIDO!", ["TITLES WON"] = "TÍTULOS GANADOS", ["STANDINGS"] = "CLASIFICACIÓN",
                 ["STARTING OVR"] = "VALORACIÓN INICIAL", ["PUT IN SPOT"] = "PONER EN PUESTO", ["STEP "] = "PASO ", ["NICE!"] = "¡BIEN!",
                 ["DAILY:"] = "RETO:", ["SLAM!"] = "¡MATE!", ["SWISH"] = "¡LIMPIA!", ["BADGE:"] = "INSIGNIA:", ["CHAMPION:"] = "CAMPEÓN:",
                 ["NEXT:"] = "SIGUIENTE:", ["EDITION"] = "EDICIÓN", ["SEASON "] = "TEMPORADA ", ["WEEK "] = "SEMANA ", ["STREAK"] = "RACHA",

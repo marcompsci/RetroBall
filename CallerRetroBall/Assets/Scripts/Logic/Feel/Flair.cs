@@ -2,9 +2,9 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7 }
 
-    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5 }
+    public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
     /// <summary>
     /// Presentation-only offsets for one player sprite at one moment, in art pixels.
@@ -49,6 +49,8 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.celebration.raise_roof": return CelebrationKind.RaiseTheRoof;
                 case "cosmetic.celebration.pixel_wave": return CelebrationKind.PixelWave;
                 case "cosmetic.celebration.take_a_bow": return CelebrationKind.TakeABow;
+                case "cosmetic.celebration.shoulder_brush": return CelebrationKind.ShoulderBrush;
+                case "cosmetic.celebration.paper_plane": return CelebrationKind.PaperPlane;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -62,6 +64,8 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.move.behind_back": return DribbleMoveKind.BehindTheBack;
                 case "cosmetic.move.double_cross": return DribbleMoveKind.DoubleCross;
                 case "cosmetic.move.step_back": return DribbleMoveKind.StepBack;
+                case "cosmetic.move.rocker_step": return DribbleMoveKind.RockerStep;
+                case "cosmetic.move.snatch_back": return DribbleMoveKind.SnatchBack;
                 default: return DribbleMoveKind.Crossover;
             }
         }
@@ -100,6 +104,19 @@ namespace CallerRetroBall.Logic
                     p.OffsetX = t < 0.2f ? -1 : 0;
                     p.Lift = t >= 0.25f && t < 0.6f ? -2 : 0;
                     p.ArmsUp = t >= 0.65f;
+                    break;
+                case CelebrationKind.ShoulderBrush:
+                    // Turn away, brush one shoulder then the other (facing flips), stand tall.
+                    int brush = (int)(t / 0.18f);
+                    p.FlipOverride = brush % 2 == 1;
+                    p.OffsetX = brush < 4 ? (brush % 2 == 0 ? -1 : 1) : 0;
+                    p.ArmsUp = brush >= 4;
+                    break;
+                case CelebrationKind.PaperPlane:
+                    // Wind up low, "throw" the plane (arms up, lean forward), then watch it fly away.
+                    p.Lift = t < 0.2f ? -1 : (t < 0.45f ? Hop(t, 0.2f, 0.25f, 2) : 0);
+                    p.ArmsUp = t >= 0.2f && t < 0.5f;
+                    p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
                     break;
                 default: // ShimmyStep
                     int step = (int)(t / 0.12f);
@@ -145,6 +162,16 @@ namespace CallerRetroBall.Logic
                     p.OffsetX = u < 0.6f ? -(int)Math.Round(u / 0.6f * 2f) : -2;
                     p.Lift = Hop(t, 0.05f, 0.2f, 1);
                     p.BallLift = 2;
+                    break;
+                case DribbleMoveKind.RockerStep:
+                    // Jab forward, rock back, jab again: the body sways while the ball stays tight.
+                    p.OffsetX = (int)Math.Round(Math.Sin(u * 2.0 * Math.PI) * 2f);
+                    p.BallOffsetX = p.OffsetX > 0 ? 1 : -1;
+                    break;
+                case DribbleMoveKind.SnatchBack:
+                    // Ball pushed out low, then snatched back high across the body.
+                    p.BallOffsetX = u < 0.45f ? (int)Math.Round(u / 0.45f * 4f) : (int)Math.Round(4f - (u - 0.45f) / 0.55f * 7f);
+                    p.BallLift = u < 0.45f ? -2 : 2;
                     break;
                 default: // SpinCycle
                     // Two facing flips in quick succession reads as a spin at pixel scale.

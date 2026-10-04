@@ -93,6 +93,10 @@ namespace CallerRetroBall.UI
             });
             UiControls.ToggleRow(column, "TEAM PATTERNS", s.colorblindContrast, v => { s.colorblindContrast = v; Save(); });
             UiKit.Size(UiKit.Label(column, "Team patterns give each side a distinct jersey pattern, not just a colour.", 28f, Theme.Muted), 70f);
+            UiControls.ChoiceRow(column, "COLOR FILTER", ColorAccess.FilterNames, (int)ColorAccess.Normalize(s.colorFilter), i => { s.colorFilter = i; Save(); });
+            UiKit.Size(UiKit.Label(column, "Color filter changes the shot meter colors and gives the away team its other kit when the two teams would look alike.", 28f, Theme.Muted), 90f);
+            UiControls.ToggleRow(column, "CAPTIONS", s.captions, v => { s.captions = v; Save(); });
+            UiKit.Size(UiKit.Label(column, "Captions show the announcer's calls on screen. They're also on when Closed Captions is on in iOS Settings. VoiceOver reads the menus.", 28f, Theme.Muted), 90f);
             UiControls.ToggleRow(column, "LEFT-HANDED", s.leftHanded, v => { s.leftHanded = v; Save(); });
             UiControls.ToggleRow(column, "LARGE BUTTONS", s.largeButtons, v => { s.largeButtons = v; Save(); });
             UiControls.ToggleRow(column, "TAP TO SHOOT", s.tapToShoot, v => { s.tapToShoot = v; Save(); });
@@ -126,7 +130,7 @@ namespace CallerRetroBall.UI
             Header(column, "GAME CENTER");
             UiControls.ToggleRow(column, "SIGN IN", s.gameCenter, v => App.SetGameCenter(v));
             UiKit.Size(UiKit.Label(column, App.GameCenter.IsAvailable
-                    ? "Optional. Posts your wins, greens, and daily streak to leaderboards and unlocks achievements. The game works the same without it."
+                    ? "Optional. Posts your best marks to leaderboards and unlocks achievements. The game works the same without it."
                     : "Game Center is only available in the iPhone app.",
                 28f, Theme.Muted), 90f);
             if (App.GameCenter.IsAvailable)
@@ -136,9 +140,22 @@ namespace CallerRetroBall.UI
                     App.GameCenter.ShowDashboard();
                 }, ButtonStyle.Secondary, 110f, 40f);
 
+            Header(column, "ICLOUD");
+            UiControls.ToggleRow(column, "ICLOUD SYNC", s.icloudSync, v =>
+            {
+                s.icloudSync = v;
+                Save();
+            });
+            UiKit.Size(UiKit.Label(column, !CloudSync.Supported
+                    ? "iCloud sync is only available in the iPhone app."
+                    : CloudSync.Available
+                        ? "Keeps your career in your own iCloud, so a new iPhone picks up where you left off. Settings stay per device."
+                        : "Sign in to iCloud in the iPhone Settings app to sync your career.",
+                28f, Theme.Muted), 90f);
+
             UiKit.Button(column, "RESET SAVE", () =>
                 UiControls.Dialog("RESET SAVE?",
-                    "This deletes your career, Rise Mode progress, upgrades, and cosmetics on this device. It can't be undone.",
+                    "This deletes your career, Rise Mode progress, upgrades, and cosmetics on this device and in iCloud. It can't be undone.",
                     ("RESET", ButtonStyle.Primary, () =>
                     {
                         App.ResetCareer();

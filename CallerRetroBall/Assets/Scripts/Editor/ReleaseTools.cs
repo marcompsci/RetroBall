@@ -23,6 +23,7 @@ namespace CallerRetroBall.EditorTools
         public const string LaunchPath = ArtFolder + "/LaunchImage.png";
         public const string SimulatorOutput = "iOSBuild/Simulator";
         public const string DeviceOutput = "iOSBuild/Device";
+        public const string AppStoreOutput = "iOSBuild/AppStore";
         public const string ReleaseVersion = "1.0.0";
 
         [MenuItem("RetroBall/Release/Generate App Icon and Launch Image", priority = 60)]
@@ -42,7 +43,42 @@ namespace CallerRetroBall.EditorTools
         public static void BuildSimulator() => Build(iOSSdkVersion.SimulatorSDK, SimulatorOutput);
 
         [MenuItem("RetroBall/Release/Build iOS (Device)", priority = 81)]
-        public static void BuildDevice() => Build(iOSSdkVersion.DeviceSDK, DeviceOutput);
+        public static void BuildDevice()
+        {
+            ApplyTeamFromCommandLine();
+            Build(iOSSdkVersion.DeviceSDK, DeviceOutput);
+        }
+
+        /// <summary>
+        /// Release build for App Store Connect / TestFlight: raises the build number by one (every upload
+        /// needs a new one), Release configuration, writes iOSBuild/AppStore. tools/ship_testflight.sh then
+        /// archives and uploads it with xcodebuild. Pass -teamId XXXXXXXXXX on the command line to set the team.
+        /// </summary>
+        [MenuItem("RetroBall/Release/Build iOS (App Store)", priority = 82)]
+        public static void BuildAppStore()
+        {
+            ApplyTeamFromCommandLine();
+            int build = int.TryParse(PlayerSettings.iOS.buildNumber, out int b) && b >= 1 ? b + 1 : 1;
+            PlayerSettings.iOS.buildNumber = build.ToString();
+            EditorUserBuildSettings.iOSXcodeBuildConfig = XcodeBuildConfig.Release;
+            AssetDatabase.SaveAssets();
+            WriteReport("APP STORE BUILD: version " + ReleaseVersion + " build " + build +
+                        (string.IsNullOrEmpty(PlayerSettings.iOS.appleDeveloperTeamID) ? "" : ", team " + PlayerSettings.iOS.appleDeveloperTeamID));
+            Build(iOSSdkVersion.DeviceSDK, AppStoreOutput);
+        }
+
+        /// <summary>-teamId XXXXXXXXXX on the Unity command line sets Player Settings ▸ iOS ▸ Signing Team ID.</summary>
+        private static void ApplyTeamFromCommandLine()
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-teamId" && IsTeamId(args[i + 1]))
+                    PlayerSettings.iOS.appleDeveloperTeamID = args[i + 1];
+        }
+
+        /// <summary>Apple team ids are ten upper-case letters and digits.</summary>
+        public static bool IsTeamId(string s) =>
+            !string.IsNullOrEmpty(s) && s.Length == 10 && s.All(ch => (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'));
 
         // ------------------------------------------------------------------ readiness
 
@@ -198,6 +234,9 @@ namespace CallerRetroBall.EditorTools
             if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int build) || build < 1) PlayerSettings.iOS.buildNumber = "1";
             PlayerSettings.iOS.targetOSVersionString = "15.0";
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
+            // iPhone only: the game is designed for portrait phones. (It still runs on iPad in iPhone
+            // mode, and App Store Connect then doesn't require iPad screenshots.)
+            PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneOnly;
             PlayerSettings.iOS.requiresFullScreen = true;
             PlayerSettings.statusBarHidden = true;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
@@ -211,7 +250,7 @@ namespace CallerRetroBall.EditorTools
             AssetDatabase.SaveAssets();
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
-            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, portrait, full screen, no splash.\n" +
+            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, iPhone, portrait, full screen, no splash.\n" +
                    "Bundle ID: " + id + (IsPlaceholderId(id)
                        ? "  ← placeholder: change it to your own (e.g. com.yourname.retroball) before signing." : "");
         }

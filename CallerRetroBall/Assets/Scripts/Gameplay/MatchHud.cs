@@ -334,12 +334,12 @@ namespace CallerRetroBall.Gameplay
         }
 
         /// <summary>Practice end card.</summary>
-        public void ShowPracticeEnd(string title, string result, bool newBest)
+        public void ShowPracticeEnd(string title, string result, bool newBest, string againLabel = "RUN IT BACK")
         {
             ClearFinal();
             Title(title, result);
             if (newBest) UiKit.Size(UiKit.Label(_finalColumn, "NEW PERSONAL BEST!", 48f, Theme.Cyan, TextAlignmentOptions.Center, true), 76f);
-            UiKit.Button(_finalColumn, "RUN IT BACK", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
+            UiKit.Button(_finalColumn, againLabel, () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
             UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 110f, 44f);
             Open();
         }

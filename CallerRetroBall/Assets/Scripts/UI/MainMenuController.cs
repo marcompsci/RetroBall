@@ -108,6 +108,24 @@ namespace CallerRetroBall.UI
                 else Offer();
             }
 
+            if (App.CareerFromCloud)
+            {
+                App.CareerFromCloud = false;
+                UiControls.Dialog("WELCOME BACK", "Your career was loaded from iCloud.", ("OK", ButtonStyle.Primary, null));
+            }
+            else if (CloudSync.CloudAhead && _overlay == null)
+            {
+                string from = string.IsNullOrEmpty(CloudSync.CloudDevice) ? "another device" : CloudSync.CloudDevice;
+                UiControls.Dialog("NEWER CAREER IN ICLOUD",
+                    "iCloud has a career that's further along (saved on " + from + "). Load it on this iPhone, or keep this one and replace the iCloud copy?",
+                    ("LOAD FROM ICLOUD", ButtonStyle.Primary, () =>
+                    {
+                        CloudSync.LoadCloud();
+                        SceneFlow.GoTo(SceneNames.MainMenu);
+                    }),
+                    ("KEEP THIS ONE", ButtonStyle.Ghost, CloudSync.KeepLocal));
+            }
+
             if (App.CareerLoadStatus == LoadStatus.Recovered)
                 UiControls.Dialog("SAVE RESET", "Your save file couldn't be read, so a fresh career was started. A backup of the old file was kept.",
                                   ("OK", ButtonStyle.Primary, null));
@@ -318,7 +336,7 @@ namespace CallerRetroBall.UI
             bool done = DailyChallenges.CompletedToday(App.Career.daily, App.Today);
             int streak = DailyChallenges.LiveStreak(App.Career.daily, App.Today);
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
-            Mode(column, "2 PLAYER", "Head to head on one device: keyboard or two controllers.", ShowVersus, ButtonStyle.Secondary);
+            Mode(column, "2 PLAYER", "Head to head on one iPhone: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
             Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + App.Career.classic.titles, ShowClassic, ButtonStyle.Secondary);
             var arcade = App.Career.secrets.arcade;
             Mode(column, "ARCADE LADDER", arcade.active
@@ -493,10 +511,10 @@ namespace CallerRetroBall.UI
             UiKit.Size(p2Label, 60f);
             UiKit.Button(column, "CHANGE TEAM", () => { p2 = Next(p2, p1); Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
             UiKit.Size(UiKit.Label(column,
-                "P1: touch, or WASD · K shoot (hold) · J pass · L steal · C call\n" +
-                "P2: arrows · Num1 shoot (hold) · Num2 pass · Num3 steal · Num0 pick & roll\n" +
-                "Controllers: with two, P1 gets the first; with one, it's P2's.",
-                26f, Theme.Muted), 150f);
+                "One iPhone: lay it flat between you. P1 plays from the bottom edge, P2 from the top.\n" +
+                "Controllers: with two, P1 gets the first; with one, it's P2's (P1 uses touch).\n" +
+                "Keyboard: P1 WASD · K J L C, P2 arrows · Num1 Num2 Num3 Num0.",
+                26f, Theme.Muted), 170f);
             UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
             UiKit.Button(footer, "TIP OFF", () =>
             {
@@ -653,6 +671,11 @@ namespace CallerRetroBall.UI
                 StartParty(DrillKind.AroundTheWorld, null, null), ButtonStyle.Secondary);
             Mode(column, "SHOOTOUT", "Beat a CPU shooter's 3-point score. Wins: " + best.shootoutWins, () =>
                 StartParty(DrillKind.Shootout, null, RandomTeam()), ButtonStyle.Secondary);
+            Mode(column, "SHOOTOUT VS FRIEND", "Pass the phone: P1 sets a 60-second score, P2 tries to beat it.", () =>
+            {
+                App.PendingDuel = null;
+                StartParty(DrillKind.Shootout, ShootoutDuel.ContextId, null);
+            }, ButtonStyle.Secondary);
             UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
         }
 

@@ -14,6 +14,13 @@ namespace CallerRetroBall.Controls
     /// </summary>
     public sealed class TouchControls : MonoBehaviour
     {
+        /// <summary>
+        /// Where the controls sit. Full = the whole screen (one player). Bottom / Top = tabletop
+        /// 2 Player on one phone lying flat: player 1 holds the bottom edge, player 2 the top edge
+        /// (their controls are turned 180° to face them).
+        /// </summary>
+        public enum Seat { Full = 0, Bottom = 1, Top = 2 }
+
         public VirtualJoystick Joystick { get; private set; }
         public TouchActionButton Shoot { get; private set; }
         public TouchActionButton Pass { get; private set; }
@@ -25,27 +32,47 @@ namespace CallerRetroBall.Controls
 
         /// <param name="leftHanded">Mirror the layout: stick on the right, buttons on the left.</param>
         /// <param name="largeButtons">Action buttons 25% bigger (accessibility).</param>
-        public static TouchControls Create(InputBuffer buffer, bool leftHanded = false, bool largeButtons = false)
+        public static TouchControls Create(InputBuffer buffer, bool leftHanded = false, bool largeButtons = false, Seat seat = Seat.Full)
         {
-            var canvas = UiKit.CreateScreenCanvas("TouchControlsCanvas", 10);
+            var canvas = UiKit.CreateScreenCanvas(seat == Seat.Top ? "TouchControlsCanvasP2" : "TouchControlsCanvas", 10);
             var controls = canvas.gameObject.AddComponent<TouchControls>();
             controls._canvas = canvas;
             controls._buffer = buffer;
             controls._leftHanded = leftHanded;
-            controls._scale = largeButtons ? 1.25f : 1f;
-            controls.Build(UiKit.SafeArea(canvas.transform));
+            controls._seat = seat;
+            // Half a screen each in tabletop play: slightly smaller buttons so both sets fit.
+            controls._scale = (largeButtons ? 1.25f : 1f) * (seat == Seat.Full ? 1f : 0.82f);
+            var safe = UiKit.SafeArea(canvas.transform);
+            if (seat == Seat.Full)
+            {
+                controls.Build(safe);
+            }
+            else
+            {
+                var half = UiKit.NewRect(seat == Seat.Top ? "SeatP2" : "SeatP1", safe);
+                half.anchorMin = new Vector2(0f, seat == Seat.Top ? 0.5f : 0f);
+                half.anchorMax = new Vector2(1f, seat == Seat.Top ? 1f : 0.5f);
+                half.offsetMin = half.offsetMax = Vector2.zero;
+                // Turned to face player 2 across the table.
+                if (seat == Seat.Top) half.localEulerAngles = new Vector3(0f, 0f, 180f);
+                controls.Build(half);
+                var tag = UiKit.Label(half, seat == Seat.Top ? "P2" : "P1", 40f, seat == Seat.Top ? Theme.Cyan : Theme.Gold, TextAlignmentOptions.Center, true);
+                UiKit.Place(tag.rectTransform, new Vector2(0.5f, 0.06f), new Vector2(160f, 60f));
+                tag.raycastTarget = false;
+            }
             return controls;
         }
 
         private bool _leftHanded;
         private float _scale = 1f;
+        private Seat _seat;
 
         private void Build(RectTransform safe)
         {
             // Joystick zone: lower-left, generous so the thumb never has to aim.
             var zone = UiKit.NewRect("JoystickZone", safe);
             zone.anchorMin = new Vector2(_leftHanded ? 0.45f : 0f, 0f);
-            zone.anchorMax = new Vector2(_leftHanded ? 1f : 0.55f, 0.48f);
+            zone.anchorMax = new Vector2(_leftHanded ? 1f : 0.55f, _seat == Seat.Full ? 0.48f : 0.92f);
             zone.offsetMin = zone.offsetMax = Vector2.zero;
             var zoneImage = zone.gameObject.AddComponent<Image>();
             zoneImage.color = new Color(0f, 0f, 0f, 0f); // invisible but receives touches
@@ -147,7 +174,8 @@ namespace CallerRetroBall.Controls
             get
             {
                 var v = Joystick.Value;
-                return new Vec2(v.x, -v.y);
+                // Player 2's controls are upside down: their "up" points down the screen.
+                return _seat == Seat.Top ? new Vec2(-v.x, v.y) : new Vec2(v.x, -v.y);
             }
         }
     }

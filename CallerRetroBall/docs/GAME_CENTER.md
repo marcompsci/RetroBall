@@ -7,38 +7,60 @@ Game Center in RetroBall is **optional and off by default**. The player turns it
 - **Native bridge:** `Assets/Plugins/iOS/CallerGameCenter.mm` (GameKit). It handles sign-in, leaderboard scores, achievements, and the Game Center dashboard.
 - **C# service:** `Core/GameCenterService.cs`. `GameKitGameCenterService` is used on iOS builds and `NullGameCenterService` everywhere else (Editor, other platforms).
 - **What gets reported:** `Logic/Progression/Daily.cs` ▸ `Achievements` decides which achievements are earned and which scores are reported. It's pure logic and unit-tested.
-- **When it reports:** after every rewarded game and after the tutorial. Nothing is sent unless the player opted in and is signed in.
+- **When it reports:** after every rewarded game, the tutorial, practice and party games, and 2 Player games. Nothing is sent unless the player opted in and is signed in.
 - **Xcode setup:** the iOS build post-processor links `GameKit.framework` and adds the **Game Center** capability automatically.
 
 ## You need to create these in App Store Connect
 
 In App Store Connect, open **App ▸ Features ▸ Game Center**. The IDs must match exactly.
 
-### Leaderboards (Classic, "High score to low")
+### Leaderboards (Classic)
 
-| Leaderboard ID | Name | Score format |
-|---|---|---|
-| `retroball.lb.career_wins` | Career Wins | Integer |
-| `retroball.lb.career_greens` | Green Releases | Integer |
-| `retroball.lb.daily_best_streak` | Best Daily Streak | Integer |
+| Leaderboard ID | Name | Sort | Score format |
+|---|---|---|---|
+| `retroball.lb.career_wins` | Career Wins | High to low | Integer |
+| `retroball.lb.career_greens` | Green Releases | High to low | Integer |
+| `retroball.lb.daily_best_streak` | Best Daily Streak | High to low | Integer |
+| `retroball.lb.king_streak` | King of the Court Streak | High to low | Integer |
+| `retroball.lb.arcade_clears` | Arcade Ladder Clears | High to low | Integer |
+| `retroball.lb.shootout_wins` | Shootout Wins | High to low | Integer |
+| `retroball.lb.around_world` | Around the World | Low to high | Elapsed time (to the hundredth of a second) |
+| `retroball.lb.win_streak` | Best Win Streak | High to low | Integer |
+| `retroball.lb.game_points` | Most Points in a Game | High to low | Integer |
+
+"Around the World" scores are sent in hundredths of a second (41.23 s = 4123), which is the format Game Center's "Elapsed time (to the hundredth of a second)" expects. A leaderboard only receives a score once you have one: zeros are never sent.
 
 ### Achievements
 
-Achievements report 100% when earned.
+Achievements report 100% when earned. Points total **890** (Game Center allows up to 1,000; no single achievement above 100). This list comes from `Achievements.All` in `Logic/Progression/Daily.cs`, and a unit test checks the limits.
 
-| Achievement ID | Title | How it's earned |
-|---|---|---|
-| `retroball.ach.first_win` | First W | Win any game |
-| `retroball.ach.first_green` | Called It | Hit your first GREEN release |
-| `retroball.ach.ten_wins` | Double Digits | Win 10 games |
-| `retroball.ach.hundred_greens` | Green Machine | 100 GREEN releases |
-| `retroball.ach.circuit_cleared` | Off the Blacktop | Clear The Blacktop Circuit |
-| `retroball.ach.cup_champion` | Gold Signal | Win The Gold Signal Cup |
-| `retroball.ach.classic_champion` | First Call | Win the First Call Classic |
-| `retroball.ach.daily_streak_7` | Every Day | 7-day Daily Challenge streak |
-| `retroball.ach.tutorial_done` | Ready to Call | Finish How to Play |
+| Achievement ID | Title | How it's earned | Points |
+|---|---|---|---|
+| `retroball.ach.first_win` | First W | Win any game. | 10 |
+| `retroball.ach.first_green` | Called It | Hit your first GREEN release. | 10 |
+| `retroball.ach.ten_wins` | Double Digits | Win 10 games. | 30 |
+| `retroball.ach.hundred_greens` | Green Machine | Hit 100 GREEN releases. | 50 |
+| `retroball.ach.circuit_cleared` | Off the Blacktop | Clear The Blacktop Circuit. | 50 |
+| `retroball.ach.cup_champion` | Gold Signal | Win The Gold Signal Cup. | 80 |
+| `retroball.ach.classic_champion` | First Call | Win the First Call Classic. | 40 |
+| `retroball.ach.daily_streak_7` | Every Day | Reach a 7-day Daily Challenge streak. | 50 |
+| `retroball.ach.tutorial_done` | Ready to Call | Finish How to Play. | 10 |
+| `retroball.ach.heat_check` | Heating Up | Hit three in a row and HEAT UP. | 20 |
+| `retroball.ach.alley_oop` | Up Top | Throw or finish an alley-oop. | 20 |
+| `retroball.ach.glitch_beaten` | Game Over, Glitch | Clear the Arcade Ladder. | 80 |
+| `retroball.ach.first_code` | Old-School | Enter a secret code. | 20 |
+| `retroball.ach.all_codes` | Code Breaker | Find every secret code. | 80 |
+| `retroball.ach.king_five` | Hold the Court | Win 5 straight in King of the Court. | 50 |
+| `retroball.ach.caller_cup` | Cup Run | Win the Caller Cup. | 60 |
+| `retroball.ach.all_rivals` | Every Rival | Beat Neon Static, the Sundown Syndicate, the Midnight Tide and the Paper Cranes. | 100 |
+| `retroball.ach.shootout` | Sharpshooter | Win a Shootout. | 20 |
+| `retroball.ach.horse` | Spell It Out | Win a game of H-O-R-S-E against the CPU. | 20 |
+| `retroball.ach.around_world` | World Tour | Finish Around the World. | 20 |
+| `retroball.ach.couch_game` | Couch Rivals | Play a 2 Player game. | 10 |
+| `retroball.ach.your_colors` | Your Colors | Create your own team. | 10 |
+| `retroball.ach.long_haul` | Long Haul | Play five Rise seasons. | 50 |
 
-Each achievement needs a title, a description, point value(s) totalling 1,000 or less, and a 512×512 or 1024×1024 image.
+Each achievement needs a title, a pre-earned and an earned description, its points, and a 512×512 or 1024×1024 image. Mark none of them hidden.
 
 ## Testing
 

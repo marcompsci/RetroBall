@@ -9,7 +9,7 @@ namespace CallerRetroBall.EditorTools
     /// <summary>
     /// After an iOS build, sets the Info.plist keys App Store Connect would otherwise ask about
     /// (no non-exempt encryption, full screen, hidden status bar, Sports Games category), links
-    /// GameKit, and adds the Game Center capability.
+    /// GameKit, and adds the Game Center and iCloud (key-value storage) capabilities.
     /// </summary>
     public static class IosPostProcess
     {
@@ -44,6 +44,8 @@ namespace CallerRetroBall.EditorTools
             proj.WriteToFile(projPath);
             var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroBall.entitlements", null, proj.GetUnityMainTargetGuid());
             caps.AddGameCenter();
+            // iCloud key-value storage for save sync (Settings ▸ ICLOUD SYNC). No documents, no CloudKit.
+            caps.AddiCloud(true, false, false, false, new string[0]);
             caps.WriteToFile();
         }
     }

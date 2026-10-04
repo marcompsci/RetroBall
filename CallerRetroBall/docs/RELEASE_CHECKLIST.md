@@ -9,10 +9,10 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ✅ Logic tests pass on .NET: `cd tools/LogicTests && dotnet run --project Runner/Runner.csproj`
 
 ## 2. Identity and settings
-- ☐ Choose your bundle ID (for example `com.yourname.retroball`) and set it in **Player Settings ▸ iOS ▸ Bundle Identifier**.
+- ✅ Bundle ID `com.marcompsci.retroball`.
 - ☐ Set your **Signing Team ID** in Player Settings, or choose the team in Xcode later.
-- ✅ **RetroBall ▸ Release ▸ Apply Release Player Settings:** version 1.0.0, build 1, iOS 15+, portrait, full screen, status bar hidden, Unity splash off, development build off.
-- ☐ Raise **Build** (Player Settings ▸ iOS ▸ Build) for every upload to App Store Connect.
+- ✅ **RetroBall ▸ Release ▸ Apply Release Player Settings:** version 1.0.0, build 1, iOS 15+, iPhone only, portrait, full screen, status bar hidden, Unity splash off, development build off.
+- ✅ `ship_testflight.sh` (RetroBall ▸ Release ▸ Build iOS (App Store)) raises the build number for every upload.
 
 ## 3. Icon and launch screen
 - ✅ **RetroBall ▸ Release ▸ Generate App Icon and Launch Image** writes `Assets/Art/AppIcon/AppIcon1024.png` (opaque, 1024²) and `LaunchImage.png` (1080×1920), then assigns them.
@@ -37,7 +37,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ☐ App Privacy: **Data Not Collected**.
 - ☐ Age rating questionnaire: all **None** / **No**.
 - ☐ Upload screenshots (6.9" iPhone set, from **RetroBall ▸ Release ▸ Capture Store Screenshot**; see `docs/LAUNCH_KIT.md`).
-- ☐ In Xcode, choose **Product ▸ Archive**, then **Distribute App ▸ App Store Connect ▸ Upload**.
+- ☐ Upload with `bash ~/RetroBall-push/tools/ship_testflight.sh` (build number goes up automatically). Full walkthrough: `docs/SUBMISSION.md`.
 - ☐ Install the build through TestFlight and play a full Rise season on it.
 - ☐ Submit for review with the review notes from `docs/APP_STORE.md`.
 

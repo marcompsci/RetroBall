@@ -296,6 +296,27 @@
   celebrations; Double Cross and Step Back moves; badges Tide Turner, Three-Peat, Dynasty; codes POCKET
   GREEN (old-handheld green screen) and SKY HIGH (double-height jumps, looks only).
 
+## Phase 19: App Store, Game Center + iCloud, local multiplayer, accessibility, Season 4
+
+- **TestFlight / App Store:** `tools/ship_testflight.sh` runs Unity's `ReleaseTools.BuildAppStore` (raises the
+  build number, Release config, `iOSBuild/AppStore`), then `xcodebuild archive` and `-exportArchive` with an
+  App Store Connect export (upload, or `.ipa` with `--export-only`). The team comes from `$TEAM`, Unity's
+  Signing Team ID, or the last Xcode device build. The app is iPhone-only. Step-by-step guide: `docs/SUBMISSION.md`.
+- **Game Center:** 23 achievements (890 points) and 9 leaderboards (King streak, Arcade clears, Shootout wins,
+  Around the World time, best win streak, most points), defined as data in `Achievements` (tested against
+  Apple's limits). Reported after practice, party and 2 Player games too.
+- **iCloud:** the career syncs through the player's own iCloud key-value storage (`CloudSync`, `RetroCloud.mm`,
+  capability added by `IosPostProcess`). The career that's further along wins; a fresh install loads it,
+  otherwise the menu asks LOAD FROM ICLOUD / KEEP THIS ONE. Settings stay per device; Reset also clears iCloud.
+- **Local multiplayer:** tabletop 2 Player on one phone (P1 bottom half, P2 top half turned 180°) when no
+  controller is connected; Shootout vs Friend (pass and play, two 60-second rounds).
+- **Accessibility:** COLOR FILTER (red-green / blue-yellow meter palettes and automatic away-kit swap, chosen
+  with colour-vision simulation and ΔE checks in `ColorAccess`); CAPTIONS for announcer calls (also follows
+  iOS Closed Captions); VoiceOver for menus via Unity's screen-reader API (`ScreenReader`).
+- **Season 4:** the Paper Cranes (Juno Vale) take their turn as the fourth rival (rivals now rotate every four
+  seasons), chapter 4 scenes (EN/ES), courts Laundromat Lot, Drive-In Lot and Paper Garden, kits, Shoulder
+  Brush and Paper Plane celebrations, Rocker Step and Snatch Back moves, a crane logo, and four badges.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

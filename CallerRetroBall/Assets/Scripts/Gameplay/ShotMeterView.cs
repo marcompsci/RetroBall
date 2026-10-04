@@ -12,9 +12,18 @@ namespace CallerRetroBall.Gameplay
     public sealed class ShotMeterView : MonoBehaviour
     {
         private static readonly Color FillColor = new Color32(0xF4, 0xF1, 0xDE, 255);
-        private static readonly Color GreenColor = new Color32(0x3D, 0xDC, 0x84, 255);
-        private static readonly Color EarlyLateColor = new Color32(0xFF, 0xB0, 0x3B, 255);
-        private static readonly Color BadColor = new Color32(0xF7, 0x25, 0x85, 255);
+        // Settings ▸ COLOR FILTER picks these (green / amber / pink with no filter).
+        private static Color GreenColor = new Color32(0x3D, 0xDC, 0x84, 255);
+        private static Color EarlyLateColor = new Color32(0xFF, 0xB0, 0x3B, 255);
+        private static Color BadColor = new Color32(0xF7, 0x25, 0x85, 255);
+
+        /// <summary>Applies the colour filter's meter palette (call before creating the meter).</summary>
+        public static void UsePalette(MeterPalette p)
+        {
+            GreenColor = new Color32(p.Good.r, p.Good.g, p.Good.b, 255);
+            EarlyLateColor = new Color32(p.Near.r, p.Near.g, p.Near.b, 255);
+            BadColor = new Color32(p.Bad.r, p.Bad.g, p.Bad.b, 255);
+        }
 
         private const float Ppu = CourtSpace.PixelsPerUnit;
         private const int InnerX = 2;

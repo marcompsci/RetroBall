@@ -117,9 +117,10 @@ namespace CallerRetroBall.Tests
         {
             Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(1));
             Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(2));
-            Assert.AreEqual(DefaultContent.Rival3CrewId, RivalEngine.RivalFor(3), "every third season brings the Midnight Tide");
-            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(4));
+            Assert.AreEqual(DefaultContent.Rival3CrewId, RivalEngine.RivalFor(3));
+            Assert.AreEqual(DefaultContent.Rival4CrewId, RivalEngine.RivalFor(4), "the four rivals take turns");
             Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(5));
+            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(6));
         }
 
         [Test]

@@ -26,6 +26,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 3 rival (every third Rise season).</summary>
         public const string Rival3CrewId = "crew.midnight_tide";
         public const string Rival3LeaderId = "player.mdt.quill";
+        /// <summary>Season 4 rival (every fourth Rise season).</summary>
+        public const string Rival4CrewId = "crew.paper_cranes";
+        public const string Rival4LeaderId = "player.crn.vale";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -123,6 +126,17 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.canyon_rim", "Canyon Rim", CourtCircuit.Blacktop,
                 "Red rock, thin air, and a long way down past the baseline.",
                 "#9A4A2E", "#FFE4CC", "#7C2D12", "#FDBA74", "#FB923C", 0.25f));
+
+            // Season 4 courts.
+            c.Courts.Add(Court("court.laundromat_lot", "Laundromat Lot", CourtCircuit.Blacktop,
+                "Behind the all-night laundromat. The dryers hum like a crowd.",
+                "#5B6475", "#F8FAFC", "#38BDF8", "#1E1B4B", "#A78BFA", 0.35f));
+            c.Courts.Add(Court("court.drive_in", "Drive-In Lot", CourtCircuit.Blacktop,
+                "Between the parked cars, under a giant blank movie screen.",
+                "#334155", "#FDE68A", "#EF4444", "#0F172A", "#475569", 0.55f));
+            c.Courts.Add(Court("court.paper_garden", "Paper Garden", CourtCircuit.Blacktop,
+                "A rooftop garden strung with a thousand folded paper birds.",
+                "#7C9A6D", "#FFFBEB", "#E11D48", "#FDF2F8", "#FBCFE8", 0.45f));
 
             // Hidden courts (secrets): neon grid floors.
             c.Courts.Add(Court(BossCourtId, "The Glitch Grid", CourtCircuit.Secret,
@@ -285,6 +299,14 @@ namespace CallerRetroBall.Logic
                 P("osei", "Tobi", "Osei", 15, Archetype.QuickCutter, 3),
                 P("lindqvist", "Sven", "Lindqvist", 42, Archetype.PostAnchor, 2));
 
+            // Season 4 rival: every fourth Rise season.
+            AddTeam(c, Rival4CrewId, "", "Paper Cranes", "CRN", TeamTier.Rival,
+                "#FFFBEB", "#E11D48", "#1F2937", LogoShape.Hexagon, LogoMotif.Crane, TeamPattern.Diagonal,
+                "court.paper_garden", "Folded a thousand times.", false,
+                P("vale", "Juno", "Vale", 7, Archetype.Playmaker, 3),
+                P("okafor", "Ari", "Okafor", 21, Archetype.LockdownWing, 3),
+                P("castillo", "Wren", "Castillo", 33, Archetype.StretchForward, 2));
+
             // Secret teams (Arcade Ladder boss and a code-unlocked crew). Original characters.
             AddTeam(c, BossTeamId, "", "The Glitch", "GLT", TeamTier.Secret,
                 "#FF2E88", "#0B0B1A", "#00F0FF", LogoShape.Diamond, LogoMotif.Signal, TeamPattern.Cross,
@@ -338,6 +360,7 @@ namespace CallerRetroBall.Logic
             S(RivalCrewId, DefenseScheme.Pressure);
             S(Rival2CrewId, DefenseScheme.Zone);
             S(Rival3CrewId, DefenseScheme.PackLine);
+            S(Rival4CrewId, DefenseScheme.ManToMan);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -561,6 +584,11 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.lantern", "Lantern Glow", CosmeticSlot.JerseyPalette, 450, 900, false, "#F59E0B", "#B91C1C"));
             c.Cosmetics.Add(Cosmetic("cosmetic.jersey.red_rock", "Red Rock", CosmeticSlot.JerseyPalette, 400, 850, false, "#9A4A2E", "#FFE4CC"));
 
+            // Season 4 kits.
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.origami", "Origami", CosmeticSlot.JerseyPalette, 450, 1000, false, "#FFFBEB", "#E11D48"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.wash_fold", "Wash and Fold", CosmeticSlot.JerseyPalette, 400, 950, false, "#38BDF8", "#1E1B4B"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.double_feature", "Double Feature", CosmeticSlot.JerseyPalette, 450, 1050, false, "#EF4444", "#FDE68A"));
+
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.classic", "Classic Whites", CosmeticSlot.Shoes, 0, 0, true, "#FFFFFF", "#D9D9D9"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.volt_laces", "Volt Laces", CosmeticSlot.Shoes, 150, 40, false, "#1A1A1A", "#FFD400"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.glacier", "Glacier Highs", CosmeticSlot.Shoes, 200, 120, false, "#E0FBFC", "#3D5A80"));
@@ -572,6 +600,9 @@ namespace CallerRetroBall.Logic
 
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.tide_runners", "Tide Runners", CosmeticSlot.Shoes, 350, 750, false, "#E0F2FE", "#0EA5E9"));
             c.Cosmetics.Add(Cosmetic("cosmetic.shoes.ember_highs", "Ember Highs", CosmeticSlot.Shoes, 400, 950, false, "#B91C1C", "#F59E0B"));
+
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.paper_planes", "Paper Planes", CosmeticSlot.Shoes, 350, 1000, false, "#FFFBEB", "#E11D48"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.shoes.marquee", "Marquee Lights", CosmeticSlot.Shoes, 400, 1100, false, "#FDE68A", "#0F172A"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.blacktop", "Blacktop Banner", CosmeticSlot.CourtBanner, 0, 0, true, "#2F2F36", "#FFE066"));
             c.Cosmetics.Add(Cosmetic("cosmetic.banner.signal_flag", "Signal Flag", CosmeticSlot.CourtBanner, 200, 100, false, "#4CC9F0", "#F72585"));
@@ -587,11 +618,16 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.pixel_wave", "Pixel Wave", CosmeticSlot.Celebration, 300, 500, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.take_a_bow", "Take a Bow", CosmeticSlot.Celebration, 450, 900, false, "#FFFFFF", "#FFFFFF"));
 
+            c.Cosmetics.Add(Cosmetic("cosmetic.celebration.shoulder_brush", "Shoulder Brush", CosmeticSlot.Celebration, 350, 1000, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.celebration.paper_plane", "Paper Plane", CosmeticSlot.Celebration, 450, 1200, false, "#FFFFFF", "#FFFFFF"));
+
             c.Cosmetics.Add(Cosmetic("cosmetic.move.basic_cross", "Basic Crossover", CosmeticSlot.DribbleMove, 0, 0, true, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.hesi_hop", "Hesitation Hop", CosmeticSlot.DribbleMove, 300, 150, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.behind_back", "Behind the Back", CosmeticSlot.DribbleMove, 400, 250, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.double_cross", "Double Cross", CosmeticSlot.DribbleMove, 400, 600, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.step_back", "Step Back", CosmeticSlot.DribbleMove, 500, 1000, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.move.rocker_step", "Rocker Step", CosmeticSlot.DribbleMove, 450, 1100, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.move.snatch_back", "Snatch Back", CosmeticSlot.DribbleMove, 500, 1300, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.spin_cycle", "Spin Cycle", CosmeticSlot.DribbleMove, 450, 350, false, "#FFFFFF", "#FFFFFF"));
         }
 

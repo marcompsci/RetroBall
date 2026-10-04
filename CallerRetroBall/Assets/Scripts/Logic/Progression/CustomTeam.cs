@@ -53,7 +53,7 @@ namespace CallerRetroBall.Logic
 
         public static readonly string[] PatternNames = { "SOLID", "STRIPES", "DOTS", "CHEVRONS", "CHECKER", "DIAGONAL", "RINGS", "CROSS" };
         public static readonly string[] ShapeNames = { "CIRCLE", "SHIELD", "DIAMOND", "HEXAGON", "BADGE" };
-        public static readonly string[] MotifNames = { "BOLT", "WAVE", "PAW", "TREE", "COMET", "DUNE", "OWL", "CROWN", "BALL", "SIGNAL" };
+        public static readonly string[] MotifNames = { "BOLT", "WAVE", "PAW", "TREE", "COMET", "DUNE", "OWL", "CROWN", "BALL", "SIGNAL", "CRANE" };
 
         public static RgbColor Color(int index) => Palette[Mod(index, Palette.Length)];
 

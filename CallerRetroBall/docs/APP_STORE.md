@@ -8,7 +8,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 |---|---|
 | Name (30) | RetroBall |
 | Subtitle (30) | Retro 3v3 street basketball *(27)* |
-| Bundle ID | **YOU:** replace the placeholder `com.retroball.game` in Player Settings ▸ iOS and register the same ID in your Apple Developer account |
+| Bundle ID | `com.marcompsci.retroball` (already set; registered when you ran it on your iPhone) |
 | SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
 | Secondary category | Games ▸ Arcade |
@@ -96,7 +96,7 @@ basketball,arcade,retro,pixel,3v3,hoops,streetball,offline,sports,court,season,s
 
 ### Privacy policy text (ready to host)
 
-> RetroBall does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved only on your device and is deleted when you delete the app. Contact: **YOU: your email**.
+> RetroBall does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved on your device and, if iCloud Sync is on, in your own iCloud account through Apple's iCloud service, where the developer can't see it. Optional Game Center scores and achievements are handled by Apple's Game Center. Contact: **YOU: your email**.
 
 ## App Privacy ("nutrition label")
 
@@ -138,4 +138,4 @@ Only show real gameplay. Don't add device frames that show non-Apple hardware, a
 
 ## App Review notes (paste into "Notes")
 
-> Fully offline single-player game with no login, network use, ads, or purchases. All content is original and generated procedurally. To see the full season flow quickly: Main menu ▸ RISE MODE ▸ PLAY NEXT.
+> Fully offline game with no login, ads, or purchases. Optional Apple services only: Game Center (Settings ▸ Game Center) and iCloud save sync (Settings ▸ iCloud Sync). All content is original and generated procedurally. To see the full season flow quickly: Main menu ▸ RISE MODE ▸ PLAY NEXT.

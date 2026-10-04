@@ -123,6 +123,8 @@ namespace CallerRetroBall.Audio
         /// <summary>The announcer "says" a callout as chiptune voice blips (synthesised once per phrase, then cached).</summary>
         public static void Voice(string phrase, float volume = 0.9f)
         {
+            // Captions show even with the sound off.
+            UI.Captions.Show(phrase);
             if (_instance == null || _instance._sfxVolume <= 0f || string.IsNullOrEmpty(phrase)) return;
             if (!_instance._voices.TryGetValue(phrase, out var clip))
             {

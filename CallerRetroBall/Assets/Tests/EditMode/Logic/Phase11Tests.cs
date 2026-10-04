@@ -265,6 +265,20 @@ namespace CallerRetroBall.Tests
             d.daily.bestStreak = 7;
             d.tutorialDone = true;
             d.rise.stage = RiseStage.Season;
+            d.rise.seasonsPlayed = 5;
+            d.totals.heatUps = 1;
+            d.totals.alleyOops = 1;
+            d.totals.versusGames = 1;
+            d.secrets.arcade.clears = 1;
+            foreach (var code in Secrets.All) d.secrets.codesFound.Add(code.Id);
+            d.king.best = 5;
+            d.cup.titles = 1;
+            d.rival.wins = 4;
+            d.rival.sundownWins = d.rival.tideWins = d.rival.cranesWins = 1;
+            d.practice.shootoutWins = 1;
+            d.practice.horseWins = 1;
+            d.practice.aroundWorldTime = 42f;
+            d.customTeam.created = true;
             var earned = Achievements.Earned(d);
             foreach (var id in Achievements.AllAchievements) Assert.Contains(id, earned);
         }
@@ -273,7 +287,7 @@ namespace CallerRetroBall.Tests
         public void Ids_AreUnique()
         {
             Assert.AreEqual(Achievements.AllAchievements.Length, new HashSet<string>(Achievements.AllAchievements).Count);
-            Assert.AreEqual(3, Achievements.Scores(Career.New(_c)).Count);
+            Assert.AreEqual(Achievements.Boards.Count, Achievements.Scores(Career.New(_c)).Count);
         }
 
         [Test]

@@ -43,6 +43,12 @@ namespace CallerRetroBall.Logic
         public bool showFps;
         /// <summary>Coach Dee's tips during your first games.</summary>
         public bool coachTips = true;
+        /// <summary>Colour cues tuned for a colour-vision deficiency (<see cref="ColorFilter"/>).</summary>
+        public int colorFilter;
+        /// <summary>Show the announcer's calls as captions (also on when iOS Closed Captions is on).</summary>
+        public bool captions;
+        /// <summary>Keep the career in sync through the player's own iCloud (iOS key-value storage).</summary>
+        public bool icloudSync = true;
     }
 
     /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
@@ -127,6 +133,8 @@ namespace CallerRetroBall.Logic
         /// <summary>Alley-oops you threw or finished.</summary>
         public int alleyOops;
         public int heatUps;
+        /// <summary>Local 2 Player games finished (no rewards; counted for a badge and an achievement).</summary>
+        public int versusGames;
     }
 
     [Serializable]

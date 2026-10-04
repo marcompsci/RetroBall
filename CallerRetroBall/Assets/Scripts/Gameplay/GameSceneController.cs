@@ -40,6 +40,10 @@ namespace CallerRetroBall.Gameplay
         private SpriteRenderer _receiverArrow;
         private CourtCameraRig _cameraRig;
         private TouchControls _controls;
+        /// <summary>Tabletop 2 Player: player 2's touch controls at the top of the screen (null otherwise).</summary>
+        private TouchControls _controls2;
+        /// <summary>Pass-and-play Shootout between two people (null otherwise).</summary>
+        private ShootoutDuel _duel;
         private MatchHud _hud;
         private readonly InputBuffer _buffer = new InputBuffer();
         private float _accumulator;
@@ -146,7 +150,14 @@ namespace CallerRetroBall.Gameplay
             else if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
             {
                 _practice = new PracticeSession((DrillKind)_request.Drill, _match, _request.Seed);
-                if (_practice.Kind == DrillKind.Shootout)
+                if (_practice.Kind == DrillKind.Shootout && _request.ContextId == ShootoutDuel.ContextId)
+                {
+                    // Pass and play: P1 sets the score, P2 tries to beat it (kept across the two rounds).
+                    _duel = App.PendingDuel != null && !App.PendingDuel.Finished ? App.PendingDuel : new ShootoutDuel();
+                    App.PendingDuel = _duel;
+                    _practice.SetCpu(_duel.Round == 1 ? _duel.Points[0] : 0, "P1");
+                }
+                else if (_practice.Kind == DrillKind.Shootout)
                 {
                     // The CPU shoots first (simulated); you get the score to beat.
                     var cpu = Shootout.PickShooter(catalog, _request.AwayTeamId ?? catalog.TeamsInTier(TeamTier.League)[0].id);
@@ -166,7 +177,15 @@ namespace CallerRetroBall.Gameplay
             var settings = App.Career?.settings;
             _reduceMotion = settings != null && settings.reduceMotion;
             _tapToShoot = settings != null && settings.tapToShoot;
-            _controls = TouchControls.Create(_buffer, settings != null && settings.leftHanded, settings != null && settings.largeButtons);
+            // 2 Player with no controllers on a touch screen: tabletop mode, each player gets half the screen.
+            bool tabletop = Versus && TabletopWanted();
+            _controls = TouchControls.Create(_buffer, settings != null && settings.leftHanded, settings != null && settings.largeButtons,
+                                             tabletop ? TouchControls.Seat.Bottom : TouchControls.Seat.Full);
+            if (tabletop)
+            {
+                _controls2 = TouchControls.Create(_buffer2, false, settings != null && settings.largeButtons, TouchControls.Seat.Top);
+                _controls2.Call.SetLabel("P&R");
+            }
             _controls.Shoot.Pressed += () => _shootTapped = true;
             MatchHud.ReduceMotion = _reduceMotion;
             Audio.AudioManager.PlayMusic(1);
@@ -179,7 +198,7 @@ namespace CallerRetroBall.Gameplay
             _skyHigh = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.SkyHigh);
             if (Demo)
             {
-                _controls.SetVisible(false);
+                SetTouchVisible(false);
                 _demoStartedAt = Time.unscaledTime;
             }
             _hud.ReplayRequested += () => StartReplay(_lastHighlight);
@@ -203,6 +222,7 @@ namespace CallerRetroBall.Gameplay
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
                      : Demo ? "DEMO PLAY"
                      : _horse != null ? "H-O-R-S-E: " + _horse.Name(0) + " SHOOTS FIRST"
+                     : _duel != null ? _duel.Intro
                      : _practice != null && _practice.Kind == DrillKind.Shootout ? "BEAT " + _practice.CpuName + ": " + _practice.CpuScore
                      : _practice != null ? DrillTitle(_practice.Kind)
                      : (_request.Mode == GameMode.Practice ? "PRACTICE LAB" : "CHECK BALL"), 1.8f);
@@ -231,6 +251,15 @@ namespace CallerRetroBall.Gameplay
             _playerViews = new PlayerView[_match.Players.Length];
             var ringColor = new Color(1f, 0.82f, 0.4f, 1f);
             bool contrast = career != null && career.settings.colorblindContrast;
+            var filter = career != null ? ColorAccess.Normalize(career.settings.colorFilter) : ColorFilter.Off;
+            ShotMeterView.UsePalette(ColorAccess.Meter(filter));
+            // Away team switches to its alternate kit when the two jerseys would look alike (for this filter).
+            var homeJersey = setup.TeamA.primary;
+            if (setup.HumanTeam == 0 && setup.TeamA.id == DefaultContent.PlayerCrewId && !setup.TeamA.customKit && Cosmetic(career?.equippedJersey) != null)
+                homeJersey = Cosmetic(career?.equippedJersey).colorA;
+            var awayJersey = setup.TeamB.primary;
+            var awayTrim = setup.TeamB.secondary;
+            bool awayAlternate = ColorAccess.ResolveAwayKit(homeJersey, ref awayJersey, ref awayTrim, filter);
             var jersey = Cosmetic(career?.equippedJersey);
             var shoes = Cosmetic(career?.equippedShoes);
             for (int i = 0; i < _match.Players.Length; i++)
@@ -239,6 +268,11 @@ namespace CallerRetroBall.Gameplay
                 var team = p.Team == 0 ? setup.TeamA : setup.TeamB;
                 var primary = team.primary;
                 var trim = team.secondary;
+                if (p.Team == 1 && awayAlternate)
+                {
+                    primary = awayJersey;
+                    trim = awayTrim;
+                }
                 // Jersey palettes are for your own crew only.
                 if (p.Team == setup.HumanTeam && team.id == DefaultContent.PlayerCrewId && jersey != null && !team.customKit)
                 {
@@ -380,6 +414,23 @@ namespace CallerRetroBall.Gameplay
 
         private const float DemoSeconds = 75f;
 
+        /// <summary>2 Player on a touch screen with no controllers connected: split the screen between the two players.</summary>
+        private static bool TabletopWanted()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Gamepad.all.Count > 0) return false;
+            return Application.isMobilePlatform || UnityEngine.InputSystem.Touchscreen.current != null;
+#else
+            return Application.isMobilePlatform;
+#endif
+        }
+
+        private void SetTouchVisible(bool visible)
+        {
+            _controls.SetVisible(visible);
+            if (_controls2 != null) _controls2.SetVisible(visible);
+        }
+
         private void UpdatePadMode()
         {
 #if ENABLE_INPUT_SYSTEM
@@ -390,7 +441,7 @@ namespace CallerRetroBall.Gameplay
             var touch = Pointer.current;
             if (touch != null && touch.press.wasPressedThisFrame && Application.isMobilePlatform) _padMode = false;
             if (Gamepad.all.Count == 0) _padMode = false;
-            if (was != _padMode && !_paused && !_finalShown && !Demo) _controls.SetVisible(!_padMode);
+            if (was != _padMode && !_paused && !_finalShown && !Demo) SetTouchVisible(!_padMode);
 #endif
         }
 
@@ -527,6 +578,14 @@ namespace CallerRetroBall.Gameplay
                 shootHeld |= pad.buttonSouth.isPressed;
             }
 #endif
+            if (_controls2 != null)
+            {
+                // Tabletop: player 2's half of the screen.
+                var touchMove = _controls2.CourtMove;
+                if (touchMove.x != 0f || touchMove.y != 0f) move = touchMove;
+                shootHeld |= _controls2.Shoot.IsHeld;
+                if (_buffer2.Consume(ActionButton.Call, now)) callPressed = true;
+            }
             int me = _match.SecondControlledIndex;
             var input = new PlayerInput { Move = move, ShootHeld = shootHeld };
             if (me < 0) return input;
@@ -905,7 +964,7 @@ namespace CallerRetroBall.Gameplay
         private void ShowFinal()
         {
             _finalShown = true;
-            _controls.SetVisible(false);
+            SetTouchVisible(false);
             var s = _match.Setup;
             int human = s.HumanTeam;
             string title = _match.Winner < 0 ? "TIE" : (_match.Winner == human ? "YOU WIN" : "FINAL");
@@ -919,8 +978,15 @@ namespace CallerRetroBall.Gameplay
 
             if (Versus)
             {
-                // Local 2-player: box score, no rewards, nothing saved.
+                // Local 2-player: box score, no rewards (only counted for a badge and an achievement).
                 var vs = MatchSummary.From(_match, _request.Mode, "versus");
+                if (App.Career != null && !_resultApplied)
+                {
+                    _resultApplied = true;
+                    App.Career.totals.versusGames++;
+                    App.SaveCareer();
+                    App.ReportGameCenter();
+                }
                 _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
                 string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
                 Haptics.Success();
@@ -948,9 +1014,9 @@ namespace CallerRetroBall.Gameplay
                 {
                     var rivalOutcome = RivalEngine.ApplyResult(App.Career, summary);
                     note = rivalOutcome == RivalOutcome.Won
-                        ? "NEON STATIC BEATEN!  +" + RivalEngine.WinBonus + " SP  +" + RivalEngine.WinFans + " FANS"
-                        : "Static wins this one. They'll be back next season.";
-                    if (rivalOutcome == RivalOutcome.Won) title = "STATIC SILENCED";
+                        ? "RIVAL BEATEN!  +" + RivalEngine.WinBonus + " SP  +" + RivalEngine.WinFans + " FANS"
+                        : "They win this one. They'll be back next season.";
+                    if (rivalOutcome == RivalOutcome.Won) title = "RIVAL DOWN";
                 }
                 if (rewarded && _request.Mode == GameMode.Rise)
                 {
@@ -1104,7 +1170,7 @@ namespace CallerRetroBall.Gameplay
         private void ShowTutorialEnd()
         {
             _finalShown = true;
-            _controls.SetVisible(false);
+            SetTouchVisible(false);
             int reward = App.Career != null ? Career.CompleteTutorial(App.Career) : 0;
             if (App.Career != null) Badges.TakeNew(App.Career);
             if (App.Career != null)
@@ -1176,12 +1242,13 @@ namespace CallerRetroBall.Gameplay
         private void ShowHorseEnd()
         {
             _finalShown = true;
-            _controls.SetVisible(false);
+            SetTouchVisible(false);
             bool youWon = _horse.Winner == 0;
             if (App.Career != null && _horse.Opponent == HorseOpponent.Cpu)
             {
                 Career.RecordPractice(App.Career, 0, 0, 0, 0f, 0, 0, false, 0f, youWon);
                 App.SaveCareer();
+                App.ReportGameCenter();
             }
             if (youWon || _horse.Opponent == HorseOpponent.Friend) Sfx(SfxId.Fanfare, 0.8f);
             Audio.AudioManager.Voice("H-O-R-S-E!");
@@ -1192,7 +1259,12 @@ namespace CallerRetroBall.Gameplay
         private void ShowPracticeEnd()
         {
             _finalShown = true;
-            _controls.SetVisible(false);
+            SetTouchVisible(false);
+            if (_duel != null)
+            {
+                ShowDuelEnd();
+                return;
+            }
             bool best = false;
             if (App.Career != null)
             {
@@ -1207,12 +1279,34 @@ namespace CallerRetroBall.Gameplay
                     p.ShootoutWon,
                     p.Kind == DrillKind.AroundTheWorld && p.Finished ? p.CourseTime : 0f);
                 App.SaveCareer();
+                App.ReportGameCenter();
             }
             if (best) Haptics.Success();
             Sfx(SfxId.Whistle, 0.7f);
             string endTitle = _practice.Kind == DrillKind.Shootout ? (_practice.ShootoutWon ? "YOU WIN THE SHOOTOUT" : "CPU WINS") : DrillTitle(_practice.Kind);
             if (_practice.ShootoutWon) Sfx(SfxId.Fanfare, 0.8f);
             _hud.ShowPracticeEnd(endTitle, _practice.ResultText().ToUpperInvariant(), best);
+        }
+
+        /// <summary>Pass-and-play Shootout: hand over to P2 after round one, or show who won.</summary>
+        private void ShowDuelEnd()
+        {
+            _duel.Record(_practice.ContestPoints);
+            Sfx(SfxId.Whistle, 0.7f);
+            if (!_duel.Finished)
+            {
+                _hud.ShowPracticeEnd("P1: " + _duel.Points[0] + " POINTS", "PASS THE PHONE TO P2", false, "P2: GO");
+                return;
+            }
+            Sfx(SfxId.Fanfare, 0.8f);
+            Haptics.Success();
+            if (App.Career != null)
+            {
+                App.Career.totals.versusGames++;
+                App.SaveCareer();
+                App.ReportGameCenter();
+            }
+            _hud.ShowPracticeEnd(_duel.ResultTitle, _duel.ResultLine, false, "NEW DUEL");
         }
 
         // ------------------------------------------------------------------ practice markers
@@ -1325,7 +1419,7 @@ namespace CallerRetroBall.Gameplay
             if (clip == null || clip.Frames.Count < 2) return;
             _replay = clip;
             _replayT = 0f;
-            _controls.SetVisible(false);
+            SetTouchVisible(false);
             _hud.ShowCallMenu(false);
             _hud.ShowReplayOverlay(true);
         }
@@ -1438,7 +1532,7 @@ namespace CallerRetroBall.Gameplay
             _replay = null;
             _accumulator = 0f;
             _hud.ShowReplayOverlay(false);
-            if (!_finalShown && !_paused) _controls.SetVisible(!_padMode);
+            if (!_finalShown && !_paused) SetTouchVisible(!_padMode);
             SyncViews(0f, snapCamera: true);
         }
 
@@ -1549,7 +1643,7 @@ namespace CallerRetroBall.Gameplay
             _paused = paused;
             _accumulator = 0f;
             _buffer.Clear();
-            _controls.SetVisible(!paused && !_padMode);
+            SetTouchVisible(!paused && !_padMode);
             _hud.ShowPause(paused);
         }
 
