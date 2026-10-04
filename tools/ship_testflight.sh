@@ -22,6 +22,9 @@ LOGS="$PROJECT/Logs"
 mkdir -p "$LOGS"
 REPORT="$LOGS/RetroBall-release.txt"
 note() { echo "$1"; printf '=== %s  ship_testflight\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
+# Everything printed below also goes to Logs/ship_console.log, so a failed run can be read afterwards.
+exec > >(tee "$LOGS/ship_console.log") 2>&1
+note "STARTED: project $PROJECT, $(sw_vers -productVersion 2>/dev/null | sed 's/^/macOS /'), $(xcodebuild -version 2>/dev/null | head -1)"
 
 VERSION="$(sed -n 's/^m_EditorVersion: //p' "$PROJECT/ProjectSettings/ProjectVersion.txt" 2>/dev/null | tr -d '[:space:]')"
 UNITY="${UNITY:-/Applications/Unity/Hub/Editor/$VERSION/Unity.app/Contents/MacOS/Unity}"
