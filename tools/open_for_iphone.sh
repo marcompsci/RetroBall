@@ -20,11 +20,15 @@ OPEN="$(ps -axo pid=,args= | grep "Unity.app/Contents/MacOS/Unity " | grep -v --
 if [[ -n "$OPEN" ]]; then note "STOPPED: Unity has this project open. Quit the Unity Editor (Cmd+Q) and run this again."; exit 1; fi
 
 echo "1/2  Unity: writing the iPhone Xcode project (a few minutes)..."
+STAMP="$LOGS/.open_for_iphone_started"
+touch "$STAMP"
 "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
   -executeMethod CallerRetroBall.EditorTools.ReleaseTools.BuildDevice -logFile "$LOGS/unity_build_device.log"
+CODE=$?
 XCPROJ="$PROJECT/iOSBuild/Device/Unity-iPhone.xcodeproj"
-if [[ ! -d "$XCPROJ" ]]; then
-  note "FAILED (Unity device build). Last lines of the Unity log:
+# An old Xcode project from an earlier build doesn't count: it has to have been written just now.
+if [[ $CODE -ne 0 || ! -d "$XCPROJ" || ! "$XCPROJ/project.pbxproj" -nt "$STAMP" ]]; then
+  note "FAILED (Unity device build, exit $CODE). The Xcode project was NOT updated. Last lines of the Unity log:
 $(grep -E 'error|Exception' "$LOGS/unity_build_device.log" | grep -v Licensing | head -15)
 $(tail -10 "$LOGS/unity_build_device.log")"
   exit 1

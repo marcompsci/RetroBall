@@ -57,10 +57,13 @@ ARCHIVE="$PROJECT/iOSBuild/RetroHoops.xcarchive"
 EXPORT="$PROJECT/iOSBuild/Export"
 
 echo "1/3  Unity: App Store build (raises the build number; a few minutes)..."
+STAMP="$LOGS/.ship_started"
+touch "$STAMP"
 "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
   -executeMethod CallerRetroBall.EditorTools.ReleaseTools.BuildAppStore -teamId "$TEAM" -logFile "$LOGS/unity_build_appstore.log"
-if [[ ! -d "$OUT/Unity-iPhone.xcodeproj" ]]; then
-  note "FAILED (Unity App Store build). Last lines of the Unity log:
+CODE=$?
+if [[ $CODE -ne 0 || ! -d "$OUT/Unity-iPhone.xcodeproj" || ! "$OUT/Unity-iPhone.xcodeproj/project.pbxproj" -nt "$STAMP" ]]; then
+  note "FAILED (Unity App Store build, exit $CODE). Last lines of the Unity log:
 $(grep -E 'error|Exception' "$LOGS/unity_build_appstore.log" | grep -v Licensing | head -15)
 $(tail -10 "$LOGS/unity_build_appstore.log")"
   exit 1
