@@ -25,6 +25,8 @@ namespace CallerRetroBall.Logic
         OneOnOne = 11,
         /// <summary>The Caller Cup: an eight-team knockout (quarterfinals, semifinals, final).</summary>
         Cup = 12,
+        /// <summary>Full Court 5-on-5: both hoops, 2s and 3s, possessions change after a make.</summary>
+        FullCourt = 13,
     }
 
     /// <summary>

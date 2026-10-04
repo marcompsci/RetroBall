@@ -85,7 +85,7 @@ namespace CallerRetroBall.Logic
         {
             // Everyone guards the same slot on the other team.
             for (int i = 0; i < Players.Length; i++)
-                _guarding[i] = IndexOf(1 - Players[i].Team, Players[i].Slot);
+                _guarding[i] = Index(1 - Players[i].Team, Players[i].Slot);
         }
 
         // ------------------------------------------------------------------ human defense
@@ -351,9 +351,9 @@ namespace CallerRetroBall.Logic
         {
             int best = -1;
             float bestScore = float.MinValue;
-            for (int slot = 0; slot < PlayersPerTeam; slot++)
+            for (int slot = 0; slot < TeamSize; slot++)
             {
-                int i = IndexOf(team, slot);
+                int i = Index(team, slot);
                 if (i == exclude || (Ball.IsHeld && i == Ball.HolderIndex)) continue;
                 float s = Players[i].Tendencies.screen;
                 if (s > bestScore)

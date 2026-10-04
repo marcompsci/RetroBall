@@ -122,7 +122,9 @@ namespace CallerRetroBall.Gameplay
         private float _moveStart = -10f;
         private float _moveReadyAt;
         private Vec2 _lastMoveDir;
-        private Vector3 _hoopWorld;
+        /// <summary>The rim the offence attacks, as drawn (Full Court: whichever end that is right now).</summary>
+        private Vector3 HoopWorld => CourtSpace.ToWorldSnapped(_match.Setup.Court.Hoop, CourtSpace.RimHeight);
+        private bool FullCourtGame => _match != null && _match.Setup.FullCourt;
 
         public MatchSimulation Match => _match;
         public bool IsPaused => _paused;
@@ -140,6 +142,8 @@ namespace CallerRetroBall.Gameplay
             MaxStepsPerFrame = rate / 12;
             var setup = MatchSetup.FromRequest(_request, catalog);
             _match = new MatchSimulation(setup);
+            CourtSpace.Flip = false;
+            CourtSpace.FlipLength = setup.Court.depth;
             if (_request.Mode == GameMode.Practice && _request.Drill == (int)DrillKind.Horse)
             {
                 bool friend = _request.ContextId == "horse:friend";
@@ -220,6 +224,7 @@ namespace CallerRetroBall.Gameplay
             _hud.Toast(_tutorial != null ? "HOW TO PLAY"
                      : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
+                     : FullCourtGame ? "FULL COURT  5 ON 5"
                      : Demo ? "DEMO PLAY"
                      : _horse != null ? "H-O-R-S-E: " + _horse.Name(0) + " SHOOTS FIRST"
                      : _duel != null ? _duel.Intro
@@ -232,7 +237,10 @@ namespace CallerRetroBall.Gameplay
         {
             var career = App.Career;
             var banner = Cosmetic(career?.equippedBanner);
-            _art = MatchArt.Build(court, setup.Court, StableHash.Of(court.id), banner?.colorA, banner?.colorB, staticCrowd: false);
+            // Full Court draws two halves back to back; everything else is one half court.
+            var artGeometry = setup.FullCourt ? FullCourt.HalfGeometry() : setup.Court;
+            _art = MatchArt.Build(court, artGeometry, StableHash.Of(court.id), banner?.colorA, banner?.colorB, staticCrowd: false,
+                                  fullCourt: setup.FullCourt);
             var world = new GameObject("World").transform;
 
             var courtGo = new GameObject("Court");
@@ -247,6 +255,18 @@ namespace CallerRetroBall.Gameplay
             var hoopSr = hoopGo.AddComponent<SpriteRenderer>();
             hoopSr.sprite = _art.Hoop;
             hoopSr.sortingOrder = CourtSpace.SortingOrder(setup.Court.Hoop, -1);
+            if (setup.FullCourt)
+            {
+                // The other basket at the bottom of the court, backboard toward the bottom baseline.
+                var bottomHoop = new Vec2(0f, setup.Court.depth - setup.Court.hoopY);
+                var hoop2 = new GameObject("Hoop (bottom)");
+                hoop2.transform.SetParent(world, false);
+                hoop2.transform.position = CourtSpace.ToWorldSnapped(bottomHoop, CourtSpace.RimHeight);
+                var hoop2Sr = hoop2.AddComponent<SpriteRenderer>();
+                hoop2Sr.sprite = _art.Hoop;
+                hoop2Sr.flipY = true;
+                hoop2Sr.sortingOrder = CourtSpace.SortingOrder(bottomHoop, 1);
+            }
 
             _playerViews = new PlayerView[_match.Players.Length];
             var ringColor = new Color(1f, 0.82f, 0.4f, 1f);
@@ -299,8 +319,7 @@ namespace CallerRetroBall.Gameplay
             _ballView = BallView.Create(world, _art);
             _meter = ShotMeterView.Create(world, _art);
             _bursts = PixelBursts.Create(world, _art);
-            BuildCrowd(world, court, setup, banner != null);
-            _hoopWorld = CourtSpace.ToWorldSnapped(setup.Court.Hoop, CourtSpace.RimHeight);
+            BuildCrowd(world, court, setup, artGeometry, banner != null);
 
             var arrowGo = new GameObject("ReceiverArrow");
             arrowGo.transform.SetParent(world, false);
@@ -326,7 +345,7 @@ namespace CallerRetroBall.Gameplay
             _cameraRig = cam.GetComponent<CourtCameraRig>();
             if (_cameraRig == null) _cameraRig = cam.gameObject.AddComponent<CourtCameraRig>();
             var bg = court.floor.Darken(0.35f);
-            _cameraRig.Init(setup.Court, new Color32(bg.r, bg.g, bg.b, 255));
+            _cameraRig.Init(setup.Court, new Color32(bg.r, bg.g, bg.b, 255), setup.FullCourt);
         }
 
         private void Update()
@@ -366,6 +385,7 @@ namespace CallerRetroBall.Gameplay
                 StepMarker.Begin();
                 _match.Step(FixedStep, input, input2);
                 StepMarker.End();
+                CourtSpace.Flip = _match.Flipped;
                 _recorder.Capture(_match);
                 _practice?.Update(_match, FixedStep);
                 _horse?.Update(_match);
@@ -637,7 +657,7 @@ namespace CallerRetroBall.Gameplay
                         break;
                     case MatchEventType.AlleyOop:
                         Callout("ALLEY-OOP!", SfxId.Stinger);
-                        if (!_reduceMotion) _bursts.Spawn(_hoopWorld, new Color32(0x4C, 0xC9, 0xF0, 255), 20, 4.5f, 0.6f);
+                        if (!_reduceMotion) _bursts.Spawn(HoopWorld, new Color32(0x4C, 0xC9, 0xF0, 255), 20, 4.5f, 0.6f);
                         _cameraRig.Shake(0.2f);
                         if (e.Team == human || Versus) Haptics.Heavy();
                         break;
@@ -667,7 +687,7 @@ namespace CallerRetroBall.Gameplay
                         bool swish = _match.Ball.ShotGrade == TimingGrade.Green;
                         bool dunk = _match.Ball.ShotType == ShotType.Dunk;
                         _hud.Toast((dunk ? "SLAM!  +" : swish ? "SWISH  +" : "+") + e.Value, 1.1f);
-                        if (!_reduceMotion) _bursts.Spawn(_hoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
+                        if (!_reduceMotion) _bursts.Spawn(HoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
                         if (dunk)
                         {
                             _cameraRig.Shake(0.22f);
@@ -756,6 +776,7 @@ namespace CallerRetroBall.Gameplay
 
         private void SyncViews(float dt, bool snapCamera)
         {
+            CourtSpace.Flip = _match.Flipped;
             float now = Time.unscaledTime;
             if (_leaper >= 0 && now - _leapStart >= _leapDuration) _leaper = -1;
             SyncCrowd(now);
@@ -803,8 +824,9 @@ namespace CallerRetroBall.Gameplay
                 _receiverArrow.transform.position = CourtSpace.ToWorldSnapped(_match.Players[receiver].Position) + new Vector3(0f, 1.75f + bob, 0f);
             }
 
-            // 2-player: follow the ball so neither player is left off screen.
-            _cameraRig.Follow(Versus ? _match.Ball.Position : _match.Controlled.Position, Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
+            // 2-player and Full Court: follow the ball so nobody is left off screen.
+            var follow = Versus || FullCourtGame ? _match.Ball.Position : _match.Controlled.Position;
+            _cameraRig.Follow(_match.ToWorldCourt(follow), Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
             _hud.Sync(_match);
             // The info line builds a string, so refresh it ~10x a second rather than every frame.
             if (Time.unscaledTime >= _nextInfoAt)
@@ -1426,6 +1448,8 @@ namespace CallerRetroBall.Gameplay
 
         private void StepReplay()
         {
+            // Replays are recorded as drawn on the fixed court.
+            CourtSpace.Flip = false;
             float dt = Time.unscaledDeltaTime;
             _replayT += dt * ReplaySpeed;
             bool skip = false;
@@ -1547,10 +1571,9 @@ namespace CallerRetroBall.Gameplay
         // ------------------------------------------------------------------ crowd
 
         /// <summary>Animated fans in the stands behind the baseline; they cheer and groan with the game.</summary>
-        private void BuildCrowd(Transform world, CourtDef court, MatchSetup setup, bool bannerUp)
+        private void BuildCrowd(Transform world, CourtDef court, MatchSetup setup, CourtGeometry g, bool bannerUp)
         {
             if (court.crowdDensity <= 0f) return;
-            var g = setup.Court;
             int texW = CourtGenerator.TextureWidth(g);
             CourtGenerator.CourtToPixel(g, Vec2.Zero, out float originPx, out float originPy);
             var rng = new SeededRandom(StableHash.Of(court.id + ":crowd"));
@@ -1678,6 +1701,7 @@ namespace CallerRetroBall.Gameplay
         private void OnDestroy()
         {
             UI.ControllerCursor.Suppressed = false;
+            CourtSpace.Flip = false;
             Audio.AudioManager.SetAmbience(false);
             Audio.AudioManager.PlayMusic(0);
             _art?.Dispose();

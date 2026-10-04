@@ -81,7 +81,7 @@ namespace CallerRetroBall.Logic
                 reason = m.EndReason,
             };
             int potgTeam = s.winner < 0 ? s.humanTeam : s.winner;
-            s.playerOfTheGame = m.Stats.PlayerOfTheGame(potgTeam, MatchSimulation.PlayersPerTeam);
+            s.playerOfTheGame = m.Stats.PlayerOfTheGame(potgTeam, m.TeamSize);
             foreach (var p in m.Players)
             {
                 s.lines.Add(new SummaryLine

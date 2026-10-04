@@ -330,7 +330,8 @@ namespace CallerRetroBall.UI
         private void ShowPlayMenu()
         {
             var column = OpenOverlay("PLAY", out var footer);
-            Mode(column, "QUICK CALL", "Pick a team and an opponent. One game.", ShowQuickCall, ButtonStyle.Primary);
+            Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);
+            Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
 
             var today = DailyChallenges.For(App.Today, App.Catalog);
             bool done = DailyChallenges.CompletedToday(App.Career.daily, App.Today);
@@ -635,6 +636,49 @@ namespace CallerRetroBall.UI
                 var leader = c.Player(theirs[b].rosterPlayerIds[0]);
                 mineLabel.text = mine[a].FullName.ToUpperInvariant();
                 theirLabel.text = Loc.T("VS") + "  " + (leader != null ? leader.DisplayName.ToUpperInvariant() + "  ·  " : "") + theirs[b].abbreviation;
+            }
+            Refresh();
+        }
+
+        /// <summary>Full Court 5-on-5: pick both teams (three-player crews get two reserves).</summary>
+        private void ShowFullCourt()
+        {
+            var c = App.Catalog;
+            var mine = Secrets.PlayableTeams(c, App.Career.secrets);
+            var theirs = Secrets.OpponentTeams(c, App.Career.secrets);
+            int a = 0, b = 0;
+            var column = OpenOverlay("FULL COURT", out var footer);
+            UiKit.Size(UiKit.Label(column,
+                "Five on five, end to end. Inside the arc is 2, outside is 3. After a basket the other team inbounds and brings it up. Four minutes; 20-second shot clock.",
+                30f, Theme.Cream), 150f);
+            UiKit.Size(UiKit.Label(column, "YOUR TEAM", 32f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
+            TextMeshProUGUI mineLabel = null, theirLabel = null; // declared first so Refresh() can see them
+            mineLabel = UiKit.Label(column, "", 40f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(mineLabel, 64f);
+            UiKit.Button(column, "CHANGE TEAM", () => { a = (a + 1) % mine.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            theirLabel = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(theirLabel, 64f);
+            UiKit.Button(column, "CHANGE OPPONENT", () => { b = (b + 1) % theirs.Count; Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "TIP OFF", () =>
+            {
+                App.PendingMatch = new MatchRequest
+                {
+                    Mode = GameMode.FullCourt,
+                    HomeTeamId = mine[a].id,
+                    AwayTeamId = theirs[b].id,
+                    CourtId = mine[a].homeCourtId,
+                    RulesId = FullCourt.RulesId,
+                    DifficultyId = App.Career.settings.difficultyId,
+                };
+                SceneFlow.GoTo(SceneNames.Game);
+            }, ButtonStyle.Primary, 130f);
+
+            void Refresh()
+            {
+                if (theirs[b].id == mine[a].id) b = (b + 1) % theirs.Count;
+                mineLabel.text = mine[a].FullName.ToUpperInvariant();
+                theirLabel.text = Loc.T("VS") + "  " + theirs[b].FullName.ToUpperInvariant();
             }
             Refresh();
         }

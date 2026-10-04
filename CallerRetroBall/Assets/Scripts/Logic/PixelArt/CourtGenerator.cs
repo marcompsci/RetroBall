@@ -117,6 +117,45 @@ namespace CallerRetroBall.Logic.PixelArt
             return c;
         }
 
+        // ------------------------------------------------------------------ full court
+
+        /// <summary>
+        /// Full Court art: two halves back to back (the bottom half turned 180°) with stands behind both
+        /// baselines. Court origin (centre of the TOP baseline) sits at <see cref="FullCourtOriginPivot"/>;
+        /// the court runs 2 × <paramref name="half"/>.depth down the screen.
+        /// </summary>
+        public static PixelCanvas GenerateFullCourt(CourtDef court, CourtGeometry half, uint seed, RgbColor? bannerA, RgbColor? bannerB, bool drawPeople)
+        {
+            var h = Generate(court, half, seed, bannerA, bannerB, drawPeople);
+            // The bottom stands are drawn without people (they'd be upside down); the wall pattern stays.
+            var hb = drawPeople ? Generate(court, half, seed, null, null, false) : h;
+            int keep = h.Height - TopRows;
+            var full = new PixelCanvas(h.Width, keep * 2);
+            for (int y = 0; y < keep; y++)
+                for (int x = 0; x < h.Width; x++)
+                {
+                    // Top half: the half court as drawn (its rows from the half-court line up).
+                    full.Set(x, keep + y, h.Get(x, TopRows + y));
+                    // Bottom half: the same half turned 180° about the court's centre line and half-court line.
+                    full.Set(x, y, hb.Get(Math.Min(h.Width - 1, h.Width - x), Math.Min(h.Height - 1, h.Height - y)));
+                }
+            return full;
+        }
+
+        /// <summary>Texture rows above the half-court line in a half texture (dropped in the full court).</summary>
+        private static int TopRows => (int)Math.Round(TopMargin * PixelsPerMeter);
+
+        public static int FullCourtTextureHeight(CourtGeometry half) => (TextureHeight(half) - TopRows) * 2;
+
+        /// <summary>Pivot (0..1) on the court origin (centre of the top baseline) for the full-court texture.</summary>
+        public static void FullCourtOriginPivot(CourtGeometry half, out float pivotX, out float pivotY)
+        {
+            CourtToPixel(half, Vec2.Zero, out float px, out float py);
+            int keep = TextureHeight(half) - TopRows;
+            pivotX = px / TextureWidth(half);
+            pivotY = (py - TopRows + keep) / (keep * 2f);
+        }
+
         private static void FillCourtRect(PixelCanvas c, CourtGeometry g, float x0, float y0, float x1, float y1, RgbColor col)
         {
             CourtToPixel(g, new Vec2(x0, y1), out float ax, out float ay);

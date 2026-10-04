@@ -98,7 +98,7 @@ namespace CallerRetroBall.Gameplay
 
             bool moving = motion.IsMoving;
             _animTime += dt;
-            var view = CharacterSpriteGenerator.ViewFor(motion.facing, out bool flip);
+            var view = CharacterSpriteGenerator.ViewFor(CourtSpace.Facing(motion.facing), out bool flip);
             if (flair.FlipOverride) flip = !flip;
             int frame = shooting || jump01 > 0.05f || flair.ArmsUp ? CharacterSpriteGenerator.ShootFrame
                 : moving ? CharacterSpriteGenerator.IdleFrames + (int)(_animTime * RunFps) % CharacterSpriteGenerator.RunFrames

@@ -84,16 +84,17 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < f.Players.Length && i < m.Players.Length; i++)
             {
                 var p = m.Players[i];
+                // Stored as drawn on the fixed court (Full Court turns the simulation frame).
                 f.Players[i] = new ReplayPlayer
                 {
-                    Position = p.Position,
-                    Facing = p.Motion.facing,
+                    Position = m.ToWorldCourt(p.Position),
+                    Facing = m.ToWorldFacing(p.Motion.facing),
                     Moving = p.Motion.IsMoving,
                     Jump01 = m.JumpHeight01(i),
                     ArmsUp = i == m.ChargingIndex,
                 };
             }
-            f.BallPosition = m.Ball.Position;
+            f.BallPosition = m.ToWorldCourt(m.Ball.Position);
             f.BallHeight = m.Ball.Height;
             f.BallHolder = m.Ball.IsHeld ? m.Ball.HolderIndex : -1;
             f.BallPhase = m.Ball.Phase;

@@ -24,14 +24,25 @@ namespace CallerRetroBall.Gameplay
 
         private readonly List<Object> _owned = new List<Object>();
 
+        /// <param name="fullCourt">Draw both halves (Full Court); <paramref name="geometry"/> is then one half.</param>
         public static MatchArt Build(CourtDef court, CourtGeometry geometry, uint seed, RgbColor? bannerA = null, RgbColor? bannerB = null,
-                                     bool staticCrowd = true)
+                                     bool staticCrowd = true, bool fullCourt = false)
         {
             var art = new MatchArt();
             const float ppu = CourtSpace.PixelsPerUnit;
 
-            var courtCanvas = CourtGenerator.Generate(court, geometry, seed, bannerA, bannerB, staticCrowd);
-            CourtGenerator.OriginPivot(geometry, out float px, out float py);
+            float px, py;
+            PixelCanvas courtCanvas;
+            if (fullCourt)
+            {
+                courtCanvas = CourtGenerator.GenerateFullCourt(court, geometry, seed, bannerA, bannerB, staticCrowd);
+                CourtGenerator.FullCourtOriginPivot(geometry, out px, out py);
+            }
+            else
+            {
+                courtCanvas = CourtGenerator.Generate(court, geometry, seed, bannerA, bannerB, staticCrowd);
+                CourtGenerator.OriginPivot(geometry, out px, out py);
+            }
             art.Court = art.Make(courtCanvas, "court:" + court.id, new Vector2(px, py), ppu);
 
             var hoop = PropSpriteGenerator.Hoop();

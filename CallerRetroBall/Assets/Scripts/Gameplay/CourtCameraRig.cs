@@ -24,6 +24,10 @@ namespace CallerRetroBall.Gameplay
         private int _lastWidth, _lastHeight;
         private Rect _lastSafe;
         private float _targetY;
+        /// <summary>Full Court: the camera also scrolls up and down the floor.</summary>
+        private bool _vertical;
+        private float _minY;
+        private float _y;
 
         public int Zoom { get; private set; } = 1;
 
@@ -37,8 +41,11 @@ namespace CallerRetroBall.Gameplay
             _shake = Mathf.Max(_shake, amount);
         }
 
-        public void Init(CourtGeometry court, Color background)
+        /// <param name="court">Simulation geometry (Full Court: the whole floor).</param>
+        /// <param name="fullCourt">Scroll vertically to follow play between the two baskets.</param>
+        public void Init(CourtGeometry court, Color background, bool fullCourt = false)
         {
+            _vertical = fullCourt;
             _camera = GetComponent<Camera>();
             _camera.orthographic = true;
             _camera.clearFlags = CameraClearFlags.SolidColor;
@@ -47,21 +54,34 @@ namespace CallerRetroBall.Gameplay
             _minX = -court.HalfWidth - CourtGenerator.SideMargin;
             _maxX = court.HalfWidth + CourtGenerator.SideMargin;
             Recompute();
+            _y = _targetY;
             transform.position = new Vector3(0f, _targetY, -10f);
         }
 
-        /// <summary>Follows a court position (usually the controlled player).</summary>
+        /// <summary>
+        /// Follows a position on the court as drawn (x across, y down from the top baseline): usually the
+        /// controlled player, or the ball in 2 Player and Full Court.
+        /// </summary>
         public void Follow(Vec2 target, float dt, bool snap = false)
         {
             if (_court == null) return;
             if (Screen.width != _lastWidth || Screen.height != _lastHeight || Screen.safeArea != _lastSafe) Recompute();
 
             float halfW = _camera.orthographicSize * _camera.aspect;
-            var current = new Vec2(transform.position.x, _targetY);
-            var goal = new Vec2(target.x, _targetY);
+            float goalY = _targetY;
+            if (_vertical)
+            {
+                // Keep the play a little above the middle (the thumbs cover the bottom of the screen),
+                // between the top of the court (under the HUD) and the bottom stands.
+                goalY = Mathf.Clamp(-target.y - _camera.orthographicSize * 0.12f, _minY, _targetY);
+            }
+            var current = new Vec2(transform.position.x, _vertical ? _y : _targetY);
+            var goal = new Vec2(target.x, goalY);
             var next = snap ? goal : CameraMath.Follow(current, goal, dt, followStiffness);
             next = CameraMath.ClampView(next, halfW, _camera.orthographicSize,
                                         new Vec2(_minX, -1000f), new Vec2(_maxX, 1000f));
+            float camY = _vertical ? Mathf.Clamp(next.y, _minY, _targetY) : _targetY;
+            _y = camY;
             // Snap the camera to the pixel grid of the current zoom to avoid shimmering.
             float step = 1f / (CourtSpace.PixelsPerUnit * Zoom);
             float sx = 0f, sy = 0f;
@@ -71,7 +91,7 @@ namespace CallerRetroBall.Gameplay
                 sy = (Random.value * 2f - 1f) * _shake;
                 _shake = Mathf.MoveTowards(_shake, 0f, dt * 1.2f);
             }
-            transform.position = new Vector3(Mathf.Round((next.x + sx) / step) * step, Mathf.Round((_targetY + sy) / step) * step, -10f);
+            transform.position = new Vector3(Mathf.Round((next.x + sx) / step) * step, Mathf.Round((camY + sy) / step) * step, -10f);
         }
 
         private void Recompute()
@@ -88,6 +108,9 @@ namespace CallerRetroBall.Gameplay
             float topInsetPx = (Screen.height - _lastSafe.yMax) + Screen.height * hudReserve;
             float courtTopWorld = CourtGenerator.BaselineMargin; // baseline is world y = 0
             _targetY = courtTopWorld + topInsetPx * unitsPerPixel - _camera.orthographicSize;
+            // Lowest camera centre: the bottom stands sit just above the thumb area (lower 40% of the screen).
+            float courtBottomWorld = -(_court.depth + CourtGenerator.BaselineMargin);
+            _minY = Mathf.Min(_targetY, courtBottomWorld + _camera.orthographicSize * 0.2f);
         }
     }
 }

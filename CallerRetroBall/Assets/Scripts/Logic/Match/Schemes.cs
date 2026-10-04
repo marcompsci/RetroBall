@@ -84,9 +84,11 @@ namespace CallerRetroBall.Logic
                     // Sag: halfway between your man and the rim.
                     return court.Clamp(Vec2.Lerp(man.Position, court.Hoop, 0.45f));
                 case DefenseScheme.Zone:
-                    // Two zone spots in front of the rim, shaded toward the ball.
-                    float side = p.Slot == 1 ? -1f : 1f;
+                    // Zone spots in front of the rim, shaded toward the ball (Full Court adds two up top).
                     float shade = holder != null ? Math.Max(-0.8f, Math.Min(0.8f, holder.Position.x * 0.25f)) : 0f;
+                    if (p.Slot >= 3)
+                        return court.Clamp(new Vec2((p.Slot == 3 ? -1f : 1f) * 3.4f + shade, court.hoopY + 4.8f));
+                    float side = p.Slot == 1 ? -1f : 1f;
                     return court.Clamp(new Vec2(side * 1.6f + shade, court.hoopY + 1.8f));
             }
             return Formation.GuardSpot(man.Position, false, court);

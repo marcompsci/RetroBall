@@ -427,7 +427,7 @@ namespace CallerRetroBall.Logic
         }
 
         /// <summary>Deterministic ±3 variation per attribute so same-archetype players differ.</summary>
-        private static AttributeSet Personalize(AttributeSet baseline, string playerId)
+        internal static AttributeSet Personalize(AttributeSet baseline, string playerId)
         {
             uint h = StableHash.Of(playerId);
             var result = baseline;
@@ -441,7 +441,7 @@ namespace CallerRetroBall.Logic
             return result;
         }
 
-        private static AppearanceDef AppearanceFromSeed(string playerId, Archetype a)
+        internal static AppearanceDef AppearanceFromSeed(string playerId, Archetype a)
         {
             uint h = StableHash.Of(playerId + ".look");
             int skin = (int)(h % 6); h = StableHash.Next(h);
@@ -487,6 +487,17 @@ namespace CallerRetroBall.Logic
                 bustRule = true,
                 bustScore = 13,
                 makeItTakeIt = true,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
+                // Full Court 5-on-5: four minutes, 2s and 3s, a longer shot clock to bring it up the floor.
+                id = FullCourt.RulesId,
+                targetScore = 99,
+                useGameClock = true,
+                gameClockSeconds = 240f,
+                shotClockSeconds = 20f,
+                insideArcPoints = 2,
+                beyondArcPoints = 3,
             });
             c.Rules.Add(new GameRulesDef
             {

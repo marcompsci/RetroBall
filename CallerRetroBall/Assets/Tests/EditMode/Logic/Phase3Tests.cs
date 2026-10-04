@@ -239,10 +239,25 @@ namespace CallerRetroBall.Tests
         }
 
         [Test]
-        public void HumanGreenJumper_FromCheckSpot_ScoresTwo_AndGivesTheBallAway()
+        public void HumanGreenJumper_FromCheckSpot_ScoresTwo_AndKeepsTheBall()
         {
             var m = NewMatch(greenAlwaysMakes: true);
             m.Setup.PassiveOpponents = true; // no contests, no steals: isolate the scoring path
+            Assert.IsTrue(m.Setup.WinnersBall, "half-court 3-on-3 is winners' ball");
+            GreenJumper(m);
+            Assert.AreEqual(BallPhase.Shot, m.Ball.Phase);
+            RunUntil(m, () => m.Phase == MatchPhase.CheckBall, 5f);
+            Assert.AreEqual(2, m.Score[0]);
+            Assert.AreEqual(0, m.OffenseTeam, "the team that scores gets the ball back");
+            Assert.AreEqual(MatchSimulation.IndexOf(0, 0), m.HolderIndex);
+        }
+
+        [Test]
+        public void HumanGreenJumper_WithoutWinnersBall_GivesTheBallAway()
+        {
+            var m = NewMatch(greenAlwaysMakes: true);
+            m.Setup.PassiveOpponents = true; // no contests, no steals: isolate the scoring path
+            m.Setup.WinnersBall = false;
             GreenJumper(m);
             Assert.AreEqual(BallPhase.Shot, m.Ball.Phase);
             var log = RunUntil(m, () => m.Phase == MatchPhase.CheckBall, 5f);

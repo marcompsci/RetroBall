@@ -290,6 +290,11 @@ namespace CallerRetroBall.Logic
             ["Sign in to iCloud in the iPhone Settings app to sync your career."] = "Inicia sesión en iCloud en la app Ajustes del iPhone para sincronizar tu carrera.",
             ["WELCOME BACK"] = "BIENVENIDO DE NUEVO", ["Your career was loaded from iCloud."] = "Tu carrera se cargó desde iCloud.",
             ["NEWER CAREER IN ICLOUD"] = "CARRERA MÁS NUEVA EN ICLOUD", ["LOAD FROM ICLOUD"] = "CARGAR DE ICLOUD", ["KEEP THIS ONE"] = "QUEDARME CON ESTA",
+            ["FULL COURT"] = "CANCHA COMPLETA", ["FULL COURT  5 ON 5"] = "CANCHA COMPLETA  5 CONTRA 5",
+            ["5 on 5, both baskets, 2s and 3s. Four minutes."] = "5 contra 5, las dos canastas, dobles y triples. Cuatro minutos.",
+            ["Pick a team and an opponent. One game. Score and it's still your ball."] = "Elige equipo y rival. Un partido. Si anotas, el balón sigue siendo tuyo.",
+            ["Five on five, end to end. Inside the arc is 2, outside is 3. After a basket the other team inbounds and brings it up. Four minutes; 20-second shot clock."] =
+                "Cinco contra cinco, de canasta a canasta. Dentro del arco vale 2 y fuera 3. Tras una canasta, el otro equipo saca de fondo y sube el balón. Cuatro minutos; 20 segundos de posesión.",
             ["SHOOTOUT VS FRIEND"] = "DUELO DE TRIPLES VS AMIGO",
             ["Pass the phone: P1 sets a 60-second score, P2 tries to beat it."] = "Pásate el teléfono: J1 marca una puntuación en 60 segundos y J2 intenta superarla.",
             ["P2: GO"] = "J2: ¡VAMOS!", ["NEW DUEL"] = "NUEVO DUELO", ["PASS THE PHONE TO P2"] = "PÁSALE EL TELÉFONO A J2", ["TIE GAME"] = "EMPATE",

@@ -361,7 +361,7 @@ namespace CallerRetroBall.Logic
             if (Time < s.IntentUntil) return; // finishing a cut
             var court = Setup.Court;
             int defIndex = DefenderOf(p.Index);
-            var defender = Players[defIndex >= 0 ? defIndex : IndexOf(DefenseTeam, p.Slot)];
+            var defender = Players[defIndex >= 0 ? defIndex : Index(DefenseTeam, p.Slot)];
             float separation = Vec2.Distance(defender.Position, p.Position);
 
             // Backdoor cut when the defender is ball-watching, weighted by cut tendency.
@@ -414,6 +414,8 @@ namespace CallerRetroBall.Logic
                 s.Intent = AiIntent.Guard;
                 var toHoop = court.Hoop - man.Position;
                 float gap = ChargingIndex == man.Index ? 0.7f : SchemeOnBallGap(p.Team);
+                // Full Court: contain the ball in the backcourt (give a cushion) unless pressing.
+                if (Setup.FullCourt && man.Position.y > FullCourt.MidY && _scheme[p.Team] != DefenseScheme.Pressure) gap = Math.Max(gap, 2.2f);
                 s.Target = toHoop.SqrMagnitude > 0.01f ? court.Clamp(man.Position + toHoop.Normalized * gap) : man.Position;
                 return;
             }
@@ -432,10 +434,24 @@ namespace CallerRetroBall.Logic
 
             // Guard the man (positions snapshot at decision time → realistic reaction lag).
             s.Intent = AiIntent.Guard;
-            s.Target = SchemeGuardSpot(p, man, holder);
+            s.Target = BackcourtSag(SchemeGuardSpot(p, man, holder), man, p.Team);
         }
 
         // ------------------------------------------------------------------ helpers
+
+        /// <summary>
+        /// Full Court: off-ball defenders get back and wait just inside half court while their man is still
+        /// in the backcourt (a pressing team picks up full court instead).
+        /// </summary>
+        private Vec2 BackcourtSag(Vec2 target, PlayerRuntimeState man, int team)
+        {
+            if (!Setup.FullCourt || _scheme[team] == DefenseScheme.Pressure || man.Position.y <= FullCourt.MidY) return target;
+            var court = Setup.Court;
+            var hoop = court.Hoop;
+            var d = man.Position - hoop;
+            float t = (FullCourt.MidY - 1f - hoop.y) / Math.Max(0.1f, d.y);
+            return court.Clamp(hoop + d * Math.Max(0f, Math.Min(1f, t)));
+        }
 
         private float OpennessOf(PlayerRuntimeState p)
         {

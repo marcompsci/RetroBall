@@ -95,3 +95,10 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] iCloud (two devices on the same Apple Account): play a game on device A, open the app on device B (fresh install) → "Your career was loaded from iCloud". With progress on both, the further-along one is offered with LOAD FROM ICLOUD / KEEP THIS ONE. Settings ▸ RESET SAVE removes the iCloud copy too.
 - [ ] Season 4: Rise Season 4 brings the Paper Cranes (Juno Vale) with the chapter 4 scenes; the crane logo draws in Locker Room ▸ TEAM ▸ LOGO ICON.
 - [ ] TestFlight: `tools/ship_testflight.sh` uploads a build that appears in App Store Connect ▸ TestFlight and installs from the TestFlight app.
+
+## Full Court and winners' ball
+- [ ] Quick Call / Rise: after you score you check the ball again; after they score, they keep it.
+- [ ] 1-on-1: possession still alternates after a basket.
+- [ ] Full Court: tip-off at half court; after a basket the other team inbounds under that basket and brings it up. The camera follows the ball up and down; both hoops are drawn; shots at the bottom hoop arc into it.
+- [ ] Full Court: on a steal or defensive rebound nobody jumps or teleports; the stick still moves your player the same way on screen at both ends.
+- [ ] Full Court post-game box score lists all ten players (scrolls).

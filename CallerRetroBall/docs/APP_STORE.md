@@ -36,7 +36,8 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > • Arcade Ladder: six stages, three continues, one secret boss
 > • King of the Court: win until you lose
 > • The Caller Cup: an eight-team knockout
-> • 1-on-1, Quick Call, and a new Daily Challenge every day
+> • Full Court 5-on-5: both baskets, 2s and 3s
+> • 1-on-1, Quick Call (winners' ball), and a new Daily Challenge every day
 >
 > **MAKE IT YOURS**
 > Create your player and your own team: name, colours, jersey pattern, shorts, shoes, logo, and home court. Train attributes, unlock kits, and fill your trophy room with badges.

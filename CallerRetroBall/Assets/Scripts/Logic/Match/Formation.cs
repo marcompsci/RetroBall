@@ -8,7 +8,7 @@ namespace CallerRetroBall.Logic
     /// </summary>
     public static class Formation
     {
-        /// <summary>Off-ball spacing spots for teammates 1 and 2 (slot 0 is the ball handler).</summary>
+        /// <summary>Spacing spots: 0 top (ball handler), 1-2 wings, and in Full Court 3-4 the corners.</summary>
         public static Vec2 OffenseSpot(int slot, CourtGeometry c)
         {
             switch (slot)
@@ -16,6 +16,8 @@ namespace CallerRetroBall.Logic
                 case 0: return c.CheckSpot;
                 case 1: return new Vec2(-(c.HalfWidth - 2.3f), c.hoopY + 4.6f); // left wing
                 case 2: return new Vec2(c.HalfWidth - 2.3f, c.hoopY + 4.6f);   // right wing
+                case 3: return new Vec2(-(c.HalfWidth - 0.9f), c.hoopY + 0.7f); // left corner
+                case 4: return new Vec2(c.HalfWidth - 0.9f, c.hoopY + 0.7f);    // right corner
                 default: return new Vec2(0f, c.hoopY + 3f);
             }
         }

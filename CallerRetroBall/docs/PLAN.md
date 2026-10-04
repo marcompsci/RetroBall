@@ -317,6 +317,20 @@
   seasons), chapter 4 scenes (EN/ES), courts Laundromat Lot, Drive-In Lot and Paper Garden, kits, Shoulder
   Brush and Paper Plane celebrations, Rocker Step and Snatch Back moves, a crane logo, and four badges.
 
+## Full Court and winners' ball (after Phase 19)
+
+- **Full Court 5-on-5** (Play ▸ FULL COURT, `GameMode.FullCourt`): both baskets, 2s and 3s, four minutes,
+  20-second shot clock, tip-off at half court, inbound from the far baseline after a basket. Teams with
+  fewer than five players get deterministic generated reserves (`FullCourt.Reserves`). The simulation runs
+  in the attacking team's frame (its hoop always "up"), and the picture turns 180° when possession changes
+  (`MatchSimulation.TurnFrame`, `Flipped`, `ToWorldCourt`), so shooting, passing and the AI are unchanged.
+  Off-ball defenders get back to half court unless pressing; on-ball defenders give a cushion in the
+  backcourt. Views draw on the fixed court through `CourtSpace.Flip`; the camera scrolls up and down;
+  the art is two half courts back to back with a second hoop. Pays like Quick Call; its points don't count
+  toward the half-court single-game points record.
+- **Winners' ball:** every half-court 3-on-3 game (Quick Call, Rise, King, Cup, Arcade, 2 Player and the
+  rest) keeps the ball with the team that scores. Full Court and 1-on-1 still alternate.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).
