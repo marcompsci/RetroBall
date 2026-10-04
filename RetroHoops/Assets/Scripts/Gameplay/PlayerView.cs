@@ -86,7 +86,7 @@ namespace CallerRetroBall.Gameplay
         {
             transform.position = CourtSpace.ToWorldSnapped(f.Position);
             _animTime += dt;
-            var view = CharacterSpriteGenerator.ViewFor(f.Facing, out bool flip);
+            var view = CharacterSpriteGenerator.ViewFor(CourtSpace.Facing(f.Facing), out bool flip);
             int frame = f.ArmsUp || f.Jump01 > 0.05f ? CharacterSpriteGenerator.ShootFrame
                 : f.Moving ? CharacterSpriteGenerator.IdleFrames + (int)(_animTime * RunFps) % CharacterSpriteGenerator.RunFrames
                 : (int)(_animTime * IdleFps) % CharacterSpriteGenerator.IdleFrames;

@@ -172,12 +172,8 @@ namespace CallerRetroBall.EditorTools
                 PlayerSettings.SetApplicationIdentifier(android, PlaceholderBundleId);
             }
 
-            // Portrait-first.
-            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
-            PlayerSettings.allowedAutorotateToPortrait = true;
-            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
-            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+            // Portrait everywhere, landscape for Full Court (the game locks the one it wants at runtime).
+            ReleaseTools.EnsureOrientations();
             PlayerSettings.statusBarHidden = true;
 
             // iOS

@@ -30,6 +30,7 @@ namespace CallerRetroBall.Core
         private IEnumerator Start()
         {
             float started = Time.realtimeSinceStartup;
+            Orientation.Portrait();
             Build();
             // Let the title screen draw before the (blocking) content and save loading.
             yield return null;

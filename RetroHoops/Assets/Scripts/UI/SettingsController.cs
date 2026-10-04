@@ -100,6 +100,7 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(column, "Captions show the announcer's calls on screen. They're also on when Closed Captions is on in iOS Settings. VoiceOver reads the menus.", 28f, Theme.Muted), 90f);
             UiControls.ToggleRow(column, "LEFT-HANDED", s.leftHanded, v => { s.leftHanded = v; Save(); });
             UiControls.ToggleRow(column, "LARGE BUTTONS", s.largeButtons, v => { s.largeButtons = v; Save(); });
+            UiKit.Button(column, "CUSTOMIZE CONTROLS", () => Controls.ControlEditor.Open(), ButtonStyle.Secondary, 100f, 36f);
             UiControls.ToggleRow(column, "TAP TO SHOOT", s.tapToShoot, v => { s.tapToShoot = v; Save(); });
             UiControls.ToggleRow(column, "REDUCE MOTION", s.reduceMotion, v => { s.reduceMotion = v; Save(); });
             UiKit.Size(UiKit.Label(column,

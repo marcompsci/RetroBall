@@ -342,7 +342,7 @@ namespace CallerRetroBall.UI
                 };
                 SceneFlow.GoTo(SceneNames.Game);
             }, ButtonStyle.Primary, 130f);
-            UiKit.Size(UiKit.Label(column, "Touch: stick + SHOOT / PASS / DEF / CALL\nKeyboard: WASD move · K shoot (hold) · J pass · L steal · C call · Esc pause",
+            UiKit.Size(UiKit.Label(column, "Touch: stick + SHOOT / PASS / DUNK / LAYUP / CALL\nKeyboard: WASD move · K shoot (hold) · J pass · U dunk · I layup · L steal · C call",
                                    28f, Theme.Muted), 90f);
 
             void Refresh()

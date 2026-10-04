@@ -70,7 +70,7 @@ namespace CallerRetroBall.Logic
                 case TutorialStep.Ask: return "A teammate has it. Tap ASK";
                 case TutorialStep.Call: return "Tap CALL and pick a play";
                 case TutorialStep.Steal: return "Get close to the ball and tap STEAL";
-                case TutorialStep.Jump: return "Tap JUMP to contest a shot";
+                case TutorialStep.Jump: return "Tap BLOCK to contest a shot";
                 default: return "Tutorial complete";
             }
         }

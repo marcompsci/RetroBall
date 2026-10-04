@@ -102,5 +102,39 @@ namespace CallerRetroBall.Logic.PixelArt
             c.Set(gx, gy - 1, Glint);
             return c;
         }
+
+        public const int RingButtonSize = 48;
+        public static readonly RgbColor RingFill = new RgbColor(0x0E, 0x10, 0x24, 205);
+
+        /// <summary>
+        /// Action-button face for the match controls: a dark see-through disc with a bright coloured ring
+        /// and a soft inner glow; pressed fills with the ring colour.
+        /// </summary>
+        public static PixelCanvas RingButton(RgbColor ring, bool pressed = false)
+        {
+            const int n = RingButtonSize;
+            var c = new PixelCanvas(n, n);
+            float r = n * 0.5f - 0.5f;
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = x + 0.5f - n * 0.5f, dy = y + 0.5f - n * 0.5f;
+                    float d = (float)System.Math.Sqrt(dx * dx + dy * dy);
+                    if (d > r) continue;
+                    RgbColor col;
+                    if (d > r - 1f) col = Outline.WithAlpha(230);
+                    else if (d > r - 4f) col = pressed ? ring.Lighten(0.25f) : ring;
+                    else if (d > r - 5f) col = ring.Darken(0.35f).WithAlpha(230);
+                    else if (pressed) col = ring.Darken(0.15f).WithAlpha(235);
+                    else
+                    {
+                        // Inner glow toward the top-left, fading into the dark face.
+                        float glow = System.Math.Max(0f, 1f - d / (r - 5f)) * 0.0f + System.Math.Max(0f, (-dx + dy) / (n * 1.4f));
+                        col = RgbColor.Lerp(RingFill, ring.Darken(0.55f).WithAlpha(215), glow);
+                    }
+                    c.Pixels[y * n + x] = col;
+                }
+            return c;
+        }
     }
 }

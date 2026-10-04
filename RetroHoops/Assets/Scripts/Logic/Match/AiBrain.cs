@@ -15,6 +15,8 @@ namespace CallerRetroBall.Logic
         Crash = 8,
         Stand = 9,
         Screen = 10,
+        /// <summary>Running the baseline for an alley-oop (Finishes.cs).</summary>
+        BaselineRun = 11,
     }
 
     /// <summary>Per-player AI memory: what it decided, where it's going, when it thinks next.</summary>
@@ -371,6 +373,7 @@ namespace CallerRetroBall.Logic
         {
             if (PlayIntentFor(p, s)) return;
             if (FastBreakSpot(p, s)) return;
+            if (BaselineRunIntent(p, s)) return;
             if (Time < s.IntentUntil) return; // finishing a cut
             var court = Setup.Court;
             int defIndex = DefenderOf(p.Index);

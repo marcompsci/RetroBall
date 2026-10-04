@@ -510,6 +510,50 @@ namespace CallerRetroBall.Logic.PixelArt
             return c;
         }
 
+        /// <summary>
+        /// The basket from the side, for landscape Full Court: backboard on the LEFT (flip it for the right-hand
+        /// basket), arm, rim seen nearly edge-on, net. Pivot: rim centre = (<see cref="HoopSidePivotX"/>, <see cref="HoopSidePivotY"/>).
+        /// </summary>
+        public static PixelCanvas HoopSide()
+        {
+            const int w = 26, h = 30;
+            var c = new PixelCanvas(w, h);
+            var board = RgbColor.FromHex("#F4F4F8");
+            var boardEdge = RgbColor.FromHex("#9AA0B4");
+            var rim = RgbColor.FromHex("#E4572E");
+            var net = RgbColor.FromHex("#FFFFFF").WithAlpha(210);
+            var metal = RgbColor.FromHex("#5C6378");
+
+            // Backboard seen at an angle: a narrow panel with a red square edge.
+            c.FillRect(3, 6, 4, 22, board);
+            for (int y = 6; y < 28; y++) { c.Set(3, y, boardEdge); c.Set(6, y, boardEdge); }
+            for (int x = 3; x < 7; x++) { c.Set(x, 6, boardEdge); c.Set(x, 27, boardEdge); }
+            for (int y = 9; y <= 16; y++) c.Set(5, y, rim);
+            // Support arm behind the board.
+            c.FillRect(0, 14, 3, 2, metal);
+            // Bracket from the board to the rim.
+            for (int x = 7; x <= 9; x++) c.Set(x, 8, metal);
+
+            // Rim: a flat ellipse (12 x 4) centred on the pivot.
+            int cx = HoopSidePivotX, cy = HoopSidePivotY;
+            for (int x = cx - 4; x <= cx + 4; x++) { c.Set(x, cy + 2, rim); c.Set(x, cy - 1, rim); }
+            foreach (int x in new[] { cx - 6, cx - 5, cx + 5, cx + 6 }) { c.Set(x, cy + 1, rim); c.Set(x, cy, rim); }
+
+            // Net: tapered strands below the rim.
+            for (int row = 0; row < 6; row++)
+            {
+                int half = 5 - row / 2;
+                for (int x = cx - half; x <= cx + half; x += 2) c.Set(x, cy - 2 - row, net);
+                c.Set(cx - half, cy - 2 - row, net);
+                c.Set(cx + half, cy - 2 - row, net);
+            }
+            CharacterSpriteGenerator.AddOutline(c);
+            return c;
+        }
+
+        public const int HoopSidePivotX = 16;
+        public const int HoopSidePivotY = 8;
+
         /// <summary>Vertical shot-meter frame: 7 x 28 px with a 2px dark border (inner area 3 x 24).</summary>
         public static PixelCanvas MeterFrame()
         {

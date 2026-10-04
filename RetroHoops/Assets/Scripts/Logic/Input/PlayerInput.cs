@@ -9,6 +9,10 @@ namespace CallerRetroBall.Logic
         Shoot = 1,
         Defense = 2,
         Call = 3,
+        /// <summary>Attack the rim and dunk it (a layup if you can't dunk from there).</summary>
+        Dunk = 4,
+        /// <summary>Attack the rim and lay it in.</summary>
+        Layup = 5,
     }
 
     /// <summary>One frame of controller intent, produced by touch/keyboard/gamepad adapters.</summary>
@@ -24,6 +28,10 @@ namespace CallerRetroBall.Logic
         public bool PassPressed;
         /// <summary>Defense button: reach for a steal.</summary>
         public bool DefensePressed;
+        /// <summary>DUNK (with the ball): drive to the rim and throw it down.</summary>
+        public bool DunkPressed;
+        /// <summary>LAYUP (with the ball): drive to the rim and lay it in.</summary>
+        public bool LayupPressed;
         /// <summary>Play chosen from the CALL menu this frame (offense only).</summary>
         public PlayCall CallPlay;
 

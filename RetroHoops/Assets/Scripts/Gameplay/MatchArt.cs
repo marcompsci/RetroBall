@@ -18,6 +18,8 @@ namespace CallerRetroBall.Gameplay
         public Sprite Shadow { get; private set; }
         public Sprite BallShadow { get; private set; }
         public Sprite Ring { get; private set; }
+        /// <summary>The basket seen from the side (landscape Full Court).</summary>
+        public Sprite HoopSide { get; private set; }
         public Sprite MeterFrame { get; private set; }
         public Sprite Pixel { get; private set; }
         public Sprite Arrow { get; private set; }
@@ -48,6 +50,10 @@ namespace CallerRetroBall.Gameplay
             var hoop = PropSpriteGenerator.Hoop();
             art.Hoop = art.Make(hoop, "hoop",
                 new Vector2((PropSpriteGenerator.HoopPivotX + 0.5f) / hoop.Width, (PropSpriteGenerator.HoopPivotY + 0.5f) / hoop.Height), ppu);
+
+            var side = PropSpriteGenerator.HoopSide();
+            art.HoopSide = art.Make(side, "hoop-side",
+                new Vector2((PropSpriteGenerator.HoopSidePivotX + 0.5f) / side.Width, (PropSpriteGenerator.HoopSidePivotY + 0.5f) / side.Height), ppu);
 
             art.Ball = art.Make(PropSpriteGenerator.Ball(), "ball", new Vector2(0.5f, 0f), ppu);
             art.Shadow = art.Make(PropSpriteGenerator.Shadow(12, 4), "shadow", new Vector2(0.5f, 0.5f), ppu);

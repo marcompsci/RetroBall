@@ -63,6 +63,7 @@ namespace CallerRetroBall.Logic
                     ["gameCenter"] = d.settings.gameCenter,
                     ["leftHanded"] = d.settings.leftHanded,
                     ["largeButtons"] = d.settings.largeButtons,
+                    ["controlLayout"] = d.settings.controlLayout ?? "",
                     ["tapToShoot"] = d.settings.tapToShoot,
                     ["reduceMotion"] = d.settings.reduceMotion,
                 },
@@ -490,6 +491,7 @@ namespace CallerRetroBall.Logic
                     gameCenter = Bool(st, "gameCenter", false),
                     leftHanded = Bool(st, "leftHanded", false),
                     largeButtons = Bool(st, "largeButtons", false),
+                    controlLayout = ControlLayout.Serialize(ControlLayout.Parse(Str(st, "controlLayout", ""))),
                     tapToShoot = Bool(st, "tapToShoot", false),
                     reduceMotion = Bool(st, "reduceMotion", false),
                 };

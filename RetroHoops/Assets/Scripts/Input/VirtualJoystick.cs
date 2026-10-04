@@ -23,6 +23,8 @@ namespace CallerRetroBall.Controls
         /// <summary>Current stick vector (magnitude 0..1). Screen-up is +y.</summary>
         public Vec2 Value { get; private set; }
         public bool IsActive => _pointerId != int.MinValue;
+        /// <summary>Raised when the stick appears (true) or goes away (false).</summary>
+        public event System.Action<bool> Moved;
 
         public void Init(RectTransform zone, RectTransform baseRing, RectTransform knob)
         {
@@ -77,6 +79,7 @@ namespace CallerRetroBall.Controls
         {
             if (_base != null) _base.gameObject.SetActive(visible);
             if (_knob != null) _knob.gameObject.SetActive(visible);
+            Moved?.Invoke(visible);
         }
     }
 }

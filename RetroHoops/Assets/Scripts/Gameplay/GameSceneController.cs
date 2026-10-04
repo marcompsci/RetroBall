@@ -64,6 +64,11 @@ namespace CallerRetroBall.Gameplay
         private DailyChallenge _daily;
         private readonly InputBuffer _buffer2 = new InputBuffer();
         private bool Versus => _request != null && _request.Mode == GameMode.Versus;
+        /// <summary>Full Court on a landscape screen.</summary>
+        private bool _landscape;
+
+        /// <summary>A stick / key direction on screen (+y up) as a fixed-court direction.</summary>
+        private static Vec2 ScreenToCourt(Vec2 screen) => CourtSpace.ScreenToCourt(screen);
         private bool Demo => _request != null && _request.Mode == GameMode.Demo;
 
         // Phase 15: arcade feel and secrets.
@@ -162,6 +167,11 @@ namespace CallerRetroBall.Gameplay
             _match = new MatchSimulation(setup);
             CourtSpace.Flip = false;
             CourtSpace.FlipLength = setup.Court.depth;
+            // Full Court 5-on-5 plays in landscape (baskets left and right).
+            _landscape = setup.FullCourt && !Demo && !Versus;
+            CourtSpace.Landscape = _landscape;
+            CourtSpace.LandscapeLength = setup.Court.depth;
+            if (_landscape) Orientation.Landscape();
             if (_request.Mode == GameMode.Practice && _request.Drill == (int)DrillKind.Horse)
             {
                 bool friend = _request.ContextId == "horse:friend";
@@ -209,7 +219,7 @@ namespace CallerRetroBall.Gameplay
             // 2 Player with no controllers on a touch screen: tabletop mode, each player gets half the screen.
             bool tabletop = Versus && TabletopWanted();
             _controls = TouchControls.Create(_buffer, settings != null && settings.leftHanded, settings != null && settings.largeButtons,
-                                             tabletop ? TouchControls.Seat.Bottom : TouchControls.Seat.Full);
+                                             tabletop ? TouchControls.Seat.Bottom : TouchControls.Seat.Full, settings?.controlLayout);
             if (tabletop)
             {
                 _controls2 = TouchControls.Create(_buffer2, false, settings != null && settings.largeButtons, TouchControls.Seat.Top);
@@ -218,7 +228,8 @@ namespace CallerRetroBall.Gameplay
             _controls.Shoot.Pressed += () => _shootTapped = true;
             MatchHud.ReduceMotion = _reduceMotion;
             Audio.AudioManager.PlayMusic(1);
-            _controls.Defense.UnavailableHint = "OFFENSE";
+            _controls.Dunk.UnavailableHint = "NO BALL";
+            _controls.Layup.UnavailableHint = "NO BALL";
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
@@ -274,12 +285,18 @@ namespace CallerRetroBall.Gameplay
             var courtSr = courtGo.AddComponent<SpriteRenderer>();
             courtSr.sprite = _art.Court;
             courtSr.sortingOrder = -10000;
+            if (_landscape)
+            {
+                // The full-court art turned a quarter turn: top basket on the left, bottom basket on the right.
+                courtGo.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                courtGo.transform.localPosition = new Vector3(-setup.Court.depth * 0.5f, 0f, 0f);
+            }
 
             var hoopGo = new GameObject("Hoop");
             hoopGo.transform.SetParent(world, false);
             hoopGo.transform.position = CourtSpace.ToWorldSnapped(setup.Court.Hoop, CourtSpace.RimHeight);
             var hoopSr = hoopGo.AddComponent<SpriteRenderer>();
-            hoopSr.sprite = _art.Hoop;
+            hoopSr.sprite = _landscape ? _art.HoopSide : _art.Hoop;
             hoopSr.sortingOrder = CourtSpace.SortingOrder(setup.Court.Hoop, -1);
             if (setup.FullCourt)
             {
@@ -289,8 +306,9 @@ namespace CallerRetroBall.Gameplay
                 hoop2.transform.SetParent(world, false);
                 hoop2.transform.position = CourtSpace.ToWorldSnapped(bottomHoop, CourtSpace.RimHeight);
                 var hoop2Sr = hoop2.AddComponent<SpriteRenderer>();
-                hoop2Sr.sprite = _art.Hoop;
-                hoop2Sr.flipY = true;
+                hoop2Sr.sprite = _landscape ? _art.HoopSide : _art.Hoop;
+                if (_landscape) hoop2Sr.flipX = true; // backboard on the right
+                else hoop2Sr.flipY = true;
                 hoop2Sr.sortingOrder = CourtSpace.SortingOrder(bottomHoop, 1);
             }
 
@@ -364,7 +382,9 @@ namespace CallerRetroBall.Gameplay
             _ballView = BallView.Create(world, _art);
             _meter = ShotMeterView.Create(world, _art);
             _bursts = PixelBursts.Create(world, _art);
-            BuildCrowd(world, court, setup, artGeometry, banner != null);
+            // The stands' fans are drawn for the portrait view; landscape leaves the stands empty.
+            if (!_landscape) BuildCrowd(world, court, setup, artGeometry, banner != null);
+            else _fans = new Fan[0];
 
             var arrowGo = new GameObject("ReceiverArrow");
             arrowGo.transform.SetParent(world, false);
@@ -390,7 +410,7 @@ namespace CallerRetroBall.Gameplay
             _cameraRig = cam.GetComponent<CourtCameraRig>();
             if (_cameraRig == null) _cameraRig = cam.gameObject.AddComponent<CourtCameraRig>();
             var bg = court.floor.Darken(0.35f);
-            _cameraRig.Init(setup.Court, new Color32(bg.r, bg.g, bg.b, 255), setup.FullCourt);
+            _cameraRig.Init(setup.Court, new Color32(bg.r, bg.g, bg.b, 255), setup.FullCourt, _landscape);
         }
 
         private void Update()
@@ -536,7 +556,7 @@ namespace CallerRetroBall.Gameplay
 
         private PlayerInput ReadInput()
         {
-            var move = _controls.CourtMove;
+            var move = ScreenToCourt(_controls.ScreenStick);
             bool shootHeld = _controls.Shoot.IsHeld;
 #if ENABLE_INPUT_SYSTEM
             // Keyboard / gamepad fallback for the Editor and controllers.
@@ -546,8 +566,10 @@ namespace CallerRetroBall.Gameplay
                 // In 2-player the arrow keys belong to player 2.
                 bool arrows = !Versus;
                 float x = (kb.dKey.isPressed || arrows && kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || arrows && kb.leftArrowKey.isPressed ? 1f : 0f);
-                float y = (kb.sKey.isPressed || arrows && kb.downArrowKey.isPressed ? 1f : 0f) - (kb.wKey.isPressed || arrows && kb.upArrowKey.isPressed ? 1f : 0f);
-                if (x != 0f || y != 0f) move = Vec2.ClampMagnitude(new Vec2(x, y), 1f);
+                float y = (kb.wKey.isPressed || arrows && kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || arrows && kb.downArrowKey.isPressed ? 1f : 0f);
+                if (x != 0f || y != 0f) move = ScreenToCourt(Vec2.ClampMagnitude(new Vec2(x, y), 1f));
+                if (kb.uKey.wasPressedThisFrame) _buffer.Press(ActionButton.Dunk, Time.unscaledTime);
+                if (kb.iKey.wasPressedThisFrame) _buffer.Press(ActionButton.Layup, Time.unscaledTime);
                 if (kb.jKey.wasPressedThisFrame) _buffer.Press(ActionButton.Pass, Time.unscaledTime);
                 if (kb.kKey.wasPressedThisFrame) _buffer.Press(ActionButton.Shoot, Time.unscaledTime);
                 if (kb.lKey.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, Time.unscaledTime);
@@ -563,7 +585,9 @@ namespace CallerRetroBall.Gameplay
             if (pad != null)
             {
                 var stick = pad.leftStick.ReadValue();
-                if (stick.sqrMagnitude > 0.02f) move = new Vec2(stick.x, -stick.y);
+                if (stick.sqrMagnitude > 0.02f) move = ScreenToCourt(new Vec2(stick.x, stick.y));
+                if (pad.rightShoulder.wasPressedThisFrame) _buffer.Press(ActionButton.Dunk, Time.unscaledTime);
+                if (pad.leftShoulder.wasPressedThisFrame) _buffer.Press(ActionButton.Layup, Time.unscaledTime);
                 if (pad.buttonSouth.wasPressedThisFrame) _buffer.Press(ActionButton.Shoot, Time.unscaledTime);
                 if (pad.buttonWest.wasPressedThisFrame) _buffer.Press(ActionButton.Pass, Time.unscaledTime);
                 if (pad.buttonEast.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, Time.unscaledTime);
@@ -597,6 +621,10 @@ namespace CallerRetroBall.Gameplay
                     input.ShootPressed = true;
                 if (live && (_match.HumanHasBall || _match.HumanTeamHasBall) && _match.ChargingIndex < 0 && _buffer.Consume(ActionButton.Pass, now))
                     input.PassPressed = true;
+                bool canFinish = _match.Phase == MatchPhase.Live && _match.HumanHasBall && !_match.MustClear && !_match.MustInbound && _match.ChargingIndex < 0;
+                if (canFinish && _buffer.Consume(ActionButton.Dunk, now)) input.DunkPressed = true;
+                if (canFinish && _buffer.Consume(ActionButton.Layup, now)) input.LayupPressed = true;
+                if (!_match.HumanHasBall) { _buffer.Consume(ActionButton.Dunk, now); _buffer.Consume(ActionButton.Layup, now); }
                 _buffer.Consume(ActionButton.Defense, now);
                 if (_buffer.Consume(ActionButton.Call, now) && CanCall()) _hud.ShowCallMenu(!_hud.CallMenuOpen);
                 if (_pendingCall != PlayCall.None)
@@ -613,6 +641,9 @@ namespace CallerRetroBall.Gameplay
                 if (liveOnly && _buffer.Consume(ActionButton.Defense, now)) input.DefensePressed = true;
                 if (liveOnly && _buffer.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
                 if (liveOnly && _buffer.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                // U / right shoulder steal on defence too.
+                if (liveOnly && _buffer.Consume(ActionButton.Dunk, now)) input.DefensePressed = true;
+                _buffer.Consume(ActionButton.Layup, now);
                 _buffer.Consume(ActionButton.Call, now);
             }
             return input;
@@ -656,7 +687,7 @@ namespace CallerRetroBall.Gameplay
             if (_controls2 != null)
             {
                 // Tabletop: player 2's half of the screen.
-                var touchMove = _controls2.CourtMove;
+                var touchMove = ScreenToCourt(_controls2.ScreenStick);
                 if (touchMove.x != 0f || touchMove.y != 0f) move = touchMove;
                 shootHeld |= _controls2.Shoot.IsHeld;
                 if (_buffer2.Consume(ActionButton.Call, now)) callPressed = true;
@@ -672,6 +703,9 @@ namespace CallerRetroBall.Gameplay
             {
                 if (live && hasBall && !_match.MustClear && _match.ChargingIndex < 0 && _buffer2.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
                 if (live && teamHasBall && _match.ChargingIndex < 0 && _buffer2.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                bool finish = _match.Phase == MatchPhase.Live && hasBall && !_match.MustClear && !_match.MustInbound && _match.ChargingIndex < 0;
+                if (finish && _buffer2.Consume(ActionButton.Dunk, now)) input.DunkPressed = true;
+                if (finish && _buffer2.Consume(ActionButton.Layup, now)) input.LayupPressed = true;
                 _buffer2.Consume(ActionButton.Defense, now);
                 if (callPressed && teamHasBall && _match.Phase == MatchPhase.Live && _match.ActivePlay == PlayCall.None) input.CallPlay = PlayCall.PickAndRoll;
             }
@@ -680,6 +714,7 @@ namespace CallerRetroBall.Gameplay
                 if (_buffer2.Consume(ActionButton.Defense, now)) input.DefensePressed = true;
                 if (_buffer2.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
                 if (_buffer2.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                _buffer2.Consume(ActionButton.Layup, now);
             }
             return input;
         }
@@ -891,7 +926,7 @@ namespace CallerRetroBall.Gameplay
             }
 
             // Intended receiver marker.
-            int receiver = _match.Phase == MatchPhase.Live && _match.ChargingIndex < 0 ? _match.PreviewPassTarget(_controls.CourtMove) : -1;
+            int receiver = _match.Phase == MatchPhase.Live && _match.ChargingIndex < 0 ? _match.PreviewPassTarget(ScreenToCourt(_controls.ScreenStick)) : -1;
             _receiverArrow.enabled = receiver >= 0;
             if (receiver >= 0)
             {
@@ -938,42 +973,56 @@ namespace CallerRetroBall.Gameplay
         private void UpdateControlLabels()
         {
             bool offense = _match.OffenseTeam == _match.Setup.HumanTeam;
-            string shoot, pass, def;
-            bool canShoot, canPass;
+            bool oop = offense && _match.HumanHasBall && _match.Phase == MatchPhase.Live && _match.AlleyOopCandidate(_match.ControlledIndex) >= 0;
+            string shoot, pass, dunk;
+            bool canShoot, canPass, canDunk;
             if (offense && _match.HumanHasBall)
             {
                 shoot = _match.MustClear ? "CLEAR" : (_match.MustInbound ? "WAIT" : "SHOOT");
-                pass = _match.MustInbound ? "INBOUND" : "PASS";
-                def = "DEF";
+                pass = _match.MustInbound ? "INBOUND" : (oop ? "OOP" : "PASS");
+                dunk = "DUNK";
                 canShoot = !_match.MustClear && !_match.MustInbound;
+                canDunk = canShoot;
                 canPass = true;
                 _controls.Shoot.UnavailableHint = _match.MustInbound ? "PASS IT IN" : "TAKE IT BACK";
+                _controls.Dunk.UnavailableHint = _controls.Layup.UnavailableHint = _controls.Shoot.UnavailableHint;
             }
             else if (offense)
             {
                 shoot = "SHOOT";
                 pass = "ASK";
-                def = "DEF";
+                dunk = "DUNK";
                 canShoot = false;
+                canDunk = false;
                 canPass = _match.HumanTeamHasBall;
                 _controls.Shoot.UnavailableHint = "NO BALL";
+                _controls.Dunk.UnavailableHint = _controls.Layup.UnavailableHint = "NO BALL";
             }
             else
             {
-                shoot = "JUMP";
+                shoot = "BLOCK";
                 pass = "SWITCH";
-                def = "STEAL";
+                dunk = "STEAL";
                 canShoot = true;
+                canDunk = true;
                 canPass = true;
             }
             _controls.Pass.UnavailableHint = "NO BALL";
             bool canCall = CanCall();
 
-            int state = (offense ? 1 : 0) | (_match.HumanHasBall ? 2 : 0) | (_match.MustClear ? 4 : 0) | (_match.HumanTeamHasBall ? 8 : 0) | (canCall ? 16 : 0);
+            int state = (offense ? 1 : 0) | (_match.HumanHasBall ? 2 : 0) | (_match.MustClear ? 4 : 0) | (_match.HumanTeamHasBall ? 8 : 0) | (canCall ? 16 : 0)
+                        | (oop ? 32 : 0) | (_match.MustInbound ? 64 : 0);
             if (state == _lastLabelState) return;
             _lastLabelState = state;
-            _controls.SetLabels(shoot, pass, def);
-            _controls.SetAvailability(canShoot, canPass, !offense, canCall);
+            _controls.SetRole(!offense, oop);
+            _controls.SetLabels(shoot, pass, dunk);
+            _controls.SetAvailability(canShoot, canPass, canDunk, canDunk, canCall);
+            if (_controls2 != null)
+            {
+                bool p2Offense = _match.SecondControlledIndex >= 0 && _match.OffenseTeam == _match.Players[_match.SecondControlledIndex].Team;
+                _controls2.SetRole(!p2Offense, false);
+                _controls2.Call.SetLabel("P&R");
+            }
         }
 
         /// <summary>
@@ -1026,9 +1075,9 @@ namespace CallerRetroBall.Gameplay
             // On a computer, show the keyboard controls for the first seconds of a match.
             if (Demo) return "DEMO PLAY  ·  TAP OR PRESS ANY BUTTON";
             if (_padMode && !_keyMode && _match.Time < 8f)
-                return "STICK MOVE · A SHOOT (HOLD) · X PASS · B STEAL · Y CALL · START PAUSE";
+                return "STICK MOVE · A SHOOT (HOLD) · X PASS · RB DUNK · LB LAYUP · B STEAL · Y CALL";
             if ((_keyMode || !Application.isMobilePlatform || Core.DeviceInfo.IsMac) && _match.Time < 8f)
-                return "WASD MOVE · K SHOOT (HOLD) · J PASS · L STEAL · C CALL · ESC PAUSE";
+                return "WASD MOVE · K SHOOT (HOLD) · J PASS · U DUNK · I LAYUP · L STEAL · C CALL";
             if (_match.ActivePlay != PlayCall.None && _match.ActivePlayTeam == _match.Setup.HumanTeam) return PlayName(_match.ActivePlay);
             if (_match.IsBoxingOut(_match.ControlledIndex)) return "BOX OUT";
             if (_daily != null) return "DAILY: " + _daily.Describe().ToUpperInvariant();
@@ -1375,7 +1424,7 @@ namespace CallerRetroBall.Gameplay
             int me = _match.ControlledIndex;
             int handler = _match.HolderIndex;
             bool onDefense = _match.OffenseTeam != _match.Setup.HumanTeam;
-            int target = _match.HumanHasBall ? _match.PreviewPassTarget(_controls.CourtMove) : -1;
+            int target = _match.HumanHasBall ? _match.PreviewPassTarget(ScreenToCourt(_controls.ScreenStick)) : -1;
             var s = new TipSituation
             {
                 Live = _match.Phase == MatchPhase.Live,
@@ -1926,6 +1975,13 @@ namespace CallerRetroBall.Gameplay
         {
             UI.ControllerCursor.Suppressed = false;
             CourtSpace.Flip = false;
+            if (_landscape)
+            {
+                CourtSpace.Landscape = false;
+                // Straight into another landscape game (rematch / next Full Court game): stay sideways.
+                var next = App.PendingMatch;
+                if (next == null || !(next.Mode == GameMode.FullCourt || next.FullCourt) || next.Mode == GameMode.Versus) Orientation.Portrait();
+            }
             Audio.AudioManager.SetAmbience(false);
             Audio.AudioManager.PlayMusic(0);
             _art?.Dispose();

@@ -428,6 +428,27 @@
   (Arcade scanlines, 4-Color dither, Dusk, Neon, Mono), optional frame with RETRO HOOPS, score and date;
   SNAP samples one pixel per art pixel, scales up crisp, saves a PNG and opens the share sheet.
 
+### Phase 24: controls, finishes, alley-oops, landscape Full Court
+
+- **Boot screen:** sunset court, RETRO HOOPS logo, spinning pixel basketball loader (was the old text card).
+- **Button layout** (TouchControls + ControlLayout): ring buttons with original pixel icons in a thumb arc in the
+  lower-right corner: SHOOT (biggest, outside), PASS beside it, DUNK above, LAYUP on the diagonal, CALL further in;
+  the stick's resting place is shown bottom-left. On defence they become BLOCK, SWITCH and STEAL (LAYUP and CALL
+  hide). PASS turns gold and reads OOP when a lob is on.
+- **Customize controls** (Settings ▸ CUSTOMIZE CONTROLS): drag buttons, tap and −/+ to resize (70–150%), RESET,
+  SAVE; warns about overlaps; saved in the career; used in portrait and landscape.
+- **DUNK / LAYUP:** with the ball, close enough you go straight up; further out you attack the rim at full speed
+  (up to 2.6 s; pull the stick away to back out) and finish there. Release is automatic, spread by Finishing;
+  contests and blocks apply. DUNK becomes a layup without the rating (65) or distance (2.2 m). Keys U / I,
+  controller RB / LB.
+- **Baseline alley-oops:** while you handle the ball away from the rim, an athletic AI teammate (Finishing 60+)
+  sometimes sprints to the corner and runs the baseline; within 4.6 m of the rim they're a lob target and PASS
+  throws them the oop (whatever the stick aim), which they catch and throw down.
+- **Full Court 5-on-5 in landscape:** the screen turns sideways for Full Court (not the attract demo or 2 Player),
+  baskets left and right, side-view hoops, camera pans with the ball (the whole floor fits on most phones),
+  sprites face the right way, UI lays out on 1920 x 1080. Info.plist allows portrait + both landscapes; the game
+  locks portrait at boot and returns to portrait after the game. The stands' animated fans are off in landscape.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

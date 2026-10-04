@@ -45,9 +45,15 @@ namespace CallerRetroBall.Gameplay
 
         /// <param name="court">Simulation geometry (Full Court: the whole floor).</param>
         /// <param name="fullCourt">Scroll vertically to follow play between the two baskets.</param>
-        public void Init(CourtGeometry court, Color background, bool fullCourt = false)
+        /// <summary>Full Court on a landscape screen: the court runs left to right and the camera pans sideways.</summary>
+        private bool _landscape;
+        /// <summary>Landscape: at least this much court across the screen's height (sidelines plus room for the HUD), m.</summary>
+        [SerializeField] private float landscapeVisibleHeight = 18f;
+
+        public void Init(CourtGeometry court, Color background, bool fullCourt = false, bool landscape = false)
         {
-            _vertical = fullCourt;
+            _landscape = landscape;
+            _vertical = fullCourt && !landscape;
             _camera = GetComponent<Camera>();
             _camera.orthographic = true;
             _camera.clearFlags = CameraClearFlags.SolidColor;
@@ -68,6 +74,11 @@ namespace CallerRetroBall.Gameplay
         {
             if (_court == null) return;
             if (Screen.width != _lastWidth || Screen.height != _lastHeight || Screen.safeArea != _lastSafe) Recompute();
+            if (_landscape)
+            {
+                FollowLandscape(target, dt, snap);
+                return;
+            }
 
             float halfW = _camera.orthographicSize * _camera.aspect;
             float goalY = _targetY;
@@ -96,11 +107,45 @@ namespace CallerRetroBall.Gameplay
             transform.position = new Vector3(Mathf.Round((next.x + sx) / step) * step, Mathf.Round((camY + sy) / step) * step, -10f);
         }
 
+        private float _landscapeX;
+
+        /// <summary>Landscape Full Court: pan with the play left and right; the sidelines stay in view below the HUD.</summary>
+        private void FollowLandscape(Vec2 target, float dt, bool snap)
+        {
+            float length = CourtSpace.LandscapeLength;
+            float halfW = _camera.orthographicSize * _camera.aspect;
+            float goal = target.y - length * 0.5f;
+            float min = -length * 0.5f - CourtGenerator.BaselineMargin, max = length * 0.5f + CourtGenerator.BaselineMargin;
+            float x = snap ? goal : Mathf.Lerp(_landscapeX, goal, 1f - Mathf.Exp(-followStiffness * dt));
+            x = halfW * 2f >= max - min ? (min + max) * 0.5f : Mathf.Clamp(x, min + halfW, max - halfW);
+            _landscapeX = x;
+            float step = 1f / (CourtSpace.PixelsPerUnit * Zoom);
+            float sx = 0f, sy = 0f;
+            if (_shake > 0.001f)
+            {
+                sx = (Random.value * 2f - 1f) * _shake;
+                sy = (Random.value * 2f - 1f) * _shake;
+                _shake = Mathf.MoveTowards(_shake, 0f, dt * 1.2f);
+            }
+            transform.position = new Vector3(Mathf.Round((x + sx) / step) * step, Mathf.Round((_targetY + sy) / step) * step, -10f);
+        }
+
         private void Recompute()
         {
             _lastWidth = Screen.width;
             _lastHeight = Screen.height;
             _lastSafe = Screen.safeArea;
+            if (_landscape)
+            {
+                // Integer zoom that fits the court's width (plus margins) top to bottom, and a fair stretch across.
+                Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, landscapeVisibleHeight, CourtSpace.PixelsPerUnit);
+                _camera.orthographicSize = CameraMath.OrthographicSize(Screen.height, Zoom, CourtSpace.PixelsPerUnit);
+                // The HUD bar takes the top of the screen: centre the sidelines in what's left.
+                float top = _court.HalfWidth + CourtGenerator.SideMargin * 0.5f, bottom = -_court.HalfWidth - CourtGenerator.SideMargin;
+                float hud = 2f * _camera.orthographicSize * 0.13f;
+                _targetY = (top + hud + bottom) * 0.5f;
+                return;
+            }
 
             Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, minVisibleHeight, CourtSpace.PixelsPerUnit);
             _camera.orthographicSize = CameraMath.OrthographicSize(Screen.height, Zoom, CourtSpace.PixelsPerUnit);

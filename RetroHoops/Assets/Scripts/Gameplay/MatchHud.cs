@@ -120,7 +120,7 @@ namespace CallerRetroBall.Gameplay
             _pausePanel = scrim.gameObject;
 
             var column = UiKit.Column(scrim.transform, 28f, null, "PauseMenu");
-            UiKit.Band(column, 0.3f, 0.7f, 160f);
+            UiKit.Band(column, 0.12f, 0.88f, 160f);
             column.GetComponent<UnityEngine.UI.VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             UiKit.Size(UiKit.ShadowLabel(column, "PAUSED", 90f, Theme.Cream, Theme.Pink, 8f).transform.parent.GetComponent<RectTransform>(), 140f);
             UiKit.Button(column, "RESUME", () => ResumeRequested?.Invoke(), ButtonStyle.Primary, 150f);

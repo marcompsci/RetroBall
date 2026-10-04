@@ -43,7 +43,21 @@ namespace CallerRetroBall.Controls
         {
             _upSprite = up;
             _downSprite = down;
+            if (_image != null) _image.sprite = IsHeld && down != null ? down : up;
         }
+
+        private Image _icon;
+
+        /// <summary>The pixel icon drawn above the label.</summary>
+        public void SetIcon(Image icon) => _icon = icon;
+
+        public void SetIconSprite(Sprite sprite)
+        {
+            if (_icon != null && _icon.sprite != sprite) _icon.sprite = sprite;
+        }
+
+        /// <summary>Kept for layouts that resize buttons; labels auto-size to the ring.</summary>
+        public void SetFontScale(float scale) { }
 
         public void SetLabel(string text)
         {
@@ -87,6 +101,7 @@ namespace CallerRetroBall.Controls
             var c = _baseColor;
             if (!Available) c = new Color(c.r * 0.55f, c.g * 0.55f, c.b * 0.55f, 0.75f);
             _image.color = c;
+            if (_icon != null) _icon.color = Available ? Color.white : new Color(1f, 1f, 1f, 0.45f);
             if (_hint != null && _hint.text.Length > 0 && Time.unscaledTime > _hintUntil) _hint.text = "";
         }
     }

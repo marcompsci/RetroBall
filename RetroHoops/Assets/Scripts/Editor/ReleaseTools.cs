@@ -235,6 +235,19 @@ namespace CallerRetroBall.EditorTools
             string.IsNullOrEmpty(id) || id == "com.retroball.game" || id == OldPersonalBundleId || id.StartsWith("com.Unity", StringComparison.Ordinal)
             || id.StartsWith("com.DefaultCompany", StringComparison.Ordinal);
 
+        /// <summary>
+        /// Portrait and both landscapes are allowed in Info.plist (Full Court 5-on-5 turns the screen);
+        /// the game itself locks portrait at boot and only goes landscape for Full Court.
+        /// </summary>
+        public static void EnsureOrientations()
+        {
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+            PlayerSettings.allowedAutorotateToPortrait = true;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+        }
+
         /// <summary>Moves the project off a placeholder (or the old personal-team) bundle ID.</summary>
         private static void EnsureBundleId()
         {
@@ -254,7 +267,7 @@ namespace CallerRetroBall.EditorTools
             PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneAndiPad;
             PlayerSettings.iOS.requiresFullScreen = true;
             PlayerSettings.statusBarHidden = true;
-            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            EnsureOrientations();
             // Unity 6 lets every licence turn off the "Made with Unity" splash.
             PlayerSettings.SplashScreen.show = false;
             // Release builds strip the dev-only cheats and checks (they're behind UNITY_EDITOR || DEBUG).
@@ -265,7 +278,7 @@ namespace CallerRetroBall.EditorTools
             AssetDatabase.SaveAssets();
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
-            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, iPhone + iPad (+ Mac as Designed for iPad), portrait, full screen, no splash.\n" +
+            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, iPhone + iPad (+ Mac as Designed for iPad), portrait (landscape for Full Court), full screen, no splash.\n" +
                    "Bundle ID: " + id + (IsPlaceholderId(id)
                        ? "  ← placeholder: change it to your own (e.g. com.yourname.retroball) before signing." : "");
         }
@@ -274,6 +287,7 @@ namespace CallerRetroBall.EditorTools
 
         private static void Build(iOSSdkVersion sdk, string output)
         {
+            EnsureOrientations();
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {

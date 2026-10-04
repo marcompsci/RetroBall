@@ -35,10 +35,10 @@ namespace CallerRetroBall.UI
 
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = ReferenceResolution / Mathf.Clamp(UiScale, 0.75f, 1.5f);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             // Tall phones favour width (big buttons); iPad / Mac aspects match height so nothing runs off screen.
-            scaler.matchWidthOrHeight = CallerRetroBall.Logic.CameraMath.UiMatch(Screen.height > 0 ? Screen.width / (float)Screen.height : 0.5f);
+            // Landscape (Full Court) lays out on 1920 x 1080 instead. AspectMatch keeps this right as the screen turns.
+            AspectMatch.Apply(scaler);
             scaler.referencePixelsPerUnit = 100f;
             go.AddComponent<AspectMatch>();
 

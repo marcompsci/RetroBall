@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using CallerRetroBall.Logic;
+using CallerRetroBall.Logic.PixelArt;
 using CallerRetroBall.UI;
+using CallerRetroBall.Utilities;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,10 +10,12 @@ using UnityEngine.UI;
 namespace CallerRetroBall.Controls
 {
     /// <summary>
-    /// On-screen controls for portrait play. Left thumb: floating joystick in the lower-left
-    /// zone. Right thumb: SHOOT (hold/release), PASS, DEF, and CALL, laid out in an arc so each
-    /// is reachable without looking. Presses go into an <see cref="InputBuffer"/> so slightly
-    /// early taps still count.
+    /// On-screen match controls. Left thumb: a floating stick (its base rests in the lower-left until
+    /// you touch). Right thumb: an arc of ring buttons in the corner, each with an icon and a label:
+    /// SHOOT (hold/release) on the outside, PASS beside it (it reads OOP when a lob is on), DUNK above,
+    /// LAYUP on the diagonal and CALL further in. On defence the same buttons turn into BLOCK, SWITCH
+    /// and STEAL. Positions and sizes come from <see cref="ControlLayout"/> (Settings ▸ CUSTOMIZE
+    /// CONTROLS). Presses go into an <see cref="InputBuffer"/> so slightly early taps still count.
     /// </summary>
     public sealed class TouchControls : MonoBehaviour
     {
@@ -21,27 +26,62 @@ namespace CallerRetroBall.Controls
         /// </summary>
         public enum Seat { Full = 0, Bottom = 1, Top = 2 }
 
+        public static readonly Color ShootColor = new Color32(0xFF, 0x4F, 0xA3, 255);
+        public static readonly Color PassColor = new Color32(0x3B, 0xD5, 0xFF, 255);
+        public static readonly Color DunkColor = new Color32(0xFF, 0x8C, 0x42, 255);
+        public static readonly Color LayupColor = new Color32(0x7C, 0xE5, 0x77, 255);
+        public static readonly Color CallColor = new Color32(0xB8, 0xB4, 0xD8, 255);
+        public static readonly Color StealColor = new Color32(0xFF, 0xD1, 0x66, 255);
+        public static readonly Color OopColor = new Color32(0xFF, 0xE0, 0x66, 255);
+
         public VirtualJoystick Joystick { get; private set; }
         public TouchActionButton Shoot { get; private set; }
         public TouchActionButton Pass { get; private set; }
-        public TouchActionButton Defense { get; private set; }
+        /// <summary>DUNK on offence, STEAL on defence.</summary>
+        public TouchActionButton Dunk { get; private set; }
+        public TouchActionButton Layup { get; private set; }
         public TouchActionButton Call { get; private set; }
+        /// <summary>The steal button (the DUNK button on defence).</summary>
+        public TouchActionButton Defense => Dunk;
+
+        public TouchActionButton this[ControlButton b]
+        {
+            get
+            {
+                switch (b)
+                {
+                    case ControlButton.Shoot: return Shoot;
+                    case ControlButton.Pass: return Pass;
+                    case ControlButton.Dunk: return Dunk;
+                    case ControlButton.Layup: return Layup;
+                    default: return Call;
+                }
+            }
+        }
 
         private InputBuffer _buffer;
         private Canvas _canvas;
+        private bool _defense;
+        private bool _oop;
+        private RectTransform _stickRest;
+
+        public Canvas Canvas => _canvas;
 
         /// <param name="leftHanded">Mirror the layout: stick on the right, buttons on the left.</param>
         /// <param name="largeButtons">Action buttons 25% bigger (accessibility).</param>
-        public static TouchControls Create(InputBuffer buffer, bool leftHanded = false, bool largeButtons = false, Seat seat = Seat.Full)
+        /// <param name="layout">Saved layout string (Settings ▸ CUSTOMIZE CONTROLS); empty = the default arc.</param>
+        public static TouchControls Create(InputBuffer buffer, bool leftHanded = false, bool largeButtons = false, Seat seat = Seat.Full,
+                                           string layout = null)
         {
             var canvas = UiKit.CreateScreenCanvas(seat == Seat.Top ? "TouchControlsCanvasP2" : "TouchControlsCanvas", 10);
             var controls = canvas.gameObject.AddComponent<TouchControls>();
             controls._canvas = canvas;
-            controls._buffer = buffer;
+            controls._buffer = buffer ?? new InputBuffer();
             controls._leftHanded = leftHanded;
             controls._seat = seat;
             // Half a screen each in tabletop play: slightly smaller buttons so both sets fit.
             controls._scale = (largeButtons ? 1.25f : 1f) * (seat == Seat.Full ? 1f : 0.82f);
+            controls._slots = ControlLayout.Parse(seat == Seat.Full ? layout : null);
             var safe = UiKit.SafeArea(canvas.transform);
             if (seat == Seat.Full)
             {
@@ -66,17 +106,26 @@ namespace CallerRetroBall.Controls
         private bool _leftHanded;
         private float _scale = 1f;
         private Seat _seat;
+        private ControlSlot[] _slots;
 
         private void Build(RectTransform safe)
         {
-            // Joystick zone: lower-left, generous so the thumb never has to aim.
+            // Joystick zone: the lower-left, generous so the thumb never has to aim.
             var zone = UiKit.NewRect("JoystickZone", safe);
-            zone.anchorMin = new Vector2(_leftHanded ? 0.45f : 0f, 0f);
-            zone.anchorMax = new Vector2(_leftHanded ? 1f : 0.55f, _seat == Seat.Full ? 0.48f : 0.92f);
+            zone.anchorMin = new Vector2(_leftHanded ? 0.55f : 0f, 0f);
+            zone.anchorMax = new Vector2(_leftHanded ? 1f : 0.45f, _seat == Seat.Full ? 0.5f : 0.92f);
             zone.offsetMin = zone.offsetMax = Vector2.zero;
             var zoneImage = zone.gameObject.AddComponent<Image>();
             zoneImage.color = new Color(0f, 0f, 0f, 0f); // invisible but receives touches
             zoneImage.raycastTarget = true;
+
+            // Where the stick rests when nobody's touching it: a faint ring so you know where to put your thumb.
+            var rest = UiKit.Panel(zone, new Color(1f, 1f, 1f, 0.22f), Theme.DiscSprite(new Color(0f, 0f, 0f, 0.2f), Theme.Cream), false, "StickRest");
+            _stickRest = rest.rectTransform;
+            _stickRest.anchorMin = _stickRest.anchorMax = new Vector2(_leftHanded ? 1f : 0f, 0f);
+            _stickRest.sizeDelta = new Vector2(300f, 300f);
+            _stickRest.anchoredPosition = new Vector2(_leftHanded ? -220f : 220f, 230f);
+            rest.raycastTarget = false;
 
             var baseRing = UiKit.Panel(zone, new Color(1f, 1f, 1f, 0.35f), Theme.DiscSprite(new Color(0f, 0f, 0f, 0.25f), Theme.Cream), false, "StickBase");
             baseRing.rectTransform.anchorMin = baseRing.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -87,71 +136,148 @@ namespace CallerRetroBall.Controls
 
             Joystick = zone.gameObject.AddComponent<VirtualJoystick>();
             Joystick.Init(zone, baseRing.rectTransform, knob.rectTransform);
+            Joystick.Moved += active => _stickRest.gameObject.SetActive(!active);
 
-            var hint = UiKit.Label(zone, "MOVE", 30f, new Color(1f, 1f, 1f, 0.35f), TextAlignmentOptions.Center, true);
-            UiKit.Place(hint.rectTransform, new Vector2(0.45f, 0.4f), new Vector2(300f, 60f));
+            var hint = UiKit.Label(_stickRest, "MOVE", 30f, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Center, true);
+            UiKit.Stretch(hint.rectTransform);
+            hint.raycastTarget = false;
 
-            // Action buttons, anchored to the lower-right corner of the safe area.
-            float k = _scale;
-            Shoot = MakeButton(safe, "SHOOT", 250f * k, Corner(-185f * k, 245f * k), Theme.Pink, 44f * k);
-            Pass = MakeButton(safe, "PASS", 180f * k, Corner(-440f * k, 165f * k), Theme.Cyan, 36f * k);
-            Defense = MakeButton(safe, "DEF", 160f * k, Corner(-175f * k, 520f * k), Theme.Gold, 32f * k);
-            Call = MakeButton(safe, "CALL", 130f * k, Corner(-420f * k, 420f * k), Theme.Muted, 28f * k);
-            if (_leftHanded)
-                foreach (var b in new[] { Shoot, Pass, Defense, Call })
-                {
-                    var rt = (RectTransform)b.transform;
-                    rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
-                }
+            // Action buttons, anchored to the lower-right corner of the safe area (lower-left when left-handed).
+            Shoot = MakeButton(safe, ControlButton.Shoot, "SHOOT", ShootColor);
+            Pass = MakeButton(safe, ControlButton.Pass, "PASS", PassColor);
+            Dunk = MakeButton(safe, ControlButton.Dunk, "DUNK", DunkColor);
+            Layup = MakeButton(safe, ControlButton.Layup, "LAYUP", LayupColor);
+            Call = MakeButton(safe, ControlButton.Call, "CALL", CallColor);
+            ApplyLayout(_slots);
 
             Shoot.Pressed += () => Press(ActionButton.Shoot);
             Pass.Pressed += () => Press(ActionButton.Pass);
-            Defense.Pressed += () => Press(ActionButton.Defense);
+            Dunk.Pressed += () => Press(_defense ? ActionButton.Defense : ActionButton.Dunk);
+            Layup.Pressed += () => Press(ActionButton.Layup);
             Call.Pressed += () => Press(ActionButton.Call);
         }
+
+        /// <summary>Places every button from a layout (the editor calls this while you drag).</summary>
+        public void ApplyLayout(ControlSlot[] slots)
+        {
+            _slots = slots;
+            foreach (var s in slots)
+            {
+                var b = this[s.Button];
+                var rt = (RectTransform)b.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(_leftHanded ? 0f : 1f, 0f);
+                rt.sizeDelta = new Vector2(s.Size * _scale, s.Size * _scale);
+                rt.anchoredPosition = Corner(s.X * _scale, s.Y * _scale);
+                b.SetFontScale(s.Size * _scale / ControlLayout.DefaultSize(s.Button));
+            }
+        }
+
+        public ControlSlot[] Slots => _slots;
+        public float Scale => _scale;
+        public bool LeftHanded => _leftHanded;
 
         private void Press(ActionButton b) => _buffer.Press(b, Time.unscaledTime);
 
         /// <summary>Offset from the lower-right corner, mirrored to the lower-left for left-handed play.</summary>
         private Vector2 Corner(float x, float y) => _leftHanded ? new Vector2(-x, y) : new Vector2(x, y);
 
-        private static TouchActionButton MakeButton(RectTransform parent, string text, float size, Vector2 fromCorner, Color color, float fontSize)
+        private static readonly Dictionary<string, Sprite> Faces = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<ControlIcon, Sprite> Icons = new Dictionary<ControlIcon, Sprite>();
+
+        public static Sprite Face(Color ring, bool pressed)
         {
-            var image = UiKit.Panel(parent, Color.white, Theme.DiscSprite(color, Theme.Shadow), false, "Btn " + text);
+            string key = ColorUtility.ToHtmlStringRGB(ring) + (pressed ? "p" : "");
+            if (Faces.TryGetValue(key, out var s) && s != null) return s;
+            var c32 = (Color32)ring;
+            s = TextureFactory.ToSprite(UiSkinGenerator.RingButton(new RgbColor(c32.r, c32.g, c32.b), pressed), "ui.ring." + key);
+            Faces[key] = s;
+            return s;
+        }
+
+        public static Sprite IconSprite(ControlIcon icon)
+        {
+            if (Icons.TryGetValue(icon, out var s) && s != null) return s;
+            s = TextureFactory.ToSprite(ControlIconGenerator.Generate(icon), "ui.icon." + icon);
+            Icons[icon] = s;
+            return s;
+        }
+
+        private static TouchActionButton MakeButton(RectTransform parent, ControlButton which, string text, Color color)
+        {
+            var image = UiKit.Panel(parent, Color.white, Face(color, false), false, "Btn " + text);
             image.raycastTarget = true;
             image.preserveAspect = true;
             var rt = image.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(size, size);
-            rt.anchoredPosition = fromCorner;
 
-            var label = UiKit.Label(rt, text, fontSize, Theme.Shadow, TextAlignmentOptions.Center, true);
-            UiKit.Stretch(label.rectTransform);
+            // Icon in the upper part of the ring, label underneath it.
+            var icon = UiKit.Panel(rt, Color.white, IconSprite(ControlIconGenerator.For(which, false)), false, "Icon");
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            icon.rectTransform.anchorMin = new Vector2(0.27f, 0.36f);
+            icon.rectTransform.anchorMax = new Vector2(0.73f, 0.82f);
+            icon.rectTransform.offsetMin = icon.rectTransform.offsetMax = Vector2.zero;
+
+            var label = UiKit.Label(rt, text, 30f, Theme.Cream, TextAlignmentOptions.Center, true);
+            label.rectTransform.anchorMin = new Vector2(0.05f, 0.1f);
+            label.rectTransform.anchorMax = new Vector2(0.95f, 0.36f);
+            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 14f;
+            label.fontSizeMax = 30f;
+            label.raycastTarget = false;
+            UiKit.ApplyTextShadow(label);
             var hint = UiKit.Label(rt, "", 24f, Theme.Cream, TextAlignmentOptions.Center, true, "Hint");
-            UiKit.Place(hint.rectTransform, new Vector2(0.5f, 1f), new Vector2(size, 40f));
+            UiKit.Place(hint.rectTransform, new Vector2(0.5f, 1f), new Vector2(260f, 40f));
             hint.rectTransform.anchoredPosition = new Vector2(0f, 24f);
 
             var button = image.gameObject.AddComponent<TouchActionButton>();
             button.Init(image, label, hint);
-            button.SetSprites(Theme.DiscSprite(color, Theme.Shadow), Theme.DiscPressedSprite(color));
+            button.SetIcon(icon);
+            button.SetSprites(Face(color, false), Face(color, true));
             return button;
         }
 
-        /// <summary>Contextual labels, e.g. SHOOT/PASS with the ball, SHOOT/ASK when a teammate has it.</summary>
-        public void SetLabels(string shoot, string pass, string defense)
+        /// <summary>Switches every button between its offence and defence role (labels, icons, ring colours).</summary>
+        public void SetRole(bool defense, bool oop)
+        {
+            if (defense == _defense && oop == _oop && _roleSet) return;
+            _roleSet = true;
+            _defense = defense;
+            _oop = oop && !defense;
+            SetButton(Shoot, ControlButton.Shoot, defense ? "BLOCK" : "SHOOT", ShootColor);
+            SetButton(Pass, ControlButton.Pass, defense ? "SWITCH" : (_oop ? "OOP" : "PASS"), _oop ? OopColor : PassColor);
+            SetButton(Dunk, ControlButton.Dunk, defense ? "STEAL" : "DUNK", defense ? StealColor : DunkColor);
+            SetButton(Layup, ControlButton.Layup, "LAYUP", LayupColor);
+            // Nothing to lay up on defence, and no plays to call.
+            Layup.gameObject.SetActive(!defense);
+            Call.gameObject.SetActive(!defense);
+        }
+
+        private bool _roleSet;
+
+        private void SetButton(TouchActionButton b, ControlButton which, string label, Color ring)
+        {
+            b.SetLabel(label);
+            b.SetIconSprite(IconSprite(ControlIconGenerator.For(which, _defense, _oop)));
+            b.SetSprites(Face(ring, false), Face(ring, true));
+        }
+
+        /// <summary>Labels for a button (e.g. SHOOT/CLEAR/WAIT).</summary>
+        public void SetLabels(string shoot, string pass, string dunk)
         {
             Shoot.SetLabel(shoot);
             Pass.SetLabel(pass);
-            Defense.SetLabel(defense);
+            Dunk.SetLabel(dunk);
         }
 
-        /// <summary>Marks which actions are usable right now (dimmed + "SOON"/no-op otherwise).</summary>
-        public void SetAvailability(bool shoot, bool pass, bool defense, bool call)
+        /// <summary>Marks which actions are usable right now (dimmed + a short hint otherwise).</summary>
+        public void SetAvailability(bool shoot, bool pass, bool dunk, bool layup, bool call)
         {
             Shoot.Available = shoot;
             Pass.Available = pass;
-            Defense.Available = defense;
+            Dunk.Available = dunk;
+            Layup.Available = layup;
             Call.Available = call;
         }
 
@@ -162,20 +288,31 @@ namespace CallerRetroBall.Controls
                 Joystick.Release();
                 Shoot.Release();
                 Pass.Release();
-                Defense.Release();
+                Dunk.Release();
+                Layup.Release();
                 Call.Release();
             }
             _canvas.enabled = visible;
         }
 
-        /// <summary>Stick direction in court space (+y away from the hoop = screen-down).</summary>
-        public Vec2 CourtMove
+        /// <summary>Raw stick, screen-up = +y.</summary>
+        public Vec2 ScreenStick
         {
             get
             {
                 var v = Joystick.Value;
                 // Player 2's controls are upside down: their "up" points down the screen.
-                return _seat == Seat.Top ? new Vec2(-v.x, v.y) : new Vec2(v.x, -v.y);
+                return _seat == Seat.Top ? new Vec2(-v.x, -v.y) : v;
+            }
+        }
+
+        /// <summary>Stick direction in court space for the portrait view (+y away from the hoop = screen-down).</summary>
+        public Vec2 CourtMove
+        {
+            get
+            {
+                var v = ScreenStick;
+                return new Vec2(v.x, -v.y);
             }
         }
     }

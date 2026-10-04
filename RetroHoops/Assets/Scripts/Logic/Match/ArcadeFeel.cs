@@ -56,7 +56,7 @@ namespace CallerRetroBall.Logic
             if (r.Team != Players[Ball.HolderIndex].Team || Time < r.StunnedUntil) return false;
             if (r.Def.attributes.finishing < Setup.Pass.alleyOopMinFinishing) return false;
             float dist = Setup.Court.DistanceToHoop(r.Position);
-            if (dist > Setup.Pass.alleyOopRange) return false;
+            if (dist > Setup.Pass.alleyOopRange && !(IsRunningBaseline(target) && dist <= BaselineOopRange)) return false;
             // The passer has to be away from the rim: a lob from under the basket makes no sense.
             return Setup.Court.DistanceToHoop(Players[Ball.HolderIndex].Position) >= Setup.Pass.alleyOopMinPassDistance;
         }

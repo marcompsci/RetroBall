@@ -62,7 +62,7 @@ namespace CallerRetroBall.Logic
 
             // In-game controls & callouts
             ["SHOOT"] = "TIRAR", ["PASS"] = "PASAR", ["ASK"] = "PEDIR", ["DEF"] = "DEF", ["CALL"] = "JUGADA", ["STEAL"] = "ROBAR",
-            ["JUMP"] = "SALTAR", ["SWITCH"] = "CAMBIO", ["CLEAR"] = "SACAR", ["NO BALL"] = "SIN BALÓN", ["OFFENSE"] = "ATAQUE",
+            ["JUMP"] = "SALTAR", ["BLOCK"] = "TAPÓN", ["DUNK"] = "MATE", ["LAYUP"] = "BANDEJA", ["OOP"] = "OOP", ["SWITCH"] = "CAMBIO", ["CLEAR"] = "SACAR", ["NO BALL"] = "SIN BALÓN", ["OFFENSE"] = "ATAQUE",
             ["TAKE IT BACK"] = "SÁCALA DEL ARCO", ["SOON"] = "PRONTO",
             ["CHECK BALL"] = "BALÓN AL CENTRO", ["YOUR BALL"] = "TU BALÓN", ["DEFENSE"] = "DEFENSA", ["CLEARED"] = "LIMPIA",
             ["BOARD!"] = "¡REBOTE!", ["PICKED OFF!"] = "¡INTERCEPTADO!", ["STOLEN"] = "ROBADO", ["STEAL!"] = "¡ROBO!",
@@ -133,7 +133,7 @@ namespace CallerRetroBall.Logic
             ["A teammate has it. Tap ASK"] = "La tiene un compañero. Toca PEDIR",
             ["Tap CALL and pick a play"] = "Toca JUGADA y elige una",
             ["Get close to the ball and tap STEAL"] = "Acércate al balón y toca ROBAR",
-            ["Tap JUMP to contest a shot"] = "Toca SALTAR para puntear un tiro",
+            ["Tap BLOCK to contest a shot"] = "Toca TAPÓN para puntear un tiro",
             ["Tutorial complete"] = "Tutorial completado",
 
             // Rise event cards

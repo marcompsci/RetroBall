@@ -146,3 +146,14 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Play ▸ WEEKLY & HOOPS PASS: three goals with bars, days left; play a game and the bars move; finishing a goal shows "WEEKLY DONE" on the post-game screen and pays SP.
 - [ ] Hoops Pass: tier and XP bar move after games and the daily; reaching tier 5 unlocks gear that shows as OWNED in the Locker Room cosmetics list (and pass gear you don't have shows "HOOPS PASS TIER n" with no BUY).
 - [ ] Pause ▸ PHOTO MODE: HUD and controls disappear; drag moves the view, - / + zoom; < > cycles filters; FRAME ON/OFF; SNAP opens the share sheet with a sharp PNG (Save Image → Photos); DONE puts the camera back and shows the pause menu; RESUME carries on.
+
+## Phase 24
+- [ ] Launch: the start screen shows the sunset court, the RETRO HOOPS logo and a spinning, bobbing ball with LOADING..., then the main menu.
+- [ ] In a game: ring buttons with icons in the lower-right (SHOOT, PASS, DUNK, LAYUP, CALL); on defence they read BLOCK, SWITCH, STEAL and LAYUP/CALL disappear.
+- [ ] DUNK next to the rim with a good finisher: goes straight up and dunks without holding anything. From the arc: runs at the rim and finishes. A weak finisher's DUNK becomes a layup. Pulling the stick away mid-drive stops the drive.
+- [ ] LAYUP: same, always a layup.
+- [ ] With the ball up top, a teammate sometimes cuts to the corner and runs the baseline; PASS turns gold "OOP"; tapping it lobs to them and they dunk it (ALLEY-OOP!).
+- [ ] Settings ▸ CUSTOMIZE CONTROLS: drag each button, resize with − / +, overlap warning, RESET, SAVE; the new layout is used in the next game and survives a relaunch; CANCEL discards.
+- [ ] Play ▸ FULL COURT: the phone turns to landscape, baskets left and right, players face the way they run, the hoops look right from the side, the camera follows the ball, buttons and stick fit; pause menu and the post-game screen fit; HOME returns to a portrait menu. Rematch stays landscape.
+- [ ] Legacy / Franchise / All-Star games (Full Court) also play in landscape.
+- [ ] Keyboard U / I and controller RB / LB dunk and lay up.

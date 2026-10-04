@@ -273,6 +273,10 @@ namespace CallerRetroBall.Logic
         Substitution = 29,
         /// <summary>Street rules: a crossover broke a defender's ankles (PlayerIndex = handler, Value = defender).</summary>
         AnkleBreaker = 30,
+        /// <summary>DUNK / LAYUP pressed away from the rim: the player attacks the basket (Value = <see cref="ShotType"/> wanted).</summary>
+        DriveStarted = 31,
+        /// <summary>A DUNK request that had to be a layup (too far out, or not enough finishing).</summary>
+        DunkToLayup = 32,
     }
 
     public struct MatchEvent
@@ -646,6 +650,7 @@ namespace CallerRetroBall.Logic
         {
             if (!Setup.Demo) HandleHuman(ControlledIndex, input);
             if (SecondControlledIndex >= 0) HandleHuman(SecondControlledIndex, _input2);
+            UpdateDrive();
             UpdatePlay();
             UpdateAi(dt);
             UpdateCharge(dt, input);
@@ -654,6 +659,7 @@ namespace CallerRetroBall.Logic
             for (int i = 0; i < Players.Length; i++)
             {
                 if (i == ChargingIndex) { _desired[i] = Vec2.Zero; continue; }
+                if (i == _driveIndex) { _desired[i] = DriveDesired(Players[i]); continue; }
                 // The inbounder stays on the baseline until the pass is away.
                 if (MustInbound && Ball.IsHeld && i == Ball.HolderIndex) { _desired[i] = Vec2.Zero; continue; }
                 if (i == ControlledIndex && !Setup.Demo) { _desired[i] = FrameMove(input.Move); continue; }
@@ -787,8 +793,18 @@ namespace CallerRetroBall.Logic
             bool teamHasBall = Ball.IsHeld && Players[Ball.HolderIndex].Team == team;
             if (hasBall && ChargingIndex < 0)
             {
-                if (input.ShootPressed && CanShoot(me)) BeginCharge(me, -1f);
-                else if (input.PassPressed) PassFrom(me, FrameMove(input.Move), -1);
+                if (input.ShootPressed && CanShoot(me)) { CancelDrive(); BeginCharge(me, -1f); }
+                else if ((input.DunkPressed || input.LayupPressed) && CanShoot(me)) StartFinish(me, input.DunkPressed);
+                else if (input.PassPressed)
+                {
+                    CancelDrive();
+                    // A teammate running the baseline (or sitting at the rim) turns PASS into an alley-oop lob.
+                    int oop = AlleyOopCandidate(me);
+                    PassFrom(me, FrameMove(input.Move), oop);
+                }
+                else if (_driveIndex == me && FrameMove(input.Move).SqrMagnitude > 0.5f
+                         && Vec2.Dot(FrameMove(input.Move).Normalized, (Setup.Court.Hoop - Players[me].Position).Normalized) < -0.3f)
+                    CancelDrive(); // pulled the stick away: back out of the drive
             }
             else if (input.PassPressed && teamHasBall && !IsHumanControlled(Ball.HolderIndex) && ChargingIndex != Ball.HolderIndex)
             {
@@ -814,7 +830,8 @@ namespace CallerRetroBall.Logic
         public int PreviewPassTarget(Vec2 aim)
         {
             if (!HumanHasBall) return -1;
-            return SelectPassTarget(ControlledIndex, FrameMove(aim));
+            int oop = AlleyOopCandidate(ControlledIndex);
+            return oop >= 0 ? oop : SelectPassTarget(ControlledIndex, FrameMove(aim));
         }
 
         // ------------------------------------------------------------------ shooting
@@ -849,7 +866,8 @@ namespace CallerRetroBall.Logic
             float meter = ChargeTime / fill;
             float overHold = 1f + Setup.Shot.overHoldSeconds / fill;
 
-            bool release = ChargingIndex == ControlledIndex && !Setup.Demo ? !input.ShootHeld
+            bool release = _autoRelease ? meter >= _aiReleaseMeter
+                         : ChargingIndex == ControlledIndex && !Setup.Demo ? !input.ShootHeld
                          : ChargingIndex == SecondControlledIndex ? !_input2.ShootHeld
                          : meter >= _aiReleaseMeter;
             if (release || meter >= overHold) ReleaseShot(ChargingIndex, meter);
@@ -860,6 +878,7 @@ namespace CallerRetroBall.Logic
             ChargingIndex = -1;
             ChargeTime = 0f;
             _aiReleaseMeter = -1f;
+            _autoRelease = false;
         }
 
         /// <summary>Builds the context for a shot from <paramref name="shooter"/> at <paramref name="meter"/>.</summary>
@@ -1098,6 +1117,7 @@ namespace CallerRetroBall.Logic
             Ball.Position = from.Position;
             Ball.Height = Setup.Flow.passHeight;
             _alleyOop = oop && receiver == target;
+            _oopToRunner = _alleyOop && IsRunningBaseline(target);
             _lastPasser = passer;
             OnPassForPlays(passer, receiver);
             Events.Add(new MatchEvent(MatchEventType.PassThrown, passer, from.Team, (int)type));
@@ -1165,7 +1185,7 @@ namespace CallerRetroBall.Logic
                     _lastCatchTime = Time;
                     Events.Add(new MatchEvent(MatchEventType.PassCaught, Ball.TargetIndex, receiver.Team));
                     // The finisher has to still be near the rim when the lob arrives.
-                    if (_alleyOop && Setup.Court.DistanceToHoop(receiver.Position) <= Setup.Pass.alleyOopRange + 1f)
+                    if (_alleyOop && Setup.Court.DistanceToHoop(receiver.Position) <= (_oopToRunner ? BaselineOopRange : Setup.Pass.alleyOopRange + 1f))
                     {
                         FinishAlleyOop(Ball.TargetIndex, Ball.PasserIndex);
                         return;

@@ -27,6 +27,8 @@ namespace CallerRetroBall.Logic
         public bool leftHanded;
         /// <summary>Action buttons 25% bigger.</summary>
         public bool largeButtons;
+        /// <summary>Settings ▸ CUSTOMIZE CONTROLS: button positions and sizes (<see cref="ControlLayout"/>); empty = default.</summary>
+        public string controlLayout = "";
         /// <summary>Tap SHOOT to start the meter and tap again to release (no holding).</summary>
         public bool tapToShoot;
         /// <summary>No screen shake, sparks, or score bounce.</summary>
