@@ -57,7 +57,7 @@ namespace CallerRetroBall.EditorTools
             proj.ReadFromFile(projPath);
             proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "GameKit.framework", false);
             proj.WriteToFile(projPath);
-            var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroBall.entitlements", null, proj.GetUnityMainTargetGuid());
+            var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroHoops.entitlements", null, proj.GetUnityMainTargetGuid());
             caps.AddGameCenter();
             // iCloud key-value storage for save sync (Settings ▸ ICLOUD SYNC). No documents, no CloudKit.
             caps.AddiCloud(true, false, false, false, new string[0]);

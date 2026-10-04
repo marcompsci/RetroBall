@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # One command from Unity project to Retro Hoops running in the iOS Simulator (macOS).
 #
-#   bash ~/RetroBall-push/tools/play_on_simulator.sh            # project at ~/RetroBall
-#   bash ~/RetroBall-push/tools/play_on_simulator.sh /path/to/project
+#   bash ~/RetroHoops-push/tools/play_on_simulator.sh            # project at ~/RetroHoops (or ~/RetroBall)
+#   bash ~/RetroHoops-push/tools/play_on_simulator.sh /path/to/project
 #
 # Quit the Unity Editor first (Unity can't open one project twice). Steps:
 #   1. Unity (batch mode) writes the Xcode project to <project>/iOSBuild/Simulator
@@ -11,10 +11,10 @@
 # Everything is logged to <project>/Logs/ so it can be shared if something fails.
 set -uo pipefail
 
-PROJECT="${1:-$HOME/RetroBall}"
+PROJECT="${1:-$( [[ -d $HOME/RetroHoops ]] && echo $HOME/RetroHoops || echo $HOME/RetroBall )}"
 LOGS="$PROJECT/Logs"
 mkdir -p "$LOGS"
-REPORT="$LOGS/RetroBall-release.txt"
+REPORT="$LOGS/RetroHoops-release.txt"
 note() { echo "$1"; printf '=== %s  play_on_simulator\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
 
 # Use the exact editor version the project was made with (another version would refuse to open it in batch mode).

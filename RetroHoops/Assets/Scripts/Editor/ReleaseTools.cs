@@ -319,7 +319,7 @@ namespace CallerRetroBall.EditorTools
         }
 
         /// <summary>
-        /// Appends a line to Logs/Retro Hoops-release.txt in the project, so readiness checks and build
+        /// Appends a line to Logs/RetroHoops-release.txt in the project, so readiness checks and build
         /// results can be read later (and shared) without copying them out of a dialog.
         /// </summary>
         public static void WriteReport(string text)
@@ -327,7 +327,7 @@ namespace CallerRetroBall.EditorTools
             try
             {
                 Directory.CreateDirectory("Logs");
-                File.AppendAllText(Path.Combine("Logs", "Retro Hoops-release.txt"),
+                File.AppendAllText(Path.Combine("Logs", "RetroHoops-release.txt"),
                     "=== " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  Unity " + Application.unityVersion + "\n" + text + "\n\n");
             }
             catch (System.Exception e)

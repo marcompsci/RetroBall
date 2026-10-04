@@ -1,6 +1,6 @@
 {
-    "name": "CallerRetroBall.Logic",
-    "rootNamespace": "CallerRetroBall.Logic",
+    "name": "RetroHoops.Logic",
+    "rootNamespace": "RetroHoops.Logic",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

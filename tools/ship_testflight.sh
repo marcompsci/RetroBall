@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Builds Retro Hoops for the App Store, archives it, and uploads it to App Store Connect (TestFlight).
 #
-#   bash ~/RetroBall-push/tools/ship_testflight.sh                 # build, archive, upload
-#   bash ~/RetroBall-push/tools/ship_testflight.sh --export-only   # build + archive + .ipa, no upload
-#   TEAM=ABCDE12345 bash ~/RetroBall-push/tools/ship_testflight.sh # pick the Apple team explicitly
+#   bash ~/RetroHoops-push/tools/ship_testflight.sh                 # build, archive, upload
+#   bash ~/RetroHoops-push/tools/ship_testflight.sh --export-only   # build + archive + .ipa, no upload
+#   TEAM=ABCDE12345 bash ~/RetroHoops-push/tools/ship_testflight.sh # pick the Apple team explicitly
 #
 # Before the first upload: create the app in App Store Connect with bundle ID com.phoronomicstudios.retroball
 # (docs/SUBMISSION.md, step 1). Quit the Unity Editor first. Xcode must be signed in to your paid
 # Apple Developer account (Xcode ▸ Settings ▸ Accounts). Logs go to <project>/Logs/.
 set -uo pipefail
 
-PROJECT="${PROJECT:-$HOME/RetroBall}"
+PROJECT="${PROJECT:-$( [[ -d $HOME/RetroHoops ]] && echo $HOME/RetroHoops || echo $HOME/RetroBall )}"
 UPLOAD=1
 for a in "$@"; do
   case "$a" in
@@ -20,7 +20,7 @@ for a in "$@"; do
 done
 LOGS="$PROJECT/Logs"
 mkdir -p "$LOGS"
-REPORT="$LOGS/RetroBall-release.txt"
+REPORT="$LOGS/RetroHoops-release.txt"
 note() { echo "$1"; printf '=== %s  ship_testflight\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
 # Everything printed below also goes to Logs/ship_console.log, so a failed run can be read afterwards.
 exec > >(tee "$LOGS/ship_console.log") 2>&1
@@ -43,7 +43,7 @@ fi
 if [[ ! "${TEAM:-}" =~ ^[A-Z0-9]{10}$ ]]; then
   note "STOPPED: no Apple Team ID for the paid team. Find it at developer.apple.com ▸ Account ▸ Membership details
 (10 letters/digits; also shown as the App ID Prefix on the com.phoronomicstudios identifiers), then either put it in
-~/RetroBall-push/tools/apple_team.txt or run:  TEAM=YOURTEAMID bash ~/RetroBall-push/tools/ship_testflight.sh"
+~/RetroHoops-push/tools/apple_team.txt or run:  TEAM=YOURTEAMID bash ~/RetroHoops-push/tools/ship_testflight.sh"
   exit 1
 fi
 if [[ "$TEAM" == "X6LZQ3FS36" ]]; then
@@ -53,7 +53,7 @@ fi
 echo "Team: $TEAM"
 
 OUT="$PROJECT/iOSBuild/AppStore"
-ARCHIVE="$PROJECT/iOSBuild/RetroBall.xcarchive"
+ARCHIVE="$PROJECT/iOSBuild/RetroHoops.xcarchive"
 EXPORT="$PROJECT/iOSBuild/Export"
 
 echo "1/3  Unity: App Store build (raises the build number; a few minutes)..."

@@ -17,7 +17,7 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 2. Press **Play** and set up the moment you want.
 3. Choose **Retro Hoops ▸ Release ▸ Capture Store Screenshot** (or press ⌘⇧K).
 4. The images save to `StoreScreenshots/` in the project, as opaque PNGs (no transparency).
-5. Every capture is also logged in `Logs/RetroBall-release.txt`.
+5. Every capture is also logged in `Logs/RetroHoops-release.txt`.
 
 **Shot list and captions** (put the captions on the image or leave them off)
 

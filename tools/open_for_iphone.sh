@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Builds the Retro Hoops Xcode project for a real iPhone and opens it in Xcode (macOS).
 #
-#   bash ~/RetroBall-push/tools/open_for_iphone.sh            # project at ~/RetroBall
+#   bash ~/RetroHoops-push/tools/open_for_iphone.sh            # project at ~/RetroHoops (or ~/RetroBall)
 #
 # Quit the Unity Editor first. Then, in Xcode: Signing & Capabilities > Team (your Apple ID),
 # choose your iPhone at the top, and press Run. Logs go to <project>/Logs/.
 set -uo pipefail
 
-PROJECT="${1:-$HOME/RetroBall}"
+PROJECT="${1:-$( [[ -d $HOME/RetroHoops ]] && echo $HOME/RetroHoops || echo $HOME/RetroBall )}"
 LOGS="$PROJECT/Logs"
 mkdir -p "$LOGS"
-REPORT="$LOGS/RetroBall-release.txt"
+REPORT="$LOGS/RetroHoops-release.txt"
 note() { echo "$1"; printf '=== %s  open_for_iphone\n%s\n\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$REPORT"; }
 
 VERSION="$(sed -n 's/^m_EditorVersion: //p' "$PROJECT/ProjectSettings/ProjectVersion.txt" 2>/dev/null | tr -d '[:space:]')"

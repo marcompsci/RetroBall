@@ -136,5 +136,5 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Play ▸ THE PARK: locked callers show "???"; CALL OUT plays their format (2-on-2 and 4-on-4 look right: everyone placed, plays work); sharp cuts near a defender sometimes show "ANKLES!" and the defender stops for a moment. After the game: rep change, then HOME reopens the Park.
 - [ ] Play ▸ TOURNAMENT BUILDER: SIZE / FORMAT / RANDOM FIELD / ADD / MINE; START only lights up with the right count; bracket, PLAY, results; win it → "<NAME> CHAMPIONS"; NEW TOURNAMENT / ABANDON.
 - [ ] Settings ▸ MUSIC PLAYER: a new song shows LOADING then plays without the screen freezing; switching songs repeatedly doesn't stutter.
-- [ ] Upload: double-click `tools/Ship RetroBall.command` (Unity closed) → `Logs/ship_console.log` is written whatever happens.
+- [ ] Upload: double-click `tools/Ship Retro Hoops.command` (Unity closed) → `Logs/ship_console.log` is written whatever happens.
 

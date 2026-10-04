@@ -1,15 +1,12 @@
 {
-    "name": "CallerRetroBall.Tests.EditMode",
+    "name": "RetroHoops.Tests.PlayMode",
     "rootNamespace": "CallerRetroBall.Tests",
     "references": [
-        "CallerRetroBall.Logic",
-        "CallerRetroBall.Runtime",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "RetroHoops.Logic",
+        "RetroHoops.Runtime",
+        "UnityEngine.TestRunner"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

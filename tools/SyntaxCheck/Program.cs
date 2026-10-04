@@ -8,7 +8,7 @@ public static class Program
 {
     public static int Main(string[] args)
     {
-        string root = args.Length > 0 ? args[0] : "../../CallerRetroBall/Assets";
+        string root = args.Length > 0 ? args[0] : "../../RetroHoops/Assets";
         var symbolSets = new[]
         {
             new[] { "UNITY_EDITOR", "ENABLE_INPUT_SYSTEM", "UNITY_INCLUDE_TESTS", "DEVELOPMENT_BUILD" },

@@ -1,13 +1,13 @@
 {
-    "name": "CallerRetroBall.Editor",
-    "rootNamespace": "CallerRetroBall.EditorTools",
+    "name": "RetroHoops.Runtime",
+    "rootNamespace": "CallerRetroBall",
     "references": [
-        "CallerRetroBall.Logic",
-        "CallerRetroBall.Runtime"
+        "RetroHoops.Logic",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

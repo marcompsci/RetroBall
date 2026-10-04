@@ -256,7 +256,7 @@
 - **Launch kit:** `docs/LAUNCH_KIT.md` (screenshot sizes and shot list with EN/ES captions, app preview
   storyboard, TestFlight checklist, privacy answers, launch-day list, press blurb); updated `APP_STORE.md`
   with the new features and a Spanish (Mexico) listing; **Capture Store Screenshot** saves opaque PNGs; the
-  readiness check and builds write `Logs/RetroBall-release.txt`.
+  readiness check and builds write `Logs/RetroHoops-release.txt`.
 
 ## Phase 17: party games, Dynasty, highlights, iPhone prep
 
@@ -274,14 +274,14 @@
   wide, encodes an animated GIF with an original encoder (`GifEncoder`, tested by decoding it back), saves it in
   the app's Highlights folder and opens the iOS share sheet (`RetroShare.mm`; Save Image needs
   `NSPhotoLibraryAddUsageDescription`, set by the build post-processor).
-- **iPhone prep:** iOS readiness checks, builds and screenshots are logged to `Logs/RetroBall-release.txt`;
+- **iPhone prep:** iOS readiness checks, builds and screenshots are logged to `Logs/RetroHoops-release.txt`;
   `tools/UnityCheck` compiles every assembly against Unity's own reference assemblies before delivery.
 
 ## Phase 18: Simulator, performance, onboarding, Season 3
 
 - **Run it:** `tools/play_on_simulator.sh` (quit Unity first) builds with the project's exact Unity version,
   compiles with xcodebuild for the Simulator (no signing), boots an iPhone simulator and launches the game;
-  every step logs to `Logs/` and failures are summarised in `Logs/RetroBall-release.txt`.
+  every step logs to `Logs/` and failures are summarised in `Logs/RetroHoops-release.txt`.
 - **Power:** `PowerMonitor` checks Low Power Mode and thermal state (iOS plugin `RetroPower.mm`) every 5 s;
   while saving power the screen runs at 60 fps and embers/crowd bobbing switch off. Settings ▸ SHOW FPS shows
   a rolling fps/avg/worst readout. Sim step and view sync have Profiler markers; spark bursts no longer
@@ -407,7 +407,7 @@
 - **Polish:** the PLAY menu is grouped (Play now, Careers, Events, With friends); composed songs are written
   on a worker thread so screens never hitch, and only the playing song stays in memory; two leaderboards.
 - **Ship it:** the upload script now logs every run to `Logs/ship_console.log`; double-click
-  `tools/Ship RetroBall.command`.
+  `tools/Ship Retro Hoops.command`.
 
 ## Deviations from the brief (deliberate)
 

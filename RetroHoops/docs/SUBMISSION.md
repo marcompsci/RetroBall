@@ -28,7 +28,7 @@ Follow `docs/GAME_CENTER.md`. Create every ID in the tables exactly as written. 
 Quit Unity, then in Terminal:
 
 ```bash
-bash ~/RetroBall-push/tools/ship_testflight.sh
+bash ~/RetroHoops-push/tools/ship_testflight.sh
 ```
 
 What it does:
@@ -37,7 +37,7 @@ What it does:
 2. `xcodebuild` archives it, signed automatically with your team.
 3. `xcodebuild` uploads it to App Store Connect.
 
-Every result is appended to `Logs/RetroBall-release.txt`. The detailed logs are `Logs/unity_build_appstore.log`, `Logs/xcodebuild_archive.log` and `Logs/xcodebuild_export.log`.
+Every result is appended to `Logs/RetroHoops-release.txt`. The detailed logs are `Logs/unity_build_appstore.log`, `Logs/xcodebuild_archive.log` and `Logs/xcodebuild_export.log`.
 
 - **To pick the team:** run `TEAM=YOURTEAMID bash ...`. The team ID is at developer.apple.com ▸ Account ▸ Membership details. Without it, the script uses Unity's Signing Team ID, or the team you picked last time in Xcode.
 - **To make the `.ipa` without uploading:** add `--export-only`.

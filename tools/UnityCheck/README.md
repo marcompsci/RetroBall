@@ -11,7 +11,7 @@ Run it:
 
 ```
 cd tools/UnityCheck
-dotnet run -c Release -- <refs folder> ../../CallerRetroBall/Assets
+dotnet run -c Release -- <refs folder> ../../RetroHoops/Assets
 ```
 
 It exits non-zero if any assembly has errors. Unity's own analyzers (UAC warnings) are not run.

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Builds the Retro Hoops Xcode project from the command line (macOS).
-#   tools/build_ios.sh            -> iOS Simulator build in CallerRetroBall/iOSBuild/Simulator
-#   tools/build_ios.sh device     -> device build in CallerRetroBall/iOSBuild/Device
+#   tools/build_ios.sh            -> iOS Simulator build in RetroHoops/iOSBuild/Simulator
+#   tools/build_ios.sh device     -> device build in RetroHoops/iOSBuild/Device
 # Close the project in the Unity Editor first (Unity can't open one project twice).
 # Override the editor with UNITY=/path/to/Unity.app/Contents/MacOS/Unity
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT="$ROOT/CallerRetroBall"
+PROJECT="$ROOT/RetroHoops"
 TARGET="${1:-simulator}"
 
 if [[ -z "${UNITY:-}" ]]; then

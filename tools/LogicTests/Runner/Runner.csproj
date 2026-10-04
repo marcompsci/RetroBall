@@ -12,6 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="../Logic/Logic.csproj" />
     <Compile Include="*.cs" />
-    <Compile Include="../../../CallerRetroBall/Assets/Tests/EditMode/Logic/**/*.cs" />
+    <Compile Include="../../../RetroHoops/Assets/Tests/EditMode/Logic/**/*.cs" />
   </ItemGroup>
 </Project>
