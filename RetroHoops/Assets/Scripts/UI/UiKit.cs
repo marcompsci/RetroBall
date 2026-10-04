@@ -37,8 +37,10 @@ namespace CallerRetroBall.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = ReferenceResolution / Mathf.Clamp(UiScale, 0.75f, 1.5f);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.35f; // portrait: favour width so tall phones don't shrink buttons
+            // Tall phones favour width (big buttons); iPad / Mac aspects match height so nothing runs off screen.
+            scaler.matchWidthOrHeight = CallerRetroBall.Logic.CameraMath.UiMatch(Screen.height > 0 ? Screen.width / (float)Screen.height : 0.5f);
             scaler.referencePixelsPerUnit = 100f;
+            go.AddComponent<AspectMatch>();
 
             go.AddComponent<GraphicRaycaster>();
             return canvas;

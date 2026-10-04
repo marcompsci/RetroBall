@@ -11,7 +11,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 ## 2. Identity and settings
 - ✅ Bundle ID `com.phoronomicstudios.retroball`.
 - ☐ Set your **Signing Team ID** in Player Settings, or choose the team in Xcode later.
-- ✅ **Retro Hoops ▸ Release ▸ Apply Release Player Settings:** version 1.0.0, build 1, iOS 15+, iPhone only, portrait, full screen, status bar hidden, Unity splash off, development build off.
+- ✅ **Retro Hoops ▸ Release ▸ Apply Release Player Settings:** version 1.0.0, build 1, iOS 15+, iPhone + iPad (Macs with Apple silicon run it as Designed for iPad), portrait, full screen, status bar hidden, Unity splash off, development build off.
 - ✅ `ship_testflight.sh` (Retro Hoops ▸ Release ▸ Build iOS (App Store)) raises the build number for every upload.
 
 ## 3. Icon and launch screen
@@ -36,7 +36,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ☐ Host the privacy policy and a support page, then paste the URLs.
 - ☐ App Privacy: **Data Not Collected**.
 - ☐ Age rating questionnaire: all **None** / **No**.
-- ☐ Upload screenshots (6.9" iPhone set, from **Retro Hoops ▸ Release ▸ Capture Store Screenshot**; see `docs/LAUNCH_KIT.md`).
+- ☐ Upload screenshots (6.9" iPhone set **and** 13" iPad set, from **Retro Hoops ▸ Release ▸ Capture Store Screenshot**; see `docs/LAUNCH_KIT.md`).
 - ☐ Upload with `bash ~/RetroHoops-push/tools/ship_testflight.sh` (build number goes up automatically). Full walkthrough: `docs/SUBMISSION.md`.
 - ☐ Install the build through TestFlight and play a full Rise season on it.
 - ☐ Submit for review with the review notes from `docs/APP_STORE.md`.

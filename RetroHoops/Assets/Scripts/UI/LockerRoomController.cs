@@ -470,6 +470,14 @@ namespace CallerRetroBall.UI
                                        28f, Theme.Muted), 80f);
         }
 
+        private static int PassTierOf(string id)
+        {
+            foreach (var set in HoopsPass.GearSets)
+                for (int i = 0; i < set.Length; i++)
+                    if (set[i] == id) return (i + 1) * 5;
+            return 0;
+        }
+
         private void CosmeticRow(CosmeticDef item, CareerSaveData career)
         {
             bool owned = career.ownedCosmetics.Contains(item.id);
@@ -487,6 +495,7 @@ namespace CallerRetroBall.UI
             swatchB.rectTransform.anchoredPosition = new Vector2(94f, 0f);
 
             string status = owned ? (equipped ? "<color=#4CC9F0>EQUIPPED</color>" : "<color=#8D99AE>OWNED</color>")
+                          : check == CosmeticCheck.PassOnly ? "<color=#9B4DFF>HOOPS PASS TIER " + PassTierOf(item.id) + "</color>"
                           : check == CosmeticCheck.NeedsFans ? "<color=#F72585>Needs " + item.fansRequired + " fans</color>"
                           : "<color=#FFD166>" + item.cost + " SP</color>";
             var text = UiKit.Label(card.transform, item.displayName.ToUpperInvariant() + "\n<size=75%>" + status + "</size>",

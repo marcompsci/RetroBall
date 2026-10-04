@@ -409,6 +409,25 @@
 - **Ship it:** the upload script now logs every run to `Logs/ship_console.log`; double-click
   `tools/Ship Retro Hoops.command`.
 
+### Phase 23: launch 1.0, iPad + Mac, online-free extras
+
+- **App icon "Sunset Swish"** (AppIconGenerator): ball dropping through the net under a backboard, striped
+  synthwave sun, neon grid floor, gold sparkles; 64x64 pixel art scaled to 1024, fully opaque.
+- **iPad + Mac:** release settings now target iPhone and iPad (portrait, full screen); Apple silicon Macs run
+  the iPad build as "Designed for iPad". The court camera picks the largest integer zoom that shows 11.5 m
+  across *and* 20 m top to bottom, so wide screens no longer crop the court (phones are unchanged). Canvases
+  match height on anything wider than 9:16 (and re-match when a window changes shape). iPad launch image set.
+  A keyboard (WASD/J/K/L) hides the touch controls like a controller does, until the next touch; Macs show
+  the keyboard hint. 13" iPad screenshot sizes accepted by Capture Store Screenshot.
+- **Weekly Challenges** (Play ▸ WEEKLY & HOOPS PASS): three goals each Monday from the week number (offline,
+  same for everyone), progress adds up over every game vs the CPU; +100 SP each, +150 for all three.
+- **Hoops Pass:** free 20-tier season track (6-week seasons): XP from games (+25, +15 for a win), weekly goals
+  (+120) and the daily (+60, once a day). Tiers pay SP; tiers 5/10/15/20 unlock pass-only gear (two alternating
+  sets of four; owned gear pays 250 SP instead). No purchases, no ads.
+- **Photo mode** (pause ▸ PHOTO MODE): frozen game, HUD hidden, drag/zoom (or stick/triggers), six filters
+  (Arcade scanlines, 4-Color dither, Dusk, Neon, Mono), optional frame with RETRO HOOPS, score and date;
+  SNAP samples one pixel per art pixel, scales up crisp, saves a PNG and opens the share sheet.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

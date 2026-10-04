@@ -257,6 +257,12 @@ namespace CallerRetroBall.Logic
         public StreetSaveData street = new StreetSaveData();
         /// <summary>Tournament Builder: the tournament in progress and titles.</summary>
         public CustomCupSaveData customCup = new CustomCupSaveData();
+        /// <summary>This week's Weekly Challenges progress.</summary>
+        public WeeklySaveData weekly = new WeeklySaveData();
+        /// <summary>The free Hoops Pass season track.</summary>
+        public PassSaveData pass = new PassSaveData();
+        /// <summary>Photo mode shots taken (for the badge).</summary>
+        public int photosTaken;
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Coach tips already shown.</summary>

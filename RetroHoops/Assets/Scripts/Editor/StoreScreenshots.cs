@@ -33,13 +33,15 @@ namespace CallerRetroBall.EditorTools
             Object.DestroyImmediate(shot);
             Object.DestroyImmediate(rgb);
 
-            string note = IsStoreSize(w, h) ? "" : "\n\nNote: " + w + "×" + h + " isn't an App Store size. Set the Game view to 1320×2868 (or 1290×2796 / 1260×2736).";
+            string note = IsStoreSize(w, h) ? "" : "\n\nNote: " + w + "×" + h + " isn't an App Store size. Set the Game view to 1320×2868 (or 1290×2796 / 1260×2736) for iPhone, 2064×2752 (or 2048×2732) for iPad.";
             Debug.Log("[Retro Hoops] Screenshot saved: " + Path.GetFullPath(path) + note);
             ReleaseTools.WriteReport("SCREENSHOT " + path + note);
         }
 
         /// <summary>6.9" iPhone portrait sizes App Store Connect accepts.</summary>
         public static bool IsStoreSize(int w, int h) =>
-            (w == 1320 && h == 2868) || (w == 1290 && h == 2796) || (w == 1260 && h == 2736);
+            (w == 1320 && h == 2868) || (w == 1290 && h == 2796) || (w == 1260 && h == 2736)
+            // 13" iPad (required now the app runs on iPad).
+            || (w == 2064 && h == 2752) || (w == 2048 && h == 2732);
     }
 }

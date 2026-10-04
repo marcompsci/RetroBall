@@ -54,7 +54,7 @@ Every result is appended to `Logs/RetroHoops-release.txt`. The detailed logs are
 
 | Item | What to enter |
 |---|---|
-| Screenshots | **6.9" iPhone** set: 1320×2868, 1290×2796 or 1260×2736 portrait. Use 3–10 from **Retro Hoops ▸ Release ▸ Capture Store Screenshot** (see `LAUNCH_KIT.md`). The app is iPhone-only, so no iPad screenshots are needed. |
+| Screenshots | **6.9" iPhone** set: 1320×2868, 1290×2796 or 1260×2736 portrait. Use 3–10 from **Retro Hoops ▸ Release ▸ Capture Store Screenshot** (see `LAUNCH_KIT.md`). **Plus a 13" iPad set** (2064×2752 or 2048×2732 portrait), required because the app runs on iPad. Mac: leave "Make this app available on Mac" on (App Store Connect ▸ Pricing and Availability); it runs as Designed for iPad, with keyboard (WASD + J/K/L/C) and controllers. |
 | Promotional text, description, keywords, subtitle | Copy from `docs/APP_STORE.md`, then add the Spanish (Mexico) localization from the same file. |
 | Support URL and Privacy Policy URL | **You** host these. A simple page is fine, and `docs/APP_STORE.md` has a privacy policy draft. |
 | Category | Games ▸ Sports (secondary: Games ▸ Arcade) |

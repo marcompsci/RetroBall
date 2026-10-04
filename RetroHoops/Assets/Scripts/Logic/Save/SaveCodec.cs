@@ -111,6 +111,9 @@ namespace CallerRetroBall.Logic
                 ["legacy"] = EncodeLegacy(d.legacy),
                 ["street"] = EncodeStreet(d.street),
                 ["customCup"] = EncodeCustomCup(d.customCup),
+                ["weekly"] = EncodeWeekly(d.weekly),
+                ["pass"] = EncodePass(d.pass),
+                ["photos"] = d.photosTaken,
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -536,6 +539,9 @@ namespace CallerRetroBall.Logic
                 d.legacy = DecodeLegacy(Obj(o, "legacy"));
                 d.street = DecodeStreet(Obj(o, "street"));
                 d.customCup = DecodeCustomCup(Obj(o, "customCup"));
+                d.weekly = DecodeWeekly(Obj(o, "weekly"));
+                d.pass = DecodePass(Obj(o, "pass"));
+                d.photosTaken = Math.Max(0, Int(o, "photos", 0));
                 CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");

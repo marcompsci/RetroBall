@@ -391,6 +391,12 @@ namespace CallerRetroBall.UI
             bool done = DailyChallenges.CompletedToday(career.daily, App.Today);
             int streak = DailyChallenges.LiveStreak(career.daily, App.Today);
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
+            career.weekly = career.weekly ?? new WeeklySaveData();
+            Weekly.Sync(career.weekly, App.Today);
+            int weeklyDone = career.weekly.done.FindAll(x => x).Count;
+            Mode(column, "WEEKLY & HOOPS PASS", weeklyDone + "/" + Weekly.Goals + " weekly goals  ·  pass tier "
+                 + (career.pass != null && career.pass.season == HoopsPass.SeasonOf(App.Today) ? HoopsPass.Tier(career.pass.xp) : 0) + "/" + HoopsPass.Tiers
+                 + "  ·  free gear", ShowWeekly, ButtonStyle.Secondary);
             Mode(column, "ALL-STAR CONTESTS", "Dunk Contest, 3-Point Contest and the All-Star Game.", () =>
             {
                 CloseOverlay();
@@ -408,7 +414,7 @@ namespace CallerRetroBall.UI
                  ShowTournamentBuilder, ButtonStyle.Secondary);
 
             Section(column, "WITH FRIENDS");
-            Mode(column, "2 PLAYER", "Head to head on one iPhone: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
+            Mode(column, "2 PLAYER", "Head to head on one iPhone or iPad: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
             Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);

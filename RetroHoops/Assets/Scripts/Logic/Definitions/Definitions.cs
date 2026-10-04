@@ -289,6 +289,8 @@ namespace CallerRetroBall.Logic
         /// <summary>Fans required before it can be bought (0 = none).</summary>
         public int fansRequired;
         public bool unlockedByDefault;
+        /// <summary>Only unlocked on the Hoops Pass track (never sold in the shop).</summary>
+        public bool passOnly;
         public RgbColor colorA;
         public RgbColor colorB;
 

@@ -138,3 +138,11 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Settings ▸ MUSIC PLAYER: a new song shows LOADING then plays without the screen freezing; switching songs repeatedly doesn't stutter.
 - [ ] Upload: double-click `tools/Ship Retro Hoops.command` (Unity closed) → `Logs/ship_console.log` is written whatever happens.
 
+
+## Phase 23
+- [ ] Home screen icon is the Sunset Swish icon (ball in the net, striped sun, neon grid).
+- [ ] iPad (device or simulator): launches portrait full screen; menus fit top to bottom with nothing cut off; in a game the whole half court and both stands fit above the touch controls; Full Court scrolls.
+- [ ] Mac (Apple silicon, from TestFlight/App Store as "Designed for iPad"): window opens, keyboard plays (WASD, K shoot, J pass, L steal, C call, Esc pause), touch controls hide after the first key, keyboard hint shows at tip-off; a controller works.
+- [ ] Play ▸ WEEKLY & HOOPS PASS: three goals with bars, days left; play a game and the bars move; finishing a goal shows "WEEKLY DONE" on the post-game screen and pays SP.
+- [ ] Hoops Pass: tier and XP bar move after games and the daily; reaching tier 5 unlocks gear that shows as OWNED in the Locker Room cosmetics list (and pass gear you don't have shows "HOOPS PASS TIER n" with no BUY).
+- [ ] Pause ▸ PHOTO MODE: HUD and controls disappear; drag moves the view, - / + zoom; < > cycles filters; FRAME ON/OFF; SNAP opens the share sheet with a sharp PNG (Save Image → Photos); DONE puts the camera back and shows the pause menu; RESUME carries on.

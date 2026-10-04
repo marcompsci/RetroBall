@@ -44,6 +44,26 @@ namespace CallerRetroBall.Logic
             return Math.Max(1, zoom);
         }
 
+        /// <summary>
+        /// Largest integer zoom that shows at least <paramref name="minVisibleWidth"/> across AND
+        /// <paramref name="minVisibleHeight"/> top to bottom. Phones are limited by width; wider screens
+        /// (iPad, a Mac window) by height, so the court still fits above the thumb zone.
+        /// </summary>
+        public static int IntegerZoom(int screenWidth, int screenHeight, float minVisibleWidth, float minVisibleHeight, float pixelsPerUnit)
+        {
+            int byWidth = IntegerZoom(screenWidth, minVisibleWidth, pixelsPerUnit);
+            if (minVisibleHeight <= 0f) return byWidth;
+            return Math.Min(byWidth, IntegerZoom(screenHeight, minVisibleHeight, pixelsPerUnit));
+        }
+
+        /// <summary>
+        /// CanvasScaler match for a screen aspect (width / height). Phones taller than 9:16 favour width
+        /// so buttons stay big. Anything wider (iPad 3:4, a Mac window) matches height, so the 1080x1920
+        /// layout never runs off the top or bottom. (At exactly 9:16 every match gives the same scale,
+        /// so there's no jump between the two.)
+        /// </summary>
+        public static float UiMatch(float aspect) => aspect <= 1080f / 1920f ? 0.35f : 1f;
+
         /// <summary>Orthographic size (half height in world units) for a given integer zoom.</summary>
         public static float OrthographicSize(int screenHeightPixels, int zoom, float pixelsPerUnit)
         {

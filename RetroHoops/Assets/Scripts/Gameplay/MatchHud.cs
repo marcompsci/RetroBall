@@ -22,6 +22,7 @@ namespace CallerRetroBall.Gameplay
         public event Action PlayOfTheGameRequested;
         /// <summary>Make a GIF of the play of the game and share / save it.</summary>
         public event Action ShareRequested;
+        public event Action PhotoRequested;
 
         private TextMeshProUGUI _teamA, _teamB, _scoreA, _scoreB, _clock, _shotClock, _toast;
         private GameObject _pausePanel;
@@ -119,10 +120,11 @@ namespace CallerRetroBall.Gameplay
             _pausePanel = scrim.gameObject;
 
             var column = UiKit.Column(scrim.transform, 28f, null, "PauseMenu");
-            UiKit.Band(column, 0.35f, 0.65f, 160f);
+            UiKit.Band(column, 0.3f, 0.7f, 160f);
             column.GetComponent<UnityEngine.UI.VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             UiKit.Size(UiKit.ShadowLabel(column, "PAUSED", 90f, Theme.Cream, Theme.Pink, 8f).transform.parent.GetComponent<RectTransform>(), 140f);
             UiKit.Button(column, "RESUME", () => ResumeRequested?.Invoke(), ButtonStyle.Primary, 150f);
+            UiKit.Button(column, "PHOTO MODE", () => PhotoRequested?.Invoke(), ButtonStyle.Secondary, 130f, 48f);
             UiKit.Button(column, "QUIT TO MENU", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 130f, 48f);
             _pausePanel.SetActive(false);
         }
@@ -357,6 +359,13 @@ namespace CallerRetroBall.Gameplay
         }
 
         public void ShowPause(bool visible) => _pausePanel.SetActive(visible);
+
+        /// <summary>Hides the whole HUD (photo mode) without changing what's open.</summary>
+        public void SetHudVisible(bool visible)
+        {
+            var canvas = GetComponent<Canvas>();
+            if (canvas != null) canvas.enabled = visible;
+        }
 
         /// <summary>Brief centre-screen callout ("STEAL!", "BALL!").</summary>
         public void Toast(string text, float seconds = 1.2f)

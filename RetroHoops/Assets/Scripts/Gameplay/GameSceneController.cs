@@ -78,6 +78,8 @@ namespace CallerRetroBall.Gameplay
         private bool _tooEarly, _tooLate;
         /// <summary>A controller is being used: hide the touch buttons and show controller hints.</summary>
         private bool _padMode;
+        /// <summary>The keyboard was used last (counts as pad mode for hiding the touch controls).</summary>
+        private bool _keyMode;
 
         // Phase 12: accessibility, leaps, crowd.
         private bool _reduceMotion;
@@ -236,6 +238,7 @@ namespace CallerRetroBall.Gameplay
             _hud.PauseRequested += () => SetPaused(true);
             _hud.ResumeRequested += () => SetPaused(false);
             _hud.QuitRequested += Quit;
+            _hud.PhotoRequested += OpenPhotoMode;
             _hud.RematchRequested += Rematch;
 
             _myCelebration = Flair.CelebrationFor(App.Career?.equippedCelebration);
@@ -408,6 +411,7 @@ namespace CallerRetroBall.Gameplay
                     return;
                 }
             }
+            else if (_photo != null) return;
             else if (EscapePressed() && !_match.IsOver) SetPaused(!_paused);
             if (_paused) return;
             if (Time.unscaledTime < _hitStopUntil)
@@ -500,9 +504,18 @@ namespace CallerRetroBall.Gameplay
             var pad = Gamepad.current;
             if (pad != null && (pad.leftStick.ReadValue().sqrMagnitude > 0.1f || pad.buttonSouth.wasPressedThisFrame || pad.buttonWest.wasPressedThisFrame))
                 _padMode = true;
+            // A keyboard (Mac, or an iPad keyboard) hides the touch controls too, until the next touch.
+            var keys = Keyboard.current;
+            if (keys != null && (keys.wKey.wasPressedThisFrame || keys.aKey.wasPressedThisFrame || keys.sKey.wasPressedThisFrame || keys.dKey.wasPressedThisFrame
+                                 || keys.jKey.wasPressedThisFrame || keys.kKey.wasPressedThisFrame || keys.lKey.wasPressedThisFrame
+                                 || keys.leftArrowKey.wasPressedThisFrame || keys.rightArrowKey.wasPressedThisFrame))
+            {
+                _padMode = true;
+                _keyMode = true;
+            }
             var touch = Pointer.current;
-            if (touch != null && touch.press.wasPressedThisFrame && Application.isMobilePlatform) _padMode = false;
-            if (Gamepad.all.Count == 0) _padMode = false;
+            if (touch != null && touch.press.wasPressedThisFrame && Application.isMobilePlatform) _padMode = _keyMode = false;
+            if (Gamepad.all.Count == 0 && !_keyMode) _padMode = false;
             if (was != _padMode && !_paused && !_finalShown && !Demo) SetTouchVisible(!_padMode);
 #endif
         }
@@ -1012,9 +1025,9 @@ namespace CallerRetroBall.Gameplay
             }
             // On a computer, show the keyboard controls for the first seconds of a match.
             if (Demo) return "DEMO PLAY  ·  TAP OR PRESS ANY BUTTON";
-            if (_padMode && _match.Time < 8f)
+            if (_padMode && !_keyMode && _match.Time < 8f)
                 return "STICK MOVE · A SHOOT (HOLD) · X PASS · B STEAL · Y CALL · START PAUSE";
-            if (!Application.isMobilePlatform && _match.Time < 8f)
+            if ((_keyMode || !Application.isMobilePlatform || Core.DeviceInfo.IsMac) && _match.Time < 8f)
                 return "WASD MOVE · K SHOOT (HOLD) · J PASS · L STEAL · C CALL · ESC PAUSE";
             if (_match.ActivePlay != PlayCall.None && _match.ActivePlayTeam == _match.Setup.HumanTeam) return PlayName(_match.ActivePlay);
             if (_match.IsBoxingOut(_match.ControlledIndex)) return "BOX OUT";
@@ -1262,6 +1275,19 @@ namespace CallerRetroBall.Gameplay
                     App.OpenClassicOnMenu = true;
                     note = ClassicText(outcome);
                     if (outcome == ClassicOutcome.Champion) title = "CLASSIC CHAMPS";
+                }
+                // Weekly Challenges and the Hoops Pass (every counted game; the daily adds its own pass XP once a day).
+                if (rewarded)
+                {
+                    var weekly = Weekly.ApplyGame(App.Career, App.Catalog, summary, App.Today, street != null);
+                    if (_daily != null && DailyChallenges.CompletedToday(App.Career.daily, _daily.Day))
+                        weekly.PassRewards.AddRange(HoopsPass.AddDailyXp(App.Career, App.Catalog, App.Today));
+                    string weeklyNote = weekly.Note();
+                    if (weeklyNote != null)
+                    {
+                        note = string.IsNullOrEmpty(note) ? weeklyNote : note + "\n" + weeklyNote;
+                        Sfx(SfxId.Coin, 0.8f);
+                    }
                 }
                 if (App.Career.rise.recruitable.Count > recruitsBefore)
                     note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "New players can join your crew (Rise hub ▸ YOUR CREW).";
@@ -1829,6 +1855,26 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>The All-Star Weekend lives in the Rise hub while it's open; otherwise the contests are on the main menu.</summary>
         private static string AllStarHost() => App.Career != null && AllStar.WeekendOpen(App.Career) ? SceneNames.Season : SceneNames.MainMenu;
+
+        private PhotoModeView _photo;
+
+        /// <summary>Photo mode from the pause menu: the game stays frozen until DONE brings the pause menu back.</summary>
+        private void OpenPhotoMode()
+        {
+            if (_photo != null || !_paused || Demo) return;
+            _hud.ShowPause(false);
+            _hud.SetHudVisible(false);
+            SetTouchVisible(false);
+            var s = _match.Setup;
+            string caption = (s.TeamA?.abbreviation ?? "HOME") + " " + _match.Score[0] + "-" + _match.Score[1] + " " + (s.TeamB?.abbreviation ?? "AWAY")
+                             + "  " + System.DateTime.Now.ToString("M/d/yy", System.Globalization.CultureInfo.InvariantCulture);
+            _photo = PhotoModeView.Open(Camera.main != null ? Camera.main : _cameraRig.GetComponent<Camera>(), caption, () =>
+            {
+                _photo = null;
+                _hud.SetHudVisible(true);
+                _hud.ShowPause(true);
+            });
+        }
 
         private void SetPaused(bool paused)
         {

@@ -177,6 +177,8 @@ namespace CallerRetroBall.EditorTools
 
             PlayerSettings.iOS.SetiPhoneLaunchScreenType(iOSLaunchScreenType.ImageAndBackgroundRelative);
             PlayerSettings.iOS.SetLaunchScreenImage(launch, iOSLaunchScreenImageType.iPhonePortraitImage);
+            PlayerSettings.iOS.SetiPadLaunchScreenType(iOSLaunchScreenType.ImageAndBackgroundRelative);
+            PlayerSettings.iOS.SetLaunchScreenImage(launch, iOSLaunchScreenImageType.iPadImage);
             PlayerSettings.SplashScreen.backgroundColor = new Color32(0x1A, 0x1A, 0x2E, 255);
 
             AssetDatabase.SaveAssets();
@@ -247,9 +249,9 @@ namespace CallerRetroBall.EditorTools
             if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int build) || build < 1) PlayerSettings.iOS.buildNumber = "1";
             PlayerSettings.iOS.targetOSVersionString = "15.0";
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
-            // iPhone only: the game is designed for portrait phones. (It still runs on iPad in iPhone
-            // mode, and App Store Connect then doesn't require iPad screenshots.)
-            PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneOnly;
+            // iPhone and iPad (portrait, full screen). Apple Silicon Macs run the iPad build as
+            // "Designed for iPad"; the camera and UI adapt to the wider screens, keyboard and controllers work.
+            PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneAndiPad;
             PlayerSettings.iOS.requiresFullScreen = true;
             PlayerSettings.statusBarHidden = true;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
@@ -263,7 +265,7 @@ namespace CallerRetroBall.EditorTools
             AssetDatabase.SaveAssets();
 
             string id = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.iOS);
-            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, iPhone, portrait, full screen, no splash.\n" +
+            return "Version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.iOS.buildNumber + "), iOS 15+, iPhone + iPad (+ Mac as Designed for iPad), portrait, full screen, no splash.\n" +
                    "Bundle ID: " + id + (IsPlaceholderId(id)
                        ? "  ← placeholder: change it to your own (e.g. com.yourname.retroball) before signing." : "");
         }

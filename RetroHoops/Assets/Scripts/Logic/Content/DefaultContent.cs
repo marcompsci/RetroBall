@@ -671,7 +671,23 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.move.step_back", "Step Back", CosmeticSlot.DribbleMove, 500, 1000, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.rocker_step", "Rocker Step", CosmeticSlot.DribbleMove, 450, 1100, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.snatch_back", "Snatch Back", CosmeticSlot.DribbleMove, 500, 1300, false, "#FFFFFF", "#FFFFFF"));
+            // Hoops Pass gear (Weekly.cs): never sold, only unlocked on the free pass track.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.vapor_court", "Vapor Court", CosmeticSlot.JerseyPalette, "#FF4FA3", "#3BD5FF"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.horizon", "Horizon Runners", CosmeticSlot.Shoes, "#FFE066", "#FF7A3D"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.neon_grid", "Neon Grid", CosmeticSlot.CourtBanner, "#9B4DFF", "#3BD5FF"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.sunset_swish", "Sunset Swish", CosmeticSlot.JerseyPalette, "#1B0B3A", "#FF7A3D"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.static_bloom", "Static Bloom", CosmeticSlot.JerseyPalette, "#2B2D42", "#EF233C"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.cloud_nine", "Cloud Nines", CosmeticSlot.Shoes, "#F8F8FF", "#8ECAE6"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.checker_flag", "Checker Flag", CosmeticSlot.CourtBanner, "#F4F1DE", "#14141F"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.tropic_night", "Tropic Night", CosmeticSlot.JerseyPalette, "#023047", "#FB8500"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.spin_cycle", "Spin Cycle", CosmeticSlot.DribbleMove, 450, 350, false, "#FFFFFF", "#FFFFFF"));
+        }
+
+        private static CosmeticDef PassGear(string id, string name, CosmeticSlot slot, string a, string b)
+        {
+            var d = Cosmetic(id, name, slot, 0, 0, false, a, b);
+            d.passOnly = true;
+            return d;
         }
 
         private static CosmeticDef Cosmetic(string id, string name, CosmeticSlot slot, int cost, int fans, bool unlocked, string a, string b)

@@ -14,6 +14,8 @@ namespace CallerRetroBall.Gameplay
     {
         /// <summary>Always keep at least this much court width visible (m).</summary>
         [SerializeField] private float minVisibleWidth = 11.5f;
+        /// <summary>And at least this much top to bottom (m): limits zoom on iPad and Mac, where width alone would crop the court.</summary>
+        [SerializeField] private float minVisibleHeight = 20f;
         [SerializeField] private float followStiffness = 5f;
         /// <summary>Share of the screen height reserved for the HUD above the court.</summary>
         [SerializeField] private float hudReserve = 0.1f;
@@ -100,7 +102,7 @@ namespace CallerRetroBall.Gameplay
             _lastHeight = Screen.height;
             _lastSafe = Screen.safeArea;
 
-            Zoom = CameraMath.IntegerZoom(Screen.width, minVisibleWidth, CourtSpace.PixelsPerUnit);
+            Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, minVisibleHeight, CourtSpace.PixelsPerUnit);
             _camera.orthographicSize = CameraMath.OrthographicSize(Screen.height, Zoom, CourtSpace.PixelsPerUnit);
 
             // Top of the court art (crowd strip) sits just below the HUD and the notch.
