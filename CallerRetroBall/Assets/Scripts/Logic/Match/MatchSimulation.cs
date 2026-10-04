@@ -70,6 +70,8 @@ namespace CallerRetroBall.Logic
         public bool HumanStartsHeated;
         /// <summary>1-on-1: only slot 0 of each team plays; the others sit out.</summary>
         public bool OneOnOne;
+        /// <summary>Street rules: sharp crossovers near a defender can break their ankles (they stumble).</summary>
+        public bool StreetRules;
         /// <summary>Full Court 5-on-5: both hoops, the picture turns when possession changes (see <see cref="FullCourt"/>).</summary>
         public bool FullCourt;
         /// <summary>Players per side: 3 (half court) or 5 (Full Court).</summary>
@@ -97,7 +99,8 @@ namespace CallerRetroBall.Logic
                 TeamB = c.Team(request.AwayTeamId),
                 Rules = c.Find(c.Rules, rulesId) ?? new GameRulesDef(),
                 FullCourt = full,
-                TeamSize = full ? Logic.FullCourt.TeamSize : MatchSimulation.PlayersPerTeam,
+                TeamSize = full ? Logic.FullCourt.TeamSize : (request.TeamSize >= 2 && request.TeamSize <= 4 ? request.TeamSize : MatchSimulation.PlayersPerTeam),
+                StreetRules = request.StreetRules,
                 Court = full ? Logic.FullCourt.Geometry() : CourtGeometry.Default,
                 // Half-court 3-on-3 is winners' ball; Full Court and 1-on-1 alternate possessions.
                 WinnersBall = !full && !drills && request.Mode != GameMode.OneOnOne,
@@ -268,6 +271,8 @@ namespace CallerRetroBall.Logic
         Violation = 28,
         /// <summary>Full Court substitution (PlayerIndex = the slot that changed player).</summary>
         Substitution = 29,
+        /// <summary>Street rules: a crossover broke a defender's ankles (PlayerIndex = handler, Value = defender).</summary>
+        AnkleBreaker = 30,
     }
 
     public struct MatchEvent
@@ -682,12 +687,57 @@ namespace CallerRetroBall.Logic
                 float scale = IsHumanControlled(i) || p.Team == Setup.HumanTeam ? 1f : AiProfile(p.Team).movementScale;
                 if (Time < p.ScreenedUntil) scale *= Setup.Defense.screenSlow;
                 float max = Movement.MaxSpeed(p.Def.attributes.speed, dribbling, tuning, scale) * StaminaSpeedFactor(p) * HeatSpeedFactor(p);
+                if (Setup.StreetRules && dribbling && !freezeAll) CheckAnkles(i, desired);
                 p.Motion = Movement.Step(p.Motion, desired, max, dt, tuning);
                 UpdateStamina(p, max, dt, freezeAll);
                 _scratch[i] = p.Motion.position;
             }
             Movement.Separate(_scratch, tuning.bodyRadius, Setup.Court);
             for (int i = 0; i < Players.Length; i++) Players[i].Motion.position = _scratch[i];
+        }
+
+        // ------------------------------------------------------------------ street: ankle breakers
+
+        public const float AnkleCutAngle = 110f;
+        public const float AnkleRange = 1.9f;
+        public const float AnkleStumbleSeconds = 0.9f;
+        public const float AnkleCooldown = 1.6f;
+        private Vec2[] _lastCut;
+        private float[] _ankleReadyAt;
+
+        /// <summary>Chance a sharp cut breaks this defender: the handler's handle and burst against the defender's feet.</summary>
+        public static float AnkleChance(AttributeSet handler, AttributeSet defender)
+        {
+            float handle = (handler.playmaking + handler.speed) * 0.5f;
+            float feet = (defender.defense + defender.speed) * 0.5f;
+            return Math.Max(0.08f, Math.Min(0.55f, 0.25f + (handle - feet) / 120f));
+        }
+
+        private void CheckAnkles(int i, Vec2 desired)
+        {
+            if (Phase != MatchPhase.Live) return;
+            if (_lastCut == null) { _lastCut = new Vec2[Players.Length]; _ankleReadyAt = new float[Players.Length]; }
+            if (desired.Magnitude < 0.5f) return;
+            var prev = _lastCut[i];
+            _lastCut[i] = desired;
+            if (prev.Magnitude < 0.5f || Time < _ankleReadyAt[i]) return;
+            float cos = (prev.x * desired.x + prev.y * desired.y) / (prev.Magnitude * desired.Magnitude);
+            if (cos > (float)Math.Cos(AnkleCutAngle * Math.PI / 180.0)) return;
+            var p = Players[i];
+            PlayerRuntimeState victim = null;
+            float best = AnkleRange;
+            foreach (var d in Players)
+            {
+                if (d.Team == p.Team || IsBenched(d.Index) || Time < d.StunnedUntil) continue;
+                float dist = Vec2.Distance(d.Position, p.Position);
+                if (dist < best) { best = dist; victim = d; }
+            }
+            if (victim == null) return;
+            _ankleReadyAt[i] = Time + AnkleCooldown;
+            if (_rng.NextFloat() >= AnkleChance(p.Def.attributes, victim.Def.attributes)) return;
+            victim.StunnedUntil = Time + AnkleStumbleSeconds;
+            Stats[i].ankleBreakers++;
+            Events.Add(new MatchEvent(MatchEventType.AnkleBreaker, i, p.Team, victim.Index));
         }
 
         private void TickClocks(float dt)

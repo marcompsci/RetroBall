@@ -108,6 +108,9 @@ namespace CallerRetroBall.Logic
                 ["franchise"] = EncodeFranchise(d.franchise),
                 ["allStar"] = EncodeAllStar(d.allStar),
                 ["courts"] = EncodeCourts(d.courts),
+                ["legacy"] = EncodeLegacy(d.legacy),
+                ["street"] = EncodeStreet(d.street),
+                ["customCup"] = EncodeCustomCup(d.customCup),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -530,6 +533,9 @@ namespace CallerRetroBall.Logic
                 d.franchise = DecodeFranchise(Obj(o, "franchise"));
                 d.allStar = DecodeAllStar(Obj(o, "allStar"));
                 d.courts = DecodeCourts(Arr(o, "courts"));
+                d.legacy = DecodeLegacy(Obj(o, "legacy"));
+                d.street = DecodeStreet(Obj(o, "street"));
+                d.customCup = DecodeCustomCup(Obj(o, "customCup"));
                 CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");
@@ -567,7 +573,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.AllStar ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.CustomCup ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });

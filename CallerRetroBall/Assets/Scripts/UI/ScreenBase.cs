@@ -58,7 +58,8 @@ namespace CallerRetroBall.UI
         }
 
         private static bool PanelOpen() =>
-            FindAnyObjectByType<FranchiseScreen>() != null || FindAnyObjectByType<AllStarScreen>() != null || FindAnyObjectByType<MusicPlayer>() != null;
+            FindAnyObjectByType<FranchiseScreen>() != null || FindAnyObjectByType<AllStarScreen>() != null || FindAnyObjectByType<MusicPlayer>() != null
+            || FindAnyObjectByType<LegacyScreen>() != null;
 
         private static bool BackPressedThisFrame()
         {

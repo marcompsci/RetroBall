@@ -347,6 +347,15 @@ namespace CallerRetroBall.Logic
                 "Teclado: J1 WASD · K J L C, J2 flechas · Num1 Num2 Num3 Num0.",
             ["Optional. Posts your best marks to leaderboards and unlocks achievements. The game works the same without it."] =
                 "Opcional. Publica tus mejores marcas en las clasificaciones y desbloquea logros. El juego funciona igual sin él.",
+            // Phase 22: Legacy, The Park, Tournament Builder, menu sections
+            ["PLAY NOW"] = "JUGAR YA", ["CAREERS"] = "CARRERAS", ["EVENTS"] = "EVENTOS", ["WITH FRIENDS"] = "CON AMIGOS",
+            ["LEGACY"] = "LEGADO", ["START LEGACY"] = "EMPEZAR LEGADO", ["SKILLS"] = "HABILIDADES", ["SPONSORS"] = "PATROCINADORES",
+            ["THE PARK"] = "EL PARQUE", ["CALL OUT"] = "RETAR", ["TOURNAMENT BUILDER"] = "CREADOR DE TORNEOS", ["RANDOM FIELD"] = "EQUIPOS AL AZAR",
+            ["ANKLES!"] = "¡TOBILLOS!", ["GOT YOU!"] = "¡TE TENGO!", ["RECRUITING"] = "RECLUTAMIENTO", ["DRAFT NIGHT"] = "NOCHE DEL DRAFT",
+            ["HEAR YOUR NAME"] = "ESCUCHA TU NOMBRE", ["OFF-SEASON"] = "RECESO", ["RETIRE"] = "RETIRARSE", ["HALL OF FAME"] = "SALÓN DE LA FAMA",
+            ["LEARN"] = "APRENDER", ["LEARNED"] = "APRENDIDA", ["HIRE"] = "CONTRATAR", ["COMMIT"] = "COMPROMETERSE", ["DECLARE"] = "DECLARARSE",
+            ["NEW LEGACY"] = "NUEVO LEGADO", ["START OVER"] = "EMPEZAR DE NUEVO", ["ABANDON"] = "ABANDONAR", ["NEW TOURNAMENT"] = "NUEVO TORNEO",
+            ["SIM GAME (HALF XP)"] = "SIMULAR (MITAD DE XP)", ["LOADING"] = "CARGANDO",
             // Phase 21: Franchise, All-Star Weekend, Court Builder, Music Player
             ["FRANCHISE"] = "FRANQUICIA", ["ROSTER"] = "PLANTILLA", ["TRADE"] = "TRASPASO",
             ["LEAGUE"] = "LIGA", ["MARKET"] = "MERCADO", ["DRAFT"] = "DRAFT",

@@ -104,6 +104,9 @@ namespace CallerRetroBall.Audio
 
         public static bool IsPlaying => _instance != null && _instance._music.isPlaying;
 
+        /// <summary>A composed song is still being written.</summary>
+        public static bool IsLoading => _instance != null && _instance._pending != null;
+
         /// <summary>Plays one soundtrack track now (the Music Player). Composed songs are written the first
         /// time they're played (about a second) and only the current one is kept in memory.</summary>
         public static void PlayTrack(int track)
@@ -111,17 +114,49 @@ namespace CallerRetroBall.Audio
             if (_instance == null) return;
             if (track < 0 || track >= Soundtrack.Count) track = 0;
             if (_instance._track == track && _instance._music.isPlaying) return;
-            int old = _instance._track;
+            if (_instance._tracks[track] == null && track >= Soundtrack.ClassicCount)
+            {
+                // Composed songs are written on a worker thread so loading a screen never hitches;
+                // the clip starts as soon as its samples are ready (Update picks it up).
+                _instance._track = track;
+                _instance._pendingTrack = track;
+                int t = track;
+                _instance._pending = System.Threading.Tasks.Task.Run(() => Soundtrack.Render(t));
+                return;
+            }
             if (_instance._tracks[track] == null)
                 _instance._tracks[track] = MakeClip("music.track" + track, Soundtrack.Render(track));
+            StartClip(track);
+        }
+
+        private System.Threading.Tasks.Task<float[]> _pending;
+        private int _pendingTrack = -1;
+
+        private void Update()
+        {
+            if (_pending == null || !_pending.IsCompleted) return;
+            var task = _pending;
+            int track = _pendingTrack;
+            _pending = null;
+            _pendingTrack = -1;
+            if (task.IsFaulted || task.Result == null) return;
+            if (_tracks[track] == null) _tracks[track] = MakeClip("music.track" + track, task.Result);
+            // Only start it if nothing else was asked for while it was being written.
+            if (_track == track) StartClip(track);
+        }
+
+        private static void StartClip(int track)
+        {
             _instance._track = track;
             _instance._music.clip = _instance._tracks[track];
             _instance._music.Play();
-            if (old >= Soundtrack.ClassicCount && old != track && _instance._tracks[old] != null)
-            {
-                Destroy(_instance._tracks[old]);
-                _instance._tracks[old] = null;
-            }
+            // Keep only the composed song that's playing (each is several MB); the three loops stay cached.
+            for (int i = Soundtrack.ClassicCount; i < _instance._tracks.Length; i++)
+                if (i != track && _instance._tracks[i] != null)
+                {
+                    Destroy(_instance._tracks[i]);
+                    _instance._tracks[i] = null;
+                }
         }
 
         public static void StopMusic()

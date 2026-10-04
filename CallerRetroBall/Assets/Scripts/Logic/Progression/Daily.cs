@@ -211,6 +211,9 @@ namespace CallerRetroBall.Logic
         public const string BoardPoints = "retroball.lb.game_points";
         // Phase 21.
         public const string BoardDunk = "retroball.lb.dunk_round";
+        // Phase 22.
+        public const string BoardStreetRep = "retroball.lb.street_rep";
+        public const string BoardLegacy = "retroball.lb.legacy_points";
 
         public static readonly List<AchievementInfo> All = new List<AchievementInfo>
         {
@@ -256,6 +259,8 @@ namespace CallerRetroBall.Logic
             L(BoardWinStreak, "Best Win Streak", false, "Integer", d => d.records?.bestWinStreak ?? 0),
             L(BoardPoints, "Most Points in a Game", false, "Integer", d => d.records?.points ?? 0),
             L(BoardDunk, "Best Dunk Contest Round", false, "Integer", d => d.allStar?.bestDunk ?? 0),
+            L(BoardStreetRep, "Street Rep", false, "Integer", d => d.street?.rep ?? 0),
+            L(BoardLegacy, "Legacy Points", false, "Integer", d => d.legacy?.legacyPoints ?? 0),
         };
 
         public static readonly string[] AllAchievements = All.ConvertAll(a => a.Id).ToArray();

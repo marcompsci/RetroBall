@@ -28,6 +28,8 @@ In App Store Connect, open **App ▸ Features ▸ Game Center**. The IDs must ma
 | `retroball.lb.win_streak` | Best Win Streak | High to low | Integer |
 | `retroball.lb.game_points` | Most Points in a Game | High to low | Integer |
 | `retroball.lb.dunk_round` | Best Dunk Contest Round | High to low | Integer |
+| `retroball.lb.street_rep` | Street Rep | High to low | Integer |
+| `retroball.lb.legacy_points` | Legacy Points | High to low | Integer |
 
 "Around the World" scores are sent in hundredths of a second (41.23 s = 4123), which is the format Game Center's "Elapsed time (to the hundredth of a second)" expects. A leaderboard only receives a score once you have one: zeros are never sent.
 

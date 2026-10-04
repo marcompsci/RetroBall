@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace CallerRetroBall.UI
 {
     /// <summary>Main menu: career strip, title, five mode buttons, Quick Call and Practice pickers.</summary>
-    public sealed class MainMenuController : ScreenBase
+    public sealed partial class MainMenuController : ScreenBase
     {
         protected override string BackdropCourtId => "court.sunset_cage";
         protected override uint BackdropSeed => 7;
@@ -104,6 +104,21 @@ namespace CallerRetroBall.UI
             {
                 App.OpenFranchiseOnMenu = false;
                 FranchiseScreen.Open();
+            }
+            else if (App.OpenParkOnMenu)
+            {
+                App.OpenParkOnMenu = false;
+                ShowPark();
+            }
+            else if (App.OpenCustomCupOnMenu)
+            {
+                App.OpenCustomCupOnMenu = false;
+                ShowTournamentBuilder();
+            }
+            else if (App.OpenLegacyOnMenu)
+            {
+                App.OpenLegacyOnMenu = false;
+                LegacyScreen.Open();
             }
             else if (App.OpenAllStar)
             {
@@ -345,9 +360,24 @@ namespace CallerRetroBall.UI
         private void ShowPlayMenu()
         {
             var column = OpenOverlay("PLAY", out var footer);
+            var career = App.Career;
+
+            Section(column, "PLAY NOW");
             Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);
             Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
-            var fr = App.Career.franchise;
+            Mode(column, "THE PARK", "Call out street legends, 1-on-1 to 4-on-4. Break ankles. Rep: " + Street.RepNames[Street.RepLevel(career.street.rep)], ShowPark, ButtonStyle.Secondary);
+            Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
+            Mode(column, "HOLIDAY GAMES", "Christmas, Halloween, Easter and Fourth of July courts.", () => ShowHolidays(), ButtonStyle.Secondary);
+
+            Section(column, "CAREERS");
+            var lg = career.legacy;
+            Mode(column, "LEGACY", lg != null && lg.active ? Legacy.StageName(lg).ToLowerInvariant() + "  ·  age " + lg.age
+                : "Your player's career: high school, college, the draft, the pros, the Hall of Fame.", () =>
+            {
+                CloseOverlay();
+                LegacyScreen.Open();
+            }, ButtonStyle.Secondary);
+            var fr = career.franchise;
             Mode(column, "FRANCHISE", fr != null && fr.active
                 ? "Year " + fr.year + "  ·  " + Franchise.PhaseName(fr.phase).ToLowerInvariant() + "  ·  titles " + fr.titles
                 : "Be the GM: trades, free agency, the draft, season after season.", () =>
@@ -355,30 +385,41 @@ namespace CallerRetroBall.UI
                 CloseOverlay();
                 FranchiseScreen.Open();
             }, ButtonStyle.Secondary);
-            Mode(column, "HOLIDAY GAMES", "Christmas, Halloween, Easter and Fourth of July courts.", () => ShowHolidays(), ButtonStyle.Secondary);
 
+            Section(column, "EVENTS");
             var today = DailyChallenges.For(App.Today, App.Catalog);
-            bool done = DailyChallenges.CompletedToday(App.Career.daily, App.Today);
-            int streak = DailyChallenges.LiveStreak(App.Career.daily, App.Today);
+            bool done = DailyChallenges.CompletedToday(career.daily, App.Today);
+            int streak = DailyChallenges.LiveStreak(career.daily, App.Today);
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
-            Mode(column, "2 PLAYER", "Head to head on one iPhone: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
-            Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + App.Career.classic.titles, ShowClassic, ButtonStyle.Secondary);
-            var arcade = App.Career.secrets.arcade;
-            Mode(column, "ARCADE LADDER", arcade.active
-                ? "Stage " + (arcade.rung + 1) + " of " + ArcadeEngine.Rungs + "  ·  continues " + arcade.continues
-                : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
-            Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
-            Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
             Mode(column, "ALL-STAR CONTESTS", "Dunk Contest, 3-Point Contest and the All-Star Game.", () =>
             {
                 CloseOverlay();
                 AllStarScreen.Open(false);
             }, ButtonStyle.Secondary);
-            Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
-            var cup = App.Career.cup;
+            var arcade = career.secrets.arcade;
+            Mode(column, "ARCADE LADDER", arcade.active
+                ? "Stage " + (arcade.rung + 1) + " of " + ArcadeEngine.Rungs + "  ·  continues " + arcade.continues
+                : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
+            Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + career.king.best, ShowKing, ButtonStyle.Secondary);
+            var cup = career.cup;
             Mode(column, "CALLER CUP", cup.Active ? "In progress  ·  titles " + cup.titles : "Eight-team knockout. Titles: " + cup.titles, ShowCup, ButtonStyle.Secondary);
+            Mode(column, "FIRST CALL CLASSIC", "Four-team knockout. Titles won: " + career.classic.titles, ShowClassic, ButtonStyle.Secondary);
+            Mode(column, "TOURNAMENT BUILDER", career.customCup.Active ? career.customCup.name + " in progress" : "Build a bracket: 4, 8 or 16 teams, 2-on-2 to Full Court.",
+                 ShowTournamentBuilder, ButtonStyle.Secondary);
+
+            Section(column, "WITH FRIENDS");
+            Mode(column, "2 PLAYER", "Head to head on one iPhone: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
+            Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
+        }
+
+        /// <summary>A small gold section heading in a menu list.</summary>
+        private static void Section(Transform column, string title)
+        {
+            var label = UiKit.Label(column, title, 30f, Theme.Gold, TextAlignmentOptions.Left, true);
+            UiKit.Size(label, 64f);
+            label.alignment = TextAlignmentOptions.BottomLeft;
         }
 
         private static void Mode(Transform column, string name, string detail, System.Action onClick, ButtonStyle style)

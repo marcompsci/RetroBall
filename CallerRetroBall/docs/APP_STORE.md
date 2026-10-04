@@ -32,6 +32,12 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > **FRANCHISE**
 > Be the GM of a league club, season after season. Set the rotation, trade with seven other GMs, re-sign your players, chase free agents under the salary cap, scout prospects, and win the draft lottery. Players age, improve, decline, and retire into the Hall of Fame. Play every game Full Court 5-on-5, or simulate.
 >
+> **LEGACY**
+> Take your own player from a high-school senior to the pros: recruiting stars, college or straight to the draft, draft night, contracts, sponsors, a skill tree, story choices, and a Hall of Fame vote.
+>
+> **THE PARK**
+> Call out twelve street legends, 1-on-1 up to 4-on-4. Street rules, make it take it, and crossovers that break ankles.
+>
 > **RISE MODE**
 > Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, rivals and story scenes. Halfway through, it's the All-Star Weekend.
 >
@@ -45,6 +51,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > • Arcade Ladder with a secret boss, King of the Court, The Caller Cup
 > • Holiday Games on Christmas, Halloween, Easter and Fourth of July courts
 > • 1-on-1, a Daily Challenge, H-O-R-S-E, 21 and more party games
+> • Tournament Builder: your own 4, 8 or 16-team bracket
 > • 2 Player on one iPhone, face to face
 >
 > **MAKE IT YOURS**
@@ -62,7 +69,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 >
 > All teams, players, courts, art and music are original.
 
-*(2316 characters without the quote markers.)*
+*(2,715 characters without the quote markers.)*
 
 ## Spanish (Mexico) localization
 

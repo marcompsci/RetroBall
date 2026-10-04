@@ -813,6 +813,15 @@ namespace CallerRetroBall.Gameplay
                         _hud.Toast(MatchSimulation.ViolationName((ViolationKind)e.Value), 1.3f);
                         Sfx(SfxId.Whistle, 0.8f);
                         break;
+                    case MatchEventType.AnkleBreaker:
+                        // Street rules: the defender stumbles.
+                        if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.Value].Position, 0.5f), new Color32(0xFF, 0xD1, 0x66, 255), 12, 3f, 0.5f);
+                        _hud.Toast(e.Team == human ? "ANKLES!" : "GOT YOU!", 1.2f);
+                        Sfx(SfxId.CrowdCheer, 0.9f);
+                        Sfx(SfxId.Squeak, 0.8f, 0.8f);
+                        _cameraRig.Shake(0.15f);
+                        if (e.Team == human) { Haptics.Medium(); Audio.AudioManager.Voice("OOOH!"); }
+                        break;
                     case MatchEventType.Substitution:
                         RedrawPlayer(e.PlayerIndex);
                         if (e.Team == human) _hud.Toast("SUB: " + _match.Players[e.PlayerIndex].Def.lastName.ToUpperInvariant() + " IN", 1.1f);
@@ -1176,6 +1185,46 @@ namespace CallerRetroBall.Gameplay
                         note = "Next: " + CupEngine.RoundName(nextCup.round);
                     else if (cupOutcome == CupOutcome.Eliminated)
                         note = "Knocked out. Champion: " + (App.Catalog.Team(App.Career.cup.championId)?.FullName ?? "?");
+                }
+                if (rewarded && _request.Mode == GameMode.Legacy)
+                {
+                    var lg = App.Career.legacy;
+                    var stageBefore = lg.stage;
+                    var lgLine = Legacy.RecordGame(lg, App.Catalog, summary.HumanScore, summary.OpponentScore, summary.HumanLine?.stats);
+                    App.OpenLegacyOnMenu = true;
+                    if (lgLine != null)
+                    {
+                        note = "GRADE " + lgLine.grade + "  ·  " + Legacy.Level(lg) + " LV  ·  " + lg.skillPoints + " SKILL POINTS";
+                        if (lg.stage != stageBefore || (lg.stage == LegacyStage.Pro && lg.season == null))
+                        {
+                            var h = lg.history.Count > 0 ? lg.history[lg.history.Count - 1] : null;
+                            if (h != null)
+                            {
+                                title = h.result == "CHAMPIONS" ? "CHAMPIONS" : title;
+                                note += "\n" + h.label + " OVER: " + h.result + (h.awards.Count > 0 ? "  ·  " + string.Join(", ", h.awards) : "");
+                            }
+                        }
+                    }
+                }
+                var street = Street.FromContext(_request.ContextId);
+                if (rewarded && street != null)
+                {
+                    int ankles = summary.HumanLine?.stats?.ankleBreakers ?? 0;
+                    int rep = Street.ApplyResult(App.Career.street, street, summary.HumanWon, ankles);
+                    App.OpenParkOnMenu = true;
+                    title = summary.HumanWon ? "YOU RUN THE PARK" : street.Nickname + " WINS";
+                    note = (rep >= 0 ? "+" : "") + rep + " REP  ·  " + Street.RepNames[Street.RepLevel(App.Career.street.rep)]
+                           + (ankles > 0 ? "  ·  " + ankles + " ANKLE BREAKER" + (ankles == 1 ? "" : "S") : "");
+                }
+                if (rewarded && _request.Mode == GameMode.CustomCup)
+                {
+                    var cup = App.Career.customCup;
+                    var outcome = CustomCup.ApplyResult(cup, App.Catalog, summary.HumanScore, summary.OpponentScore);
+                    App.OpenCustomCupOnMenu = true;
+                    var nextCup = CustomCup.NextGame(cup);
+                    if (outcome == CustomCupOutcome.Champion) { title = cup.name.ToUpperInvariant() + " CHAMPIONS"; Sfx(SfxId.Fanfare); }
+                    else if (outcome == CustomCupOutcome.Advanced && nextCup != null) note = "Next: " + CustomCup.RoundName(cup, nextCup.round);
+                    else if (outcome == CustomCupOutcome.Eliminated) note = "Knocked out. Champion: " + (App.Catalog.Team(cup.championId)?.FullName ?? "?");
                 }
                 if (rewarded && _request.Mode == GameMode.AllStar)
                 {
@@ -1794,7 +1843,8 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Modes that continue a run (no rematch button).</summary>
         private bool IsRun => _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival
                               || _request.Mode == GameMode.King || _request.Mode == GameMode.Arcade || _request.Mode == GameMode.Cup
-                              || _request.Mode == GameMode.Franchise || _request.Mode == GameMode.AllStar;
+                              || _request.Mode == GameMode.Franchise || _request.Mode == GameMode.AllStar
+                              || _request.Mode == GameMode.Legacy || _request.Mode == GameMode.CustomCup;
 
         private void Rematch()
         {

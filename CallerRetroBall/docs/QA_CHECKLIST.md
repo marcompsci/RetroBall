@@ -127,3 +127,14 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Settings ▸ MUSIC PLAYER: every track plays (new songs take about a second the first time), the meter moves, STOP stops; MENU MUSIC and MATCH MUSIC (and SHUFFLE) are used on the menu and in games and survive a relaunch.
 - [ ] Back (Escape / controller B) closes the Franchise, All-Star and Music Player panels without also leaving the screen behind them.
 
+## Phase 22
+- [ ] Play menu shows four sections (PLAY NOW, CAREERS, EVENTS, WITH FRIENDS) and every mode still opens.
+- [ ] Play ▸ LEGACY ▸ START LEGACY: senior year; PLAY GAME starts Full Court with your player first in the lineup (your look); after the game CONTINUE reopens Legacy with the grade, XP and the week advanced. SIM GAME works.
+- [ ] Story moments pop up between games; the next game waits until you choose.
+- [ ] End of high school: stars and college offers (COMMIT, or DECLARE to skip college). College season, then DRAFT NIGHT ▸ HEAR YOUR NAME names a team and rookie deal.
+- [ ] Pro: role/salary line, SKILLS (learn tier 1 then tier 2; points and ratings update), SPONSORS (offers appear with fans; three max; DROP), trainer costs cash. Contract up → agent offers → SIGN. RETIRE from 33; Hall of Fame vote. Quit and relaunch mid-season: everything kept.
+- [ ] Play ▸ THE PARK: locked callers show "???"; CALL OUT plays their format (2-on-2 and 4-on-4 look right: everyone placed, plays work); sharp cuts near a defender sometimes show "ANKLES!" and the defender stops for a moment. After the game: rep change, then HOME reopens the Park.
+- [ ] Play ▸ TOURNAMENT BUILDER: SIZE / FORMAT / RANDOM FIELD / ADD / MINE; START only lights up with the right count; bracket, PLAY, results; win it → "<NAME> CHAMPIONS"; NEW TOURNAMENT / ABANDON.
+- [ ] Settings ▸ MUSIC PLAYER: a new song shows LOADING then plays without the screen freezing; switching songs repeatedly doesn't stutter.
+- [ ] Upload: double-click `tools/Ship RetroBall.command` (Unity closed) → `Logs/ship_console.log` is written whatever happens.
+

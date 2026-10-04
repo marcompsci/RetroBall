@@ -251,6 +251,12 @@ namespace CallerRetroBall.Logic
         public AllStarSaveData allStar = new AllStarSaveData();
         /// <summary>Court Builder slots.</summary>
         public List<CustomCourtData> courts = CourtBuilder.Ensure(null);
+        /// <summary>Legacy career mode.</summary>
+        public LegacySaveData legacy = new LegacySaveData();
+        /// <summary>The Park: street rep and who you've beaten.</summary>
+        public StreetSaveData street = new StreetSaveData();
+        /// <summary>Tournament Builder: the tournament in progress and titles.</summary>
+        public CustomCupSaveData customCup = new CustomCupSaveData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Coach tips already shown.</summary>

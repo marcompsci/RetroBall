@@ -89,7 +89,7 @@ namespace CallerRetroBall.UI
         {
             for (int i = _list.childCount - 1; i >= 0; i--) Destroy(_list.GetChild(i).gameObject);
             var s = App.Career.settings;
-            int playing = AudioManager.IsPlaying ? AudioManager.CurrentTrack : -1;
+            int playing = AudioManager.IsPlaying || AudioManager.IsLoading ? AudioManager.CurrentTrack : -1;
             _now.text = playing >= 0 ? Loc.T("NOW PLAYING") + ":  " + Soundtrack.Title(playing).ToUpperInvariant() : Loc.T("STOPPED");
 
             var names = new string[Soundtrack.Count + 1];
@@ -113,7 +113,7 @@ namespace CallerRetroBall.UI
                                         + Loc.T(Soundtrack.Blurb(t)) + bpm + "</color></size>", 28f, t == playing ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left);
                 label.textWrappingMode = TextWrappingModes.Normal;
                 UiKit.Size(label).flexibleWidth = 1f;
-                var b = UiKit.Button(row, t == playing ? "PLAYING" : "PLAY", () =>
+                var b = UiKit.Button(row, t == playing ? (AudioManager.IsLoading ? "LOADING" : "PLAYING") : "PLAY", () =>
                 {
                     _selected = track;
                     AudioManager.PlayTrack(track);
@@ -124,8 +124,12 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(_list, "Every track is written and played by RetroBall's own chip synth. Songs are composed the first time you play them.", 24f, Theme.Muted), 80f);
         }
 
+        private bool _wasLoading;
+
         private void Update()
         {
+            if (_wasLoading && !AudioManager.IsLoading) Refresh();
+            _wasLoading = AudioManager.IsLoading;
             AudioManager.Levels(_levels);
             for (int i = 0; i < Bars; i++)
             {

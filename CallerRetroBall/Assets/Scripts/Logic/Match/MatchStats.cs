@@ -24,6 +24,8 @@ namespace CallerRetroBall.Logic
         public int alleyOopPasses;
         /// <summary>Times this player heated up (HEAT CHECK).</summary>
         public int heatUps;
+        /// <summary>Street rules: defenders sent stumbling.</summary>
+        public int ankleBreakers;
 
         public float FieldGoalPercentage => fieldGoalsAttempted == 0 ? 0f : (float)fieldGoalsMade / fieldGoalsAttempted;
     }

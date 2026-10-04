@@ -87,6 +87,13 @@ namespace CallerRetroBall.Core
         /// <summary>Back from an All-Star event: open the All-Star screen again (menu or Rise hub).</summary>
         public static bool OpenAllStar { get; set; }
 
+        /// <summary>After a Legacy game: open the Legacy screen again on the menu.</summary>
+        public static bool OpenLegacyOnMenu { get; set; }
+
+        /// <summary>After a street challenge or a Tournament Builder game: open those again on the menu.</summary>
+        public static bool OpenParkOnMenu { get; set; }
+        public static bool OpenCustomCupOnMenu { get; set; }
+
         /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
         public static int SimulationRate { get; private set; } = 60;
 

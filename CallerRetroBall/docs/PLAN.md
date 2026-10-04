@@ -385,6 +385,30 @@
   and a Best Dunk Contest Round leaderboard.
 - **Ship it**: store listing, screenshots plan and review notes updated for 1.0; upload via `tools/ship_testflight.sh`.
 
+## Phase 22: Legacy, The Park, Tournament Builder, polish
+
+- **Legacy** (Play ▸ LEGACY): your created player's career. Senior year of high school (7 games + state
+  playoffs) earns 1–5 recruiting stars; college offers by stars (or skip college and declare); a college season
+  sets draft stock; draft night (the weakest league team picks first; low stock = undrafted); then pro seasons
+  with a Caller League team (10 games + playoffs) until you retire (33+, forced at 38). Every game is Full
+  Court with you at the top of the lineup, or SIM for half XP. Game grades (A+..F) give XP; levels give skill
+  points for a 24-node skill tree in three branches (tiers need the tier below). You start a senior at overall
+  52 whatever your base, grow with age and skills, decline after 30. Coach's trust and your role, salaries
+  and agent offers when a contract ends, up to three invented sponsors (unlocked by fans), a private trainer
+  bought with cash, 12 story moments with choices, awards (State/Conference champion, All-State,
+  All-American, MVP, All-League, Rookie of the Year), legacy points and a Hall of Fame vote.
+- **The Park** (Play ▸ THE PARK): twelve original street legends with crews, formats 1-on-1 to 4-on-4 on their
+  own courts. Street rules (first to 15, win by two, make it take it) and **ankle breakers**: a sharp cut near a
+  defender can make them stumble for 0.9 s (handle vs feet, 8–55%, 1.6 s cooldown; "ANKLES!"). Rep from
+  Rookie to Legend opens tougher callers; first wins pay double; beat everyone for King of the Park.
+- **Half-court 2-on-2 and 4-on-4** in the engine (MatchRequest.TeamSize), tested with AI-vs-AI games.
+- **Tournament Builder** (Play ▸ TOURNAMENT BUILDER): name, 4/8/16 teams from everything you can play,
+  2-on-2, 3-on-3 or Full Court, your team; seeded by strength with a standard bracket; others simulated.
+- **Polish:** the PLAY menu is grouped (Play now, Careers, Events, With friends); composed songs are written
+  on a worker thread so screens never hitch, and only the playing song stays in memory; two leaderboards.
+- **Ship it:** the upload script now logs every run to `Logs/ship_console.log`; double-click
+  `tools/Ship RetroBall.command`.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

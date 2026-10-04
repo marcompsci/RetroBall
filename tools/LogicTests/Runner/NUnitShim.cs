@@ -141,6 +141,12 @@ namespace NUnit.Framework
 
     public static class StringAssert
     {
+        public static void DoesNotContain(string expected, string actual, string message = null)
+        {
+            if (actual != null && actual.Contains(expected))
+                throw new AssertionException((message ?? "") + " expected \"" + actual + "\" not to contain \"" + expected + "\"");
+        }
+
         public static void Contains(string expected, string actual, string message = null)
         {
             if (actual == null || !actual.Contains(expected))

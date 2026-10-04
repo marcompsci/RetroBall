@@ -31,6 +31,12 @@ namespace CallerRetroBall.Logic
         Franchise = 14,
         /// <summary>The All-Star Game: Team Sunrise (you) vs Team Moonlight, Full Court.</summary>
         AllStar = 15,
+        /// <summary>Legacy career: your player's game (high school, college or pro), Full Court.</summary>
+        Legacy = 16,
+        /// <summary>The Park: street challenges (1v1 to 4v4).</summary>
+        Street = 17,
+        /// <summary>A tournament you built in the Tournament Builder.</summary>
+        CustomCup = 18,
     }
 
     /// <summary>
@@ -68,6 +74,10 @@ namespace CallerRetroBall.Logic
         public bool StartHeated;
         /// <summary>Play this game Full Court 5-on-5 whatever the mode (the Rise Mode final).</summary>
         public bool FullCourt;
+        /// <summary>Half-court players a side (2, 3 or 4); 0 = the usual 3.</summary>
+        public int TeamSize;
+        /// <summary>Street rules: sharp crossovers can break a defender's ankles.</summary>
+        public bool StreetRules;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

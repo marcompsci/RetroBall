@@ -523,6 +523,16 @@ namespace CallerRetroBall.Logic
             });
             c.Rules.Add(new GameRulesDef
             {
+                // The Park: first to 15 by 1s and 2s, win by two, make it take it.
+                id = "rules.street",
+                targetScore = 15,
+                useGameClock = true,
+                gameClockSeconds = 180f,
+                winByTwo = true,
+                makeItTakeIt = true,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
                 id = "rules.oneonone",
                 targetScore = 11,
                 useGameClock = true,
