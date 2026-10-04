@@ -79,14 +79,14 @@ namespace CallerRetroBall.Core
             fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             fit.aspectRatio = logoTex.width / (float)logoTex.height;
 
-            // Spinning ball loader, where the launch image draws its ball (56% up, 32% of the width).
+            // Spinning ball loader — 44% of screen width, centred over the sun at 55% up.
             var frames = AppIconGenerator.LoaderBall();
             _frames = new Sprite[frames.Length];
             for (int i = 0; i < frames.Length; i++) _frames[i] = TextureFactory.ToSprite(frames[i], "ui.boot.ball." + i);
-            // Holder is 32% of the screen width and square; the frames carry 2 px of padding round the ball.
+            // Holder is 44% of the screen width and square; the frames carry 2 px of padding round the ball.
             var ballHolder = UiKit.NewRect("Loader", canvas.transform);
-            ballHolder.anchorMin = new Vector2(0.34f, 0.56f);
-            ballHolder.anchorMax = new Vector2(0.66f, 0.56f);
+            ballHolder.anchorMin = new Vector2(0.28f, 0.55f);
+            ballHolder.anchorMax = new Vector2(0.72f, 0.55f);
             ballHolder.pivot = new Vector2(0.5f, 0.5f);
             ballHolder.offsetMin = ballHolder.offsetMax = Vector2.zero;
             var square = ballHolder.gameObject.AddComponent<AspectRatioFitter>();

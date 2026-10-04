@@ -67,7 +67,7 @@ namespace CallerRetroBall.Logic.PixelArt
             DrawSkyline(c, rng, horizon, 12, 38, 8, 20, far, null);
             DrawSkyline(c, rng, horizon, 6, 26, 10, 24, near, new RgbColor(255, 214, 102));
 
-            // 4. Asphalt + court lines (simple perspective baseline and lane).
+            // 4. Asphalt + court lines (perspective half-court view from baseline).
             var asphaltDark = asphalt.Darken(0.25f);
             for (int y = 0; y < courtTop; y++)
                 for (int x = 0; x < width; x++)
@@ -76,11 +76,25 @@ namespace CallerRetroBall.Logic.PixelArt
                     c.Set(x, y, speck ? asphaltDark : asphalt);
                 }
             for (int x = 0; x < width; x++) c.Set(x, courtTop - 1, asphalt.Lighten(0.15f));
-            int laneHalf = width / 6;
             int cx = width / 2;
-            c.Line(cx - laneHalf, courtTop - 2, cx - laneHalf - 14, 0, lineColor);
-            c.Line(cx + laneHalf, courtTop - 2, cx + laneHalf + 14, 0, lineColor);
-            c.Line(cx - laneHalf - 6, courtTop / 2, cx + laneHalf + 6, courtTop / 2, lineColor);
+            // Lane boundary lines fan from a vanishing point at the horizon to the bottom corners.
+            c.Line(cx, courtTop - 1, width / 7, 0, lineColor);
+            c.Line(cx, courtTop - 1, width - width / 7, 0, lineColor);
+            // Free-throw line and key top bar.
+            int ftY = (int)(courtTop * 0.58f);
+            int ftHalf = (int)(width * 0.18f);
+            c.Line(cx - ftHalf, ftY, cx + ftHalf, ftY, lineColor);
+            // Perspective arc — half-ellipse above the free-throw line (3-point view).
+            int arcRx = (int)(width * 0.38f);
+            int arcRy = (int)(courtTop * 0.24f);
+            int arcCy = courtTop - 2;
+            for (int deg = 0; deg <= 180; deg++)
+            {
+                float rad = deg * (float)(Math.PI / 180.0);
+                int px = cx + (int)(Math.Cos(rad) * arcRx);
+                int py = arcCy - (int)(Math.Sin(rad) * arcRy);
+                if (px >= 0 && px < width && py >= 0 && py < courtTop) c.Set(px, py, lineColor);
+            }
 
             // 5. Chain-link fence between court and skyline.
             var fence = new RgbColor(200, 200, 210, 70);
@@ -90,12 +104,12 @@ namespace CallerRetroBall.Logic.PixelArt
             for (int x = 0; x < width; x += 30)
                 for (int y = courtTop; y < horizon + 24; y++) c.Set(x, y, new RgbColor(90, 90, 100));
 
-            // 6. Halftone dots fading toward the top for print-poster texture.
-            var dot = new RgbColor(255, 255, 255, 28);
-            for (int y = horizon + 30; y < height; y += 4)
+            // 6. Halftone dots across most of the sky for a retro print-poster texture.
+            var dot = new RgbColor(255, 255, 255, 32);
+            for (int y = horizon + 8; y < height; y += 4)
             {
                 float t = (y - horizon) / (float)(height - horizon);
-                if (t < 0.45f) continue;
+                if (t < 0.12f) continue;
                 int offset = (y / 4) % 2 * 2;
                 for (int x = offset; x < width; x += 4) c.Set(x, y, dot);
             }

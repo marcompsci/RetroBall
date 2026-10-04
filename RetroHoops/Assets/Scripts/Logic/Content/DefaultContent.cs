@@ -62,7 +62,7 @@ namespace CallerRetroBall.Logic
             // Blacktop Circuit (Rise Mode starting courts)
             c.Courts.Add(Court("court.sunset_cage", "Sunset Cage", CourtCircuit.Blacktop,
                 "A chain-link cage that glows orange at golden hour.",
-                "#4A4A52", "#F4F1DE", "#E07A5F", "#6A3D9A", "#FF7E5F", 0.35f));
+                "#4A4A52", "#F4F1DE", "#E07A5F", "#2E1460", "#FF6B50", 0.35f));
             c.Courts.Add(Court("court.pier_nine", "Pier Nine Blacktop", CourtCircuit.Blacktop,
                 "Salt air, loose rims, and the loudest benches on the water.",
                 "#3D4A56", "#FFFFFF", "#2A9D8F", "#8ECAE6", "#FFB4A2", 0.30f));
