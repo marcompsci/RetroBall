@@ -43,7 +43,8 @@ namespace CallerRetroBall.Tests
             var colours = new HashSet<RgbColor>(AppIconGenerator.Icon().Pixels);
             Assert.IsTrue(colours.Contains(AppIconGenerator.BallMain), "ball");
             Assert.IsTrue(colours.Contains(AppIconGenerator.Seam), "seams");
-            Assert.IsTrue(colours.Contains(AppIconGenerator.Gold), "signal arcs");
+            Assert.IsTrue(colours.Contains(AppIconGenerator.Gold), "gold sparkles");
+            Assert.IsTrue(colours.Contains(AppIconGenerator.Rim) && colours.Contains(AppIconGenerator.Net), "rim and net");
             Assert.GreaterOrEqual(colours.Count, 8, "should read as art, not a flat block");
         }
 

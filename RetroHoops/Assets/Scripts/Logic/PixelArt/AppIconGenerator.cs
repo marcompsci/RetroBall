@@ -4,8 +4,7 @@ namespace CallerRetroBall.Logic.PixelArt
 {
     /// <summary>
     /// Original app icon and launch image, drawn in code like every other piece of art.
-    /// The icon is a 64x64 pixel-art basketball on a dithered sunset with gold "signal" arcs
-    /// (the caller's call), scaled up 16x to the 1024x1024 App Store size. It is fully opaque:
+    /// The icon ("Sunset Swish") is 64x64 pixel art scaled up 16x to the 1024x1024 App Store size. It is fully opaque:
     /// App Store icons must not contain transparency.
     /// </summary>
     public static class AppIconGenerator
@@ -24,57 +23,110 @@ namespace CallerRetroBall.Logic.PixelArt
         public static readonly RgbColor Seam = new RgbColor(0x3A, 0x1F, 0x14);
         public static readonly RgbColor Outline = new RgbColor(0x14, 0x14, 0x20);
 
-        /// <summary>The 64x64 icon art (row 0 is the bottom row).</summary>
+        public static readonly RgbColor DuskTop = new RgbColor(0x1B, 0x0B, 0x3A);
+        public static readonly RgbColor DuskLow = new RgbColor(0xFF, 0x4F, 0xA3);
+        public static readonly RgbColor SunTop = new RgbColor(0xFF, 0xE0, 0x66);
+        public static readonly RgbColor SunLow = new RgbColor(0xFF, 0x7A, 0x3D);
+        public static readonly RgbColor Neon = new RgbColor(0x3B, 0xD5, 0xFF);
+        public static readonly RgbColor Grid = new RgbColor(0x9B, 0x4D, 0xFF);
+        public static readonly RgbColor Floor = new RgbColor(0x1A, 0x08, 0x30);
+        public static readonly RgbColor Board = new RgbColor(0xF4, 0xF1, 0xDE);
+        public static readonly RgbColor BoardRed = new RgbColor(0xE6, 0x39, 0x46);
+        public static readonly RgbColor Rim = new RgbColor(0xFF, 0x6B, 0x1A);
+        public static readonly RgbColor Net = new RgbColor(0xF8, 0xF8, 0xFF);
+        public static readonly RgbColor NetShade = new RgbColor(0xB8, 0xB4, 0xD8);
+
+        /// <summary>
+        /// "Sunset Swish", the Retro Hoops icon (64x64, row 0 is the bottom row): a ball dropping
+        /// through the net under a backboard, in front of a striped synthwave sun over a neon grid floor.
+        /// Drawn top-down here and flipped as it's written.
+        /// </summary>
         public static PixelCanvas Icon()
         {
             const int n = IconPixels;
             var c = new PixelCanvas(n, n);
+            void Put(int x, int y, RgbColor col) { if (x >= 0 && x < n && y >= 0 && y < n) c.Set(x, n - 1 - y, col); }
+            const int horizon = 46;
 
-            // Background: three-stop sunset, ordered-dithered into 8 bands.
-            const int bands = 8;
-            for (int y = 0; y < n; y++)
+            // Sky: dusk purple to hot pink in six dithered bands.
+            for (int y = 0; y < horizon; y++)
             {
-                float t = y / (float)(n - 1); // 0 bottom .. 1 top
-                float scaled = t * (bands - 1);
+                float scaled = y / (float)(horizon - 1) * 5f;
                 int band = (int)scaled;
-                float frac = scaled - band;
                 for (int x = 0; x < n; x++)
                 {
-                    int b = frac > PixelCanvas.BayerThreshold(x, y) ? band + 1 : band;
-                    c.Set(x, y, Sky(b / (float)(bands - 1)));
+                    int b = scaled - band > PixelCanvas.BayerThreshold(x, y) ? band + 1 : band;
+                    Put(x, y, RgbColor.Lerp(DuskTop, DuskLow, Math.Min(5, b) / 5f));
                 }
             }
-
-            // Court floor: a dark band with a highlight line, so the ball sits on something.
-            for (int y = 0; y < 9; y++)
+            // Striped sun sitting on the horizon (the cuts thicken toward the bottom).
+            for (int y = 16; y < horizon; y++)
                 for (int x = 0; x < n; x++)
-                    c.Set(x, y, y == 8 ? Gold.Darken(0.25f) : SkyLow.Lighten(0.06f));
-
-            // Signal arcs coming off the ball's upper-right edge (the caller's call): three gold arcs.
-            const float ox = 44f, oy = 43f;
-            for (int ring = 0; ring < 3; ring++)
+                {
+                    float dx = x + 0.5f - 32f, dy = y + 0.5f - 42f;
+                    if (dx * dx + dy * dy > 24f * 24f) continue;
+                    int below = y - 33;
+                    if (below >= 0 && below % 3 < 1 + below / 6) continue;
+                    Put(x, y, RgbColor.Lerp(SunTop, SunLow, (y - 18) / 28f));
+                }
+            // Neon grid floor in perspective.
+            for (int y = horizon; y < n; y++)
+                for (int x = 0; x < n; x++) Put(x, y, Floor);
+            for (int k = 0; k < 7; k++)
             {
-                float r = 6f + ring * 5.5f;
-                for (int y = 0; y < n; y++)
-                    for (int x = 0; x < n; x++)
-                    {
-                        float dx = x + 0.5f - ox, dy = y + 0.5f - oy;
-                        if (dx <= 0f || dy <= 0f) continue;
-                        double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI;
-                        if (angle < 12.0 || angle > 78.0) continue;
-                        float d = (float)Math.Sqrt(dx * dx + dy * dy);
-                        if (Math.Abs(d - r) <= 1.15f) c.Set(x, y, Gold);
-                    }
+                int y = horizon + (int)Math.Round(k * k * 0.9 + k * 1.1);
+                for (int x = 0; x < n; x++) Put(x, y, k == 0 ? Neon : Grid);
             }
-
-            // Ground shadow, then the ball.
-            for (int y = 7; y <= 10; y++)
-                for (int x = 14; x < 50; x++)
+            // Lines fanning out from the vanishing point (sampled finely so they stay unbroken).
+            for (int xb = -100; xb <= 164; xb += 24)
+                for (int i = 0; i <= 400; i++)
                 {
-                    float ex = (x + 0.5f - 32f) / 18f, ey = (y + 0.5f - 8.8f) / 2.2f;
-                    if (ex * ex + ey * ey <= 1f) c.Set(x, y, Outline);
+                    float t = i / 400f;
+                    float y = horizon + 6 + t * (n - 7 - horizon);
+                    float tt = (y - horizon) / (n - 1 - horizon);
+                    Put((int)Math.Round(32 + (xb - 32) * tt), (int)Math.Round(y), Grid);
                 }
-            DrawBall(c, 30f, 29f, 19f);
+
+            // Backboard with its square, and a bracket.
+            for (int y = 4; y <= 16; y++)
+                for (int x = 20; x <= 43; x++)
+                {
+                    bool edge = y == 4 || y == 16 || x == 20 || x == 43;
+                    bool square = (x == 28 || x == 35) && y >= 9 && y <= 15 || (y == 9 || y == 15) && x >= 28 && x <= 35;
+                    Put(x, y, edge ? Outline : (square ? BoardRed : Board));
+                }
+
+            // Net behind the ball (back strands), the ball, then the front strands and the rim.
+            bool InNet(int x, int y, out bool front)
+            {
+                front = false;
+                if (y < 20 || y > 32) return false;
+                float t = (y - 20) / 12f;
+                float left = 23 + 4 * t, right = 40 - 4 * t;
+                if (x < left - 0.5f || x > right + 0.5f) return false;
+                int u = x - 23, v = y - 20;
+                bool mesh = (u + v) % 4 == 0 || (u - v + 100) % 4 == 0 || y == 32;
+                front = mesh && (u + v) % 4 == 0;
+                return mesh;
+            }
+            for (int y = 20; y <= 32; y++)
+                for (int x = 20; x <= 43; x++)
+                    if (InNet(x, y, out _)) Put(x, y, NetShade);
+            DrawBall(c, 32f, n - 22.5f, 8.5f);
+            for (int y = 25; y <= 32; y++)
+                for (int x = 20; x <= 43; x++)
+                    if (InNet(x, y, out bool front) && front) Put(x, y, Net);
+            for (int y = 17; y <= 19; y++)
+                for (int x = 21; x <= 42; x++)
+                    Put(x, y, y == 18 && x > 21 && x < 42 ? Rim : Outline);
+
+            // Gold sparkles: the swish.
+            foreach (var (sx, sy) in new[] { (12, 12), (52, 10), (9, 30), (55, 28), (47, 39) })
+            {
+                Put(sx, sy, Gold);
+                Put(sx - 1, sy, Gold.Darken(0.2f)); Put(sx + 1, sy, Gold.Darken(0.2f));
+                Put(sx, sy - 1, Gold.Darken(0.2f)); Put(sx, sy + 1, Gold.Darken(0.2f));
+            }
             return c;
         }
 
