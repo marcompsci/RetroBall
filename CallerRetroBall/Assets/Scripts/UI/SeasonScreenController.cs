@@ -25,6 +25,11 @@ namespace CallerRetroBall.UI
             _content = UiKit.ScrollColumn(Body, 18f, new RectOffset(48, 48, 12, 40));
             Rebuild();
 
+            if (App.OpenAllStar)
+            {
+                App.OpenAllStar = false;
+                AllStarScreen.Open(AllStar.WeekendOpen(App.Career));
+            }
             var outcome = App.LastRiseOutcome;
             App.LastRiseOutcome = RiseOutcome.None;
             // Story scenes play first, then whatever the last game changed.
@@ -98,6 +103,15 @@ namespace CallerRetroBall.UI
                 }, ButtonStyle.Primary, 120f, 40f);
                 UiKit.Size(UiKit.Label(_content, "Doesn't count in the standings. Win for +" + RivalEngine.WinBonus + " SP.  Rival record: " +
                                        career.rival.wins + "-" + career.rival.losses, 28f, Theme.Muted), 50f);
+            }
+
+            // All-Star Weekend: from mid-season to the end of the regular season.
+            if (AllStar.WeekendOpen(career))
+            {
+                var w = AllStar.Weekend(career);
+                int done = (w.dunkDone ? 1 : 0) + (w.threeDone ? 1 : 0) + (w.gameDone ? 1 : 0);
+                UiKit.Button(_content, "ALL-STAR WEEKEND", () => AllStarScreen.Open(true), done < 3 ? ButtonStyle.Primary : ButtonStyle.Secondary, 120f, 40f);
+                UiKit.Size(UiKit.Label(_content, "Dunk Contest, 3-Point Contest, All-Star Game  ·  " + done + "/3 " + Loc.T("done"), 28f, Theme.Muted), 50f);
             }
 
             var next = RiseEngine.NextMatch(r, c, career.settings.difficultyId);

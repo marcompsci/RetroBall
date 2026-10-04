@@ -194,6 +194,10 @@ namespace CallerRetroBall.Logic
         public const string CouchGame = "retroball.ach.couch_game";
         public const string YourColors = "retroball.ach.your_colors";
         public const string LongHaul = "retroball.ach.long_haul";
+        // Phase 21.
+        public const string FranchiseTitle = "retroball.ach.franchise_title";
+        public const string DunkChamp = "retroball.ach.dunk_contest";
+        public const string ThreeChamp = "retroball.ach.three_contest";
 
         public const string BoardWins = "retroball.lb.career_wins";
         public const string BoardGreens = "retroball.lb.career_greens";
@@ -205,6 +209,8 @@ namespace CallerRetroBall.Logic
         public const string BoardAroundWorld = "retroball.lb.around_world";
         public const string BoardWinStreak = "retroball.lb.win_streak";
         public const string BoardPoints = "retroball.lb.game_points";
+        // Phase 21.
+        public const string BoardDunk = "retroball.lb.dunk_round";
 
         public static readonly List<AchievementInfo> All = new List<AchievementInfo>
         {
@@ -233,6 +239,9 @@ namespace CallerRetroBall.Logic
             A(CouchGame, "Couch Rivals", "Play a 2 Player game.", 10, d => d.totals.versusGames >= 1),
             A(YourColors, "Your Colors", "Create your own team.", 10, d => d.customTeam != null && d.customTeam.created),
             A(LongHaul, "Long Haul", "Play five Rise seasons.", 50, d => d.rise != null && d.rise.seasonsPlayed >= 5),
+            A(FranchiseTitle, "Front Office", "Win a title in Franchise.", 50, d => d.franchise != null && d.franchise.titles >= 1),
+            A(DunkChamp, "Above the Rim", "Win the Dunk Contest.", 30, d => d.allStar != null && d.allStar.dunkTitles >= 1),
+            A(ThreeChamp, "Money Ball", "Win the 3-Point Contest.", 30, d => d.allStar != null && d.allStar.threeTitles >= 1),
         };
 
         public static readonly List<LeaderboardInfo> Boards = new List<LeaderboardInfo>
@@ -246,6 +255,7 @@ namespace CallerRetroBall.Logic
             L(BoardAroundWorld, "Around the World", true, "Elapsed time (to the hundredth of a second)", d => Hundredths(d.practice.aroundWorldTime)),
             L(BoardWinStreak, "Best Win Streak", false, "Integer", d => d.records?.bestWinStreak ?? 0),
             L(BoardPoints, "Most Points in a Game", false, "Integer", d => d.records?.points ?? 0),
+            L(BoardDunk, "Best Dunk Contest Round", false, "Integer", d => d.allStar?.bestDunk ?? 0),
         };
 
         public static readonly string[] AllAchievements = All.ConvertAll(a => a.Id).ToArray();

@@ -24,11 +24,15 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 | # | Moment | Caption (EN) | Caption (ES) |
 |---|---|---|---|
 | 1 | Heated-up player mid-jumper, flames on | Heat up. Stay hot. | Ponte al rojo vivo. |
-| 2 | Alley-oop: gold pass arrow, then the slam | Throw it up. | Lánzala arriba. |
-| 3 | Arcade Ladder vs THE GLITCH on The Glitch Grid | Six stages. One secret boss. | Seis fases. Un jefe secreto. |
-| 4 | Locker Room ▸ TEAM with a custom kit | Your team. Your colours. | Tu equipo. Tus colores. |
-| 5 | Rise Mode story scene (Coach Dee or Kaia) | Rise from the blacktop. | Asciende desde el asfalto. |
-| 6 | A block, with the CRT filter on | Old-school arcade hoops. | Básquet arcade de la vieja escuela. |
+| 2 | Franchise ▸ TRADE, deal accepted | Be the GM. | Sé el gerente. |
+| 3 | Dunk Contest: 360 slam, judges' cards | Win the Dunk Contest. | Gana el concurso de clavadas. |
+| 4 | Full Court on a Court Builder court | Build your own court. | Construye tu cancha. |
+| 5 | Kit Studio live preview | Your team. Your colours. | Tu equipo. Tus colores. |
+| 6 | Alley-oop: gold pass arrow, then the slam | Throw it up. | Lánzala arriba. |
+| 7 | Franchise ▸ DRAFT (scouting + lottery) | Scout. Draft. Repeat. | Explora. Elige. Repite. |
+| 8 | Christmas court or THE GLITCH | Holiday Games and secrets. | Juegos festivos y secretos. |
+| 9 | Music Player | Nine original chiptune tracks. | Nueve temas chiptune originales. |
+| 10 | Rise hub, ALL-STAR WEEKEND | Rise from the blacktop. | Asciende desde el asfalto. |
 
 **Rules for the images**
 - Only show real gameplay.

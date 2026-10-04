@@ -18,9 +18,10 @@ namespace CallerRetroBall.UI
         protected override string ScreenTitle => "LOCKER ROOM";
         protected override string BackdropCourtId => "court.pier_nine";
 
-        private enum Tab { Player = 0, Create = 1, Team = 2, Kit = 3, Training = 4, Style = 5, Stats = 6, Trophies = 7 }
+        private enum Tab { Player = 0, Create = 1, Team = 2, Kit = 3, Court = 4, Training = 5, Style = 6, Stats = 7, Trophies = 8 }
 
-        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TEAM", "KIT", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private static readonly string[] TabNames = { "PLAYER", "CREATE", "TEAM", "KIT", "COURT", "TRAIN", "STYLE", "STATS", "TROPHY" };
+        private CourtStudio _courtStudio;
         private KitStudio _kitStudio;
         private CustomTeamData _teamDraft;
         private Texture2D _teamPreviewTex;
@@ -33,6 +34,7 @@ namespace CallerRetroBall.UI
             if (_previewTex != null) Destroy(_previewTex);
             if (_teamPreviewTex != null) Destroy(_teamPreviewTex);
             _kitStudio?.Dispose();
+            _courtStudio?.Dispose();
         }
 
         private Tab _tab;
@@ -109,6 +111,10 @@ namespace CallerRetroBall.UI
                 case Tab.Kit:
                     if (_kitStudio == null) _kitStudio = new KitStudio(_content, RebuildKeepingScroll);
                     _kitStudio.Build();
+                    break;
+                case Tab.Court:
+                    if (_courtStudio == null) _courtStudio = new CourtStudio(_content, RebuildKeepingScroll);
+                    _courtStudio.Build();
                     break;
                 case Tab.Training: BuildTraining(); break;
                 case Tab.Style: BuildStyle(); break;

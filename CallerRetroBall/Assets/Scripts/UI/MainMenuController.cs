@@ -100,6 +100,16 @@ namespace CallerRetroBall.UI
                 App.OpenCupOnMenu = false;
                 ShowCup();
             }
+            else if (App.OpenFranchiseOnMenu)
+            {
+                App.OpenFranchiseOnMenu = false;
+                FranchiseScreen.Open();
+            }
+            else if (App.OpenAllStar)
+            {
+                App.OpenAllStar = false;
+                AllStarScreen.Open(false);
+            }
 
             // First launch: Coach Dee says hello, then the tutorial is offered (once per session until it's done).
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
@@ -286,6 +296,7 @@ namespace CallerRetroBall.UI
 
             // Play anywhere: home court, any street court, and hidden courts once unlocked.
             var courts = new List<string> { null };
+            foreach (var court in c.Courts) if (court.circuit == CourtCircuit.Custom) courts.Add(court.id);
             foreach (var court in c.Courts) if (court.circuit == CourtCircuit.Blacktop || court.circuit == CourtCircuit.Holiday) courts.Add(court.id);
             foreach (var id in new[] { DefaultContent.SecretCourtId, DefaultContent.BossCourtId })
                 if (Secrets.IsUnlocked(App.Career.secrets, id)) courts.Add(id);
@@ -336,6 +347,14 @@ namespace CallerRetroBall.UI
             var column = OpenOverlay("PLAY", out var footer);
             Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);
             Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
+            var fr = App.Career.franchise;
+            Mode(column, "FRANCHISE", fr != null && fr.active
+                ? "Year " + fr.year + "  ·  " + Franchise.PhaseName(fr.phase).ToLowerInvariant() + "  ·  titles " + fr.titles
+                : "Be the GM: trades, free agency, the draft, season after season.", () =>
+            {
+                CloseOverlay();
+                FranchiseScreen.Open();
+            }, ButtonStyle.Secondary);
             Mode(column, "HOLIDAY GAMES", "Christmas, Halloween, Easter and Fourth of July courts.", () => ShowHolidays(), ButtonStyle.Secondary);
 
             var today = DailyChallenges.For(App.Today, App.Catalog);
@@ -350,6 +369,11 @@ namespace CallerRetroBall.UI
                 : "Six stages, three continues, one secret boss. Clears: " + arcade.clears, ShowArcade, ButtonStyle.Secondary);
             Mode(column, "KING OF THE COURT", "Beat league teams back to back until you lose. Best streak: " + App.Career.king.best, ShowKing, ButtonStyle.Secondary);
             Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
+            Mode(column, "ALL-STAR CONTESTS", "Dunk Contest, 3-Point Contest and the All-Star Game.", () =>
+            {
+                CloseOverlay();
+                AllStarScreen.Open(false);
+            }, ButtonStyle.Secondary);
             Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
             var cup = App.Career.cup;
             Mode(column, "CALLER CUP", cup.Active ? "In progress  ·  titles " + cup.titles : "Eight-team knockout. Titles: " + cup.titles, ShowCup, ButtonStyle.Secondary);

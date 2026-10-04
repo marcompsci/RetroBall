@@ -21,7 +21,7 @@ namespace CallerRetroBall.UI
             "RetroBall is an original game. All teams, players, leagues, courts, logos, " +
             "and pixel art are original and generated procedurally inside this project.\n\n" +
             "Text font: Liberation Sans, bundled with Unity TextMeshPro (SIL Open Font License 1.1).\n" +
-            "Audio: every sound effect and the music loop are synthesised in code at runtime (no recordings or samples).\n" +
+            "Audio: every sound effect and all nine music tracks are synthesised in code at runtime (no recordings or samples).\n" +
             "Haptics: a small original iOS plugin using Apple's UIKit feedback generators.\n\n" +
             "No ads, analytics, tracking, accounts, or purchases. Progress is stored only on this device. " +
             "Game Center is optional and off unless you turn it on.";
@@ -39,6 +39,7 @@ namespace CallerRetroBall.UI
             Header(column, "AUDIO");
             UiControls.SliderRow(column, "MUSIC", s.musicVolume, v => { s.musicVolume = v; App.ApplySettings(); });
             UiControls.SliderRow(column, "SFX", s.sfxVolume, v => { s.sfxVolume = v; App.ApplySettings(); });
+            UiKit.Button(column, "MUSIC PLAYER", () => MusicPlayer.Open(), ButtonStyle.Secondary, 100f, 36f);
 
             Header(column, "FEEL");
             UiControls.ToggleRow(column, "HAPTICS", s.haptics, v => { s.haptics = v; Save(); if (v) Haptics.Light(); });

@@ -347,6 +347,31 @@ namespace CallerRetroBall.Logic
                 "Teclado: J1 WASD · K J L C, J2 flechas · Num1 Num2 Num3 Num0.",
             ["Optional. Posts your best marks to leaderboards and unlocks achievements. The game works the same without it."] =
                 "Opcional. Publica tus mejores marcas en las clasificaciones y desbloquea logros. El juego funciona igual sin él.",
+            // Phase 21: Franchise, All-Star Weekend, Court Builder, Music Player
+            ["FRANCHISE"] = "FRANQUICIA", ["ROSTER"] = "PLANTILLA", ["TRADE"] = "TRASPASO",
+            ["LEAGUE"] = "LIGA", ["MARKET"] = "MERCADO", ["DRAFT"] = "DRAFT",
+            ["HISTORY"] = "HISTORIA", ["PAYROLL"] = "NÓMINA", ["CAP ROOM"] = "ESPACIO SALARIAL",
+            ["REGULAR SEASON"] = "TEMPORADA REGULAR", ["RE-SIGN PLAYERS"] = "RENOVAR JUGADORES", ["FREE AGENCY"] = "AGENCIA LIBRE",
+            ["PRESEASON"] = "PRETEMPORADA", ["PLAY GAME"] = "JUGAR PARTIDO", ["SIM GAME"] = "SIMULAR PARTIDO",
+            ["SIM TO PLAYOFFS"] = "SIMULAR HASTA PLAYOFFS", ["SIM PLAYOFFS"] = "SIMULAR PLAYOFFS", ["START FRANCHISE"] = "EMPEZAR FRANQUICIA",
+            ["CHANGE CLUB"] = "CAMBIAR CLUB", ["NEW FRANCHISE"] = "NUEVA FRANQUICIA", ["PROPOSE TRADE"] = "PROPONER TRASPASO",
+            ["NEXT TEAM"] = "SIGUIENTE EQUIPO", ["YOU SEND"] = "ENVÍAS", ["YOU GET"] = "RECIBES",
+            ["FREE AGENTS"] = "AGENTES LIBRES", ["SIGN"] = "FICHAR", ["RE-SIGN"] = "RENOVAR",
+            ["STARTERS (YOU CONTROL #1)"] = "TITULARES (CONTROLAS AL #1)", ["BENCH"] = "BANCA", ["TOP SCORERS"] = "MÁXIMOS ANOTADORES",
+            ["SCOUT"] = "OJEAR", ["AWARDS"] = "PREMIOS", ["TRANSACTIONS"] = "MOVIMIENTOS",
+            ["FINISH FREE AGENCY"] = "TERMINAR AGENCIA LIBRE", ["DONE: OPEN FREE AGENCY"] = "LISTO: ABRIR AGENCIA LIBRE", ["GO TO THE DRAFT"] = "IR AL DRAFT",
+            ["THE DRAFT"] = "EL DRAFT", ["MISSED PLAYOFFS"] = "SIN PLAYOFFS", ["LOST SEMI"] = "PERDIÓ SEMIFINAL",
+            ["LOST FINAL"] = "PERDIÓ LA FINAL", ["ALL-STAR CONTESTS"] = "CONCURSOS DE ESTRELLAS", ["ALL-STAR WEEKEND"] = "FIN DE SEMANA DE ESTRELLAS",
+            ["DUNK CONTEST"] = "CONCURSO DE CLAVADAS", ["ALL-STAR GAME"] = "PARTIDO DE ESTRELLAS", ["JAM!"] = "¡MÁTALA!",
+            ["SLAM IT!"] = "¡CLÁVALA!", ["ENTER THE COMBO!"] = "¡METE EL COMBO!", ["BLOWN!"] = "¡FALLADA!",
+            ["TOO SLOW"] = "MUY LENTO", ["WRONG MOVE"] = "MOVIMIENTO EQUIVOCADO", ["TRY AGAIN"] = "OTRA VEZ",
+            ["ROUND ONE"] = "PRIMERA RONDA", ["THE FINAL"] = "LA FINAL", ["MUSIC PLAYER"] = "REPRODUCTOR",
+            ["MENU MUSIC"] = "MÚSICA DEL MENÚ", ["MATCH MUSIC"] = "MÚSICA DEL PARTIDO", ["SHUFFLE"] = "ALEATORIO",
+            ["NOW PLAYING"] = "SONANDO", ["STOPPED"] = "DETENIDA", ["PLAYING"] = "SONANDO",
+            ["SAVE COURT"] = "GUARDAR CANCHA", ["PLAY HERE"] = "JUGAR AQUÍ", ["DELETE COURT"] = "BORRAR CANCHA",
+            ["FLOOR"] = "PISO", ["FLOOR COLOUR"] = "COLOR DEL PISO", ["LINES"] = "LÍNEAS",
+            ["PAINT"] = "ZONA", ["BEHIND"] = "FONDO", ["CROWD"] = "PÚBLICO",
+            ["CENTRE LOGO"] = "LOGO CENTRAL", ["LOGO COLOUR"] = "COLOR DEL LOGO", ["SAVED"] = "GUARDADA",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>

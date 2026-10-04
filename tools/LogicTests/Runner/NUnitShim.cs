@@ -138,4 +138,13 @@ namespace NUnit.Framework
                 if (!seen.Add(item)) throw new AssertionException((message ?? "") + " duplicate item " + item);
         }
     }
+
+    public static class StringAssert
+    {
+        public static void Contains(string expected, string actual, string message = null)
+        {
+            if (actual == null || !actual.Contains(expected))
+                throw new AssertionException((message ?? "") + " expected \"" + actual + "\" to contain \"" + expected + "\"");
+        }
+    }
 }

@@ -49,6 +49,9 @@ namespace CallerRetroBall.Logic
         public bool captions;
         /// <summary>Keep the career in sync through the player's own iCloud (iOS key-value storage).</summary>
         public bool icloudSync = true;
+        /// <summary>Music Player: menu track (−1 = the menu theme) and match track (−1 = match theme, −2 = shuffle).</summary>
+        public int musicMenu = -1;
+        public int musicGame = -1;
     }
 
     /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
@@ -242,6 +245,12 @@ namespace CallerRetroBall.Logic
         public CustomTeamData customTeam = new CustomTeamData();
         /// <summary>Kit Studio: Home / Away / Alt kits for your team.</summary>
         public KitSaveData kits = new KitSaveData();
+        /// <summary>Franchise mode: your GM career with one Caller League club.</summary>
+        public FranchiseSaveData franchise = new FranchiseSaveData();
+        /// <summary>All-Star Weekend (Rise) and contest titles.</summary>
+        public AllStarSaveData allStar = new AllStarSaveData();
+        /// <summary>Court Builder slots.</summary>
+        public List<CustomCourtData> courts = CourtBuilder.Ensure(null);
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Coach tips already shown.</summary>

@@ -170,7 +170,14 @@ namespace CallerRetroBall.Gameplay
             else if (_request.Mode == GameMode.Practice && _request.Drill >= 0)
             {
                 _practice = new PracticeSession((DrillKind)_request.Drill, _match, _request.Seed);
-                if (_practice.Kind == DrillKind.Shootout && _request.ContextId == ShootoutDuel.ContextId)
+                if (_practice.Kind == DrillKind.Shootout && IsThreeContest)
+                {
+                    // All-Star 3-Point Contest: the "CPU" score is the one you need to beat this round.
+                    var contest = App.Career.allStar.contest;
+                    var rival = contest.round >= 2 ? AllStar.Finalists(contest).Find(e => !e.you) : null;
+                    _practice.SetCpu(Mathf.Max(0, AllStar.Target(contest) - 1), rival != null ? rival.name.ToUpperInvariant() : Loc.T("FINAL SPOT"));
+                }
+                else if (_practice.Kind == DrillKind.Shootout && _request.ContextId == ShootoutDuel.ContextId)
                 {
                     // Pass and play: P1 sets the score, P2 tries to beat it (kept across the two rounds).
                     _duel = App.PendingDuel != null && !App.PendingDuel.Finished ? App.PendingDuel : new ShootoutDuel();
@@ -1170,6 +1177,36 @@ namespace CallerRetroBall.Gameplay
                     else if (cupOutcome == CupOutcome.Eliminated)
                         note = "Knocked out. Champion: " + (App.Catalog.Team(App.Career.cup.championId)?.FullName ?? "?");
                 }
+                if (rewarded && _request.Mode == GameMode.AllStar)
+                {
+                    int bonus = AllStar.ApplyGame(App.Career, summary);
+                    title = summary.HumanWon ? "ALL-STAR WIN" : "ALL-STAR GAME";
+                    note = (summary.HumanWon ? "Team Sunrise takes it." : "Team Moonlight takes it.") + (bonus > 0 ? "  +" + bonus + " SP" : "");
+                }
+                if (rewarded && _request.Mode == GameMode.Franchise)
+                {
+                    var fr = App.Career.franchise;
+                    var frGame = Franchise.NextGame(fr);
+                    int frRound = frGame != null ? frGame.round : 0;
+                    App.OpenFranchiseOnMenu = true;
+                    if (Franchise.RecordYourGame(fr, App.Catalog, summary.HumanScore, summary.OpponentScore))
+                    {
+                        string champ = Franchise.ChampionId(fr);
+                        if (frRound == 2 && champ == Franchise.TeamId(fr.you))
+                        {
+                            title = "CHAMPIONS";
+                            note = "FRANCHISE CHAMPIONS! Year " + (fr.year - 1) + " is yours.";
+                        }
+                        else if (fr.phase == FranchisePhase.Playoffs && frRound == 0)
+                            note = Franchise.NextGame(fr) != null ? "Regular season over: you're in the playoffs!" : "Regular season over. You missed the playoffs.";
+                        else if (frRound == 0)
+                            note = "Record: " + SeasonEngine.Standings(fr.season).Find(r => r.TeamId == Franchise.TeamId(fr.you))?.Wins + "-"
+                                   + SeasonEngine.Standings(fr.season).Find(r => r.TeamId == Franchise.TeamId(fr.you))?.Losses;
+                        else if (frRound == 1)
+                            note = summary.HumanWon ? "On to the final!" : "Knocked out in the semifinal.";
+                        else note = "Runners-up. The off-season starts in the front office.";
+                    }
+                }
                 if (rewarded && _request.Mode == GameMode.Tournament)
                 {
                     var outcome = ClassicEngine.ApplyResult(App.Career.classic, App.Catalog, summary);
@@ -1336,6 +1373,11 @@ namespace CallerRetroBall.Gameplay
                 ShowDuelEnd();
                 return;
             }
+            if (IsThreeContest)
+            {
+                ShowThreeContestEnd();
+                return;
+            }
             bool best = false;
             if (App.Career != null)
             {
@@ -1357,6 +1399,27 @@ namespace CallerRetroBall.Gameplay
             string endTitle = _practice.Kind == DrillKind.Shootout ? (_practice.ShootoutWon ? "YOU WIN THE SHOOTOUT" : "CPU WINS") : DrillTitle(_practice.Kind);
             if (_practice.ShootoutWon) Sfx(SfxId.Fanfare, 0.8f);
             _hud.ShowPracticeEnd(endTitle, _practice.ResultText().ToUpperInvariant(), best);
+        }
+
+        private bool IsThreeContest => _request != null && _request.ContextId != null
+                                       && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal)
+                                       && App.Career != null && App.Career.allStar.contest.kind == "three";
+
+        /// <summary>All-Star 3-Point Contest: record the round, then back to the contest.</summary>
+        private void ShowThreeContestEnd()
+        {
+            var contest = App.Career.allStar.contest;
+            int round = contest.round;
+            AllStar.RecordThrees(contest, App.Catalog, _practice.ContestPoints);
+            App.SaveCareer();
+            Sfx(SfxId.Whistle, 0.7f);
+            var me = AllStar.You(contest);
+            string title;
+            if (contest.round >= 3) title = contest.youWon ? "3-POINT CHAMPION!" : contest.championName.ToUpperInvariant() + " WINS IT";
+            else title = round == 1 && AllStar.InFinal(contest, me) ? "YOU'RE IN THE FINAL" : "ROUND DONE";
+            if (contest.youWon) { Sfx(SfxId.Fanfare, 0.8f); Haptics.Success(); }
+            App.OpenAllStar = true;
+            _hud.ShowPracticeEnd(title, _practice.ContestPoints + " POINTS", false, "CONTINUE");
         }
 
         /// <summary>Pass-and-play Shootout: hand over to P2 after round one, or show who won.</summary>
@@ -1706,8 +1769,17 @@ namespace CallerRetroBall.Gameplay
 
         private void Continue()
         {
+            if (_request.Mode == GameMode.AllStar)
+            {
+                App.OpenAllStar = true;
+                SceneFlow.GoTo(AllStarHost());
+                return;
+            }
             SceneFlow.GoTo(_request.Mode == GameMode.Rise || _request.Mode == GameMode.Rival ? SceneNames.Season : SceneNames.MainMenu);
         }
+
+        /// <summary>The All-Star Weekend lives in the Rise hub while it's open; otherwise the contests are on the main menu.</summary>
+        private static string AllStarHost() => App.Career != null && AllStar.WeekendOpen(App.Career) ? SceneNames.Season : SceneNames.MainMenu;
 
         private void SetPaused(bool paused)
         {
@@ -1721,11 +1793,18 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>Modes that continue a run (no rematch button).</summary>
         private bool IsRun => _request.Mode == GameMode.Rise || _request.Mode == GameMode.Tournament || _request.Mode == GameMode.Rival
-                              || _request.Mode == GameMode.King || _request.Mode == GameMode.Arcade || _request.Mode == GameMode.Cup;
+                              || _request.Mode == GameMode.King || _request.Mode == GameMode.Arcade || _request.Mode == GameMode.Cup
+                              || _request.Mode == GameMode.Franchise || _request.Mode == GameMode.AllStar;
 
         private void Rematch()
         {
             if (IsRun) { Continue(); return; }
+            if (_request.ContextId != null && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal))
+            {
+                App.OpenAllStar = true;
+                SceneFlow.GoTo(AllStarHost());
+                return;
+            }
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);

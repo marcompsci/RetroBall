@@ -27,6 +27,10 @@ namespace CallerRetroBall.Logic
         Cup = 12,
         /// <summary>Full Court 5-on-5: both hoops, 2s and 3s, possessions change after a make.</summary>
         FullCourt = 13,
+        /// <summary>Franchise mode: a Full Court game between two Franchise clubs.</summary>
+        Franchise = 14,
+        /// <summary>The All-Star Game: Team Sunrise (you) vs Team Moonlight, Full Court.</summary>
+        AllStar = 15,
     }
 
     /// <summary>

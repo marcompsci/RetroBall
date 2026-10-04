@@ -27,12 +27,13 @@ In App Store Connect, open **App ▸ Features ▸ Game Center**. The IDs must ma
 | `retroball.lb.around_world` | Around the World | Low to high | Elapsed time (to the hundredth of a second) |
 | `retroball.lb.win_streak` | Best Win Streak | High to low | Integer |
 | `retroball.lb.game_points` | Most Points in a Game | High to low | Integer |
+| `retroball.lb.dunk_round` | Best Dunk Contest Round | High to low | Integer |
 
 "Around the World" scores are sent in hundredths of a second (41.23 s = 4123), which is the format Game Center's "Elapsed time (to the hundredth of a second)" expects. A leaderboard only receives a score once you have one: zeros are never sent.
 
 ### Achievements
 
-Achievements report 100% when earned. Points total **890** (Game Center allows up to 1,000; no single achievement above 100). This list comes from `Achievements.All` in `Logic/Progression/Daily.cs`, and a unit test checks the limits.
+Achievements report 100% when earned. Points total **1,000** (Game Center allows up to 1,000; no single achievement above 100). This list comes from `Achievements.All` in `Logic/Progression/Daily.cs`, and a unit test checks the limits.
 
 | Achievement ID | Title | How it's earned | Points |
 |---|---|---|---|
@@ -59,6 +60,9 @@ Achievements report 100% when earned. Points total **890** (Game Center allows u
 | `retroball.ach.couch_game` | Couch Rivals | Play a 2 Player game. | 10 |
 | `retroball.ach.your_colors` | Your Colors | Create your own team. | 10 |
 | `retroball.ach.long_haul` | Long Haul | Play five Rise seasons. | 50 |
+| `retroball.ach.franchise_title` | Front Office | Win a title in Franchise. | 50 |
+| `retroball.ach.dunk_contest` | Above the Rim | Win the Dunk Contest. | 30 |
+| `retroball.ach.three_contest` | Money Ball | Win the 3-Point Contest. | 30 |
 
 Each achievement needs a title, a pre-earned and an earned description, its points, and a 512×512 or 1024×1024 image. Mark none of them hidden.
 

@@ -7,7 +7,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 | Field | Value |
 |---|---|
 | Name (30) | RetroBall |
-| Subtitle (30) | Retro 3v3 street basketball *(27)* |
+| Subtitle (30) | Retro 3v3 & 5v5 basketball *(26)* |
 | Bundle ID | `com.marcompsci.retroball` (already set; registered when you ran it on your iPhone) |
 | SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
@@ -17,48 +17,52 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 
 ## Promotional text (170)
 
-> Heat up, throw the alley-oop, climb the Arcade Ladder, and build your own team. Retro 3v3 hoops with secrets to find. No ads. No purchases. Fully offline.
+> Run a franchise, win the Dunk Contest, build your own court and kit. Retro 3v3 and 5v5 hoops with an original chiptune soundtrack. No ads. No purchases. Offline.
 
-*(154 characters)*
+*(161 characters)*
 
 ## Description (4000)
 
 > **Call your shot. Build your legacy.**
 >
-> RetroBall is a pixel-art 3v3 half-court basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Hit three in a row and you HEAT UP. Lob it to a cutter at the rim for the ALLEY-OOP. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
+> RetroBall is a pixel-art basketball game made for one thumb on the stick and one on the buttons. Hold to shoot and release on the green. Hit three in a row and you HEAT UP. Lob it to a cutter for the ALLEY-OOP. When the game slows down, call a play: Pick & Roll, Give & Go, or Clear Out.
 >
-> On defense, jump to contest, reach for steals, switch onto the ball handler, and box out. Every AI team has its own defense (full-court pressure, zones, packing the paint) and the smart ones adjust when you find a weakness.
+> On defense, contest, reach for steals, switch onto the ball handler, and box out. Every AI team has its own defense, and the smart ones adjust when you find a weakness.
+>
+> **FRANCHISE**
+> Be the GM of a league club, season after season. Set the rotation, trade with seven other GMs, re-sign your players, chase free agents under the salary cap, scout prospects, and win the draft lottery. Players age, improve, decline, and retire into the Hall of Fame. Play every game Full Court 5-on-5, or simulate.
 >
 > **RISE MODE**
-> Beat five street crews on The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, rival crews, and story scenes, all the way to The Gold Signal Cup.
+> Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, rivals and story scenes. Halfway through, it's the All-Star Weekend.
 >
-> **ARCADE MODES**
-> • Arcade Ladder: six stages, three continues, one secret boss
-> • King of the Court: win until you lose
-> • The Caller Cup: an eight-team knockout
-> • Full Court 5-on-5: both baskets, 2s and 3s
-> • 1-on-1, Quick Call (winners' ball), and a new Daily Challenge every day
+> **ALL-STAR WEEKEND**
+> • Dunk Contest: pick a dunk, enter its combo in the air, time the slam, and face five judges
+> • 3-Point Contest against the league's best shooters
+> • The All-Star Game, Full Court
+>
+> **MORE WAYS TO PLAY**
+> • Full Court 5-on-5 and half-court 3v3 (winners' ball)
+> • Arcade Ladder with a secret boss, King of the Court, The Caller Cup
+> • Holiday Games on Christmas, Halloween, Easter and Fourth of July courts
+> • 1-on-1, a Daily Challenge, H-O-R-S-E, 21 and more party games
+> • 2 Player on one iPhone, face to face
 >
 > **MAKE IT YOURS**
-> Create your player and your own team: name, colours, jersey pattern, shorts, shoes, logo, and home court. Train attributes, unlock kits, and fill your trophy room with badges.
->
-> **SECRETS**
-> Enter old-school codes for big heads, a rainbow ball, hidden courts, and a secret crew. Hints are earned by playing.
->
-> **PRACTICE LAB**
-> Free Shoot, Passing Targets, Dribble Lane, 3-Point Contest, Lockdown, and the Shootout against a CPU sharpshooter.
+> Create your player and your team. Design Home, Away and Alt kits in the Kit Studio and share them with a code or QR. Build up to three courts of your own: floor, paint, lines, stands, sky and a centre-court logo. Pick your music in the Music Player: nine original chiptune tracks.
 >
 > **PLAY YOUR WAY**
-> • Touch controls or a Bluetooth controller (menus too)
-> • 2 Player on one device
-> • Optional CRT scanlines and 120 Hz on ProMotion iPhones
+> • Touch controls or a Bluetooth controller
 > • English and Spanish
-> • Left-handed layout, large buttons, tap-to-shoot, reduce motion, colourblind team patterns
+> • Colour filters, captions, VoiceOver menus, left-handed layout, large buttons, tap-to-shoot, reduce motion
+> • Optional CRT scanlines and 120 Hz on ProMotion iPhones
+> • Optional Game Center and iCloud save sync
 >
 > **MADE TO RESPECT YOUR TIME**
-> Games last about two minutes. Fully offline. No account, no ads, no in-app purchases, no tracking. Game Center is optional.
+> Fully offline. No account, no ads, no in-app purchases, no tracking.
 >
-> All teams, players, courts, art, and music are original.
+> All teams, players, courts, art and music are original.
+
+*(2316 characters without the quote markers.)*
 
 ## Spanish (Mexico) localization
 
@@ -75,17 +79,17 @@ Add **Spanish (Mexico)** as a localization in App Store Connect and paste these.
 >
 > RetroBall es un juego de básquet 3v3 de media cancha en pixel art, hecho para jugar con un pulgar en el stick y otro en los botones. Mantén para tirar y suelta en verde. Encesta tres seguidos y te pones AL ROJO VIVO. Lanza el alley-oop a un compañero junto al aro.
 >
-> Modo Ascenso, Escalera Arcade con jefe secreto, Rey de la Cancha, la Caller Cup, 1 contra 1, Reto Diario y 2 jugadores en un dispositivo. Crea tu jugador y tu propio equipo, descubre códigos secretos y llena tu sala de trofeos.
+> Modo Franquicia (traspasos, agencia libre, draft y tope salarial), Fin de Semana de las Estrellas con concurso de clavadas y de triples, Cancha completa 5 contra 5, constructor de canchas, estudio de uniformes y nueve temas chiptune originales. Modo Ascenso, Escalera Arcade con jefe secreto, Rey de la Cancha, la Caller Cup, 1 contra 1, Reto Diario y 2 jugadores en un dispositivo. Crea tu jugador y tu propio equipo, descubre códigos secretos y llena tu sala de trofeos.
 >
 > Controles táctiles o mando Bluetooth. Sin conexión, sin cuenta, sin anuncios, sin compras y sin rastreo. Todo el contenido es original.
 
 ## Keywords (100)
 
 ```
-basketball,arcade,retro,pixel,3v3,hoops,streetball,offline,sports,court,season,shot,8-bit,16-bit
+basketball,arcade,retro,pixel,3v3,5v5,hoops,streetball,offline,sports,franchise,dunk,chiptune,8-bit
 ```
 
-*(96 characters.)* Don't add the names of real leagues, teams, players, or other games. Apple rejects keywords that use trademarks you don't own.
+*(99 characters.)* Don't add the names of real leagues, teams, players, or other games. Apple rejects keywords that use trademarks you don't own.
 
 ## URLs
 
@@ -127,11 +131,15 @@ The app uses no encryption beyond what iOS itself provides. The build post-proce
 The 6.9" iPhone screenshots are required; App Store Connect scales them down for smaller iPhones. Take them on an iPhone Pro Max–class simulator with **⌘S**. Use portrait 1320×2868 (6.9"), or 1290×2796 (6.7") if Apple still accepts that size for your submission. Suggested set:
 
 1. A HEAT CHECK player with flames, mid-jumper
-2. An ALLEY-OOP finish (gold pass arrow, then the slam)
-3. The Arcade Ladder with THE GLITCH on its neon court
-4. Locker Room ▸ TEAM (create-a-team) with a custom kit
-5. The Rise Mode hub or a story scene
-6. Defense: a block, with the CRT filter on
+2. Franchise ▸ TRADE with a deal the other GM accepts
+3. The Dunk Contest: a 360 slam with the judges' cards up
+4. Full Court 5-on-5 on a custom court from the Court Builder
+5. Locker Room ▸ KIT (Kit Studio) with the live preview
+6. An ALLEY-OOP finish (gold pass arrow, then the slam)
+7. Franchise ▸ DRAFT with scouted prospects and the lottery result
+8. A Holiday Game (Christmas court) or the Arcade Ladder boss
+9. The Music Player with the level meter moving
+10. The Rise Mode hub with the ALL-STAR WEEKEND button
 
 Use **RetroBall ▸ Release ▸ Capture Store Screenshot** in Play mode (see `docs/LAUNCH_KIT.md`). Captions for each shot are in the launch kit.
 
@@ -139,4 +147,4 @@ Only show real gameplay. Don't add device frames that show non-Apple hardware, a
 
 ## App Review notes (paste into "Notes")
 
-> Fully offline game with no login, ads, or purchases. Optional Apple services only: Game Center (Settings ▸ Game Center) and iCloud save sync (Settings ▸ iCloud Sync). All content is original and generated procedurally. To see the full season flow quickly: Main menu ▸ RISE MODE ▸ PLAY NEXT.
+> Fully offline game with no login, ads, or purchases. Optional Apple services only: Game Center (Settings ▸ Game Center) and iCloud save sync (Settings ▸ iCloud Sync). All content is original and generated procedurally. To see the main modes quickly: Main menu ▸ PLAY ▸ FRANCHISE (START FRANCHISE, then SIM GAME or PLAY GAME) and PLAY ▸ ALL-STAR CONTESTS ▸ DUNK CONTEST. Rise Mode: Main menu ▸ RISE MODE ▸ PLAY NEXT.

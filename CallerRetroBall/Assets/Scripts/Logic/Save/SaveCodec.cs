@@ -20,7 +20,7 @@ namespace CallerRetroBall.Logic
     /// or wrongly-typed fields fall back to defaults instead of failing, and anything unreadable
     /// produces a fresh career with <see cref="LoadStatus.Recovered"/>.
     /// </summary>
-    public static class SaveCodec
+    public static partial class SaveCodec
     {
         public static string Encode(CareerSaveData d)
         {
@@ -99,10 +99,15 @@ namespace CallerRetroBall.Logic
                     ["colorFilter"] = d.settings.colorFilter,
                     ["captions"] = d.settings.captions,
                     ["icloud"] = d.settings.icloudSync,
+                    ["musicMenu"] = d.settings.musicMenu,
+                    ["musicGame"] = d.settings.musicGame,
                 },
                 ["secrets"] = EncodeSecrets(d.secrets ?? new SecretsSaveData()),
                 ["customTeam"] = EncodeTeam(d.customTeam ?? new CustomTeamData()),
                 ["kits"] = EncodeKits(d.kits ?? new KitSaveData()),
+                ["franchise"] = EncodeFranchise(d.franchise),
+                ["allStar"] = EncodeAllStar(d.allStar),
+                ["courts"] = EncodeCourts(d.courts),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -516,10 +521,16 @@ namespace CallerRetroBall.Logic
                 d.settings.colorFilter = (int)ColorAccess.Normalize(Int(disp, "colorFilter", 0));
                 d.settings.captions = Bool(disp, "captions", false);
                 d.settings.icloudSync = Bool(disp, "icloud", true);
+                d.settings.musicMenu = Math.Max(-1, Math.Min(Soundtrack.Count - 1, Int(disp, "musicMenu", -1)));
+                d.settings.musicGame = Math.Max(-2, Math.Min(Soundtrack.Count - 1, Int(disp, "musicGame", -1)));
                 d.tipsSeen = StrList(o, "tipsSeen");
                 d.secrets = DecodeSecrets(Obj(o, "secrets"));
                 d.customTeam = DecodeTeam(Obj(o, "customTeam"));
                 d.kits = DecodeKits(Obj(o, "kits"));
+                d.franchise = DecodeFranchise(Obj(o, "franchise"));
+                d.allStar = DecodeAllStar(Obj(o, "allStar"));
+                d.courts = DecodeCourts(Arr(o, "courts"));
+                CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");
                 d.rival = new RivalSaveData
@@ -556,7 +567,7 @@ namespace CallerRetroBall.Logic
                     int mode = Int(h, "mode", 0);
                     d.history.Add(new MatchHistoryEntry
                     {
-                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.Cup ? (GameMode)mode : GameMode.QuickCall,
+                        day = Int(h, "day", 0), mode = mode >= 0 && mode <= (int)GameMode.AllStar ? (GameMode)mode : GameMode.QuickCall,
                         opponentId = Str(h, "opp", null), scoreFor = Int(h, "for", 0), scoreAgainst = Int(h, "against", 0),
                         points = Int(h, "pts", 0), assists = Int(h, "ast", 0), rebounds = Int(h, "reb", 0),
                     });

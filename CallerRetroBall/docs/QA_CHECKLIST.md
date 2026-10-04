@@ -112,3 +112,18 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] TRADING CARD: card shows your player, kit, OVR, stats; SHARE CARD saves to Photos / AirDrop.
 - [ ] Play ▸ HOLIDAY GAMES: all four courts load with decorations; the in-season one (October = Halloween) is on top and on the main menu.
 - [ ] Full Court: after a basket the inbounder stands on the baseline and must pass ("INBOUND" label); 8-second and backcourt violations are called; tired AI players sub out ("SUB: … IN"); the box score lists subs; the Rise final is Full Court.
+
+## Phase 21
+- [ ] Play ▸ FRANCHISE: CHANGE CLUB cycles the eight clubs; START FRANCHISE opens HOME with week 1. PLAY GAME starts a Full Court game against the right opponent on the right court; after it, CONTINUE returns to the front office with the result counted and the rest of the week simulated.
+- [ ] SIM GAME / SIM TO PLAYOFFS / SIM PLAYOFFS advance; LEAGUE shows standings, the playoff line, results, top scorers.
+- [ ] ROSTER: UP/DOWN changes the depth chart (the top player is the one you control next game); CUT asks first, leaves dead money, and is blocked at 7 players in season.
+- [ ] TRADE: NEXT TEAM cycles; ADD players on both sides; the verdict line updates; PROPOSE TRADE only lights up when they'd accept; after the deadline (week 10) trades are closed.
+- [ ] Off-season: DRAFT shows the lottery result, SCOUT narrows ranges (visits left counts down), DRAFT picks when you're on the clock; RE-SIGN, then FREE AGENCY (SIGN, cap-room errors), FINISH FREE AGENCY, PRESEASON → START SEASON 2. HISTORY lists the season, champion, awards, transactions. Quit and relaunch mid-off-season: everything is still there.
+- [ ] Play ▸ ALL-STAR CONTESTS ▸ DUNK CONTEST: pick a dunk, the combo arrows light up as you press them (on-screen pad, arrow keys/WASD or d-pad), the timer bar runs down, a wrong arrow or timeout gives one retry, the slam meter + JAM! (or Space / A), the dunker runs, jumps, spins on 360s, the rim shakes, judges' cards flip up one by one, total out of 50. Two dunks a round; the final; the winner gets +150 SP.
+- [ ] 3-POINT CONTEST: SHOOT opens the Shootout with "BEAT … n" set to the score you need; CONTINUE returns to the contest; round one → final → result.
+- [ ] ALL-STAR GAME: Team Sunrise (you at the top of the lineup) vs Team Moonlight, Full Court; CONTINUE returns to the All-Star screen.
+- [ ] Rise: from mid-season the hub shows ALL-STAR WEEKEND with n/3 done; events done there are marked DONE; the button goes away when the regular season ends.
+- [ ] Locker Room ▸ COURT: every option changes the preview; SAVE COURT; the court is in Quick Call's COURT list and Locker Room ▸ TEAM ▸ home court; PLAY HERE plays on it (also in Full Court if it's your home court); DELETE COURT removes it and a team using it goes back to a street court.
+- [ ] Settings ▸ MUSIC PLAYER: every track plays (new songs take about a second the first time), the meter moves, STOP stops; MENU MUSIC and MATCH MUSIC (and SHUFFLE) are used on the menu and in games and survive a relaunch.
+- [ ] Back (Escape / controller B) closes the Franchise, All-Star and Music Player panels without also leaving the screen behind them.
+

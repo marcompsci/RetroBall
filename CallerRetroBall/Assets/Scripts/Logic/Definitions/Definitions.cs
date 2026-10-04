@@ -132,6 +132,8 @@ namespace CallerRetroBall.Logic
         Secret = 4,
         /// <summary>Your created team (Locker Room ▸ TEAM).</summary>
         Custom = 5,
+        /// <summary>Special-event sides: Franchise clubs (team.fr.N) and the All-Star Game teams. Never in menus.</summary>
+        Franchise = 6,
     }
 
     public enum LogoShape { Circle = 0, Shield = 1, Diamond = 2, Hexagon = 3, Badge = 4 }
@@ -171,7 +173,14 @@ namespace CallerRetroBall.Logic
     }
 
     public enum CourtCircuit { Blacktop = 0, League = 1, Practice = 2, /** Hidden courts unlocked by secrets: neon grid floor. */ Secret = 3,
-        /** Seasonal courts for the Holiday Games (always open). */ Holiday = 4 }
+        /** Seasonal courts for the Holiday Games (always open). */ Holiday = 4,
+        /** Courts you built in the Court Builder. */ Custom = 5 }
+
+    /// <summary>How a court's floor is drawn (−1 on a court = pick from its circuit).</summary>
+    public enum FloorStyle { Asphalt = 0, Hardwood = 1, NeonGrid = 2, Tiles = 3, Rubber = 4 }
+
+    /// <summary>What's behind the baseline.</summary>
+    public enum StandsStyle { Crowd = 0, Fence = 1, Brick = 2 }
 
     /// <summary>Holiday decorations a court is drawn with.</summary>
     public enum HolidayTheme { None = 0, Christmas = 1, Halloween = 2, Easter = 3, FourthOfJuly = 4 }
@@ -192,6 +201,13 @@ namespace CallerRetroBall.Logic
         public float crowdDensity;
         /// <summary>Holiday decorations (Holiday courts only).</summary>
         public HolidayTheme theme;
+        /// <summary>Floor look; −1 = from the circuit (league hardwood, secret neon, street asphalt).</summary>
+        public int floorStyle = -1;
+        public StandsStyle stands;
+        /// <summary>Centre-court logo motif (−1 = none), its shape and colour.</summary>
+        public int logoMotif = -1;
+        public LogoShape logoShape;
+        public RgbColor logoColor;
 
         public string Id => id;
     }

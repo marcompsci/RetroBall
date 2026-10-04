@@ -107,7 +107,7 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Courts you can choose as home: every street and league court (not practice or hidden ones).</summary>
         public static List<CourtDef> HomeCourts(ContentCatalog c) =>
-            c.Courts.FindAll(x => x.circuit == CourtCircuit.Blacktop || x.circuit == CourtCircuit.League);
+            c.Courts.FindAll(x => x.circuit == CourtCircuit.Blacktop || x.circuit == CourtCircuit.League || x.circuit == CourtCircuit.Custom);
 
         /// <summary>
         /// Puts (or refreshes) your team in the catalog so matches, logos and menus can find it, and
@@ -150,7 +150,7 @@ namespace CallerRetroBall.Logic
 
         private static string UniqueAbbreviation(ContentCatalog c, string abbr)
         {
-            bool Taken(string a) => c.Teams.Exists(t => t.id != TeamId && t.id != DefaultContent.PlayerCrewId && t.abbreviation == a);
+            bool Taken(string a) => c.Teams.Exists(t => t.id != TeamId && t.id != DefaultContent.PlayerCrewId && t.tier != TeamTier.Franchise && t.abbreviation == a);
             if (!Taken(abbr)) return abbr;
             for (int i = 2; i < 10; i++)
             {

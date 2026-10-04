@@ -278,7 +278,7 @@ namespace CallerRetroBall.Logic
             U(PartChest, (int)ChestMark.Number, "Hit 25 GREEN releases.", d => d.totals.greens >= 25),
             U(PartSides, (int)SideStripe.Double, "Throw or finish 3 alley-oops.", d => d.totals.alleyOops >= 3),
             U(PartTop, (int)ShoeTop.High, "Heat up 3 times.", d => d.totals.heatUps >= 3),
-            U(PartLength, (int)ShortsLength.Long, "Play a Full Court game.", d => d.history != null && d.history.Exists(h => h.mode == GameMode.FullCourt)),
+            U(PartLength, (int)ShortsLength.Long, "Play a Full Court game.", d => d.history != null && d.history.Exists(h => h.mode == GameMode.FullCourt || h.mode == GameMode.Franchise)),
             U(PartPattern, (int)TeamPattern.Chevrons, "Win the First Call Classic.", d => d.classic != null && d.classic.titles >= 1),
             U(PartPattern, (int)TeamPattern.Checker, "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade != null && d.secrets.arcade.clears >= 1),
             U(PartPattern, (int)TeamPattern.Rings, "Win the Caller Cup.", d => d.cup != null && d.cup.titles >= 1),

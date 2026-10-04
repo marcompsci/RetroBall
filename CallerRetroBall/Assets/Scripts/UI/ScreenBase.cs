@@ -53,8 +53,12 @@ namespace CallerRetroBall.UI
 
         protected virtual void Update()
         {
-            if (BackPressedThisFrame()) OnBack();
+            // Full-screen panels (Franchise, All-Star, Music Player) handle Back themselves.
+            if (BackPressedThisFrame() && !PanelOpen()) OnBack();
         }
+
+        private static bool PanelOpen() =>
+            FindAnyObjectByType<FranchiseScreen>() != null || FindAnyObjectByType<AllStarScreen>() != null || FindAnyObjectByType<MusicPlayer>() != null;
 
         private static bool BackPressedThisFrame()
         {

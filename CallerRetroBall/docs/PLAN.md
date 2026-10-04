@@ -354,6 +354,37 @@
   eight-second violations, fast-break lanes and get-back defence, two-player benches with substitutions at
   dead balls when AI players tire (subs keep their own box-score lines), and the Rise Mode final is Full Court.
 
+## Phase 21: Franchise, All-Star Weekend, Court Builder, soundtrack, ship 1.0
+
+- **Franchise** (Play ▸ FRANCHISE): run one of the eight Caller League clubs for as many seasons as you like.
+  7–9 man rosters (the league's players plus generated depth), contracts in tenths of a million under an
+  $85.0M cap (minimum deals always fit; your own players can be re-signed over the cap; releasing leaves
+  half a season's salary as dead money). A 14-game double round robin of Full Court games (PLAY or SIM),
+  top-four playoffs, MVP and rookie awards. Off-season in order: aging (growth toward potential before 26,
+  decline after 29), retirements and a Hall of Fame, a draft lottery for the four non-playoff teams (40/30/20/10
+  for the top two picks), a 12-man draft class with scouting (each visit narrows the rating range; the potential
+  grade shows after two), rookie scale contracts, re-signing, free agency (AI clubs fill their rosters), preseason
+  cuts. Trades with the seven AI GMs (up to 3 players a side, deadline week 10): they value rating (squared,
+  so stars beat depth), youth with potential, age and contract value, need to win the deal by a margin, and
+  both sides must stay roster- and cap-legal (or take back ≤125% of outgoing salary). History book: every
+  season's record and finish, champions, awards, transactions.
+- **All-Star Weekend**: Dunk Contest (11 original dunks with arrow combos 2–7 long, a clock to enter them,
+  a slam meter, two tries a dunk; five judges score 5–10 on difficulty, execution, timing, with repeats marked
+  down; you plus three league dunkers, two rounds), 3-Point Contest (the Shootout drill against three of the
+  league's best shooters, top two to a final), and the All-Star Game (Team Sunrise vs Team Moonlight, the
+  league's best split by snake draft, Full Court, you start). In Rise it opens at mid-season and stays open to
+  the end of the regular season; everything is also on Play ▸ ALL-STAR CONTESTS.
+- **Court Builder** (Locker Room ▸ COURT): three slots; floor style (asphalt, hardwood, neon grid, tiles,
+  rubber) and colour, lines, paint, what's behind the baseline (crowd, chain-link fence, brick wall), sky
+  presets, crowd size, centre-court logo (motif, shape, colour); live preview from the real court generator.
+  Saved courts are in Quick Call and can be your team's home court.
+- **Soundtrack + Music Player** (Settings ▸ MUSIC PLAYER): six new original songs written by an in-code
+  composer (pulse lead over chord tones, triangle bass, arpeggio, noise drums, A-A-B-A loops, all in key)
+  plus the three original loops; level meter; menu track and match track (or shuffle) are saved.
+- **Game Center**: three new achievements (Franchise title, Dunk Contest, 3-Point Contest; 1,000 points total)
+  and a Best Dunk Contest Round leaderboard.
+- **Ship it**: store listing, screenshots plan and review notes updated for 1.0; upload via `tools/ship_testflight.sh`.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

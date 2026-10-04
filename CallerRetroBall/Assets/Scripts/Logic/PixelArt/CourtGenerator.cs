@@ -53,8 +53,11 @@ namespace CallerRetroBall.Logic.PixelArt
             int w = TextureWidth(g), h = TextureHeight(g);
             var c = new PixelCanvas(w, h);
             var rng = new SeededRandom(seed);
-            bool hardwood = court.circuit == CourtCircuit.League;
-            bool grid = court.circuit == CourtCircuit.Secret;
+            var style = court.floorStyle >= 0 ? (FloorStyle)court.floorStyle
+                      : court.circuit == CourtCircuit.League ? FloorStyle.Hardwood
+                      : court.circuit == CourtCircuit.Secret ? FloorStyle.NeonGrid : FloorStyle.Asphalt;
+            bool hardwood = style == FloorStyle.Hardwood;
+            bool grid = style == FloorStyle.NeonGrid;
 
             // Floor
             var floorDark = court.floor.Darken(0.12f);
@@ -76,6 +79,19 @@ namespace CallerRetroBall.Logic.PixelArt
                         bool seam = x % 6 == 0 || (y + plank * 13) % 40 == 0;
                         col = seam ? floorDark : (plank % 2 == 0 ? court.floor : floorLight);
                     }
+                    else if (style == FloorStyle.Tiles)
+                    {
+                        // Big two-tone tiles with thin grout.
+                        bool grout = x % 12 == 0 || y % 12 == 0;
+                        col = grout ? floorDark : (((x / 12) + (y / 12)) % 2 == 0 ? court.floor : floorLight);
+                    }
+                    else if (style == FloorStyle.Rubber)
+                    {
+                        // Poured rubber: solid colour with confetti flecks in the paint and line colours.
+                        uint hsh = (uint)(x * 73856093) ^ (uint)(y * 19349663) ^ seed;
+                        int fleck = (int)(hsh % 61);
+                        col = fleck == 0 ? court.paint : (fleck == 1 ? court.lines.Darken(0.2f) : court.floor);
+                    }
                     else
                     {
                         bool speck = ((x * 7 + y * 13) ^ (int)(seed & 0xFF)) % 9 == 0;
@@ -87,6 +103,8 @@ namespace CallerRetroBall.Logic.PixelArt
 
             // Paint (key) fill
             FillCourtRect(c, g, -g.paintWidth * 0.5f, 0f, g.paintWidth * 0.5f, g.paintLength, court.paint.WithAlpha(hardwood ? (byte)200 : (byte)150));
+
+            if (court.logoMotif >= 0) DrawCenterLogo(c, g, court);
 
             // Lines
             var line = court.lines;
@@ -397,12 +415,57 @@ namespace CallerRetroBall.Logic.PixelArt
             return false;
         }
 
+        /// <summary>Centre-court logo just inside the half-court line, blended into the floor.</summary>
+        private static void DrawCenterLogo(PixelCanvas c, CourtGeometry g, CourtDef court)
+        {
+            var logo = LogoGenerator.Generate(court.logoShape, (LogoMotif)Math.Max(0, Math.Min(10, court.logoMotif)),
+                                              court.logoColor, court.lines, court.floor.Darken(0.35f));
+            CourtToPixel(g, new Vec2(0f, g.depth - 1.05f), out float cx, out float cy);
+            int left = (int)Math.Round(cx) - LogoGenerator.Size / 2, bottom = (int)Math.Round(cy) - LogoGenerator.Size / 2;
+            for (int y = 0; y < LogoGenerator.Size; y++)
+                for (int x = 0; x < LogoGenerator.Size; x++)
+                {
+                    var p = logo.Get(x, y);
+                    if (p.a == 0 || !c.InBounds(left + x, bottom + y)) continue;
+                    c.Set(left + x, bottom + y, RgbColor.Lerp(c.Get(left + x, bottom + y), p, 0.85f));
+                }
+        }
+
         private static void DrawCrowd(PixelCanvas c, CourtGeometry g, CourtDef court, SeededRandom rng, bool drawPeople = true)
         {
             CourtToPixel(g, Vec2.Zero, out _, out float baselinePy);
             int start = (int)Math.Round(baselinePy) + 2;
             var wall = court.skyTop.Darken(0.35f);
             var wallLight = court.skyTop.Darken(0.15f);
+            if (court.stands == StandsStyle.Brick)
+            {
+                var brick = RgbColor.FromHex("#8C3B2E");
+                var mortar = RgbColor.FromHex("#C9B79C");
+                for (int y = start; y < c.Height; y++)
+                    for (int x = 0; x < c.Width; x++)
+                    {
+                        int row = (y - start) / 4;
+                        bool joint = (y - start) % 4 == 0 || (x + (row % 2) * 4) % 8 == 0;
+                        c.Set(x, y, joint ? mortar : (((x / 8) + row) % 3 == 0 ? brick.Darken(0.1f) : brick));
+                    }
+                return;
+            }
+            if (court.stands == StandsStyle.Fence)
+            {
+                // Sky behind a chain-link fence on posts.
+                var post = RgbColor.FromHex("#58586A");
+                var wire = RgbColor.FromHex("#A8B2BD");
+                for (int y = start; y < c.Height; y++)
+                    for (int x = 0; x < c.Width; x++)
+                    {
+                        float t = (y - start) / (float)Math.Max(1, c.Height - start);
+                        var sky = RgbColor.Lerp(court.skyBottom, court.skyTop, t);
+                        bool link = (x + y) % 6 == 0 || (x - y + 600) % 6 == 0;
+                        bool isPost = x % 48 < 2 || y - start < 2;
+                        c.Set(x, y, isPost ? post : (link ? wire : sky));
+                    }
+                return;
+            }
             for (int y = start; y < c.Height; y++)
                 for (int x = 0; x < c.Width; x++)
                     c.Set(x, y, (y - start) % 8 == 0 ? wallLight : wall);

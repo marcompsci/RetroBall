@@ -279,6 +279,8 @@ namespace CallerRetroBall.Tests
             d.practice.horseWins = 1;
             d.practice.aroundWorldTime = 42f;
             d.customTeam.created = true;
+            d.franchise.titles = 1;
+            d.allStar.dunkTitles = d.allStar.threeTitles = 1;
             var earned = Achievements.Earned(d);
             foreach (var id in Achievements.AllAchievements) Assert.Contains(id, earned);
         }

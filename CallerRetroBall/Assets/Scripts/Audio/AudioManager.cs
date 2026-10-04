@@ -19,7 +19,7 @@ namespace CallerRetroBall.Audio
         private readonly Dictionary<SfxId, AudioClip> _clips = new Dictionary<SfxId, AudioClip>();
         private AudioSource _music;
         private AudioSource _ambience;
-        private readonly AudioClip[] _tracks = new AudioClip[AudioSynth.MusicTrackCount];
+        private readonly AudioClip[] _tracks = new AudioClip[Soundtrack.Count];
         private int _track = -1;
         private bool _ambienceOn;
         private AudioSource[] _sfx;
@@ -82,20 +82,73 @@ namespace CallerRetroBall.Audio
         }
 
         /// <summary>
-        /// Switches the music loop: 0 = menus, 1 = matches, 2 = Rise hub. Tracks are synthesised the
-        /// first time they're needed (a fraction of a second each).
+        /// Switches the music for a screen: 0 = menus, 1 = matches, 2 = Rise hub. Menus and matches play
+        /// the tracks picked in the Music Player (matches can shuffle the whole soundtrack).
         /// </summary>
-        public static void PlayMusic(int track)
+        public static void PlayMusic(int role)
         {
             if (_instance == null) return;
-            track = ((track % AudioSynth.MusicTrackCount) + AudioSynth.MusicTrackCount) % AudioSynth.MusicTrackCount;
-            if (_instance._track == track) return;
+            var s = App.Career?.settings;
+            int track = ((role % AudioSynth.MusicTrackCount) + AudioSynth.MusicTrackCount) % AudioSynth.MusicTrackCount;
+            if (role == 0 && s != null && s.musicMenu >= 0) track = s.musicMenu;
+            if (role == 1 && s != null && s.musicGame >= 0) track = s.musicGame;
+            if (role == 1 && s != null && s.musicGame == MusicShuffle) track = Random.Range(0, Soundtrack.Count);
+            PlayTrack(track);
+        }
+
+        /// <summary>Matches shuffle the whole soundtrack.</summary>
+        public const int MusicShuffle = -2;
+
+        /// <summary>The track playing now (0..Soundtrack.Count-1).</summary>
+        public static int CurrentTrack => _instance != null ? _instance._track : 0;
+
+        public static bool IsPlaying => _instance != null && _instance._music.isPlaying;
+
+        /// <summary>Plays one soundtrack track now (the Music Player). Composed songs are written the first
+        /// time they're played (about a second) and only the current one is kept in memory.</summary>
+        public static void PlayTrack(int track)
+        {
+            if (_instance == null) return;
+            if (track < 0 || track >= Soundtrack.Count) track = 0;
+            if (_instance._track == track && _instance._music.isPlaying) return;
+            int old = _instance._track;
             if (_instance._tracks[track] == null)
-                _instance._tracks[track] = MakeClip("music.track" + track, AudioSynth.MusicLoop(track));
+                _instance._tracks[track] = MakeClip("music.track" + track, Soundtrack.Render(track));
             _instance._track = track;
             _instance._music.clip = _instance._tracks[track];
             _instance._music.Play();
+            if (old >= Soundtrack.ClassicCount && old != track && _instance._tracks[old] != null)
+            {
+                Destroy(_instance._tracks[old]);
+                _instance._tracks[old] = null;
+            }
         }
+
+        public static void StopMusic()
+        {
+            if (_instance != null) _instance._music.Stop();
+        }
+
+        /// <summary>Loudness of the music right now in <paramref name="bands"/> slices (0..1), for the player's meter.</summary>
+        public static void Levels(float[] bands)
+        {
+            if (_instance == null || bands == null || bands.Length == 0) return;
+            var src = _instance._music;
+            if (!src.isPlaying || src.clip == null) { System.Array.Clear(bands, 0, bands.Length); return; }
+            var data = _levelBuffer;
+            src.GetSpectrumData(data, 0, FFTWindow.BlackmanHarris);
+            // Log-spaced bands from bass to treble.
+            int n = bands.Length;
+            for (int b = 0; b < n; b++)
+            {
+                int from = (int)(Mathf.Pow(data.Length, b / (float)n)), to = Mathf.Max(from + 1, (int)(Mathf.Pow(data.Length, (b + 1) / (float)n)));
+                float sum = 0f;
+                for (int i = from; i < to && i < data.Length; i++) sum += data[i];
+                bands[b] = Mathf.Clamp01(Mathf.Sqrt(sum) * 2.2f);
+            }
+        }
+
+        private static readonly float[] _levelBuffer = new float[512];
 
         /// <summary>Crowd murmur under a match (follows the SFX volume). Music ducks while it plays.</summary>
         public static void SetAmbience(bool on)

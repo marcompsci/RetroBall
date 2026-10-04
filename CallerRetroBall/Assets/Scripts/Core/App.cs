@@ -81,6 +81,12 @@ namespace CallerRetroBall.Core
         /// <summary>Set after a Caller Cup game so the main menu reopens the bracket.</summary>
         public static bool OpenCupOnMenu { get; set; }
 
+        /// <summary>After a Franchise game: open the front office again on the menu.</summary>
+        public static bool OpenFranchiseOnMenu { get; set; }
+
+        /// <summary>Back from an All-Star event: open the All-Star screen again (menu or Rise hub).</summary>
+        public static bool OpenAllStar { get; set; }
+
         /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
         public static int SimulationRate { get; private set; } = 60;
 
@@ -138,6 +144,7 @@ namespace CallerRetroBall.Core
             Content = ContentDatabase.Load();
             Career = data;
             DynastyEngine.Apply(Catalog, Career.dynasty);
+            CourtBuilder.Apply(Catalog, Career.courts);
             CustomTeams.Apply(Catalog, Career.customTeam);
             SaveStore.Save(Career);
             ApplySettings();
@@ -151,6 +158,7 @@ namespace CallerRetroBall.Core
             // Dynasty mode changes ratings and rosters in memory: start from clean content.
             Content = ContentDatabase.Load();
             Career = Logic.Career.New(Catalog);
+            CourtBuilder.Apply(Catalog, Career.courts);
             CustomTeams.Apply(Catalog, Career.customTeam);
             SaveCareer();
             ApplySettings();
@@ -212,6 +220,7 @@ namespace CallerRetroBall.Core
                 SaveStore.Save(Career);
             }
             DynastyEngine.Apply(Content.Catalog, Career.dynasty);
+            CourtBuilder.Apply(Content.Catalog, Career.courts);
             CustomTeams.Apply(Content.Catalog, Career.customTeam);
             CareerLoadStatus = status;
             AudioManager.EnsureExists();
