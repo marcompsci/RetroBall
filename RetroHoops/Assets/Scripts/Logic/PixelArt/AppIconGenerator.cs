@@ -149,8 +149,15 @@ namespace CallerRetroBall.Logic.PixelArt
         }
 
         /// <summary>Pixel-art basketball with lighting, seams and a 1px outline.</summary>
-        public static void DrawBall(PixelCanvas c, float cx, float cy, float r)
+        public static void DrawBall(PixelCanvas c, float cx, float cy, float r) => DrawBall(c, cx, cy, r, 0f);
+
+        /// <summary>
+        /// The ball with its seams turned by <paramref name="spin"/> radians (the light stays put),
+        /// so a run of frames reads as a ball spinning on a fingertip.
+        /// </summary>
+        public static void DrawBall(PixelCanvas c, float cx, float cy, float r, float spin)
         {
+            float cos = (float)Math.Cos(spin), sin = (float)Math.Sin(spin);
             int x0 = (int)Math.Floor(cx - r - 1), x1 = (int)Math.Ceiling(cx + r + 1);
             int y0 = (int)Math.Floor(cy - r - 1), y1 = (int)Math.Ceiling(cy + r + 1);
             float seamWidth = Math.Max(0.6f, r * 0.06f);
@@ -169,12 +176,33 @@ namespace CallerRetroBall.Logic.PixelArt
                     else if (light < -0.35f || (light < -0.2f && PixelCanvas.BayerThreshold(x, y) < 0.5f)) col = BallShade;
 
                     // Seams: vertical and horizontal centre lines plus two side curves.
-                    float u = dx / r, v = dy / r;
-                    bool seam = Math.Abs(dx) <= seamWidth || Math.Abs(dy) <= seamWidth;
+                    float sx = dx * cos + dy * sin, sy = -dx * sin + dy * cos;
+                    float u = sx / r, v = sy / r;
+                    bool seam = Math.Abs(sx) <= seamWidth || Math.Abs(sy) <= seamWidth;
                     float curve = (float)Math.Abs(Math.Abs(u) - (0.62f + 0.38f * v * v));
                     if (curve * r <= seamWidth * 1.1f && Math.Abs(u) > 0.25f) seam = true;
                     c.Set(x, y, seam ? Seam : col);
                 }
+        }
+
+        /// <summary>Frames in the boot screen's spinning-ball loader (one half turn; the seams repeat after 180°).</summary>
+        public const int LoaderFrames = 12;
+
+        /// <summary>
+        /// Spinning-ball loader frames: the launch image's ball (same size in backdrop pixels) with its
+        /// seams turned a little more each frame. Transparent around the ball.
+        /// </summary>
+        public static PixelCanvas[] LoaderBall(float radius = BackdropGenerator.DefaultWidth * 0.16f, int frames = LoaderFrames)
+        {
+            int size = (int)Math.Ceiling(radius * 2f + 4f);
+            var result = new PixelCanvas[Math.Max(1, frames)];
+            for (int i = 0; i < result.Length; i++)
+            {
+                var c = new PixelCanvas(size, size);
+                DrawBall(c, size * 0.5f, size * 0.5f, radius, (float)(Math.PI * i / result.Length));
+                result[i] = c;
+            }
+            return result;
         }
 
         /// <summary>Nearest-neighbour upscale (keeps pixels crisp).</summary>

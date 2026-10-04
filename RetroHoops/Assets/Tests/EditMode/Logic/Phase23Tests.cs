@@ -392,4 +392,33 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(60 + PhotoMode.Border * 2, framed.Width);
         }
     }
+
+    /// <summary>Boot screen: spinning-ball loader.</summary>
+    public class LoaderBallTests
+    {
+        [Test]
+        public void LoaderFrames_AreBallsThatTurn()
+        {
+            var frames = AppIconGenerator.LoaderBall();
+            Assert.AreEqual(AppIconGenerator.LoaderFrames, frames.Length);
+            int size = frames[0].Width;
+            Assert.AreEqual(size, frames[0].Height);
+            Assert.AreEqual(0, frames[0].Get(0, 0).a, "transparent corner");
+            var seen = new HashSet<string>();
+            foreach (var f in frames)
+            {
+                Assert.AreEqual(size, f.Width);
+                var colours = new HashSet<RgbColor>(f.Pixels);
+                Assert.IsTrue(colours.Contains(AppIconGenerator.BallMain));
+                Assert.IsTrue(colours.Contains(AppIconGenerator.Seam));
+                var sb = new System.Text.StringBuilder();
+                foreach (var p in f.Pixels) sb.Append(p.Equals(AppIconGenerator.Seam) ? '1' : '0');
+                Assert.IsTrue(seen.Add(sb.ToString()), "every frame's seams differ");
+            }
+            // Spin 0 is the classic ball used by the icon and launch image.
+            var plain = new PixelCanvas(size, size);
+            AppIconGenerator.DrawBall(plain, size * 0.5f, size * 0.5f, BackdropGenerator.DefaultWidth * 0.16f);
+            Assert.AreEqual(plain.Pixels, frames[0].Pixels);
+        }
+    }
 }
