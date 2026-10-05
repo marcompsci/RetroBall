@@ -121,6 +121,8 @@ namespace CallerRetroBall.Logic
         public int tideWins;
         /// <summary>Wins over the Paper Cranes (also counted in <see cref="wins"/>).</summary>
         public int cranesWins;
+        /// <summary>Wins over the Cassette Club (also counted in <see cref="wins"/>).</summary>
+        public int cassetteWins;
         /// <summary>Rise season of the last Rival Challenge played (0 = none yet).</summary>
         public int lastSeason;
     }
@@ -162,28 +164,29 @@ namespace CallerRetroBall.Logic
         }
 
         /// <summary>
-        /// Which rival crew a Rise season brings. The four rivals take turns: Neon Static (seasons 1, 5, 9...),
-        /// the Sundown Syndicate (2, 6, ...), the Midnight Tide (3, 7, ...), and the Paper Cranes (4, 8, ...).
+        /// Which rival crew a Rise season brings. The four rivals take turns: Neon Static (seasons 1, 6, 11...),
+        /// the Sundown Syndicate (2, 7, ...), the Midnight Tide (3, 8, ...), the Paper Cranes (4, 9, ...) and the Cassette Club (5, 10, ...).
         /// </summary>
         public static string RivalFor(int seasonNumber)
         {
             if (seasonNumber < 1) return DefaultContent.RivalCrewId;
-            switch ((seasonNumber - 1) % 4)
+            switch ((seasonNumber - 1) % 5)
             {
                 case 1: return DefaultContent.Rival2CrewId;
                 case 2: return DefaultContent.Rival3CrewId;
                 case 3: return DefaultContent.Rival4CrewId;
+                case 4: return DefaultContent.Rival5CrewId;
                 default: return DefaultContent.RivalCrewId;
             }
         }
 
         /// <summary>Wins over Neon Static only (the other rivals have their own counters).</summary>
         public static int StaticWins(CareerSaveData d) =>
-            d == null ? 0 : d.rival.wins - d.rival.sundownWins - d.rival.tideWins - d.rival.cranesWins;
+            d == null ? 0 : d.rival.wins - d.rival.sundownWins - d.rival.tideWins - d.rival.cranesWins - d.rival.cassetteWins;
 
-        /// <summary>Beaten all four rival crews at least once.</summary>
+        /// <summary>Beaten all five rival crews at least once.</summary>
         public static bool BeatEveryRival(CareerSaveData d) =>
-            d != null && d.rival != null && StaticWins(d) >= 1 && d.rival.sundownWins >= 1 && d.rival.tideWins >= 1 && d.rival.cranesWins >= 1;
+            d != null && d.rival != null && StaticWins(d) >= 1 && d.rival.sundownWins >= 1 && d.rival.tideWins >= 1 && d.rival.cranesWins >= 1 && d.rival.cassetteWins >= 1;
 
         public static RivalOutcome ApplyResult(CareerSaveData d, MatchSummary s)
         {
@@ -192,11 +195,13 @@ namespace CallerRetroBall.Logic
             bool sundown = s.teamAId == DefaultContent.Rival2CrewId || s.teamBId == DefaultContent.Rival2CrewId;
             bool tide = s.teamAId == DefaultContent.Rival3CrewId || s.teamBId == DefaultContent.Rival3CrewId;
             bool cranes = s.teamAId == DefaultContent.Rival4CrewId || s.teamBId == DefaultContent.Rival4CrewId;
+            bool cassette = s.teamAId == DefaultContent.Rival5CrewId || s.teamBId == DefaultContent.Rival5CrewId;
             if (s.HumanWon)
             {
                 if (sundown) d.rival.sundownWins++;
                 if (tide) d.rival.tideWins++;
                 if (cranes) d.rival.cranesWins++;
+                if (cassette) d.rival.cassetteWins++;
                 d.rival.wins++;
                 d.signalPoints += WinBonus;
                 d.fans += WinFans;
@@ -247,7 +252,8 @@ namespace CallerRetroBall.Logic
             B("badge.three_peat", "THREE-PEAT", "Win The Gold Signal Cup three times.", d => d.totals.championships >= 3),
             B("badge.dynasty", "DYNASTY", "Play five Rise seasons.", d => d.rise.seasonsPlayed >= 5),
             B("badge.cranes", "GROUNDED", "Beat the Paper Cranes.", d => d.rival.cranesWins >= 1),
-            B("badge.every_rival", "NO RIVALS LEFT", "Beat all four rival crews.", RivalEngine.BeatEveryRival),
+            B("badge.every_rival", "NO RIVALS LEFT", "Beat all five rival crews.", RivalEngine.BeatEveryRival),
+            B("badge.cassette", "REWOUND", "Beat the Cassette Club.", d => d.rival.cassetteWins >= 1),
             B("badge.couch", "COUCH RIVALS", "Play a 2 Player game.", d => d.totals.versusGames >= 1),
             B("badge.four_rings", "FOUR CUPS", "Win The Gold Signal Cup four times.", d => d.totals.championships >= 4),
             B("badge.ladder", "NO CONTINUES NEEDED", "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade.clears > 0),
@@ -286,7 +292,8 @@ namespace CallerRetroBall.Logic
     }
 
     public enum StorySpeaker { Coach = 0, Rival = 1, You = 2, /** Kaia Sol of the Sundown Syndicate (chapter 2). */ Rival2 = 3,
-        /** Mara Quill of the Midnight Tide (chapter 3). */ Rival3 = 4, /** Juno Vale of the Paper Cranes (chapter 4). */ Rival4 = 5 }
+        /** Mara Quill of the Midnight Tide (chapter 3). */ Rival3 = 4, /** Juno Vale of the Paper Cranes (chapter 4). */ Rival4 = 5,
+        /** Echo Rivera of the Cassette Club (chapter 5). */ Rival5 = 6 }
 
     public struct StoryLine
     {
@@ -312,6 +319,7 @@ namespace CallerRetroBall.Logic
         public const string Rival2Name = "KAIA";
         public const string Rival3Name = "MARA";
         public const string Rival4Name = "JUNO";
+        public const string Rival5Name = "ECHO";
 
         public const string Intro = "story.intro";
         public const string CircuitCleared = "story.circuit_cleared";
@@ -335,6 +343,9 @@ namespace CallerRetroBall.Logic
         public const string Rival4Intro = "story.rival4_intro";
         public const string Rival4Beaten = "story.rival4_beaten";
         public const string FourCups = "story.four_cups";
+        // Chapter 5 (Rise Season 5 and every fifth season).
+        public const string Rival5Intro = "story.rival5_intro";
+        public const string Rival5Beaten = "story.rival5_beaten";
 
         public static StoryBeat Beat(string id, string nickname) => Beat(id, nickname, Loc.Language);
 
@@ -348,10 +359,21 @@ namespace CallerRetroBall.Logic
             void K(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival2, t));
             void M(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival3, t));
             void J(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival4, t));
+            void E(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival5, t));
             if (language == Loc.Spanish)
             {
                 switch (id)
                 {
+                    case Rival5Intro:
+                        E("Tenemos todos tus partidos grabados, " + me + ". Cara A, cara B.");
+                        E("El Cassette Club no improvisa. Rebobinamos y lo volvemos a poner hasta que sale perfecto.");
+                        Y("Entonces voy a cambiar la canción.");
+                        C("Echo te deja tirar de fuera y cierra la zona. Ataca el aro y pásala rápido.");
+                        break;
+                    case Rival5Beaten:
+                        E("...Vale. Esa cinta la vamos a escuchar muchas veces.");
+                        C("Cinco equipos rivales, cinco historias. Todas terminan contigo, " + me + ".");
+                        break;
                     case Rival4Intro:
                         J("Nos fijamos en ti hace tres temporadas, " + me + ". Tomamos notas de cada partido.");
                         J("Los Paper Cranes no tienen estrellas. Tenemos un plan, doblado mil veces.");
@@ -449,6 +471,16 @@ namespace CallerRetroBall.Logic
             }
             switch (id)
             {
+                case Rival5Intro:
+                    E("We've got every one of your games on tape, " + me + ". Side A, side B.");
+                    E("The Cassette Club doesn't improvise. We rewind and play it again until it's perfect.");
+                    Y("Then I'll change the song.");
+                    C("Echo lets you shoot from outside and packs the paint. Attack the rim and move the ball fast.");
+                    break;
+                case Rival5Beaten:
+                    E("...Okay. We'll be replaying that tape for a long time.");
+                    C("Five rival crews, five stories. Every one of them ends with you, " + me + ".");
+                    break;
                 case Rival4Intro:
                     J("We started watching you three seasons ago, " + me + ". We took notes on every game.");
                     J("The Paper Cranes don't have stars. We have a plan, folded a thousand times.");
@@ -557,16 +589,19 @@ namespace CallerRetroBall.Logic
             bool sundownSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival2CrewId;
             bool tideSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival3CrewId;
             bool cranesSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival4CrewId;
+            bool cassetteSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival5CrewId;
             if (season >= 2 && r.stage == RiseStage.Season && !Seen(Season2)) return Season2;
+            if (RivalEngine.ChallengeAvailable(d) && cassetteSeason && !Seen(Rival5Intro)) return Rival5Intro;
+            if (d.rival.cassetteWins >= 1 && !Seen(Rival5Beaten)) return Rival5Beaten;
             if (RivalEngine.ChallengeAvailable(d) && cranesSeason && !Seen(Rival4Intro)) return Rival4Intro;
             if (d.rival.cranesWins >= 1 && !Seen(Rival4Beaten)) return Rival4Beaten;
             if (RivalEngine.ChallengeAvailable(d) && tideSeason && !Seen(Rival3Intro)) return Rival3Intro;
             if (d.rival.tideWins >= 1 && !Seen(Rival3Beaten)) return Rival3Beaten;
-            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !tideSeason && !cranesSeason && !Seen(RivalIntro)) return RivalIntro;
+            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !Seen(RivalIntro)) return RivalIntro;
             if (RivalEngine.ChallengeAvailable(d) && sundownSeason && !Seen(Rival2Intro)) return Rival2Intro;
             if (d.rival.sundownWins >= 1 && !Seen(Rival2Beaten)) return Rival2Beaten;
             if (RivalEngine.StaticWins(d) >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
-            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !tideSeason && !cranesSeason && !Seen(RivalLost)) return RivalLost;
+            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !Seen(RivalLost)) return RivalLost;
             if (r.stage == RiseStage.Playoffs && !Seen(Playoffs)) return Playoffs;
             if (d.totals.championships >= 1 && !Seen(Champions)) return Champions;
             if (d.totals.championships >= 2 && !Seen(TwoTime)) return TwoTime;

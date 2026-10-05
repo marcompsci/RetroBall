@@ -119,8 +119,9 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(2));
             Assert.AreEqual(DefaultContent.Rival3CrewId, RivalEngine.RivalFor(3));
             Assert.AreEqual(DefaultContent.Rival4CrewId, RivalEngine.RivalFor(4), "the four rivals take turns");
-            Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(5));
-            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(6));
+            Assert.AreEqual(DefaultContent.Rival5CrewId, RivalEngine.RivalFor(5));
+            Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(6));
+            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(7));
         }
 
         [Test]

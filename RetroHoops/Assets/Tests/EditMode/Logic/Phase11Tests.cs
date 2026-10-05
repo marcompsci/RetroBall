@@ -273,8 +273,8 @@ namespace CallerRetroBall.Tests
             foreach (var code in Secrets.All) d.secrets.codesFound.Add(code.Id);
             d.king.best = 5;
             d.cup.titles = 1;
-            d.rival.wins = 4;
-            d.rival.sundownWins = d.rival.tideWins = d.rival.cranesWins = 1;
+            d.rival.wins = 5;
+            d.rival.sundownWins = d.rival.tideWins = d.rival.cranesWins = d.rival.cassetteWins = 1;
             d.practice.shootoutWins = 1;
             d.practice.horseWins = 1;
             d.practice.aroundWorldTime = 42f;

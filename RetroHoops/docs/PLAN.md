@@ -449,6 +449,22 @@
   sprites face the right way, UI lays out on 1920 x 1080. Info.plist allows portrait + both landscapes; the game
   locks portrait at boot and returns to portrait after the game. The stands' animated fans are off in landscape.
 
+### Phase 25: feel, landscape polish, Season 5
+
+- **Dunk packages** (Dunks.cs, Locker Room ▸ DUNK PACKAGE): Two-Hand Jam (default), Tomahawk, Reverse Jam,
+  Windmill, Cradle Rock, Three-Sixty (SP + fans), and the pass-only Skyline Slam. Each has its own pose, extra
+  lift/hang time, shake and callout ("WINDMILL! +2"). The AI picks by Finishing (only flyers go 360).
+- **Euro step:** a driving handler with Playmaking 55+ side-steps a defender planted in the lane ("EURO STEP").
+- **Rim protection:** on a DUNK/LAYUP drive the defender nearest the rim (not the driver's man) steps in front
+  and goes up with the finish; a defender whose man runs the baseline stays between him and the rim.
+  Both scale with difficulty. "NO DUNK FROM THERE: LAYUP" when a DUNK has to be a layup.
+- **Landscape polish:** bleachers with cheering fans along the far sideline; the camera fits the near sideline
+  to the top of the stands; a compact centred score bar. Settings ▸ LANDSCAPE: ALL GAMES plays every mode
+  sideways (2 Player and the demo stay portrait).
+- **Season 5:** the Cassette Club (fifth rival, every fifth Rise season; Echo Rivera; story scenes in English
+  and Spanish; REWOUND badge; NO RIVALS LEFT now needs all five), Record Shop Roof and Night Bus Depot courts,
+  and a third Hoops Pass gear set (Cassette Deck jersey, Tape Runners, Boombox banner, Skyline Slam).
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

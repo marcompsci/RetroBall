@@ -122,11 +122,12 @@ namespace CallerRetroBall.UI
             }
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
-            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4;
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5;
             _name.color = l.Speaker == StorySpeaker.Rival ? Theme.Cyan
                         : l.Speaker == StorySpeaker.Rival2 ? (Color)new Color32(0xFF, 0x8C, 0x42, 255)
                         : l.Speaker == StorySpeaker.Rival3 ? (Color)new Color32(0x0E, 0xA5, 0xE9, 255)
                         : l.Speaker == StorySpeaker.Rival4 ? (Color)new Color32(0xE1, 0x1D, 0x48, 255)
+                        : l.Speaker == StorySpeaker.Rival5 ? (Color)new Color32(0xC9, 0x18, 0x4A, 255)
                         : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
             _text.text = l.Text;
             _text.maxVisibleCharacters = 0;
@@ -147,6 +148,7 @@ namespace CallerRetroBall.UI
                 case StorySpeaker.Rival2: return Story.Rival2Name;
                 case StorySpeaker.Rival3: return Story.Rival3Name;
                 case StorySpeaker.Rival4: return Story.Rival4Name;
+                case StorySpeaker.Rival5: return Story.Rival5Name;
                 default: return (App.Career?.nickname ?? "ROOK").ToUpperInvariant();
             }
         }
@@ -174,6 +176,13 @@ namespace CallerRetroBall.UI
                     jersey = rival.primary;
                     trim = rival.secondary;
                     accent = rival.accent;
+                    break;
+                case StorySpeaker.Rival5:
+                    var cassette = c.Team(DefaultContent.Rival5CrewId);
+                    look = c.Player(DefaultContent.Rival5LeaderId)?.appearance ?? new AppearanceDef(2, 2, 1, BodyType.Standard, 1);
+                    jersey = cassette.primary;
+                    trim = cassette.secondary;
+                    accent = cassette.accent;
                     break;
                 case StorySpeaker.Rival4:
                     var cranes = c.Team(DefaultContent.Rival4CrewId);

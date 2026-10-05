@@ -219,7 +219,7 @@ namespace CallerRetroBall.Tests
                 if (r.CosmeticId == null) Assert.Greater(r.SignalPoints, 0);
             }
             Assert.AreNotEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(1, 5), "seasons alternate gear");
-            Assert.AreEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(2, 5));
+            Assert.AreEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(HoopsPass.GearSets.Length, 5));
         }
 
         [Test]
@@ -233,7 +233,7 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(HoopsPass.Tiers, all.Count);
             Assert.AreEqual(HoopsPass.Tiers, _career.pass.granted);
             Assert.AreEqual(1, _career.pass.seasonsMaxed);
-            foreach (var id in HoopsPass.GearSets[season % 2]) Assert.IsTrue(_career.ownedCosmetics.Contains(id), id);
+            foreach (var id in HoopsPass.GearSets[season % HoopsPass.GearSets.Length]) Assert.IsTrue(_career.ownedCosmetics.Contains(id), id);
             int expectSp = 0;
             for (int t = 1; t <= HoopsPass.Tiers; t++) if (!HoopsPass.IsGearTier(t)) expectSp += HoopsPass.TierSp(t);
             Assert.AreEqual(expectSp, _career.signalPoints - sp0);
@@ -246,8 +246,8 @@ namespace CallerRetroBall.Tests
         {
             int day = DailyChallenges.DayNumber(new System.DateTime(2026, 10, 6));
             HoopsPass.AddXp(_career, _c, 99999, day);
-            // Two seasons on, the same gear set comes back: owned tiers pay Signal Points instead.
-            int later = day + HoopsPass.WeeksPerSeason * 7 * 2;
+            // A full rotation on, the same gear set comes back: owned tiers pay Signal Points instead.
+            int later = day + HoopsPass.WeeksPerSeason * 7 * HoopsPass.GearSets.Length;
             int sp0 = _career.signalPoints;
             var rewards = HoopsPass.AddXp(_career, _c, 99999, later);
             Assert.AreEqual(HoopsPass.SeasonOf(later), _career.pass.season);

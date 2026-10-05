@@ -67,6 +67,9 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>Slices a generated player sheet into [view, frame] sprites with the pivot at the feet.</summary>
         /// <summary>A crowd fan sprite (pivot bottom-left, one art pixel = one court pixel).</summary>
+        /// <summary>Landscape sideline bleachers (pivot bottom-left).</summary>
+        public Sprite SidelineStands(PixelCanvas canvas) => Make(canvas, "stands", Vector2.zero, CourtSpace.PixelsPerUnit);
+
         public Sprite CrowdFan(RgbColor shirt, RgbColor skin, bool armsUp) =>
             Make(CrowdGenerator.Fan(shirt, skin, armsUp), "fan", Vector2.zero, CourtSpace.PixelsPerUnit);
 

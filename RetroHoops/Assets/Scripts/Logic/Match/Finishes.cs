@@ -48,6 +48,7 @@ namespace CallerRetroBall.Logic
                 return;
             }
             _driveIndex = me;
+            _euroStepped = false;
             _driveDunk = dunk;
             _driveUntil = Time + DriveSeconds;
             Events.Add(new MatchEvent(MatchEventType.DriveStarted, me, Players[me].Team, dunk ? (int)ShotType.Dunk : (int)ShotType.Layup));
@@ -72,7 +73,14 @@ namespace CallerRetroBall.Logic
             if (dist <= reach) FinishNow(me, _driveDunk);
         }
 
-        /// <summary>Full speed at the rim, aiming a step in front of it (not under the backboard).</summary>
+        /// <summary>Playmaking needed to euro-step around a defender in the lane.</summary>
+        public const int EuroStepMinPlaymaking = 55;
+        private bool _euroStepped;
+
+        /// <summary>
+        /// Full speed at the rim, aiming a step in front of it (not under the backboard). A good handler
+        /// side-steps (euro step) a defender standing in the lane instead of running into them.
+        /// </summary>
         private Vec2 DriveDesired(PlayerRuntimeState p)
         {
             var hoop = Setup.Court.Hoop;
@@ -80,7 +88,73 @@ namespace CallerRetroBall.Logic
             var front = away.SqrMagnitude > 0.01f ? away.Normalized : new Vec2(0f, 1f);
             if (front.y < 0.3f) front = new Vec2(front.x, 0.3f).Normalized; // never go behind the board
             var aim = hoop + front * 0.9f;
-            return Movement.ArriveInput(p.Position, aim, 1f, 0.05f);
+            var dir = Movement.ArriveInput(p.Position, aim, 1f, 0.05f);
+            if (p.Def.attributes.playmaking < EuroStepMinPlaymaking || dir.SqrMagnitude < 0.01f) return dir;
+            var heading = dir.Normalized;
+            int blocker = -1;
+            float lateral = 0f, best = 1.7f;
+            for (int i = 0; i < Players.Length; i++)
+            {
+                var d = Players[i];
+                if (d.Team == p.Team || IsBenched(i) || Time < d.StunnedUntil) continue;
+                var rel = d.Position - p.Position;
+                float ahead = Vec2.Dot(rel, heading);
+                if (ahead <= 0.2f || ahead > best) continue;
+                float side = rel.x * heading.y - rel.y * heading.x; // + = defender to the right of the path
+                if (Math.Abs(side) > 0.9f) continue;
+                best = ahead;
+                blocker = i;
+                lateral = side;
+            }
+            if (blocker < 0) return dir;
+            if (!_euroStepped)
+            {
+                _euroStepped = true;
+                Events.Add(new MatchEvent(MatchEventType.EuroStep, p.Index, p.Team, blocker));
+            }
+            // Step to the side away from the defender (perpendicular to the path), still moving forward.
+            var perp = new Vec2(-heading.y, heading.x); // left of the path
+            float sign = lateral >= 0f ? 1f : -1f;      // defender right → go left
+            return (heading * 0.6f + perp * (0.9f * sign)).Normalized;
+        }
+
+        // ------------------------------------------------------------------ AI against drives and lobs
+
+        /// <summary>
+        /// The defender nearest the rim (not the one guarding the driver) steps in front of a DUNK / LAYUP
+        /// drive and goes up with the finish. Smarter difficulties rotate more often.
+        /// </summary>
+        private bool ProtectRim(PlayerRuntimeState p, AiState s, DifficultyDef profile)
+        {
+            if (_driveIndex < 0 && !(ChargingIndex >= 0 && _autoRelease)) return false;
+            int driverIndex = _driveIndex >= 0 ? _driveIndex : ChargingIndex;
+            var driver = Players[driverIndex];
+            if (driver.Team == p.Team || _guarding[p.Index] == driverIndex || IsBenched(p.Index)) return false;
+            var court = Setup.Court;
+            float mine = court.DistanceToHoop(p.Position);
+            for (int i = 0; i < Players.Length; i++)
+            {
+                var o = Players[i];
+                if (o.Team != p.Team || i == p.Index || IsBenched(i) || _guarding[i] == driverIndex) continue;
+                if (court.DistanceToHoop(o.Position) < mine) return false; // someone else is the last line
+            }
+            if (_rng.NextFloat() > (0.35f + 0.55f * profile.decisionQuality) * (1f - profile.errorRate)) return false;
+            s.Intent = AiIntent.Help;
+            var fromHoop = driver.Position - court.Hoop;
+            s.Target = court.Clamp(court.Hoop + (fromHoop.SqrMagnitude > 0.01f ? fromHoop.Normalized : new Vec2(0f, 1f)) * 1.1f);
+            if (ChargingIndex == driverIndex && Vec2.Distance(p.Position, driver.Position) < 1.7f) Jump(p.Index);
+            return true;
+        }
+
+        /// <summary>A defender whose man runs the baseline stays between him and the rim (fewer easy lobs).</summary>
+        private bool DenyBaselineRunner(PlayerRuntimeState p, AiState s, PlayerRuntimeState man, DifficultyDef profile)
+        {
+            if (!IsRunningBaseline(man.Index) || _rng.NextFloat() > 0.25f + 0.5f * profile.decisionQuality) return false;
+            var court = Setup.Court;
+            var toHoop = court.Hoop - man.Position;
+            s.Intent = AiIntent.Guard;
+            s.Target = court.Clamp(man.Position + (toHoop.SqrMagnitude > 0.01f ? toHoop.Normalized : Vec2.Zero) * 0.7f);
+            return true;
         }
 
         /// <summary>Goes up now: a dunk if wanted and possible, otherwise a layup. Released automatically.</summary>

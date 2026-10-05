@@ -28,6 +28,9 @@ namespace CallerRetroBall.Logic
         public const string Rival3LeaderId = "player.mdt.quill";
         /// <summary>Season 4 rival (every fourth Rise season).</summary>
         public const string Rival4CrewId = "crew.paper_cranes";
+        /// <summary>Season 5 rival (every fifth Rise season).</summary>
+        public const string Rival5CrewId = "crew.cassette_club";
+        public const string Rival5LeaderId = "player.csc.rivera";
         public const string Rival4LeaderId = "player.crn.vale";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
@@ -126,6 +129,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.canyon_rim", "Canyon Rim", CourtCircuit.Blacktop,
                 "Red rock, thin air, and a long way down past the baseline.",
                 "#9A4A2E", "#FFE4CC", "#7C2D12", "#FDBA74", "#FB923C", 0.25f));
+
+            // Season 5 courts.
+            c.Courts.Add(Court("court.record_roof", "Record Shop Roof", CourtCircuit.Blacktop,
+                "Above the record shop. Somebody always has a tape playing.",
+                "#3F3A4F", "#F2E9E4", "#C9184A", "#22223B", "#9A8C98", 0.4f));
+            c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
+                "Under the depot lights, between the last bus and the first.",
+                "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
 
             // Season 4 courts.
             c.Courts.Add(Court("court.laundromat_lot", "Laundromat Lot", CourtCircuit.Blacktop,
@@ -262,6 +273,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 5 rival: every fifth Rise season.
+            AddTeam(c, Rival5CrewId, "", "Cassette Club", "CSC", TeamTier.Rival,
+                "#F2E9E4", "#22223B", "#C9184A", LogoShape.Circle, LogoMotif.Signal, TeamPattern.Stripes,
+                "court.record_roof", "Side B hits harder.", false,
+                P("rivera", "Echo", "Rivera", 8, Archetype.ShotCreator, 3),
+                P("banks", "Tully", "Banks", 23, Archetype.RimRunner, 3),
+                P("adeyemi", "Sade", "Adeyemi", 11, Archetype.Playmaker, 3));
+
             AddTeam(c, "crew.cage_regulars", "", "Cage Regulars", "CGR", TeamTier.Circuit,
                 "#E07A5F", "#3D405B", "#F2CC8F", LogoShape.Shield, LogoMotif.Ball, TeamPattern.Stripes,
                 "court.sunset_cage", "First come, first served.", false,
@@ -383,6 +402,7 @@ namespace CallerRetroBall.Logic
             S(Rival2CrewId, DefenseScheme.Zone);
             S(Rival3CrewId, DefenseScheme.PackLine);
             S(Rival4CrewId, DefenseScheme.ManToMan);
+            S(Rival5CrewId, DefenseScheme.Zone);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -671,6 +691,14 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(Cosmetic("cosmetic.move.step_back", "Step Back", CosmeticSlot.DribbleMove, 500, 1000, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.rocker_step", "Rocker Step", CosmeticSlot.DribbleMove, 450, 1100, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.snatch_back", "Snatch Back", CosmeticSlot.DribbleMove, 500, 1300, false, "#FFFFFF", "#FFFFFF"));
+            // Season 5: dunk packages (how your dunks look; Dunks.cs).
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.two_hand", "Two-Hand Jam", CosmeticSlot.DunkPackage, 0, 0, true, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.tomahawk", "Tomahawk", CosmeticSlot.DunkPackage, 250, 150, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.reverse", "Reverse Jam", CosmeticSlot.DunkPackage, 350, 300, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.windmill", "Windmill", CosmeticSlot.DunkPackage, 450, 500, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.cradle", "Cradle Rock", CosmeticSlot.DunkPackage, 500, 750, false, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.dunk.three_sixty", "Three-Sixty", CosmeticSlot.DunkPackage, 650, 1000, false, "#FFFFFF", "#FFFFFF"));
+
             // Hoops Pass gear (Weekly.cs): never sold, only unlocked on the free pass track.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.vapor_court", "Vapor Court", CosmeticSlot.JerseyPalette, "#FF4FA3", "#3BD5FF"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.horizon", "Horizon Runners", CosmeticSlot.Shoes, "#FFE066", "#FF7A3D"));
@@ -680,6 +708,11 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.cloud_nine", "Cloud Nines", CosmeticSlot.Shoes, "#F8F8FF", "#8ECAE6"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.banner.checker_flag", "Checker Flag", CosmeticSlot.CourtBanner, "#F4F1DE", "#14141F"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.tropic_night", "Tropic Night", CosmeticSlot.JerseyPalette, "#023047", "#FB8500"));
+            // Season 5 pass set.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.cassette_deck", "Cassette Deck", CosmeticSlot.JerseyPalette, "#F2E9E4", "#C9184A"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.tape_runners", "Tape Runners", CosmeticSlot.Shoes, "#22223B", "#9A8C98"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.boombox", "Boombox Banner", CosmeticSlot.CourtBanner, "#FF9F1C", "#2EC4B6"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.dunk.skyline", "Skyline Slam", CosmeticSlot.DunkPackage, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.spin_cycle", "Spin Cycle", CosmeticSlot.DribbleMove, 450, 350, false, "#FFFFFF", "#FFFFFF"));
         }
 

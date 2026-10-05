@@ -235,7 +235,7 @@ namespace CallerRetroBall.Logic
               d => d.secrets != null && Secrets.All.TrueForAll(x => d.secrets.codesFound.Contains(x.Id))),
             A(KingFive, "Hold the Court", "Win 5 straight in King of the Court.", 50, d => d.king != null && d.king.best >= 5),
             A(CallerCup, "Cup Run", "Win the Caller Cup.", 60, d => d.cup != null && d.cup.titles >= 1),
-            A(AllRivals, "Every Rival", "Beat Neon Static, the Sundown Syndicate, the Midnight Tide and the Paper Cranes.", 100, RivalEngine.BeatEveryRival),
+            A(AllRivals, "Every Rival", "Beat Neon Static, the Sundown Syndicate, the Midnight Tide, the Paper Cranes and the Cassette Club.", 100, RivalEngine.BeatEveryRival),
             A(Shootout, "Sharpshooter", "Win a Shootout.", 20, d => d.practice.shootoutWins >= 1),
             A(Horse, "Spell It Out", "Win a game of H-O-R-S-E against the CPU.", 20, d => d.practice.horseWins >= 1),
             A(AroundWorld, "World Tour", "Finish Around the World.", 20, d => d.practice.aroundWorldTime > 0f),

@@ -277,6 +277,8 @@ namespace CallerRetroBall.Logic
         DriveStarted = 31,
         /// <summary>A DUNK request that had to be a layup (too far out, or not enough finishing).</summary>
         DunkToLayup = 32,
+        /// <summary>A driving player side-stepped a defender in the lane (PlayerIndex = driver, Value = defender).</summary>
+        EuroStep = 33,
     }
 
     public struct MatchEvent

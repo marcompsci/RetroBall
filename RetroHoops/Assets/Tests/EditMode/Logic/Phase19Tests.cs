@@ -282,12 +282,13 @@ namespace CallerRetroBall.Tests
         {
             for (int season = 1; season <= 12; season++)
             {
-                string expected = ((season - 1) % 4) switch
+                string expected = ((season - 1) % 5) switch
                 {
                     0 => DefaultContent.RivalCrewId,
                     1 => DefaultContent.Rival2CrewId,
                     2 => DefaultContent.Rival3CrewId,
-                    _ => DefaultContent.Rival4CrewId,
+                    3 => DefaultContent.Rival4CrewId,
+                    _ => DefaultContent.Rival5CrewId,
                 };
                 Assert.AreEqual(expected, RivalEngine.RivalFor(season), "season " + season);
             }
@@ -309,6 +310,9 @@ namespace CallerRetroBall.Tests
             d.rival.wins = 4;
             d.rival.sundownWins = 1;
             d.rival.tideWins = 1;
+            Assert.IsFalse(RivalEngine.BeatEveryRival(d), "the Cassette Club too");
+            d.rival.wins = 5;
+            d.rival.cassetteWins = 1;
             Assert.IsTrue(RivalEngine.BeatEveryRival(d));
             Assert.Contains(Achievements.AllRivals, Achievements.Earned(d));
             foreach (var id in new[] { Story.Rival4Intro, Story.Rival4Beaten, Story.FourCups })

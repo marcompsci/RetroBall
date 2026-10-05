@@ -232,7 +232,7 @@ namespace CallerRetroBall.Logic
     /// <summary>
     /// The Hoops Pass: a free season track (no purchases, no ads). Playing fills it; each tier pays
     /// Signal Points, and tiers 5, 10, 15 and 20 unlock gear you can only get here. Seasons are six
-    /// weeks long and alternate between two gear sets, so missed gear comes round again.
+    /// weeks long and rotate through three gear sets, so missed gear comes round again.
     /// </summary>
     public static class HoopsPass
     {
@@ -246,11 +246,13 @@ namespace CallerRetroBall.Logic
         /// <summary>Paid instead when a gear tier comes round again and you already own it.</summary>
         public const int OwnedGearSp = 250;
 
-        /// <summary>Two alternating gear sets: tier 5, 10, 15, 20.</summary>
+        /// <summary>Rotating gear sets: tier 5, 10, 15, 20.</summary>
         public static readonly string[][] GearSets =
         {
             new[] { "cosmetic.pass.jersey.vapor_court", "cosmetic.pass.shoes.horizon", "cosmetic.pass.banner.neon_grid", "cosmetic.pass.jersey.sunset_swish" },
             new[] { "cosmetic.pass.jersey.static_bloom", "cosmetic.pass.shoes.cloud_nine", "cosmetic.pass.banner.checker_flag", "cosmetic.pass.jersey.tropic_night" },
+            // Season 5: the tape-deck set, topped by a pass-only dunk.
+            new[] { "cosmetic.pass.jersey.cassette_deck", "cosmetic.pass.shoes.tape_runners", "cosmetic.pass.banner.boombox", "cosmetic.pass.dunk.skyline" },
         };
 
         public static int SeasonOf(int day)

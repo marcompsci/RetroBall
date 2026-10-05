@@ -437,6 +437,8 @@ namespace CallerRetroBall.Logic
             }
 
             if (GetBack(p, s, holder)) return;
+            if (ProtectRim(p, s, profile)) return;
+            if (DenyBaselineRunner(p, s, man, profile)) return;
 
             // Help when the ball handler gets deep; mistakes (errorRate) mean late rotations.
             bool packed = _scheme[p.Team] == DefenseScheme.PackLine || _scheme[p.Team] == DefenseScheme.Zone;

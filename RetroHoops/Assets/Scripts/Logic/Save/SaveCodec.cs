@@ -36,7 +36,7 @@ namespace CallerRetroBall.Logic
                 ["equipped"] = new Dictionary<string, object>
                 {
                     ["jersey"] = d.equippedJersey, ["shoes"] = d.equippedShoes, ["banner"] = d.equippedBanner,
-                    ["celebration"] = d.equippedCelebration, ["move"] = d.equippedMove,
+                    ["celebration"] = d.equippedCelebration, ["move"] = d.equippedMove, ["dunk"] = d.equippedDunk,
                 },
                 ["totals"] = new Dictionary<string, object>
                 {
@@ -64,6 +64,7 @@ namespace CallerRetroBall.Logic
                     ["leftHanded"] = d.settings.leftHanded,
                     ["largeButtons"] = d.settings.largeButtons,
                     ["controlLayout"] = d.settings.controlLayout ?? "",
+                    ["landscapeAll"] = d.settings.landscapeAll,
                     ["tapToShoot"] = d.settings.tapToShoot,
                     ["reduceMotion"] = d.settings.reduceMotion,
                 },
@@ -121,6 +122,7 @@ namespace CallerRetroBall.Logic
                     ["sundownWins"] = (d.rival ?? new RivalSaveData()).sundownWins,
                     ["tideWins"] = (d.rival ?? new RivalSaveData()).tideWins,
                     ["cranesWins"] = (d.rival ?? new RivalSaveData()).cranesWins,
+                    ["cassetteWins"] = (d.rival ?? new RivalSaveData()).cassetteWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -458,6 +460,7 @@ namespace CallerRetroBall.Logic
                 d.equippedBanner = Str(eq, "banner", null);
                 d.equippedCelebration = Str(eq, "celebration", null);
                 d.equippedMove = Str(eq, "move", null);
+                d.equippedDunk = Str(eq, "dunk", null);
 
                 var t = Obj(o, "totals");
                 d.totals = new CareerTotals
@@ -492,6 +495,7 @@ namespace CallerRetroBall.Logic
                     leftHanded = Bool(st, "leftHanded", false),
                     largeButtons = Bool(st, "largeButtons", false),
                     controlLayout = ControlLayout.Serialize(ControlLayout.Parse(Str(st, "controlLayout", ""))),
+                    landscapeAll = Bool(st, "landscapeAll", false),
                     tapToShoot = Bool(st, "tapToShoot", false),
                     reduceMotion = Bool(st, "reduceMotion", false),
                 };
@@ -553,6 +557,7 @@ namespace CallerRetroBall.Logic
                     sundownWins = Math.Max(0, Int(rv, "sundownWins", 0)),
                     tideWins = Math.Max(0, Int(rv, "tideWins", 0)),
                     cranesWins = Math.Max(0, Int(rv, "cranesWins", 0)),
+                    cassetteWins = Math.Max(0, Int(rv, "cassetteWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

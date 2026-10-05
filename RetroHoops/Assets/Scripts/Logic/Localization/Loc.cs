@@ -273,7 +273,9 @@ namespace CallerRetroBall.Logic
 
             // Phase 19: Season 4, accessibility, iCloud, 2 Player.
             ["GROUNDED"] = "ATERRIZADOS", ["Beat the Paper Cranes."] = "Vence a los Paper Cranes.",
-            ["NO RIVALS LEFT"] = "SIN RIVALES", ["Beat all four rival crews."] = "Vence a los cuatro equipos rivales.",
+            ["NO RIVALS LEFT"] = "SIN RIVALES", ["Beat all five rival crews."] = "Vence a los cinco equipos rivales.", ["REWOUND"] = "REBOBINADO", ["Beat the Cassette Club."] = "Vence al Cassette Club.",
+            ["Side B hits harder."] = "La cara B pega más fuerte.", ["Above the record shop. Somebody always has a tape playing."] = "Encima de la tienda de discos. Siempre suena alguna cinta.",
+            ["Under the depot lights, between the last bus and the first."] = "Bajo las luces de la cochera, entre el último bus y el primero.",
             ["COUCH RIVALS"] = "RIVALES DE SOFÁ", ["Play a 2 Player game."] = "Juega una partida de 2 jugadores.",
             ["FOUR CUPS"] = "CUATRO COPAS", ["Win The Gold Signal Cup four times."] = "Gana la Gold Signal Cup cuatro veces.",
             ["RIVAL DOWN"] = "RIVAL DERROTADO", ["They win this one. They'll be back next season."] = "Esta vez ganan ellos. Volverán la próxima temporada.",

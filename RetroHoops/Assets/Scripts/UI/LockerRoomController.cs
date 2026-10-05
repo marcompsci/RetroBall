@@ -453,8 +453,8 @@ namespace CallerRetroBall.UI
         {
             var c = App.Catalog;
             var career = App.Career;
-            var slots = new[] { CosmeticSlot.JerseyPalette, CosmeticSlot.Shoes, CosmeticSlot.CourtBanner, CosmeticSlot.Celebration, CosmeticSlot.DribbleMove };
-            string[] slotNames = { "JERSEY PALETTE", "SHOES", "COURT BANNER", "CELEBRATION", "DRIBBLE MOVE" };
+            var slots = new[] { CosmeticSlot.JerseyPalette, CosmeticSlot.Shoes, CosmeticSlot.CourtBanner, CosmeticSlot.Celebration, CosmeticSlot.DribbleMove, CosmeticSlot.DunkPackage };
+            string[] slotNames = { "JERSEY PALETTE", "SHOES", "COURT BANNER", "CELEBRATION", "DRIBBLE MOVE", "DUNK PACKAGE" };
             if (career.kits.designed)
                 UiKit.Size(UiKit.Label(_content, "Your KIT tab design is what your team wears. Jerseys and shoes you own here show up there as presets.",
                                        28f, Theme.Cyan), 80f);
@@ -466,7 +466,7 @@ namespace CallerRetroBall.UI
                 foreach (var item in items) CosmeticRow(item, career);
             }
             if (slots.Length > 0)
-                UiKit.Size(UiKit.Label(_content, "Celebrations and dribble moves are collectible style tags; they don't change ratings.",
+                UiKit.Size(UiKit.Label(_content, "Celebrations, dribble moves and dunk packages change how you look, not your ratings.",
                                        28f, Theme.Muted), 80f);
         }
 

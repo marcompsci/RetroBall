@@ -277,7 +277,7 @@ namespace CallerRetroBall.Logic
         public string Id => id;
     }
 
-    public enum CosmeticSlot { JerseyPalette = 0, Shoes = 1, CourtBanner = 2, Celebration = 3, DribbleMove = 4 }
+    public enum CosmeticSlot { JerseyPalette = 0, Shoes = 1, CourtBanner = 2, Celebration = 3, DribbleMove = 4, DunkPackage = 5 }
 
     [Serializable]
     public class CosmeticDef : IHasId

@@ -95,6 +95,8 @@ namespace CallerRetroBall.Gameplay
         private float _leapStart;
         private float _leapDuration;
         private ShotType _leapType;
+        /// <summary>How the current dunk looks (Dunks.cs).</summary>
+        private DunkStyle _dunkStyle;
         private struct Fan
         {
             public SpriteRenderer Renderer;
@@ -168,7 +170,7 @@ namespace CallerRetroBall.Gameplay
             CourtSpace.Flip = false;
             CourtSpace.FlipLength = setup.Court.depth;
             // Full Court 5-on-5 plays in landscape (baskets left and right).
-            _landscape = setup.FullCourt && !Demo && !Versus;
+            _landscape = (setup.FullCourt || (App.Career != null && App.Career.settings.landscapeAll)) && !Demo && !Versus;
             CourtSpace.Landscape = _landscape;
             CourtSpace.LandscapeLength = setup.Court.depth;
             if (_landscape) Orientation.Landscape();
@@ -384,7 +386,7 @@ namespace CallerRetroBall.Gameplay
             _bursts = PixelBursts.Create(world, _art);
             // The stands' fans are drawn for the portrait view; landscape leaves the stands empty.
             if (!_landscape) BuildCrowd(world, court, setup, artGeometry, banner != null);
-            else _fans = new Fan[0];
+            else BuildSidelineCrowd(world, court, setup);
 
             var arrowGo = new GameObject("ReceiverArrow");
             arrowGo.transform.SetParent(world, false);
@@ -751,6 +753,12 @@ namespace CallerRetroBall.Gameplay
                         _cameraRig.Shake(0.2f);
                         if (e.Team == human || Versus) Haptics.Heavy();
                         break;
+                    case MatchEventType.EuroStep:
+                        if (_match.IsHumanControlled(e.PlayerIndex)) _hud.Toast("EURO STEP", 0.7f);
+                        break;
+                    case MatchEventType.DunkToLayup:
+                        if (_match.IsHumanControlled(e.PlayerIndex)) _hud.Toast("NO DUNK FROM THERE: LAYUP", 0.9f);
+                        break;
                     case MatchEventType.PassThrown:
                         if (_match.AlleyOopInFlight) Sfx(SfxId.Lob, 0.7f);
                         break;
@@ -763,6 +771,14 @@ namespace CallerRetroBall.Gameplay
                             _leapStart = Time.unscaledTime;
                             _leapType = _match.Ball.ShotType;
                             _leapDuration = Mathf.Max(0.3f, _match.Ball.FlightDuration + 0.15f);
+                            if (_leapType == ShotType.Dunk)
+                            {
+                                // Your dunk package for you; the AI throws down what its finishing allows.
+                                _dunkStyle = e.PlayerIndex == _match.ControlledIndex && !Demo
+                                    ? Dunks.ForCosmetic(App.Career?.equippedDunk)
+                                    : Dunks.ForAi(_match.Players[e.PlayerIndex].Def.attributes.finishing, Random.value);
+                                _leapDuration *= 1f + (Dunks.LiftScale(_dunkStyle) - 1f) * 0.6f; // a bit more hang time
+                            }
                         }
                         if (e.PlayerIndex == _match.ControlledIndex)
                         {
@@ -776,11 +792,11 @@ namespace CallerRetroBall.Gameplay
                     case MatchEventType.ShotMade:
                         bool swish = _match.Ball.ShotGrade == TimingGrade.Green;
                         bool dunk = _match.Ball.ShotType == ShotType.Dunk;
-                        _hud.Toast((dunk ? "SLAM!  +" : swish ? "SWISH  +" : "+") + e.Value, 1.1f);
+                        _hud.Toast((dunk ? Dunks.Name(_dunkStyle) + "  +" : swish ? "SWISH  +" : "+") + e.Value, 1.1f);
                         if (!_reduceMotion) _bursts.Spawn(HoopWorld, swish ? (Color)new Color32(0xFF, 0xD1, 0x66, 255) : Color.white, dunk ? 28 : (swish ? 20 : 12), dunk ? 5f : 4f);
                         if (dunk)
                         {
-                            _cameraRig.Shake(0.22f);
+                            _cameraRig.Shake(Dunks.Shake(_dunkStyle) + 0.04f);
                             if (e.Team == human || Versus) Haptics.Heavy();
                         }
                         bool crowdHappy = Versus || e.Team == human;
@@ -901,7 +917,16 @@ namespace CallerRetroBall.Gameplay
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
                 var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
                 float jump = _match.JumpHeight01(i);
-                if (i == _leaper) jump = Mathf.Max(jump, Flair.Leap(_leapType, now - _leapStart, _leapDuration));
+                if (i == _leaper)
+                {
+                    float leap = Flair.Leap(_leapType, now - _leapStart, _leapDuration);
+                    if (_leapType == ShotType.Dunk)
+                    {
+                        leap *= Dunks.LiftScale(_dunkStyle);
+                        if (!_reduceMotion) flair = Dunks.Pose(_dunkStyle, (now - _leapStart) / _leapDuration);
+                    }
+                    jump = Mathf.Max(jump, leap);
+                }
                 if (_skyHigh) jump *= 2f; // SKY HIGH secret: looks only
                 _playerViews[i].Sync(dt, _match.IsHumanControlled(i), shooting, jump, flair);
             }
@@ -1852,6 +1877,58 @@ namespace CallerRetroBall.Gameplay
             _fans = fans.ToArray();
         }
 
+        /// <summary>
+        /// Landscape: bleachers along the far sideline (top of the screen) with cheering fans, since the
+        /// baseline stands are side-on in this view.
+        /// </summary>
+        private void BuildSidelineCrowd(Transform world, CourtDef court, MatchSetup setup)
+        {
+            const float ppu = CourtSpace.PixelsPerUnit;
+            float length = setup.Court.depth + CourtGenerator.BaselineMargin * 2f;
+            int widthPx = Mathf.CeilToInt(length * ppu);
+            var canvas = CrowdGenerator.SidelineStands(widthPx, court.skyTop, court.floor.Lighten(0.12f), court.paint);
+            var standsGo = new GameObject("SidelineStands");
+            standsGo.transform.SetParent(world, false);
+            var sr = standsGo.AddComponent<SpriteRenderer>();
+            sr.sprite = _art.SidelineStands(canvas);
+            sr.sortingOrder = -9600;
+            var origin = new Vector3(-length * 0.5f, setup.Court.HalfWidth + CourtGenerator.SideMargin, 0f);
+            standsGo.transform.position = origin;
+
+            var rng = new SeededRandom(StableHash.Of(court.id + ":sideline"));
+            var skins = CharacterSpriteGenerator.SkinTones;
+            RgbColor[] shirts = { setup.TeamA.primary, setup.TeamA.secondary, setup.TeamB.primary, setup.TeamB.secondary, court.paint, court.lines.Darken(0.3f) };
+            var sprites = new (Sprite idle, Sprite cheer)[shirts.Length * 2];
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                var shirt = shirts[i % shirts.Length];
+                var skin = skins[(i * 5) % skins.Length];
+                sprites[i] = (_art.CrowdFan(shirt, skin, false), _art.CrowdFan(shirt, skin, true));
+            }
+            var fans = new System.Collections.Generic.List<Fan>();
+            var parent = new GameObject("SidelineCrowd").transform;
+            parent.SetParent(world, false);
+            float density = Mathf.Clamp01(Mathf.Max(0.35f, court.crowdDensity * 1.3f));
+            for (int row = CrowdGenerator.StandRows - 1; row >= 0; row--)
+            {
+                int floor = CrowdGenerator.StandRowFloor(row);
+                for (int x = 2 + (row % 2) * 3; x < widthPx - CrowdGenerator.Width; x += 6)
+                {
+                    if (!rng.Chance(density)) continue;
+                    var pick = sprites[rng.Range(0, sprites.Length)];
+                    var go = new GameObject("Fan");
+                    go.transform.SetParent(parent, false);
+                    var fanSr = go.AddComponent<SpriteRenderer>();
+                    fanSr.sprite = pick.idle;
+                    fanSr.sortingOrder = -9500 - row; // front row in front of the rows behind it
+                    var pos = origin + new Vector3(x / ppu, floor / ppu, 0f);
+                    go.transform.position = pos;
+                    fans.Add(new Fan { Renderer = fanSr, Idle = pick.idle, Cheer = pick.cheer, Base = pos });
+                }
+            }
+            _fans = fans.ToArray();
+        }
+
         private void SetCrowd(CrowdMood mood, float seconds)
         {
             _crowdMood = mood;
@@ -1980,7 +2057,9 @@ namespace CallerRetroBall.Gameplay
                 CourtSpace.Landscape = false;
                 // Straight into another landscape game (rematch / next Full Court game): stay sideways.
                 var next = App.PendingMatch;
-                if (next == null || !(next.Mode == GameMode.FullCourt || next.FullCourt) || next.Mode == GameMode.Versus) Orientation.Portrait();
+                bool nextSideways = next != null && next.Mode != GameMode.Versus && next.Mode != GameMode.Demo
+                                    && (next.Mode == GameMode.FullCourt || next.FullCourt || (App.Career != null && App.Career.settings.landscapeAll));
+                if (!nextSideways) Orientation.Portrait();
             }
             Audio.AudioManager.SetAmbience(false);
             Audio.AudioManager.PlayMusic(0);

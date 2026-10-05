@@ -108,6 +108,8 @@ namespace CallerRetroBall.Gameplay
         }
 
         private float _landscapeX;
+        /// <summary>Height of the landscape sideline stands (m), drawn above the far sideline.</summary>
+        public static float LandscapeStandsHeight => (4 + Logic.PixelArt.CrowdGenerator.StandRows * Logic.PixelArt.CrowdGenerator.StandRowHeight + 3) / CourtSpace.PixelsPerUnit;
 
         /// <summary>Landscape Full Court: pan with the play left and right; the sidelines stay in view below the HUD.</summary>
         private void FollowLandscape(Vec2 target, float dt, bool snap)
@@ -140,10 +142,12 @@ namespace CallerRetroBall.Gameplay
                 // Integer zoom that fits the court's width (plus margins) top to bottom, and a fair stretch across.
                 Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, landscapeVisibleHeight, CourtSpace.PixelsPerUnit);
                 _camera.orthographicSize = CameraMath.OrthographicSize(Screen.height, Zoom, CourtSpace.PixelsPerUnit);
-                // The HUD bar takes the top of the screen: centre the sidelines in what's left.
-                float top = _court.HalfWidth + CourtGenerator.SideMargin * 0.5f, bottom = -_court.HalfWidth - CourtGenerator.SideMargin;
-                float hud = 2f * _camera.orthographicSize * 0.13f;
-                _targetY = (top + hud + bottom) * 0.5f;
+                // Near sideline at the bottom of the screen; above the far sideline, as much of the stands as fits
+                // (the landscape HUD is a compact bar in the middle, so the stands show either side of it).
+                float bottom = -_court.HalfWidth - CourtGenerator.SideMargin * 0.4f;
+                float top = _court.HalfWidth + CourtGenerator.SideMargin + LandscapeStandsHeight;
+                float ortho = _camera.orthographicSize;
+                _targetY = 2f * ortho >= top - bottom ? (top + bottom) * 0.5f : bottom + ortho;
                 return;
             }
 

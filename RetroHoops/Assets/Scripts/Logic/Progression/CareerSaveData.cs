@@ -29,6 +29,8 @@ namespace CallerRetroBall.Logic
         public bool largeButtons;
         /// <summary>Settings ▸ CUSTOMIZE CONTROLS: button positions and sizes (<see cref="ControlLayout"/>); empty = default.</summary>
         public string controlLayout = "";
+        /// <summary>Play every mode in landscape, not only Full Court (2 Player and the demo stay portrait).</summary>
+        public bool landscapeAll;
         /// <summary>Tap SHOOT to start the meter and tap again to release (no holding).</summary>
         public bool tapToShoot;
         /// <summary>No screen shake, sparks, or score bounce.</summary>
@@ -229,6 +231,8 @@ namespace CallerRetroBall.Logic
         public string equippedBanner;
         public string equippedCelebration;
         public string equippedMove;
+        /// <summary>Dunk package (how your dunks look; Season 5).</summary>
+        public string equippedDunk;
         public CareerTotals totals = new CareerTotals();
         public PracticeBests practice = new PracticeBests();
         public SettingsData settings = new SettingsData();
@@ -292,6 +296,7 @@ namespace CallerRetroBall.Logic
                 case CosmeticSlot.Shoes: return equippedShoes;
                 case CosmeticSlot.CourtBanner: return equippedBanner;
                 case CosmeticSlot.Celebration: return equippedCelebration;
+                case CosmeticSlot.DunkPackage: return equippedDunk;
                 default: return equippedMove;
             }
         }
@@ -304,6 +309,7 @@ namespace CallerRetroBall.Logic
                 case CosmeticSlot.Shoes: equippedShoes = id; break;
                 case CosmeticSlot.CourtBanner: equippedBanner = id; break;
                 case CosmeticSlot.Celebration: equippedCelebration = id; break;
+                case CosmeticSlot.DunkPackage: equippedDunk = id; break;
                 default: equippedMove = id; break;
             }
         }

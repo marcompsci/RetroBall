@@ -157,3 +157,12 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Play ▸ FULL COURT: the phone turns to landscape, baskets left and right, players face the way they run, the hoops look right from the side, the camera follows the ball, buttons and stick fit; pause menu and the post-game screen fit; HOME returns to a portrait menu. Rematch stays landscape.
 - [ ] Legacy / Franchise / All-Star games (Full Court) also play in landscape.
 - [ ] Keyboard U / I and controller RB / LB dunk and lay up.
+
+## Phase 25
+- [ ] Locker Room ▸ DUNK PACKAGE: buy and equip Windmill; your next dunk spins the ball round, rises higher and calls "WINDMILL!". Try each package. AI flyers sometimes throw down fancy dunks.
+- [ ] Drive at a defender standing in the lane with a good handler: "EURO STEP" and you go round them. A poor handler runs into them.
+- [ ] On your drives, a defender from the weak side rotates to the rim and jumps with you (more often on harder difficulties).
+- [ ] Landscape Full Court: stands with fans along the top, cheering on scores; the score bar is a small box in the middle; both sidelines visible.
+- [ ] Settings ▸ LANDSCAPE: ALL GAMES on: Quick Call, Park, practice turn sideways; 2 Player stays upright; off again: back to portrait.
+- [ ] Rise Season 5: the Cassette Club challenge, Echo's story scenes (English and Spanish), REWOUND badge.
+- [ ] Hoops Pass third season: Cassette Deck / Tape Runners / Boombox / Skyline Slam.

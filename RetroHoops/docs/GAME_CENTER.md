@@ -55,7 +55,7 @@ Achievements report 100% when earned. Points total **1,000** (Game Center allows
 | `retroball.ach.all_codes` | Code Breaker | Find every secret code. | 80 |
 | `retroball.ach.king_five` | Hold the Court | Win 5 straight in King of the Court. | 50 |
 | `retroball.ach.caller_cup` | Cup Run | Win the Caller Cup. | 60 |
-| `retroball.ach.all_rivals` | Every Rival | Beat Neon Static, the Sundown Syndicate, the Midnight Tide and the Paper Cranes. | 100 |
+| `retroball.ach.all_rivals` | Every Rival | Beat Neon Static, the Sundown Syndicate, the Midnight Tide, the Paper Cranes and the Cassette Club. | 100 |
 | `retroball.ach.shootout` | Sharpshooter | Win a Shootout. | 20 |
 | `retroball.ach.horse` | Spell It Out | Win a game of H-O-R-S-E against the CPU. | 20 |
 | `retroball.ach.around_world` | World Tour | Finish Around the World. | 20 |

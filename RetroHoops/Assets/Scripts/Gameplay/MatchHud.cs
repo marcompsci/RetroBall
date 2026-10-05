@@ -40,6 +40,31 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Accessibility: no score bounce.</summary>
         public static bool ReduceMotion { get; set; }
 
+        private RectTransform _bar;
+        private bool _barLandscape;
+        private bool _barSet;
+
+        /// <summary>Landscape: a compact score bar in the middle (the stands and court show either side); portrait: full width.</summary>
+        private void LayoutBar()
+        {
+            if (_bar == null) return;
+            bool landscape = Screen.width > Screen.height;
+            if (_barSet && landscape == _barLandscape) return;
+            _barSet = true;
+            _barLandscape = landscape;
+            if (landscape)
+            {
+                _bar.anchorMin = _bar.anchorMax = new Vector2(0.5f, 1f);
+                _bar.sizeDelta = new Vector2(1100f, 130f);
+            }
+            else
+            {
+                _bar.anchorMin = new Vector2(0f, 1f);
+                _bar.anchorMax = new Vector2(1f, 1f);
+                _bar.sizeDelta = new Vector2(-32f, 150f);
+            }
+        }
+
         /// <summary>Left-handed layout: the CALL menu opens on the left, near the buttons.</summary>
         public void SetCallMenuLeft(bool left)
         {
@@ -62,6 +87,7 @@ namespace CallerRetroBall.Gameplay
         {
             var bar = UiKit.Panel(safe, Color.white, Theme.PanelSprite(), true, "ScoreBar");
             var rt = bar.rectTransform;
+            _bar = rt;
             rt.anchorMin = new Vector2(0f, 1f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(0.5f, 1f);
@@ -376,6 +402,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Update()
         {
+            LayoutBar();
             if (_replayButton != null && _replayButton.activeSelf && Time.unscaledTime > _replayButtonUntil) _replayButton.SetActive(false);
             Punch(_scoreA, _punchA);
             Punch(_scoreB, _punchB);

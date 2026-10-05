@@ -1,3 +1,4 @@
+using System;
 namespace CallerRetroBall.Logic.PixelArt
 {
     public enum CrowdMood { Idle = 0, Cheer = 1, Groan = 2 }
@@ -42,5 +43,37 @@ namespace CallerRetroBall.Logic.PixelArt
                     return ((int)(t * 1.5f) + fanIndex * 3) % 7 == 0 ? 1 : 0;
             }
         }
+
+        /// <summary>Rows of the landscape sideline stands (fans stand on each).</summary>
+        public const int StandRows = 3;
+        public const int StandRowHeight = 7;
+
+        /// <summary>
+        /// Bleachers along the far sideline for landscape Full Court: a low wall, three stepped rows and a
+        /// back rail, in the court's colours. <paramref name="widthPx"/> wide; row 0 is the front (lowest) row.
+        /// </summary>
+        public static PixelCanvas SidelineStands(int widthPx, RgbColor wall, RgbColor seat, RgbColor accent)
+        {
+            int h = 4 + StandRows * StandRowHeight + 3;
+            var c = new PixelCanvas(Math.Max(8, widthPx), h);
+            // Front wall with an accent stripe.
+            c.FillRect(0, 0, c.Width, 4, wall.Darken(0.2f));
+            c.FillRect(0, 2, c.Width, 1, accent);
+            for (int row = 0; row < StandRows; row++)
+            {
+                int y = 4 + row * StandRowHeight;
+                var face = row % 2 == 0 ? seat : seat.Darken(0.12f);
+                c.FillRect(0, y, c.Width, StandRowHeight, face.Darken(0.1f * row));
+                c.FillRect(0, y + StandRowHeight - 1, c.Width, 1, seat.Lighten(0.2f)); // bench edge
+                for (int x = (row * 5) % 16; x < c.Width; x += 16) c.FillRect(x, y, 1, StandRowHeight - 1, wall.Darken(0.35f)); // aisle posts
+            }
+            // Back rail.
+            c.FillRect(0, h - 3, c.Width, 3, wall.Darken(0.4f));
+            c.FillRect(0, h - 2, c.Width, 1, accent.Darken(0.2f));
+            return c;
+        }
+
+        /// <summary>Bottom pixel row (in the stands canvas) where fans in <paramref name="row"/> stand.</summary>
+        public static int StandRowFloor(int row) => 4 + row * StandRowHeight + 1;
     }
 }
