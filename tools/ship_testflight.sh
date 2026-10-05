@@ -33,8 +33,8 @@ OPEN="$(ps -axo pid=,args= | grep "Unity.app/Contents/MacOS/Unity " | grep -v --
 if [[ -n "$OPEN" ]]; then note "STOPPED: Unity has this project open. Quit the Unity Editor (Cmd+Q) and run this again."; exit 1; fi
 if ! command -v xcodebuild >/dev/null; then note "STOPPED: xcodebuild not found. Install Xcode, open it once, and accept the licence."; exit 1; fi
 
-# Team: $TEAM, else tools/apple_team.txt, else Unity's Signing Team ID. It must be the PAID team
-# (the one that owns com.phoronomicstudios.*), not the free personal team used for early device tests.
+# Team: $TEAM, else tools/apple_team.txt, else Unity's Signing Team ID. It must be a team in the paid
+# Apple Developer Program (Omari's individual membership, team X6LZQ3FS36, owns com.phoronomicstudios.*).
 TEAMFILE="$(cd "$(dirname "$0")" && pwd)/apple_team.txt"
 if [[ -z "${TEAM:-}" && -f "$TEAMFILE" ]]; then TEAM="$(tr -d '[:space:]' < "$TEAMFILE")"; fi
 if [[ -z "${TEAM:-}" ]]; then
@@ -44,10 +44,6 @@ if [[ ! "${TEAM:-}" =~ ^[A-Z0-9]{10}$ ]]; then
   note "STOPPED: no Apple Team ID for the paid team. Find it at developer.apple.com ▸ Account ▸ Membership details
 (10 letters/digits; also shown as the App ID Prefix on the com.phoronomicstudios identifiers), then either put it in
 ~/RetroHoops-push/tools/apple_team.txt or run:  TEAM=YOURTEAMID bash ~/RetroHoops-push/tools/ship_testflight.sh"
-  exit 1
-fi
-if [[ "$TEAM" == "X6LZQ3FS36" ]]; then
-  note "STOPPED: X6LZQ3FS36 is the free personal team (it owns com.marcompsci.retroball). Use the paid team's ID instead (see above)."
   exit 1
 fi
 echo "Team: $TEAM"
