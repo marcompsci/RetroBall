@@ -13,7 +13,7 @@ App Store Connect ▸ **Apps ▸ ＋ ▸ New App**:
 | Platform | iOS |
 | Name | **Retro Hoops** (the name on the App Store record; "RetroBall" was already taken). |
 | Primary language | English (U.S.) |
-| Bundle ID | `com.phoronomicstudios.retroball`. Register it first at developer.apple.com ▸ Certificates, Identifiers & Profiles ▸ Identifiers ▸ ＋ ▸ App IDs ▸ App (Explicit; tick Game Center and iCloud). The old `com.marcompsci.retroball` belongs to the free personal team and doesn't appear in the list. |
+| Bundle ID | `com.phoronomicstudios.retrohoops`. Register it first at developer.apple.com ▸ Certificates, Identifiers & Profiles ▸ Identifiers ▸ ＋ ▸ App IDs ▸ App (Explicit; tick Game Center and iCloud). The old `com.marcompsci.retroball` belongs to the free personal team and doesn't appear in the list. |
 | SKU | `retroball-ios-1` |
 | User access | Full access |
 

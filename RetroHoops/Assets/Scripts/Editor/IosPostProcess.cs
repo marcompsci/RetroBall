@@ -42,7 +42,7 @@ namespace CallerRetroBall.EditorTools
             if (!hasScheme)
             {
                 var type = urlTypes.AddDict();
-                type.SetString("CFBundleURLName", "com.phoronomicstudios.retroball.kit");
+                type.SetString("CFBundleURLName", "com.phoronomicstudios.retrohoops.kit");
                 var schemes = type.CreateArray("CFBundleURLSchemes");
                 schemes.AddString("retrohoops");
                 schemes.AddString("retroball"); // links shared before the rename

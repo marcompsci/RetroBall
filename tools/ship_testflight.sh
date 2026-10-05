@@ -5,7 +5,7 @@
 #   bash ~/RetroHoops-push/tools/ship_testflight.sh --export-only   # build + archive + .ipa, no upload
 #   TEAM=ABCDE12345 bash ~/RetroHoops-push/tools/ship_testflight.sh # pick the Apple team explicitly
 #
-# Before the first upload: create the app in App Store Connect with bundle ID com.phoronomicstudios.retroball
+# Before the first upload: create the app in App Store Connect with bundle ID com.phoronomicstudios.retrohoops
 # (docs/SUBMISSION.md, step 1). Quit the Unity Editor first. Xcode must be signed in to your paid
 # Apple Developer account (Xcode ▸ Settings ▸ Accounts). Logs go to <project>/Logs/.
 set -uo pipefail
@@ -105,7 +105,7 @@ STATUS=$?
 if [[ $STATUS -ne 0 ]]; then
   HINT=""
   if grep -qiE "no suitable application records|Cannot determine the Apple ID|app record" "$LOGS/xcodebuild_export.log"; then
-    HINT="App Store Connect has no app with bundle ID com.phoronomicstudios.retroball yet. Create it first (docs/SUBMISSION.md, step 1), then run this again."
+    HINT="App Store Connect has no app with bundle ID com.phoronomicstudios.retrohoops yet. Create it first (docs/SUBMISSION.md, step 1), then run this again."
   elif grep -qiE "bundle version must be higher|has already been uploaded|redundant binary" "$LOGS/xcodebuild_export.log"; then
     HINT="That build number was already uploaded. Just run this again: it raises the build number every time."
   fi

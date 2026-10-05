@@ -9,7 +9,7 @@ Work through this in order. Items marked ✅ are already handled in the project.
 - ✅ Logic tests pass on .NET: `cd tools/LogicTests && dotnet run --project Runner/Runner.csproj`
 
 ## 2. Identity and settings
-- ✅ Bundle ID `com.phoronomicstudios.retroball`.
+- ✅ Bundle ID `com.phoronomicstudios.retrohoops`.
 - ☐ Set your **Signing Team ID** in Player Settings, or choose the team in Xcode later.
 - ✅ **Retro Hoops ▸ Release ▸ Apply Release Player Settings:** version 1.0.0, build 1, iOS 15+, iPhone + iPad (Macs with Apple silicon run it as Designed for iPad), portrait, full screen, status bar hidden, Unity splash off, development build off.
 - ✅ `ship_testflight.sh` (Retro Hoops ▸ Release ▸ Build iOS (App Store)) raises the build number for every upload.

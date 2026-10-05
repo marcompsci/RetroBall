@@ -228,11 +228,13 @@ namespace CallerRetroBall.EditorTools
         /// The App Store bundle ID, registered to the paid Phoronomic Studios team. (The first one,
         /// com.marcompsci.retroball, belongs to the free personal team, so App Store Connect can't use it.)
         /// </summary>
-        public const string DefaultBundleId = "com.phoronomicstudios.retroball";
+        public const string DefaultBundleId = "com.phoronomicstudios.retrohoops";
+        /// <summary>The paid-team ID used before the rename to Retro Hoops (never uploaded).</summary>
+        public const string OldRetroBallBundleId = "com.phoronomicstudios.retroball";
         public const string OldPersonalBundleId = "com.marcompsci.retroball";
 
         public static bool IsPlaceholderId(string id) =>
-            string.IsNullOrEmpty(id) || id == "com.retroball.game" || id == OldPersonalBundleId || id.StartsWith("com.Unity", StringComparison.Ordinal)
+            string.IsNullOrEmpty(id) || id == "com.retroball.game" || id == OldPersonalBundleId || id == OldRetroBallBundleId || id == "com.marcompsci.retrohoops" || id.StartsWith("com.Unity", StringComparison.Ordinal)
             || id.StartsWith("com.DefaultCompany", StringComparison.Ordinal);
 
         /// <summary>

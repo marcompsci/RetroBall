@@ -8,7 +8,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 |---|---|
 | Name (30) | Retro Hoops |
 | Subtitle (30) | 3v3 & 5v5 street basketball *(27)* |
-| Bundle ID | `com.phoronomicstudios.retroball` (paid team; `com.marcompsci.retroball` belongs to the personal team and can't be used) |
+| Bundle ID | `com.phoronomicstudios.retrohoops` (paid team; `com.marcompsci.retroball` belongs to the personal team and can't be used) |
 | SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
 | Secondary category | Games ▸ Arcade |
