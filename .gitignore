@@ -1,43 +1,4 @@
-# Unity
-CallerRetroBall/[Ll]ibrary/
-CallerRetroBall/[Tt]emp/
-CallerRetroBall/[Oo]bj/
-CallerRetroBall/[Bb]uild/
-CallerRetroBall/[Bb]uilds/
-CallerRetroBall/[Ll]ogs/
-CallerRetroBall/[Uu]ser[Ss]ettings/
-CallerRetroBall/MemoryCaptures/
-CallerRetroBall/*.csproj
-CallerRetroBall/*.sln
-CallerRetroBall/*.slnx
-CallerRetroBall/.vs/
-CallerRetroBall/.idea/
-CallerRetroBall/*.pidb
-CallerRetroBall/*.userprefs
-CallerRetroBall/crashlytics-build.properties
-RetroHoops/[Ll]ibrary/
-RetroHoops/[Tt]emp/
-RetroHoops/[Oo]bj/
-RetroHoops/[Bb]uild/
-RetroHoops/[Bb]uilds/
-RetroHoops/[Ll]ogs/
-RetroHoops/[Uu]ser[Ss]ettings/
-RetroHoops/MemoryCaptures/
-RetroHoops/*.csproj
-RetroHoops/*.sln
-RetroHoops/*.slnx
-RetroHoops/.vs/
-RetroHoops/.idea/
-RetroHoops/*.pidb
-RetroHoops/*.userprefs
-RetroHoops/crashlytics-build.properties
-
-# Xcode output from iOS builds
-CallerRetroBall/iOSBuild/
-RetroHoops/iOSBuild/
-
-# .NET logic-test harness
-tools/**/bin/
-tools/**/obj/
-
 .DS_Store
+xcuserdata/
+DerivedData/
+build/

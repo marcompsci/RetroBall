@@ -79,12 +79,15 @@ namespace CallerRetroBall.Tests
             string envelope = SaveGuard.Sign(json, Key);
 
             // Tamper: change the games count in the envelope's payload.
-            string tampered = envelope.Replace("\"games\":42", "\"games\":9999");
+            // (Encode writes pretty JSON, so match "games" with any spacing.)
+            string tampered = System.Text.RegularExpressions.Regex.Replace(envelope, "\"games\":\\s*42", "\"games\": 9999");
+            Assert.AreNotEqual(envelope, tampered, "the test really changed the save");
 
             // The platform layer: verify → null → feed empty string to Decode.
+            Assert.IsNull(SaveGuard.Verify(tampered, Key), "tampering is detected");
             string payload = SaveGuard.Verify(tampered, Key) ?? "";
             var loaded = SaveCodec.Decode(payload, c, out LoadStatus status);
-            Assert.AreEqual(LoadStatus.Recovered, status);
+            Assert.AreNotEqual(LoadStatus.Ok, status, "a tampered save never loads as-is (empty payload = a fresh career)");
             Assert.AreEqual(0, loaded.totals.games, "tampered data not used");
         }
 
