@@ -67,6 +67,21 @@ else
   fi
   echo "RESTORED: $restored"
 fi
+
+# The generated assets (scenes, content data, TextMeshPro essentials) come from Retro Hoops' own setup code.
+if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" ]]; then
+  if [[ ! -x "$UNITY" ]]; then echo "STOPPED: Unity $VERSION not found at $UNITY."; exit 1; fi
+  echo "Scenes missing: running Project Setup in Unity (a few minutes)..."
+  for pass in 1 2; do
+    "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
+      -executeMethod CallerRetroBall.EditorTools.ProjectSetup.SetupBatch -logFile "$LOGS/unity_setup_$pass.log"
+    grep -A12 "Project setup finished" "$LOGS/unity_setup_$pass.log" | head -14
+    grep -E "error CS[0-9]+|Exception" "$LOGS/unity_setup_$pass.log" | sort -u | head -10
+    [[ -f "$PROJECT/Assets/Scenes/BootScene.unity" ]] && break
+  done
+  if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" ]]; then echo "STOPPED: Project Setup didn't create the scenes."; exit 1; fi
+  echo "SETUP: scenes and content created."
+fi
 echo
 echo "=== Now the Build Check"
 bash "tools/Build Check (Simulator).command"

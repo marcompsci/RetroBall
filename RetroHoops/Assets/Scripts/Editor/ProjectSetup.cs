@@ -142,6 +142,17 @@ namespace CallerRetroBall.EditorTools
                       ", build " + PlayerSettings.iOS.buildNumber);
         }
 
+        /// <summary>
+        /// Batch mode: the whole first-open setup (TextMeshPro essentials, content assets, the six scenes, Build Settings),
+        /// for a project whose generated assets are missing (tools/Restore Project Settings.command runs it when
+        /// Assets/Scenes/BootScene.unity isn't there). Keeps anything that already exists.
+        /// </summary>
+        public static void SetupBatch()
+        {
+            Run(interactive: false);
+            Debug.Log("[CallerRetroBall] Setup batch done. Boot scene present: " + File.Exists(ScenePath(SceneNames.Boot)));
+        }
+
         /// <summary>Player Settings ▸ Active Input Handling = Input System Package (New).</summary>
         private static string SetInputSystemOnly()
         {
