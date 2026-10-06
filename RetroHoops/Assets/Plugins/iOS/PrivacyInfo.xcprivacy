@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Privacy manifest for RetroBall's own code (the game scripts and CallerHaptics.mm).
-  The game does not track, collect data, or use network domains. The game's own code uses none of
-  Apple's "required reason" APIs; the Unity engine ships its own manifest for the APIs it uses.
+  Privacy manifest for Retro Hoops' own code (the game scripts and the iOS plugins).
+  No tracking. Retro Hoops Live's server (server/, when BackendConfig.Url is set) stores the player's Game Center
+  id (User ID) and their Live game results and rating (Gameplay Content), linked to the player, only to run Live.
+  The game's own code uses none of Apple's "required reason" APIs; the Unity engine ships its own manifest.
 -->
 <plist version="1.0">
 <dict>
@@ -12,7 +13,32 @@
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeUserID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeGameplayContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array/>
 </dict>

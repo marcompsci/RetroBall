@@ -33,6 +33,14 @@ namespace CallerRetroBall.Gameplay
             if (_ball.color != c) _ball.color = c;
         }
 
+        /// <summary>Draws the ball at a given spot instead (in a dunker's hands on the way to the rim).</summary>
+        public void SyncInHands(Vector3 world, int sortingOrder)
+        {
+            _ball.transform.position = world;
+            _ball.sortingOrder = sortingOrder;
+            _shadow.color = new Color(1f, 1f, 1f, 0f);
+        }
+
         /// <param name="heldOffsetPx">Dribble-move offset in art pixels, applied only while the ball is held.</param>
         public void Sync(BallState ball, int holderSortingOrder, Vector2Int heldOffsetPx = default)
         {

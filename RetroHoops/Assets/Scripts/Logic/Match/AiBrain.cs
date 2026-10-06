@@ -295,11 +295,15 @@ namespace CallerRetroBall.Logic
             }
             float uHold = 0.05f;
 
-            // AI teams occasionally run a pick-and-roll for a good driver.
+            // AI teams occasionally run a play.
             if (p.Team != Setup.HumanTeam && _play == PlayCall.None && dist > 4f
                 && _rng.NextFloat() < 0.12f * (0.5f + tend.drive) * profile.decisionQuality)
             {
-                StartPlay(p.Team, PlayCall.PickAndRoll, p.Index);
+                // Mix it up (no extra random draw, so seeded games keep their shape): mostly pick-and-roll,
+                // sometimes a backdoor cut or a post-up for the big.
+                int pick = (int)(Time * 10f) % 5;
+                var play = pick == 3 ? PlayCall.Backdoor : pick == 4 ? PlayCall.PostUp : PlayCall.PickAndRoll;
+                StartPlay(p.Team, play, p.Index);
                 s.Intent = AiIntent.Hold;
                 s.Target = p.Position;
                 return;
@@ -439,6 +443,7 @@ namespace CallerRetroBall.Logic
             if (GetBack(p, s, holder)) return;
             if (ProtectRim(p, s, profile)) return;
             if (DenyBaselineRunner(p, s, man, profile)) return;
+            if (TrapHotHand(p, s, holder, profile)) return;
 
             // Help when the ball handler gets deep; mistakes (errorRate) mean late rotations.
             bool packed = _scheme[p.Team] == DefenseScheme.PackLine || _scheme[p.Team] == DefenseScheme.Zone;

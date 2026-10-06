@@ -71,6 +71,47 @@ namespace CallerRetroBall.Gameplay
         private PlayerInput _linkCarry;
         private float _lastLinkStep, _nextWaitToast;
         private bool _linkEnded;
+        /// <summary>Phase 30: this phone is watching someone else's two-phone game (null otherwise).</summary>
+        private Spectator _watch;
+        /// <summary>Phase 30, host of a two-phone game: sends the game to phones watching it.</summary>
+        private SpectatorFeed _feed;
+        private NearbyLink _nearby;
+        private int _watchersSeen;
+        /// <summary>Phase 30: a Couch Cup game played on two phones (null otherwise).</summary>
+        private LinkSetup _cupSetup;
+        private bool _cupRecorded;
+        /// <summary>Retro Hoops Live: the agreed setup (ratings), or null for two phones nearby.</summary>
+        private LinkSetup _liveSetup;
+        private string _opponent = "YOUR FRIEND";
+        private bool _liveRated;
+        /// <summary>Set when the Live server accepted this game for rating.</summary>
+        private string _serverMatchKey;
+
+        /// <summary>Live: records the result once (a win, a loss, or a forfeit). Returns a line for the post-game screen.</summary>
+        private string RateLive(bool won, Backend.Outcome outcome)
+        {
+            if (_liveSetup == null || _liveRated || App.Career == null) return null;
+            _liveRated = true;
+            var live = App.Career.live ?? (App.Career.live = new LiveSaveData());
+            if (_serverMatchKey != null)
+            {
+                // Rated on the Retro Hoops Live server: it changes ratings only when both phones' reports agree.
+                var hud = _hud;
+                BackendClient.ReportResult(_serverMatchKey, _match.Score[0], _match.Score[1], SimHash.Of(_match), outcome, (state, change, p) =>
+                {
+                    if (hud == null) return;
+                    if (state == "settled") hud.Toast("LIVE RATING " + (p?.Rating ?? live.rating) + " (" + (change >= 0 ? "+" : "") + change + ")", 3f);
+                    else if (state == "open") hud.Toast("RESULT SENT: RATING UPDATES WHEN BOTH RESULTS ARE IN", 3f);
+                    else if (state == "disputed") hud.Toast("THE TWO RESULTS DIDN'T MATCH: NO RATING CHANGE", 3f);
+                });
+                return "Result sent to Retro Hoops Live (" + (won ? "win" : "loss") + "). Ratings update on the server.";
+            }
+            int theirs = _link.Seat == 0 ? _liveSetup.GuestRating : _liveSetup.HostRating;
+            int delta = LiveMode.Apply(live, theirs, won);
+            App.SaveCareer();
+            App.ReportGameCenter();
+            return "LIVE RATING " + live.rating + " (" + (delta >= 0 ? "+" : "") + delta + ")  ·  " + LiveMode.Tier(live.rating) + "  ·  " + live.wins + "-" + live.losses;
+        }
         /// <summary>The team this phone plays: the guest of a two-phone game is team B.</summary>
         private int LocalTeam => _link != null ? _link.Seat : _match.Setup.HumanTeam;
         /// <summary>Full Court on a landscape screen.</summary>
@@ -103,6 +144,12 @@ namespace CallerRetroBall.Gameplay
         private int _leaper = -1;
         private float _leapStart;
         private float _leapDuration;
+        // Dunks: where the dunker took off, when the ball meets the rim (0..1 of the leap), and the lift that puts their hands on it.
+        private Vec2 _leapFrom;
+        private float _slamU;
+        private int _liftAtRimPx;
+        private Transform _hoopT, _hoop2T;
+        private Vector3 _hoopBase, _hoop2Base;
         private ShotType _leapType;
         /// <summary>How the current dunk looks (Dunks.cs).</summary>
         private DunkStyle _dunkStyle;
@@ -170,15 +217,46 @@ namespace CallerRetroBall.Gameplay
             _request = App.PrepareRequest(App.PendingMatch ?? MatchRequest.QuickCallDefault(catalog));
             App.PendingMatch = null;
             if (_request.Seed == 0) _request.Seed = (uint)System.Environment.TickCount | 1u;
-            if (_request.ContextId == "link" && LinkMatch.Active)
+            if (_request.ContextId == "link" && LinkMatch.Watching != null && LinkMatch.Transport != null)
             {
-                _link = new Lockstep(LinkMatch.Seat);
+                // Watching (a third phone): the host's game, step for step; nothing here affects it.
+                _watch = LinkMatch.Watching;
                 _wire = LinkMatch.Transport;
+                _opponent = "THE PLAYERS";
+                _lastLinkStep = Time.unscaledTime;
+            }
+            else if (_request.ContextId == "link" && LinkMatch.Active)
+            {
+                _link = new Lockstep(LinkMatch.Seat, LinkMatch.Setup.Delay);
+                _wire = LinkMatch.Transport;
+                _liveSetup = LinkMatch.Setup.IsLive ? LinkMatch.Setup : null;
+                if (_liveSetup != null && BackendClient.Ready && !string.IsNullOrEmpty(LinkMatch.LocalId) && !string.IsNullOrEmpty(LinkMatch.OpponentId))
+                {
+                    string host = LinkMatch.Seat == 0 ? LinkMatch.LocalId : LinkMatch.OpponentId;
+                    string guest = LinkMatch.Seat == 0 ? LinkMatch.OpponentId : LinkMatch.LocalId;
+                    string key = Backend.MatchKey(host, guest, _liveSetup.Seed);
+                    BackendClient.StartMatch(key, LinkMatch.OpponentId, LinkMatch.Seat, (rated, why) =>
+                    {
+                        if (rated) _serverMatchKey = key;
+                        else if (_hud != null) _hud.Toast("UNRATED GAME: " + (why ?? "").ToUpperInvariant(), 2.5f);
+                    });
+                }
+                _opponent = _liveSetup == null ? "YOUR FRIEND" : (LinkMatch.Seat == 0 ? _liveSetup.GuestName : _liveSetup.HostName).ToUpperInvariant();
+                if (string.IsNullOrEmpty(_opponent)) _opponent = "YOUR OPPONENT";
+                if (_liveSetup == null && LinkMatch.Setup.IsCup)
+                {
+                    _cupSetup = LinkMatch.Setup;
+                    string them = LinkMatch.Seat == 0 ? _cupSetup.AwayLabel : _cupSetup.HomeLabel;
+                    if (!string.IsNullOrEmpty(them)) _opponent = them.ToUpperInvariant();
+                }
+                // The host of a game nearby shares it with anyone who wants to watch.
+                _nearby = LinkMatch.Transport as NearbyLink;
+                if (_liveSetup == null && LinkMatch.Seat == 0 && _nearby != null) _feed = new SpectatorFeed(LinkMatch.Setup);
                 _lastLinkStep = Time.unscaledTime;
             }
 
             // Both phones in a two-phone game step at 60 Hz, whatever their screens do.
-            int rate = _link != null ? 60 : App.SimulationRate;
+            int rate = _link != null || _watch != null ? 60 : App.SimulationRate;
             FixedStep = 1f / rate;
             MaxStepsPerFrame = rate / 12;
             var setup = MatchSetup.FromRequest(_request, catalog);
@@ -251,6 +329,19 @@ namespace CallerRetroBall.Gameplay
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
+            // Tip-off card with tonight's court and both starting lineups (real games only; quick and skippable).
+            if (!Demo && _practice == null && _tutorial == null && _horse == null && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
+            {
+                var startersA = new System.Collections.Generic.List<string>();
+                var startersB = new System.Collections.Generic.List<string>();
+                foreach (var pl in _match.Players)
+                {
+                    if (IsBenchedSlot(pl)) continue;
+                    string n = string.IsNullOrEmpty(pl.Def.lastName) ? pl.Def.firstName : pl.Def.lastName;
+                    (pl.Team == 0 ? startersA : startersB).Add("#" + pl.Def.jerseyNumber + " " + (n ?? "").ToUpperInvariant());
+                }
+                _hud.ShowIntro(court != null ? court.displayName : "THE COURT", setup.TeamA, setup.TeamB, startersA, startersB);
+            }
             // Mic Tally on the call (Settings ▸ COMMENTARY), except in practice and the tutorial.
             if ((settings == null || settings.commentary) && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
                 _mic = new Commentary(setup.TeamA.nickname, setup.TeamB.nickname, _request.Seed);
@@ -323,6 +414,8 @@ namespace CallerRetroBall.Gameplay
             var hoopSr = hoopGo.AddComponent<SpriteRenderer>();
             hoopSr.sprite = _landscape ? _art.HoopSide : _art.Hoop;
             hoopSr.sortingOrder = CourtSpace.SortingOrder(setup.Court.Hoop, -1);
+            _hoopT = hoopGo.transform;
+            _hoopBase = _hoopT.position;
             if (setup.FullCourt)
             {
                 // The other basket at the bottom of the court, backboard toward the bottom baseline.
@@ -335,6 +428,8 @@ namespace CallerRetroBall.Gameplay
                 if (_landscape) hoop2Sr.flipX = true; // backboard on the right
                 else hoop2Sr.flipY = true;
                 hoop2Sr.sortingOrder = CourtSpace.SortingOrder(bottomHoop, 1);
+                _hoop2T = hoop2.transform;
+                _hoop2Base = _hoop2T.position;
             }
 
             _playerViews = new PlayerView[_match.Players.Length];
@@ -459,6 +554,11 @@ namespace CallerRetroBall.Gameplay
             }
             else if (_photo != null && _link == null) return;
             else if (EscapePressed() && !_match.IsOver) SetPaused(!_paused);
+            if (_watch != null)
+            {
+                WatchFrame();
+                return;
+            }
             if (_link != null)
             {
                 // Two phones: the game keeps going while the pause menu is open (the other phone is still playing).
@@ -519,6 +619,7 @@ namespace CallerRetroBall.Gameplay
             ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: false);
             ViewsMarker.End();
+            if (_practice == null && _tutorial == null && _horse == null) UpdateCrowdChant();
 
             if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
             else if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
@@ -545,6 +646,7 @@ namespace CallerRetroBall.Gameplay
 
         private void SetTouchVisible(bool visible)
         {
+            if (_watch != null) visible = false; // watching: nothing to control
             _controls.SetVisible(visible);
             if (_controls2 != null) _controls2.SetVisible(visible);
         }
@@ -760,6 +862,7 @@ namespace CallerRetroBall.Gameplay
         /// </summary>
         private void LinkFrame()
         {
+            if (_rematching) return; // the next game's messages are for the next scene
             UpdatePadMode();
             if (!_match.IsOver && !_linkEnded)
             {
@@ -787,7 +890,9 @@ namespace CallerRetroBall.Gameplay
             }
 
             foreach (var m in _link.TakeOutgoing()) _wire.Send(m);
-            while (_wire.TryReceive(out var msg)) _link.Receive(msg);
+            // After the buzzer, stop at the first hand-shake message: the rematch lobby reads from there on,
+            // so the next game's first inputs are never swallowed by this one.
+            while ((!_match.IsOver || _link.Control.Count == 0) && _wire.TryReceive(out var msg)) _link.Receive(msg);
 
             int steps = 0;
             while (steps < MaxStepsPerFrame * 2 && !_match.IsOver && !_linkEnded && _link.TryStep(out var a, out var b))
@@ -796,6 +901,7 @@ namespace CallerRetroBall.Gameplay
                 StepMarker.Begin();
                 _match.Step(FixedStep, a, b);
                 StepMarker.End();
+                _feed?.Record(a, b);
                 _link.AfterStep(tick, SimHash.Of(_match));
                 CourtSpace.Flip = _match.Flipped;
                 _recorder.Capture(_match);
@@ -809,14 +915,17 @@ namespace CallerRetroBall.Gameplay
                 foreach (var m in _link.TakeOutgoing()) _wire.Send(m); // checksums due after those steps
             }
 
+            FeedWatchers();
+
             ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: false);
             ViewsMarker.End();
 
+            UpdateLinkRematch();
             if (_linkEnded) return;
             string problem = _link.Desynced ? "OUT OF SYNC"
                            // (inputs already received are played out first, so a friend leaving right at the buzzer still finishes the game)
-                           : _link.RemoteLeft && _link.WaitingForRemote ? "YOUR FRIEND LEFT"
+                           : _link.RemoteLeft && _link.WaitingForRemote ? _opponent + " LEFT"
                            : (_wire.State == LinkState.Lost || _wire.State == LinkState.Idle) && _link.WaitingForRemote ? "CONNECTION LOST" : null;
             if (problem != null && !_match.IsOver)
             {
@@ -826,9 +935,166 @@ namespace CallerRetroBall.Gameplay
             if (!_match.IsOver && Time.unscaledTime - _lastLinkStep > 0.6f && Time.unscaledTime >= _nextWaitToast)
             {
                 _nextWaitToast = Time.unscaledTime + 1f;
-                _hud.Toast("WAITING FOR YOUR FRIEND…", 1.1f);
+                _hud.Toast("WAITING FOR " + _opponent + "…", 1.1f);
             }
             if (_match.IsOver && !_finalShown) ShowFinal();
+        }
+
+        /// <summary>Host: sends the game so far to the phones watching (and says who's watching).</summary>
+        private void FeedWatchers()
+        {
+            if (_feed == null || _nearby == null) return;
+            int n = _nearby.WatcherCount;
+            if (n > _watchersSeen) _hud.Toast(n == 1 ? "1 FRIEND IS WATCHING" : n + " FRIENDS ARE WATCHING", 2f);
+            _watchersSeen = n;
+            foreach (var m in _feed.Take(n)) _nearby.SendWatchers(m);
+        }
+
+        // ------------------------------------------------------------------ watching on a third phone
+
+        private bool _watchEndShown;
+
+        /// <summary>
+        /// One frame of watching: play the host's steps at real speed (fast-forward after joining late),
+        /// and follow the players into their next game (a rematch or the next Couch Cup game).
+        /// </summary>
+        private void WatchFrame()
+        {
+            if (_rematching) return;
+            UpdatePadMode();
+            while (_wire.TryReceive(out var msg)) _watch.Receive(msg);
+            int steps = 0;
+            bool catchingUp = _watch.Behind > 90;
+            if (!_match.IsOver)
+            {
+                _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
+                int due = Mathf.FloorToInt(_accumulator / FixedStep);
+                int n = Spectator.StepsThisFrame(_watch.Behind, due);
+                while (steps < n && !_match.IsOver && _watch.TryStep(out var a, out var b))
+                {
+                    StepMarker.Begin();
+                    _match.Step(FixedStep, a, b);
+                    StepMarker.End();
+                    CourtSpace.Flip = _match.Flipped;
+                    _recorder.Capture(_match);
+                    HandleEvents();
+                    steps++;
+                }
+                _accumulator = Mathf.Clamp(_accumulator - steps * FixedStep, 0f, FixedStep * MaxStepsPerFrame);
+            }
+            _hitStopUntil = 0f;
+            if (steps > 0) _lastLinkStep = Time.unscaledTime;
+
+            ViewsMarker.Begin();
+            SyncViews(steps * FixedStep, snapCamera: catchingUp);
+            ViewsMarker.End();
+
+            // The players started another game: watch that one too.
+            var next = _watch.Next;
+            if (next != null && next.Ready && (_match.IsOver || _watch.Behind == 0))
+            {
+                if (next.Setup.Register(App.Catalog))
+                {
+                    _rematching = true;
+                    LinkMatch.Setup = next.Setup;
+                    LinkMatch.Watching = next;
+                    App.PendingMatch = next.Setup.ToRequest();
+                    SceneFlow.GoTo(SceneNames.Game);
+                    return;
+                }
+            }
+
+            bool gone = _watch.HostLeft || _wire.State == LinkState.Lost || _wire.State == LinkState.Idle;
+            if (!_match.IsOver && !_linkEnded && gone && _watch.Behind == 0)
+            {
+                _linkEnded = true;
+                _finalShown = true;
+                _hud.ShowPause(false);
+                HangUp();
+                _hud.ShowFinal("GAME STOPPED", "The players' phones disconnected at " + _match.Score[0] + " - " + _match.Score[1] + ".");
+                return;
+            }
+            if (_match.IsOver && !_finalShown)
+            {
+                _finalShown = true;
+                var setup = _match.Setup;
+                string home = _watch.Setup.IsCup && !string.IsNullOrEmpty(_watch.Setup.HomeLabel) ? _watch.Setup.HomeLabel : setup.TeamA.FullName;
+                string away = _watch.Setup.IsCup && !string.IsNullOrEmpty(_watch.Setup.AwayLabel) ? _watch.Setup.AwayLabel : setup.TeamB.FullName;
+                string title = _match.Winner < 0 ? "TIE" : ((_match.Winner == 0 ? home : away).ToUpperInvariant() + " WIN" + (_watch.Setup.IsCup ? "S" : ""));
+                _hud.ShowFinal(title, setup.TeamA.abbreviation + "  " + _match.Score[0] + " - " + _match.Score[1] + "  " + setup.TeamB.abbreviation
+                                      + "\nStay here: if they play again, you'll watch that game too.");
+                Haptics.Success();
+            }
+            if (_match.IsOver && gone && !_watchEndShown && _watch.Next == null)
+            {
+                _watchEndShown = true;
+                _hud.Toast("THE PLAYERS HAVE LEFT", 2.5f);
+            }
+            if (!_match.IsOver && !gone && Time.unscaledTime - _lastLinkStep > 1.2f && Time.unscaledTime >= _nextWaitToast)
+            {
+                _nextWaitToast = Time.unscaledTime + 1.5f;
+                _hud.Toast("WAITING FOR THE PLAYERS…", 1.4f);
+            }
+        }
+
+        // ------------------------------------------------------------------ two-phone rematch
+
+        private LinkLobby _rematch;
+        private ILinkTransport _rematchWire;
+        private bool _rematching;
+
+        /// <summary>REMATCH on two phones: the host offers the same game with a new seed; it starts once both have tapped.</summary>
+        private void StartLinkRematch()
+        {
+            if (_rematch != null) return;
+            var c = App.Catalog;
+            bool host = _link.Seat == 0;
+            uint seed = (uint)System.Environment.TickCount | 1u;
+            LinkSetup again = null;
+            if (host && _cupSetup != null)
+            {
+                // Couch Cup: the next game in the bracket (or this one again after a tie).
+                var cup = App.Career?.couch;
+                var g = cup != null ? CouchCup.NextGame(cup) : null;
+                if (g == null)
+                {
+                    _hud.Toast("THE COUCH CUP IS OVER: TAP HOME", 2.5f);
+                    return;
+                }
+                again = CouchCup.LinkSetupFor(cup, c, g, App.Career.settings.difficultyId, seed, App.Version, LinkMatch.Setup.HostName);
+            }
+            else if (host) again = LinkMatch.Setup.Again(seed);
+            _rematch = new LinkLobby(host, again, App.Version, LinkProtocol.ContentFingerprint(c), c);
+            _rematchWire = new ReplayWire(_wire, _link.Control);
+            _hud.Toast(_cupSetup != null ? "WAITING FOR THE OTHER PHONE TO TAP REMATCH…" : "WAITING FOR YOUR FRIEND TO TAP REMATCH…", 3f);
+        }
+
+        private void UpdateLinkRematch()
+        {
+            if (_rematch == null || _rematching) return;
+            if (_link.RemoteLeft && _rematch.Status == LobbyStatus.Waiting)
+            {
+                _hud.Toast("YOUR FRIEND LEFT", 2f);
+                _rematch = null;
+                return;
+            }
+            _rematch.Update(_rematchWire);
+            switch (_rematch.Status)
+            {
+                case LobbyStatus.Started:
+                    var setup = _rematch.Setup;
+                    if (!setup.Register(App.Catalog)) { _hud.Toast("COULDN'T START THE REMATCH", 2f); _rematch = null; return; }
+                    _rematching = true;
+                    LinkMatch.Setup = setup;
+                    App.PendingMatch = setup.ToRequest();
+                    SceneFlow.GoTo(SceneNames.Game);
+                    break;
+                case LobbyStatus.Rejected:
+                case LobbyStatus.Lost:
+                    _hud.Toast(_rematch.Error ?? "NO REMATCH", 2f);
+                    _rematch = null;
+                    break;
+            }
         }
 
         private void EndLink(string why)
@@ -841,6 +1107,9 @@ namespace CallerRetroBall.Gameplay
             string detail = why == "OUT OF SYNC"
                 ? "The two games stopped matching (step " + _link.DesyncTick + "). Both phones need the same version. No result counted."
                 : "Score " + _match.Score[0] + " - " + _match.Score[1] + ". No result counted.";
+            // Live: an opponent who quits after the opening seconds forfeits; a dropped connection or desync doesn't count.
+            if (_liveSetup != null && why.EndsWith(" LEFT") && _match.Time >= LiveMode.CountsAfterSeconds)
+                detail = "Score " + _match.Score[0] + " - " + _match.Score[1] + ". They forfeit: " + RateLive(true, Backend.Outcome.OpponentLeft);
             _hud.ShowFinal(why, detail);
             Haptics.Heavy();
         }
@@ -849,9 +1118,19 @@ namespace CallerRetroBall.Gameplay
         private void HangUp()
         {
             if (_wire == null) return;
+            // Leaving a Live game early (after the opening seconds) counts as a loss.
+            if (_liveSetup != null && !_linkEnded && !_match.IsOver && _match.Time >= LiveMode.CountsAfterSeconds) RateLive(false, Backend.Outcome.Quit);
+            if (_feed != null && _nearby != null)
+            {
+                // Tell the watchers the game is over for them too.
+                _feed.End();
+                foreach (var m in _feed.Take(_nearby.WatcherCount)) _nearby.SendWatchers(m);
+                _feed = null;
+            }
             if (_wire.State == LinkState.Connected) _wire.Send(LinkProtocol.Simple(LinkMessage.Bye));
             _wire = new ClosedWire();
             NearbyLink.Stop();
+            LiveLink.Stop();
             LinkMatch.Clear();
         }
 
@@ -948,6 +1227,19 @@ namespace CallerRetroBall.Gameplay
 
         private Commentary _mic;
 
+        private bool IsBenchedSlot(PlayerRuntimeState p) => _match.IsBenched(p.Index);
+        private float _nextHornAt, _nextClapAt;
+
+        /// <summary>Tight finish (last 20 seconds, within one score): the crowd claps along every few seconds.</summary>
+        private void UpdateCrowdChant()
+        {
+            if (_match == null || _match.IsOver || _match.Phase != MatchPhase.Live || !_match.Setup.Rules.useGameClock) return;
+            if (_match.GameClock > 20f || System.Math.Abs(_match.Score[0] - _match.Score[1]) > 3) return;
+            if (Time.unscaledTime < _nextClapAt) return;
+            _nextClapAt = Time.unscaledTime + 4.5f;
+            Sfx(SfxId.ClapChant, 0.5f);
+        }
+
         private void HandleEvents()
         {
             if (_mic != null && _match.Events.Count > 0)
@@ -985,6 +1277,9 @@ namespace CallerRetroBall.Gameplay
                         _cameraRig.Shake(0.2f);
                         if (e.Team == human || Versus) Haptics.Heavy();
                         break;
+                    case MatchEventType.Trap:
+                        if (_match.IsHumanControlled(e.Value)) _hud.Toast("DOUBLE TEAM! FIND THE OPEN MAN", 1.1f);
+                        break;
                     case MatchEventType.EuroStep:
                         if (_match.IsHumanControlled(e.PlayerIndex)) _hud.Toast("EURO STEP", 0.7f);
                         break;
@@ -1009,7 +1304,16 @@ namespace CallerRetroBall.Gameplay
                                 _dunkStyle = e.PlayerIndex == _match.ControlledIndex && !Demo
                                     ? Dunks.ForCosmetic(App.Career?.equippedDunk)
                                     : Dunks.ForAi(_match.Players[e.PlayerIndex].Def.attributes.finishing, Random.value);
-                                _leapDuration *= 1f + (Dunks.LiftScale(_dunkStyle) - 1f) * 0.6f; // a bit more hang time
+                                // Rise to the rim with the ball (it meets the rim when the simulation's ball does), hang, drop.
+                                float flight = Mathf.Max(0.2f, _match.Ball.FlightDuration);
+                                _leapDuration = flight + 0.45f + (Dunks.LiftScale(_dunkStyle) - 1f) * 0.4f;
+                                _slamU = flight / _leapDuration;
+                                _leapFrom = _match.Players[e.PlayerIndex].Position;
+                                var hoop = _match.Setup.Court.Hoop;
+                                var meet = DunkPath.MeetPoint(_leapFrom, hoop, _landscape ? DunkPath.ApproachSide : DunkPath.Approach);
+                                float rimY = CourtSpace.ToWorld(hoop, CourtSpace.RimHeight).y * CourtSpace.PixelsPerUnit;
+                                float floorY = CourtSpace.ToWorld(meet).y * CourtSpace.PixelsPerUnit;
+                                _liftAtRimPx = DunkPath.LiftToRim(rimY, floorY, CharacterSpriteGenerator.HandReachPx(_match.Players[e.PlayerIndex].Def.appearance));
                             }
                         }
                         if (e.PlayerIndex == _match.ControlledIndex)
@@ -1068,6 +1372,7 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 2f), new Color32(0xF4, 0xF1, 0xDE, 255), 14, 3.5f, 0.5f);
                         _hud.Toast(e.Team == human ? "BLOCKED!" : "SENT BACK", 1.1f);
                         Sfx(SfxId.Block);
+                        Sfx(SfxId.CrowdOooh, 0.7f);
                         _cameraRig.Shake(0.18f);
                         Haptics.Medium();
                         break;
@@ -1085,6 +1390,7 @@ namespace CallerRetroBall.Gameplay
                         break;
                     case MatchEventType.GameOver:
                         Sfx(SfxId.Buzzer, 0.8f);
+                        Sfx(SfxId.ArenaHorn, 0.55f);
                         break;
                     case MatchEventType.Interception:
                         _hud.Toast(e.Team == human ? "PICKED OFF!" : "STOLEN", 1.1f);
@@ -1114,12 +1420,14 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.Value].Position, 0.5f), new Color32(0xFF, 0xD1, 0x66, 255), 12, 3f, 0.5f);
                         _hud.Toast(e.Team == human ? "ANKLES!" : "GOT YOU!", 1.2f);
                         Sfx(SfxId.CrowdCheer, 0.9f);
+                        Sfx(SfxId.CrowdOooh, 0.8f);
                         Sfx(SfxId.Squeak, 0.8f, 0.8f);
                         _cameraRig.Shake(0.15f);
                         if (e.Team == human) { Haptics.Medium(); Audio.AudioManager.Voice("OOOH!"); }
                         break;
                     case MatchEventType.Substitution:
                         RedrawPlayer(e.PlayerIndex);
+                        if (Time.unscaledTime >= _nextHornAt) { Sfx(SfxId.ArenaHorn, 0.3f); _nextHornAt = Time.unscaledTime + 3f; }
                         if (e.Team == human) _hud.Toast("SUB: " + _match.Players[e.PlayerIndex].Def.lastName.ToUpperInvariant() + " IN", 1.1f);
                         break;
                     case MatchEventType.CheckBall:
@@ -1144,8 +1452,19 @@ namespace CallerRetroBall.Gameplay
             var move = UpdateDribbleMove(now);
             var celebrate = _celebrator >= 0 ? Flair.Celebration(_celebration, now - _celebrateStart) : FlairPose.None;
             if (_celebrator >= 0 && now - _celebrateStart >= Flair.CelebrationSeconds) _celebrator = -1;
+            DunkFrame dunk = default;
+            bool dunking = _leaper >= 0 && _leapType == ShotType.Dunk;
+            if (dunking)
+            {
+                float u = (now - _leapStart) / _leapDuration;
+                dunk = DunkPath.At(_leapFrom, _match.Setup.Court.Hoop, _match.Players[_leaper].Position, u, _slamU, _liftAtRimPx,
+                                   _landscape ? DunkPath.ApproachSide : DunkPath.Approach);
+            }
+            // The rim dips a pixel while someone hangs on it.
+            SyncRimDip(dunking && dunk.OnRim);
             for (int i = 0; i < _playerViews.Length; i++)
             {
+                _playerViews[i].ClearOverride();
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
                 var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
                 float jump = _match.JumpHeight01(i);
@@ -1154,8 +1473,10 @@ namespace CallerRetroBall.Gameplay
                     float leap = Flair.Leap(_leapType, now - _leapStart, _leapDuration);
                     if (_leapType == ShotType.Dunk)
                     {
-                        leap *= Dunks.LiftScale(_dunkStyle);
                         if (!_reduceMotion) flair = Dunks.Pose(_dunkStyle, (now - _leapStart) / _leapDuration);
+                        flair.ArmsUp = true; // reaching for the rim
+                        _playerViews[i].SetOverride(dunk.Ground, dunk.LiftPx);
+                        leap = 1f;
                     }
                     jump = Mathf.Max(jump, leap);
                 }
@@ -1166,6 +1487,15 @@ namespace CallerRetroBall.Gameplay
             int holderOrder = _match.Holder != null ? CourtSpace.SortingOrder(_match.Holder.Position) : 0;
             var ballOffset = _match.HumanHasBall ? new Vector2Int(move.BallOffsetX, move.BallLift + move.Lift) : Vector2Int.zero;
             _ballView.Sync(_match.Ball, holderOrder, ballOffset);
+            if (dunking && dunk.BallInHands)
+            {
+                // The ball rides in the dunker's hands up to the rim (windmills and tomahawks swing it around).
+                var pose = _reduceMotion ? FlairPose.None : Dunks.Pose(_dunkStyle, (now - _leapStart) / _leapDuration);
+                int reach = CharacterSpriteGenerator.HandReachPx(_match.Players[_leaper].Def.appearance);
+                var hands = CourtSpace.ToWorldSnapped(dunk.Ground)
+                            + new Vector3(pose.BallOffsetX, dunk.LiftPx + reach + 2 + System.Math.Max(0, pose.BallLift), 0f) / CourtSpace.PixelsPerUnit;
+                _ballView.SyncInHands(hands, CourtSpace.SortingOrder(dunk.Ground, 2));
+            }
             if (_rainbowBall) _ballView.Tint(ToColor(ArcadeColors.RainbowAt(now)));
             else _ballView.Tint(_match.Ball.IsHeld && _match.IsHeatedUp(_match.Ball.HolderIndex) ? ToColor(ArcadeColors.FlameAt(now, 1)) : Color.white);
             SpawnFlames(now);
@@ -1208,6 +1538,20 @@ namespace CallerRetroBall.Gameplay
             SyncHorse();
             UpdateCoachTips();
             UpdateControlLabels();
+        }
+
+        private bool _rimDipped;
+
+        private void SyncRimDip(bool dip)
+        {
+            if (dip == _rimDipped || _hoopT == null) return;
+            _rimDipped = dip;
+            var down = dip ? new Vector3(0f, -1f / CourtSpace.PixelsPerUnit, 0f) : Vector3.zero;
+            // The basket being attacked is the one nearest the simulation's hoop on screen.
+            var target = CourtSpace.ToWorld(_match.Setup.Court.Hoop, CourtSpace.RimHeight);
+            bool second = _hoop2T != null && (target - _hoop2Base).sqrMagnitude < (target - _hoopBase).sqrMagnitude;
+            _hoopT.position = _hoopBase + (second ? Vector3.zero : down);
+            if (_hoop2T != null) _hoop2T.position = _hoop2Base + (second ? down : Vector3.zero);
         }
 
         /// <summary>HEAT CHECK: embers rise off heated-up players (and the ball they carry).</summary>
@@ -1353,6 +1697,8 @@ namespace CallerRetroBall.Gameplay
                 case PlayCall.PickAndRoll: return "PICK & ROLL";
                 case PlayCall.GiveAndGo: return "GIVE & GO";
                 case PlayCall.ClearOut: return "CLEAR OUT";
+                case PlayCall.Backdoor: return "BACKDOOR: HIT THE CUTTER";
+                case PlayCall.PostUp: return "POST UP: FEED THE BIG";
                 default: return "";
             }
         }
@@ -1416,11 +1762,21 @@ namespace CallerRetroBall.Gameplay
                 }
                 _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
                 string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
-                if (_link != null) winner = _match.Winner < 0 ? "TIE" : (_match.Winner == _link.Seat ? "YOU WIN" : "YOUR FRIEND WINS");
+                string linkNote = null;
+                if (_link != null)
+                {
+                    winner = _match.Winner < 0 ? "TIE" : (_match.Winner == _link.Seat ? "YOU WIN" : _opponent + " WINS");
+                    if (_liveSetup != null) App.OpenLiveOnMenu = true;
+                    linkNote = _liveSetup != null ? (_match.Winner >= 0 ? RateLive(_match.Winner == _link.Seat, Backend.Outcome.Final) : "Tie: no rating change.") + "\nPLAY ▸ LIVE to find another game."
+                                                  : "REMATCH: you both tap it. HOME hangs up.";
+                    if (_cupSetup != null) linkNote = CupResult(ref winner);
+                }
                 Haptics.Success();
                 if (couchTitle != null) winner = couchTitle;
-                _hud.ShowPostGame(winner, vs, default, false, _link != null ? "Host again from 2 PLAYER ▸ TWO PHONES for a rematch." : couchNote, null, _link == null && !couch);
-                HangUp();
+                bool twoPhones = _link != null && _liveSetup == null;
+                _hud.ShowPostGame(winner, vs, default, false, _link != null ? linkNote : couchNote, null, (_link == null && !couch) || twoPhones);
+                // Two phones stay connected for a rematch; Live games hang up.
+                if (!twoPhones) HangUp();
                 return;
             }
 
@@ -2296,7 +2652,17 @@ namespace CallerRetroBall.Gameplay
 
         private void Rematch()
         {
-            if (_link != null) { Quit(); return; } // a two-phone rematch is hosted again from the menu
+            if (_watch != null)
+            {
+                _hud.Toast("IF THEY PLAY AGAIN, IT SHOWS UP HERE", 2f);
+                return;
+            }
+            if (_link != null)
+            {
+                if (_liveSetup == null && !_linkEnded && LinkMatch.Setup != null && _wire.State == LinkState.Connected) StartLinkRematch();
+                else Quit();
+                return;
+            }
             if (IsRun) { Continue(); return; }
             if (_request.ContextId != null && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal))
             {
@@ -2307,6 +2673,30 @@ namespace CallerRetroBall.Gameplay
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);
+        }
+
+        /// <summary>Couch Cup on two phones: the host records the game in its bracket; both say what's next.</summary>
+        private string CupResult(ref string winner)
+        {
+            string nameA = (_cupSetup.HomeLabel ?? "PLAYER 1").ToUpperInvariant(), nameB = (_cupSetup.AwayLabel ?? "PLAYER 2").ToUpperInvariant();
+            winner = _match.Winner < 0 ? "TIE: PLAY IT AGAIN" : (_match.Winner == 0 ? nameA : nameB) + " WINS";
+            if (_link.Seat != 0) return "The bracket is on the host's phone. Pass the phones on, then you both tap REMATCH for the next game.";
+            var cup = App.Career?.couch;
+            if (cup == null) return null;
+            var outcome = _cupRecorded ? CouchOutcome.NoGame : CouchCup.ReportLink(cup, _cupSetup.Cup, _match.Score[0], _match.Score[1]);
+            _cupRecorded = true;
+            if (outcome != CouchOutcome.NoGame) App.SaveCareer();
+            App.OpenCouchOnMenu = true;
+            if (outcome == CouchOutcome.Champion)
+            {
+                Sfx(SfxId.Fanfare);
+                return cup.names[cup.champion].ToUpperInvariant() + " WINS THE COUCH CUP!";
+            }
+            if (outcome == CouchOutcome.TieReplay) return "Ties don't count in the Couch Cup. You both tap REMATCH to play it again.";
+            var after = CouchCup.NextGame(cup);
+            return after == null ? null
+                 : "Next: " + cup.names[after.a] + " (this phone) vs " + cup.names[after.b] + " (other phone), " + CouchCup.RoundName(cup, after.round)
+                   + ". Pass the phones on, then you both tap REMATCH.";
         }
 
         private void Quit()
@@ -2329,7 +2719,7 @@ namespace CallerRetroBall.Gameplay
         private void OnDestroy()
         {
             PowerMonitor.Gameplay = false;
-            HangUp();
+            if (!_rematching) HangUp();
             UI.ControllerCursor.Suppressed = false;
             CourtSpace.Flip = false;
             if (_landscape)

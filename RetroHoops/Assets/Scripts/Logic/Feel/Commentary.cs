@@ -86,6 +86,10 @@ namespace CallerRetroBall.Logic
                     case MatchEventType.HeatUp:
                         Offer(3, Pick("heat", who + " IS HEATING UP!", "THREE STRAIGHT! " + who + " IS ON FIRE!"));
                         break;
+                    case MatchEventType.Trap:
+                        string star = e.Value >= 0 && names != null ? Cap(names(e.Value)) : "";
+                        Offer(2, Pick("trap", "THEY'RE SENDING TWO AT " + star + "!", "DOUBLE TEAM ON " + star + "!", "TOO HOT TO GUARD ONE ON ONE: HERE COMES THE TRAP!"));
+                        break;
                     case MatchEventType.EuroStep:
                         Offer(2, Pick("euro", who + " WITH THE EURO STEP!", "SIDE STEP, " + who + "! BEAUTIFUL!"));
                         break;

@@ -15,7 +15,8 @@ namespace CallerRetroBall.Logic.PixelArt
     /// <summary>
     /// Builds an original 16x24 pixel player sprite sheet from an <see cref="AppearanceDef"/>
     /// and team colours. Layout: one row per <see cref="CharacterView"/>, columns
-    /// 0-1 = idle, 2-5 = run. Every frame gets a dark 1px outline for court readability.
+    /// 0-1 = idle, 2-5 = run, 6 = arms up (shot), 7 = crossover dribble (low, wide, ball hand across),
+    /// 8 = step-back (leaning back, ball up), 9 = chest thump. Every frame gets a dark 1px outline.
     /// </summary>
     public static class CharacterSpriteGenerator
     {
@@ -24,9 +25,38 @@ namespace CallerRetroBall.Logic.PixelArt
         public const int IdleFrames = 2;
         public const int RunFrames = 4;
         public const int ShootFrames = 1;
-        public const int FramesPerView = IdleFrames + RunFrames + ShootFrames;
+        /// <summary>Phase 30: crossover dribble, step-back and chest-thump poses.</summary>
+        public const int PoseFrames = 3;
+        public const int FramesPerView = IdleFrames + RunFrames + ShootFrames + PoseFrames;
         /// <summary>Arms-up jump-shot pose.</summary>
         public const int ShootFrame = IdleFrames + RunFrames;
+        public const int CrossoverFrame = ShootFrame + 1;
+        public const int StepBackFrame = ShootFrame + 2;
+        public const int ChestThumpFrame = ShootFrame + 3;
+
+        /// <summary>The sheet column for a special pose (-1 for none).</summary>
+        public static int FrameFor(PoseFrame pose)
+        {
+            switch (pose)
+            {
+                case PoseFrame.Crossover: return CrossoverFrame;
+                case PoseFrame.StepBack: return StepBackFrame;
+                case PoseFrame.ChestThump: return ChestThumpFrame;
+                default: return -1;
+            }
+        }
+
+        private static bool IsRunFrame(int frame) => frame >= IdleFrames && frame < IdleFrames + RunFrames;
+
+        /// <summary>Body bob (rows) per frame: idle breathes, running lifts on passing frames, the crossover crouches.</summary>
+        private static int Bob(int frame)
+        {
+            if (frame == ShootFrame) return 1;
+            if (frame == CrossoverFrame) return -1;
+            if (frame == StepBackFrame || frame == ChestThumpFrame) return 0;
+            if (IsRunFrame(frame)) return (frame - IdleFrames) % 2 == 1 ? 1 : 0;
+            return frame == 1 ? -1 : 0;
+        }
         public const int ViewCount = 3;
 
         public static readonly RgbColor Outline = new RgbColor(0x14, 0x14, 0x20);
@@ -137,21 +167,31 @@ namespace CallerRetroBall.Logic.PixelArt
         /// </summary>
         public static int HeadBottomRow(AppearanceDef look, int frame)
         {
-            bool shooting = frame == ShootFrame;
-            bool running = frame >= IdleFrames && !shooting;
-            int runPhase = running ? frame - IdleFrames : 0;
-            int bob = shooting ? 1 : (running ? (runPhase % 2 == 1 ? 1 : 0) : (frame == 1 ? -1 : 0));
+            int bob = Bob(frame);
             int legLen = 6 + Clamp(look.heightTier, 0, 2) - 1;
             return 1 + legLen + 2 + bob + 5 + 1 + 1;
+        }
+
+        /// <summary>
+        /// How far (art pixels) the raised hands reach above the sprite's pivot (one pixel above the feet) in
+        /// the arms-up frame. Mirrors the layout in <see cref="DrawFrame"/>; used to put dunkers' hands on the rim.
+        /// </summary>
+        public static int HandReachPx(AppearanceDef look)
+        {
+            int headTop = HeadBottomRow(look, ShootFrame) + 4;
+            int top = Math.Min(FrameHeight - 1, headTop + 2);
+            return top + 1 - 1; // top edge of the hand row, measured from the pivot row
         }
 
         private static void DrawFrame(PixelCanvas c, CharacterView view, int frame, AppearanceDef look, Palette p)
         {
             bool shooting = frame == ShootFrame;
-            bool running = frame >= IdleFrames && !shooting;
+            bool crossover = frame == CrossoverFrame, stepBack = frame == StepBackFrame, thump = frame == ChestThumpFrame;
+            bool posed = crossover || stepBack || thump;
+            bool running = IsRunFrame(frame);
             int runPhase = running ? frame - IdleFrames : 0;
-            // Body bob: idle breathes on frame 1; running lifts on the passing frames 1 and 3.
-            int bob = shooting ? 1 : (running ? (runPhase % 2 == 1 ? 1 : 0) : (frame == 1 ? -1 : 0));
+            // Body bob: idle breathes on frame 1; running lifts on the passing frames 1 and 3; the crossover crouches.
+            int bob = Bob(frame);
 
             int legLen = 6 + Clamp(look.heightTier, 0, 2) - 1;          // 5..7
             int torsoW = look.body == BodyType.Slim ? 6 : (look.body == BodyType.Broad ? 8 : 7);
@@ -170,15 +210,17 @@ namespace CallerRetroBall.Logic.PixelArt
             // ---- legs & shoes
             if (view == CharacterView.Side)
             {
-                int stride = !running ? 0 : (runPhase == 0 ? 2 : (runPhase == 2 ? -2 : 0));
+                // Crossover: a long lunge; step-back: the back foot planted far behind, the front one lifting.
+                int stride = crossover ? 3 : stepBack ? -3 : !running ? 0 : (runPhase == 0 ? 2 : (runPhase == 2 ? -2 : 0));
                 DrawLeg(c, cx - 1 + stride, 0, legTop, p, liftRows: 0);
-                DrawLeg(c, cx - 1 - stride, 0, legTop, p, liftRows: 0, shade: true);
+                DrawLeg(c, cx - 1 - stride, 0, legTop, p, liftRows: stepBack ? 1 : 0, shade: true);
             }
             else
             {
-                int liftL = running && runPhase == 0 ? 2 : 0;
+                int liftL = running && runPhase == 0 ? 2 : (stepBack ? 1 : 0);
                 int liftR = running && runPhase == 2 ? 2 : 0;
-                int hipHalf = Math.Max(2, torsoW / 2 - 1);
+                // Crossover: a wide, low base.
+                int hipHalf = Math.Max(2, torsoW / 2 - 1) + (crossover ? 1 : 0);
                 DrawLeg(c, cx - hipHalf - 1, 0, legTop, p, liftL);
                 DrawLeg(c, cx + hipHalf - 1, 0, legTop, p, liftR);
             }
@@ -252,6 +294,10 @@ namespace CallerRetroBall.Logic.PixelArt
             {
                 // Arms are drawn after the head (raised above it).
             }
+            else if (posed)
+            {
+                DrawPoseArms(c, view, crossover, stepBack, thump, torsoLeft, torsoW, torsoBottom, armTop, cx, p);
+            }
             else if (view == CharacterView.Side)
             {
                 int armX = cx + (armSwing > 0 ? 0 : -1);
@@ -265,7 +311,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 c.Set(torsoLeft - 2, armTop - 4 - armSwing, p.SkinShade);                     // hands
                 c.Set(torsoLeft + torsoW + 1, armTop - 4 + armSwing, p.SkinShade);
             }
-            if (!shooting && kit.Cut != JerseyCut.Tank)
+            if (!shooting && !posed && kit.Cut != JerseyCut.Tank)
             {
                 // Sleeves: a tee covers the top two rows of each arm, long sleeves all but the hand.
                 int sleeve = kit.Cut == JerseyCut.Tee ? 2 : 4;
@@ -304,6 +350,17 @@ namespace CallerRetroBall.Logic.PixelArt
 
             DrawHair(c, view, Mod(look.hairStyle, HairStyleCount), headLeft, headW, headBottom, headTop, p);
 
+            if (stepBack || thump)
+            {
+                // One arm up: the step-back holds the ball high on the shooting side; the chest thump's other fist goes up.
+                int top = Math.Min(FrameHeight - 1, headTop + 1);
+                int sleeve = kit.Cut == JerseyCut.Tee ? 2 : (kit.Cut == JerseyCut.LongSleeve ? top - armTop : 0);
+                int ax = view == CharacterView.Side ? (stepBack ? cx + 1 : cx - 2) : (stepBack ? torsoLeft + torsoW - 1 : torsoLeft - 1);
+                Rect(c, ax, armTop - 1, 2, top - armTop + 2, p.Skin);
+                if (sleeve > 0) Rect(c, ax, armTop - 1, 2, sleeve, p.Jersey);
+                c.Set(ax + (stepBack ? 1 : 0), top, p.SkinShade);
+            }
+
             if (shooting)
             {
                 int top = Math.Min(FrameHeight - 1, headTop + 2);
@@ -340,6 +397,64 @@ namespace CallerRetroBall.Logic.PixelArt
                 case TeamPattern.Rings: return y % 3 == 0;
                 case TeamPattern.Cross: return x == 2 || y == 3;
                 default: return false;
+            }
+        }
+
+        /// <summary>The arms for the Phase 30 poses that stay below the head (the raised arm is drawn after the head).</summary>
+        private static void DrawPoseArms(PixelCanvas c, CharacterView view, bool crossover, bool stepBack, bool thump,
+                                         int torsoLeft, int torsoW, int torsoBottom, int armTop, int cx, Palette p)
+        {
+            var kit = p.Kit;
+            int sleeve = kit.Cut == JerseyCut.Tee ? 2 : (kit.Cut == JerseyCut.LongSleeve ? 4 : 0);
+            if (view == CharacterView.Side)
+            {
+                if (crossover)
+                {
+                    // Ball arm reaching low and forward across the body.
+                    Rect(c, cx, armTop - 2, 2, 3, p.Skin);
+                    Rect(c, cx + 1, armTop - 4, 3, 2, p.Skin);
+                    c.Set(cx + 3, armTop - 4, p.SkinShade);
+                    if (sleeve > 0) Rect(c, cx, armTop - 1, 2, Math.Min(2, sleeve), p.Jersey);
+                }
+                else if (thump)
+                {
+                    // Fist on the chest.
+                    Rect(c, cx + 1, armTop - 3, 2, 3, p.Skin);
+                    c.Set(cx + 2, armTop - 1, p.SkinShade);
+                    if (sleeve > 0) Rect(c, cx + 1, armTop - 1, 2, 1, p.Jersey);
+                }
+                // Step-back: the arm is the raised one.
+                return;
+            }
+            int left = torsoLeft - 2, right = torsoLeft + torsoW;
+            if (crossover)
+            {
+                // One hand low across the body (the ball's on its way over), the other arm out wide for balance.
+                Rect(c, left + 1, armTop - 5, 2, 4, p.Skin);
+                Rect(c, left + 2, armTop - 6, 3, 2, p.Skin);
+                c.Set(left + 4, armTop - 6, p.SkinShade);
+                Rect(c, right + 1, armTop - 3, 2, 4, p.Skin);
+                c.Set(right + 2, armTop - 3, p.SkinShade);
+                if (sleeve > 0)
+                {
+                    Rect(c, left + 1, armTop - 2, 2, Math.Min(2, sleeve), p.Jersey);
+                    Rect(c, right + 1, armTop - 1 - Math.Min(2, sleeve) + 1, 2, Math.Min(2, sleeve), p.Jersey);
+                }
+            }
+            else if (stepBack)
+            {
+                // Off arm down and back (the ball arm is raised).
+                Rect(c, left, armTop - 4, 2, 5, p.Skin);
+                c.Set(left, armTop - 4, p.SkinShade);
+                if (sleeve > 0) Rect(c, left, armTop + 1 - sleeve, 2, sleeve, p.Jersey);
+            }
+            else if (thump)
+            {
+                // Right fist across to the chest: upper arm at the side, forearm and fist over the jersey.
+                Rect(c, right, armTop - 2, 2, 3, p.Skin);
+                Rect(c, cx, armTop - 2, right - cx, 2, p.Skin);
+                Rect(c, cx, armTop - 2, 2, 2, p.SkinShade);
+                if (sleeve > 0) Rect(c, right, armTop - 1, 2, Math.Min(2, sleeve), p.Jersey);
             }
         }
 

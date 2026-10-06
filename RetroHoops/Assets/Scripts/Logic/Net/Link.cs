@@ -20,7 +20,9 @@ namespace CallerRetroBall.Logic
         bool TryReceive(out byte[] message);
     }
 
-    public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7, /** Live: the guest's team, name and rating. */ Hello = 8 }
+    public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7, /** Live: the guest's team, name and rating. */ Hello = 8,
+        /** Host → a watching phone: the game's setup (same text as Setup). */ WatchSetup = 9,
+        /** Host → watching phones: both players' inputs for a run of steps. */ Both = 10 }
 
     /// <summary>What a player brings to a Live game: their team (as text), their name and rating.</summary>
     public sealed class LiveOffer
@@ -52,6 +54,9 @@ namespace CallerRetroBall.Logic
         /// from ones for the current session. 0 = legacy (pre-Phase 28) message.
         /// </summary>
         public uint Session;
+        /// <summary>Couch Cup on two phones: the host's cup game ("couch:3"), and the two entrants' names. Empty otherwise.</summary>
+        public string Cup = "", HomeLabel = "", AwayLabel = "";
+        public bool IsCup => !string.IsNullOrEmpty(Cup);
 
         public const string HomeId = "team.link.home", AwayId = "team.link.away";
 
@@ -80,6 +85,7 @@ namespace CallerRetroBall.Logic
         {
             var s = (LinkSetup)MemberwiseClone();
             s.Seed = seed == 0 ? 1u : seed;
+            s.Session = LinkProtocol.NewSession();
             return s;
         }
 
@@ -152,7 +158,7 @@ namespace CallerRetroBall.Logic
                 DefensePressed = (f & DefenseBit) != 0,
                 DunkPressed = (f & DunkBit) != 0,
                 LayupPressed = (f & LayupBit) != 0,
-                CallPlay = call <= (byte)PlayCall.ClearOut ? (PlayCall)call : PlayCall.None,
+                CallPlay = call <= (byte)PlayCall.PostUp ? (PlayCall)call : PlayCall.None,
             };
         }
 
@@ -190,6 +196,38 @@ namespace CallerRetroBall.Logic
             if (m.Length < 6 + count * InputBytes) return false;
             firstTick = ReadInt(m, 1);
             for (int i = 0; i < count; i++) into.Add(UnpackInput(m, 6 + i * InputBytes));
+            return true;
+        }
+
+        /// <summary>Both players' inputs for <paramref name="count"/> steps from <paramref name="firstTick"/> (host → watchers).</summary>
+        public static byte[] Both(int firstTick, IList<PlayerInput> a, IList<PlayerInput> b, int start, int count)
+        {
+            count = Math.Max(0, Math.Min(255, count));
+            var m = new byte[1 + 4 + 1 + count * InputBytes * 2];
+            m[0] = (byte)LinkMessage.Both;
+            WriteInt(m, 1, firstTick);
+            m[5] = (byte)count;
+            for (int i = 0; i < count; i++)
+            {
+                PackInput(a[start + i], m, 6 + i * InputBytes * 2);
+                PackInput(b[start + i], m, 6 + i * InputBytes * 2 + InputBytes);
+            }
+            return m;
+        }
+
+        public static bool ReadBoth(byte[] m, out int firstTick, List<PlayerInput> a, List<PlayerInput> b)
+        {
+            firstTick = 0;
+            if (m == null || m.Length < 6 || m[0] != (byte)LinkMessage.Both) return false;
+            int count = m[5];
+            if (m.Length < 6 + count * InputBytes * 2) return false;
+            firstTick = ReadInt(m, 1);
+            if (firstTick < 0) return false;
+            for (int i = 0; i < count; i++)
+            {
+                a.Add(UnpackInput(m, 6 + i * InputBytes * 2));
+                b.Add(UnpackInput(m, 6 + i * InputBytes * 2 + InputBytes));
+            }
             return true;
         }
 
@@ -234,6 +272,9 @@ namespace CallerRetroBall.Logic
             Kv("hostrating", s.HostRating.ToString());
             Kv("guestrating", s.GuestRating.ToString());
             Kv("session", s.Session.ToString());
+            Kv("cup", s.Cup);
+            Kv("homename", s.HomeLabel);
+            Kv("awayname", s.AwayLabel);
             Kv("homedata", s.HomeTeamData);
             Kv("awaydata", s.AwayTeamData);
             return Text(LinkMessage.Setup, sb.ToString());
@@ -250,9 +291,17 @@ namespace CallerRetroBall.Logic
             return new LiveOffer { AppVersion = parts[0], Name = parts[1], Rating = int.TryParse(parts[2], out int r) ? r : LiveMode.StartRating, TeamData = parts[3] };
         }
 
+        /// <summary>The setup as sent to a watching phone (a different message type, so a watcher never answers it as a player).</summary>
+        public static byte[] WatchSetupMessage(LinkSetup s)
+        {
+            var m = SetupMessage(s);
+            m[0] = (byte)LinkMessage.WatchSetup;
+            return m;
+        }
+
         public static LinkSetup ReadSetup(byte[] m)
         {
-            if (m == null || m.Length < 1 || m[0] != (byte)LinkMessage.Setup) return null;
+            if (m == null || m.Length < 1 || (m[0] != (byte)LinkMessage.Setup && m[0] != (byte)LinkMessage.WatchSetup)) return null;
             var s = new LinkSetup { Protocol = -1 };
             foreach (var line in ReadText(m).Split('\n'))
             {
@@ -276,6 +325,9 @@ namespace CallerRetroBall.Logic
                     case "hostrating": s.HostRating = int.TryParse(v, out int hr) ? hr : 0; break;
                     case "guestrating": s.GuestRating = int.TryParse(v, out int gr) ? gr : 0; break;
                     case "session": s.Session = uint.TryParse(v, out uint sess) ? sess : 0; break;
+                    case "cup": s.Cup = v; break;
+                    case "homename": s.HomeLabel = v; break;
+                    case "awayname": s.AwayLabel = v; break;
                     case "homedata": s.HomeTeamData = v; break;
                     case "awaydata": s.AwayTeamData = v; break;
                 }

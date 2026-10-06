@@ -273,6 +273,8 @@ namespace CallerRetroBall.Logic
         public StorySaveData story = new StorySaveData();
         /// <summary>The Couch Cup in progress (2 Player tournament on one device).</summary>
         public CouchCupSaveData couch = new CouchCupSaveData();
+        /// <summary>Retro Hoops Live: rating, record, Live team, cached subscription end.</summary>
+        public LiveSaveData live = new LiveSaveData();
         /// <summary>Photo mode shots taken (for the badge).</summary>
         public int photosTaken;
         /// <summary>Badges already announced.</summary>

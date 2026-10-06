@@ -36,6 +36,12 @@ namespace CallerRetroBall.Logic
         Victory = 20,
         /// <summary>Loss jingle (gentle, not mocking).</summary>
         Defeat = 21,
+        /// <summary>The crowd's "OOOOH": a vowel-ish swell for blocks, broken ankles and huge dunks.</summary>
+        CrowdOooh = 22,
+        /// <summary>Deep arena horn: final buzzer and substitutions.</summary>
+        ArenaHorn = 23,
+        /// <summary>Crowd clapping in rhythm (clap, clap, clap-clap-clap) in a tight finish.</summary>
+        ClapChant = 24,
     }
 
     /// <summary>
@@ -72,6 +78,9 @@ namespace CallerRetroBall.Logic
                 case SfxId.TipOff: return Notes(new[] { 64, 67, 71, 76 }, 0.08f, 0.35f);
                 case SfxId.Victory: return Notes(new[] { 72, 76, 79, 84, 79, 84, 88 }, 0.09f, 0.4f);
                 case SfxId.Defeat: return Notes(new[] { 67, 64, 60, 55 }, 0.14f, 0.3f);
+                case SfxId.CrowdOooh: return Oooh(1.3f, rng, 0.5f);
+                case SfxId.ArenaHorn: return Horn(1.1f, 0.45f);
+                case SfxId.ClapChant: return Claps(new[] { 0f, 0.42f, 0.84f, 1.05f, 1.26f }, rng, 0.45f);
                 default: return Square(0.6f, 220f, 0.3f);
             }
         }
@@ -308,6 +317,75 @@ namespace CallerRetroBall.Logic
                 float trill = 1f + 0.03f * (float)Math.Sin(2 * Math.PI * 28 * t);
                 float env = Math.Min(1f, i / 800f) * Math.Min(1f, (n - i) / 1500f);
                 s[i] = (float)Math.Sin(2 * Math.PI * f * trill * t) * env;
+            }
+            return Normalize(s, amp);
+        }
+
+        /// <summary>Crowd noise shaped by a sliding vowel formant (low "oo" → open "oh"), swelling then fading.</summary>
+        private static float[] Oooh(float seconds, SeededRandom rng, float amp)
+        {
+            int n = (int)(seconds * SampleRate);
+            var s = new float[n];
+            float lp = 0f, bp1 = 0f, bp2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)n;
+                float env = (float)Math.Sin(Math.PI * Math.Min(1f, t * 1.15f)) * (1f - 0.3f * t);
+                float x = rng.NextFloat() * 2f - 1f;
+                // Many voices: band-limited noise around a formant that opens from ~300 Hz to ~650 Hz.
+                float formant = 300f + 350f * Math.Min(1f, t * 1.6f);
+                float k = Math.Min(0.9f, 2f * (float)Math.PI * formant / SampleRate * 1.6f);
+                lp += k * (x - lp);
+                bp1 += k * 0.5f * (lp - bp1);
+                bp2 += 0.04f * (x - bp2); // low rumble under it
+                s[i] = ((lp - bp1) * 2.2f + bp2 * 1.2f) * env;
+            }
+            return Normalize(s, amp);
+        }
+
+        /// <summary>Arena horn: a stack of slightly detuned low square-ish tones with a flat sustain.</summary>
+        private static float[] Horn(float seconds, float amp)
+        {
+            int n = (int)(seconds * SampleRate);
+            var s = new float[n];
+            float[] freqs = { 110f, 110.6f, 164.8f, 220.4f };
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)SampleRate;
+                float u = i / (float)n;
+                float env = Math.Min(1f, u * 25f) * (u > 0.88f ? (1f - u) / 0.12f : 1f);
+                float v = 0f;
+                foreach (var f in freqs)
+                {
+                    float ph = (t * f) % 1f;
+                    v += (ph < 0.5f ? 1f : -1f) * 0.6f + (float)Math.Sin(2 * Math.PI * f * t) * 0.4f;
+                }
+                s[i] = v / freqs.Length * env;
+            }
+            return Normalize(s, amp);
+        }
+
+        /// <summary>Hand claps (short noise bursts with a body thump) at the given times, many hands slightly out of time.</summary>
+        private static float[] Claps(float[] times, SeededRandom rng, float amp)
+        {
+            int n = (int)((times[times.Length - 1] + 0.3f) * SampleRate);
+            var s = new float[n];
+            foreach (var at in times)
+            {
+                for (int hand = 0; hand < 6; hand++)
+                {
+                    int start = (int)((at + rng.NextFloat() * 0.03f) * SampleRate);
+                    int len = (int)(0.07f * SampleRate);
+                    float hp = 0f, prev = 0f;
+                    for (int j = 0; j < len && start + j < n; j++)
+                    {
+                        float x = rng.NextFloat() * 2f - 1f;
+                        hp = 0.85f * (hp + x - prev); // bright: high-passed noise
+                        prev = x;
+                        float env = (float)Math.Exp(-j / (0.012f * SampleRate));
+                        s[start + j] += hp * env / 6f;
+                    }
+                }
             }
             return Normalize(s, amp);
         }

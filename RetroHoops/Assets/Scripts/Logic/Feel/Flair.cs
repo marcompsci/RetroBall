@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8 }
 
     public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
@@ -10,8 +10,13 @@ namespace CallerRetroBall.Logic
     /// Presentation-only offsets for one player sprite at one moment, in art pixels.
     /// The views add these on top of what the simulation says; gameplay never reads them.
     /// </summary>
+    /// <summary>Phase 30: special sprite frames a pose can ask for (see CharacterSpriteGenerator).</summary>
+    public enum PoseFrame { None = 0, Crossover = 1, StepBack = 2, ChestThump = 3 }
+
     public struct FlairPose
     {
+        /// <summary>A special sprite frame (crossover dribble, step-back, chest thump); None = the usual idle/run frames.</summary>
+        public PoseFrame Frame;
         /// <summary>Sprite lift in art pixels (up).</summary>
         public int Lift;
         /// <summary>Sideways sprite offset in art pixels.</summary>
@@ -25,7 +30,7 @@ namespace CallerRetroBall.Logic
         public int BallLift;
 
         public static FlairPose None => default;
-        public bool IsNone => Lift == 0 && OffsetX == 0 && !FlipOverride && !ArmsUp && BallOffsetX == 0 && BallLift == 0;
+        public bool IsNone => Frame == PoseFrame.None && Lift == 0 && OffsetX == 0 && !FlipOverride && !ArmsUp && BallOffsetX == 0 && BallLift == 0;
     }
 
     /// <summary>
@@ -51,6 +56,7 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.celebration.take_a_bow": return CelebrationKind.TakeABow;
                 case "cosmetic.celebration.shoulder_brush": return CelebrationKind.ShoulderBrush;
                 case "cosmetic.celebration.paper_plane": return CelebrationKind.PaperPlane;
+                case "cosmetic.celebration.chest_thump": return CelebrationKind.ChestThump;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -118,6 +124,13 @@ namespace CallerRetroBall.Logic
                     p.ArmsUp = t >= 0.2f && t < 0.5f;
                     p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
                     break;
+                case CelebrationKind.ChestThump:
+                    // Two thumps on the chest (a little bounce on each), then the fist goes up to the crowd.
+                    int thump = (int)(t / 0.16f);
+                    p.Frame = thump < 4 ? PoseFrame.ChestThump : PoseFrame.None;
+                    p.Lift = thump < 4 ? (thump % 2 == 0 ? 1 : 0) : Hop(t, 0.64f, 0.26f, 2);
+                    p.ArmsUp = thump >= 4;
+                    break;
                 default: // ShimmyStep
                     int step = (int)(t / 0.12f);
                     p.OffsetX = step % 2 == 0 ? -1 : 1;
@@ -140,6 +153,7 @@ namespace CallerRetroBall.Logic
                     // Ball swings low from one hand to the other.
                     p.BallOffsetX = (int)Math.Round(-3f + 6f * u);
                     p.BallLift = -(int)Math.Round(Math.Sin(u * Math.PI) * 2f);
+                    p.Frame = u > 0.15f && u < 0.85f ? PoseFrame.Crossover : PoseFrame.None;
                     break;
                 case DribbleMoveKind.HesiHop:
                     // Freeze-and-hop: the player pops up while the ball is held high.
@@ -156,12 +170,14 @@ namespace CallerRetroBall.Logic
                     // Two crossovers back to back: left, right, left.
                     p.BallOffsetX = (int)Math.Round(3f * Math.Cos(u * 2.0 * Math.PI));
                     p.BallLift = -(int)Math.Round(Math.Abs(Math.Sin(u * 2.0 * Math.PI)) * 2f);
+                    p.Frame = p.BallLift < 0 ? PoseFrame.Crossover : PoseFrame.None;
                     break;
                 case DribbleMoveKind.StepBack:
                     // Hop back a couple of pixels, ball gathered high.
                     p.OffsetX = u < 0.6f ? -(int)Math.Round(u / 0.6f * 2f) : -2;
                     p.Lift = Hop(t, 0.05f, 0.2f, 1);
                     p.BallLift = 2;
+                    p.Frame = u > 0.1f ? PoseFrame.StepBack : PoseFrame.None;
                     break;
                 case DribbleMoveKind.RockerStep:
                     // Jab forward, rock back, jab again: the body sways while the ball stays tight.

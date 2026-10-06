@@ -2,6 +2,8 @@
 // Uses Apple's Multipeer Connectivity: nearby iPhones / iPads / Macs find each other over Wi-Fi
 // or Bluetooth with no server and no internet. One phone hosts (advertises), the other browses
 // and joins. Messages are small byte arrays, sent reliably and in order.
+// Phase 30: up to three more phones can join a hosted game as watchers. The host talks to its one
+// opponent (the "player") and separately sends the game to the watchers; data from anyone else is ignored.
 // Info.plist needs NSLocalNetworkUsageDescription and NSBonjourServices (_retrohoops._tcp,
 // _retrohoops._udp); IosPostProcess adds them and links MultipeerConnectivity.framework.
 #import <Foundation/Foundation.h>
@@ -25,7 +27,15 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
 @property (nonatomic, assign) int state;
 @property (nonatomic, assign) BOOL hosting;
 @property (nonatomic, assign) BOOL everConnected;
+// Host: the opponent, and the phones watching. Guest / watcher: the host it joined.
+@property (nonatomic, strong) MCPeerID* playerPeer;
+@property (nonatomic, strong) MCPeerID* pendingPlayer;
+@property (nonatomic, strong) MCPeerID* hostPeer;
+@property (nonatomic, strong) NSMutableArray<MCPeerID*>* watchers;
+@property (nonatomic, strong) NSMutableArray<MCPeerID*>* pendingWatchers;
 @end
+
+static const int kRetroLinkMaxWatchers = 3;
 
 @implementation RetroLinkManager
 
@@ -36,6 +46,8 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
         // alloc/init (owned) so this is right with or without ARC.
         _found = [[NSMutableArray alloc] init];
         _inbox = [[NSMutableArray alloc] init];
+        _watchers = [[NSMutableArray alloc] init];
+        _pendingWatchers = [[NSMutableArray alloc] init];
         _peerName = @"";
         _state = RLIdle;
     }
@@ -57,6 +69,11 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
     {
         [self.found removeAllObjects];
         [self.inbox removeAllObjects];
+        [self.watchers removeAllObjects];
+        [self.pendingWatchers removeAllObjects];
+        self.playerPeer = nil;
+        self.pendingPlayer = nil;
+        self.hostPeer = nil;
         self.peerName = @"";
         self.state = RLSearching;
     }
@@ -108,30 +125,60 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
     {
         [self.found removeAllObjects];
         [self.inbox removeAllObjects];
+        [self.watchers removeAllObjects];
+        [self.pendingWatchers removeAllObjects];
+        self.playerPeer = nil;
+        self.pendingPlayer = nil;
+        self.hostPeer = nil;
         self.state = RLIdle;
     }
 }
 
-- (BOOL)join:(int)index
+- (BOOL)join:(int)index watch:(BOOL)watch
 {
     MCPeerID* peer = nil;
     @synchronized (self)
     {
         if (index < 0 || index >= (int)self.found.count) return NO;
         peer = self.found[index];
+        self.hostPeer = peer;
     }
     if (self.browser == nil || self.session == nil) return NO;
-    [self.browser invitePeer:peer toSession:self.session withContext:nil timeout:20];
+    NSData* context = [(watch ? @"watch" : @"play") dataUsingEncoding:NSUTF8StringEncoding];
+    [self.browser invitePeer:peer toSession:self.session withContext:context timeout:20];
     return YES;
 }
 
-- (BOOL)send:(NSData*)data
+- (BOOL)sendTo:(NSArray<MCPeerID*>*)peers data:(NSData*)data
 {
     MCSession* s = self.session;
-    if (s == nil || s.connectedPeers.count == 0) return NO;
+    if (s == nil || peers.count == 0) return NO;
     NSError* error = nil;
-    BOOL ok = [s sendData:data toPeers:s.connectedPeers withMode:MCSessionSendDataReliable error:&error];
+    BOOL ok = [s sendData:data toPeers:peers withMode:MCSessionSendDataReliable error:&error];
     return ok && error == nil;
+}
+
+/// To the other player (host) or to the host (guest / watcher).
+- (BOOL)send:(NSData*)data
+{
+    MCPeerID* to = nil;
+    @synchronized (self) { to = self.hosting ? self.playerPeer : self.hostPeer; }
+    if (to == nil || self.session == nil || ![self.session.connectedPeers containsObject:to]) return NO;
+    return [self sendTo:@[ to ] data:data];
+}
+
+/// Host only: to every phone watching.
+- (BOOL)sendWatchers:(NSData*)data
+{
+    NSArray<MCPeerID*>* to = nil;
+    @synchronized (self) { to = [NSArray arrayWithArray:self.watchers]; }
+    if (to.count == 0) return NO;
+    return [self sendTo:to data:data];
+}
+
+- (int)watcherCount
+{
+    @synchronized (self) { return (int)self.watchers.count; }
 }
 
 // ------------------------------------------------------------------ MCNearbyServiceAdvertiserDelegate
@@ -139,9 +186,30 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
 - (void)advertiser:(MCNearbyServiceAdvertiser*)advertiser didReceiveInvitationFromPeer:(MCPeerID*)peerID
        withContext:(NSData*)context invitationHandler:(void (^)(BOOL accept, MCSession* session))invitationHandler
 {
-    // One opponent at a time: accept the first invitation while nobody is connected.
-    BOOL available = self.session != nil && self.session.connectedPeers.count == 0;
-    invitationHandler(available, available ? self.session : nil);
+    // One opponent: the first "play" invitation. Watchers: once the game has its two players, up to three.
+    NSString* kind = context != nil ? [[NSString alloc] initWithData:context encoding:NSUTF8StringEncoding] : nil;
+    BOOL watch = kind != nil && [kind isEqualToString:@"watch"];
+#if !__has_feature(objc_arc)
+    [kind release];
+#endif
+    BOOL accept = NO;
+    @synchronized (self)
+    {
+        if (self.session != nil)
+        {
+            if (watch)
+            {
+                accept = self.playerPeer != nil && (int)(self.watchers.count + self.pendingWatchers.count) < kRetroLinkMaxWatchers;
+                if (accept) [self.pendingWatchers addObject:peerID];
+            }
+            else
+            {
+                accept = self.playerPeer == nil && self.pendingPlayer == nil;
+                if (accept) self.pendingPlayer = peerID;
+            }
+        }
+    }
+    invitationHandler(accept, accept ? self.session : nil);
 }
 
 - (void)advertiser:(MCNearbyServiceAdvertiser*)advertiser didNotStartAdvertisingPeer:(NSError*)error
@@ -178,28 +246,64 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
 {
     if (state == MCSessionStateConnected)
     {
+        BOOL connectedToGame = NO;
         @synchronized (self)
         {
-            self.peerName = peerID.displayName ?: @"";
-            self.state = RLConnected;
-            self.everConnected = YES;
+            if (self.hosting)
+            {
+                if ([self.pendingWatchers containsObject:peerID])
+                {
+                    [self.pendingWatchers removeObject:peerID];
+                    if (![self.watchers containsObject:peerID]) [self.watchers addObject:peerID];
+                }
+                else if (self.playerPeer == nil && (self.pendingPlayer == nil || [self.pendingPlayer isEqual:peerID]))
+                {
+                    self.playerPeer = peerID;
+                    self.pendingPlayer = nil;
+                    connectedToGame = YES;
+                }
+            }
+            else if (self.hostPeer != nil && [self.hostPeer isEqual:peerID])
+            {
+                connectedToGame = YES;
+            }
+            if (connectedToGame)
+            {
+                self.peerName = peerID.displayName ?: @"";
+                self.state = RLConnected;
+                self.everConnected = YES;
+            }
         }
-        dispatch_async(dispatch_get_main_queue(), ^{ [self stopLooking]; });
+        // The host keeps advertising so friends can find the game to watch it; a joining phone stops browsing.
+        if (connectedToGame && !self.hosting) dispatch_async(dispatch_get_main_queue(), ^{ [self stopLooking]; });
     }
     else if (state == MCSessionStateNotConnected)
     {
         @synchronized (self)
         {
-            // Lost after playing = the game is over; a failed join just goes back to searching.
-            if (self.everConnected) self.state = RLLost;
-            else if (self.state != RLIdle) self.state = RLSearching;
+            [self.watchers removeObject:peerID];
+            [self.pendingWatchers removeObject:peerID];
+            if (self.pendingPlayer != nil && [self.pendingPlayer isEqual:peerID]) self.pendingPlayer = nil;
+            BOOL theGame = self.hosting ? (self.playerPeer != nil && [self.playerPeer isEqual:peerID])
+                                        : (self.hostPeer != nil && [self.hostPeer isEqual:peerID]);
+            if (theGame || (!self.everConnected && !self.hosting))
+            {
+                // Lost after playing = the game is over; a failed join just goes back to searching.
+                if (self.everConnected) self.state = RLLost;
+                else if (self.state != RLIdle) self.state = RLSearching;
+            }
         }
     }
 }
 
 - (void)session:(MCSession*)session didReceiveData:(NSData*)data fromPeer:(MCPeerID*)peerID
 {
-    @synchronized (self) { [self.inbox addObject:data]; }
+    @synchronized (self)
+    {
+        // Only the game's other end is listened to (watchers never decide anything).
+        MCPeerID* from = self.hosting ? self.playerPeer : self.hostPeer;
+        if (from != nil && [from isEqual:peerID]) [self.inbox addObject:data];
+    }
 }
 
 - (void)session:(MCSession*)session didReceiveStream:(NSInputStream*)stream withName:(NSString*)streamName fromPeer:(MCPeerID*)peerID
@@ -276,8 +380,27 @@ char* RetroLink_FoundName(int index)
 int RetroLink_Join(int index)
 {
     RetroLinkManager* m = RetroLinkShared();
-    dispatch_async(dispatch_get_main_queue(), ^{ [m join:index]; });
+    dispatch_async(dispatch_get_main_queue(), ^{ [m join:index watch:NO]; });
     return 1;
+}
+
+int RetroLink_Watch(int index)
+{
+    RetroLinkManager* m = RetroLinkShared();
+    dispatch_async(dispatch_get_main_queue(), ^{ [m join:index watch:YES]; });
+    return 1;
+}
+
+int RetroLink_WatcherCount(void)
+{
+    return [RetroLinkShared() watcherCount];
+}
+
+int RetroLink_SendWatchers(const unsigned char* data, int length)
+{
+    if (data == NULL || length <= 0) return 0;
+    NSData* d = [NSData dataWithBytes:data length:(NSUInteger)length];
+    return [RetroLinkShared() sendWatchers:d] ? 1 : 0;
 }
 
 char* RetroLink_PeerName(void)
