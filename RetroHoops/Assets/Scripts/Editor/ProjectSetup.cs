@@ -149,6 +149,7 @@ namespace CallerRetroBall.EditorTools
         /// </summary>
         public static void SetupBatch()
         {
+            Debug.Log("[CallerRetroBall] " + ImportTmpEssentialsNow());
             Run(interactive: false);
             Debug.Log("[CallerRetroBall] Setup batch done. Boot scene present: " + File.Exists(ScenePath(SceneNames.Boot)));
         }
@@ -188,6 +189,26 @@ namespace CallerRetroBall.EditorTools
         }
 
         // ------------------------------------------------------------------ TextMeshPro
+
+        /// <summary>
+        /// Phase 36: imports TMP Essential Resources straight from the uGUI package's .unitypackage (synchronous in batch
+        /// mode, unlike the importer window), so a rebuilt project has fonts before the first build.
+        /// </summary>
+        public static string ImportTmpEssentialsNow()
+        {
+            if (Resources.Load("TMP Settings") != null) return "TextMeshPro essentials: already present";
+            foreach (var name in new[] { "com.unity.ugui", "com.unity.textmeshpro" })
+            {
+                var info = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/" + name);
+                if (info == null || string.IsNullOrEmpty(info.resolvedPath)) continue;
+                string pkg = Path.Combine(info.resolvedPath, "Package Resources", "TMP Essential Resources.unitypackage");
+                if (!File.Exists(pkg)) continue;
+                UnityEditor.AssetPackage.Package.Import(pkg, false);
+                AssetDatabase.Refresh();
+                return "TextMeshPro essentials: imported from " + name;
+            }
+            return "TextMeshPro essentials: package file not found (Window ▸ TextMeshPro ▸ Import TMP Essential Resources)";
+        }
 
         private static string ImportTextMeshProEssentials()
         {

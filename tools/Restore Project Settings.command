@@ -69,15 +69,16 @@ else
 fi
 
 # The generated assets (scenes, content data, TextMeshPro essentials) come from Retro Hoops' own setup code.
-if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" ]]; then
+if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" || ! -d "$PROJECT/Assets/TextMesh Pro" ]]; then
   if [[ ! -x "$UNITY" ]]; then echo "STOPPED: Unity $VERSION not found at $UNITY."; exit 1; fi
-  echo "Scenes missing: running Project Setup in Unity (a few minutes)..."
+  echo "Scenes or TextMeshPro essentials missing: running Project Setup in Unity (a few minutes)..."
   for pass in 1 2; do
     "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
       -executeMethod CallerRetroBall.EditorTools.ProjectSetup.SetupBatch -logFile "$LOGS/unity_setup_$pass.log"
+    grep -E "TextMeshPro essentials" "$LOGS/unity_setup_$pass.log" | head -2
     grep -A12 "Project setup finished" "$LOGS/unity_setup_$pass.log" | head -14
     grep -E "error CS[0-9]+|Exception" "$LOGS/unity_setup_$pass.log" | sort -u | head -10
-    [[ -f "$PROJECT/Assets/Scenes/BootScene.unity" ]] && break
+    [[ -f "$PROJECT/Assets/Scenes/BootScene.unity" && -d "$PROJECT/Assets/TextMesh Pro" ]] && break
   done
   if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" ]]; then echo "STOPPED: Project Setup didn't create the scenes."; exit 1; fi
   echo "SETUP: scenes and content created."
