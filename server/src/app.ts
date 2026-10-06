@@ -12,13 +12,14 @@
 //
 // Security: every write needs a session from a verified Game Center signature; subscriptions are checked with
 // Apple's server API, never trusted from the app; ratings change only on the server; bodies are size-limited and
-// validated; per-IP and per-player rate limits; parameterised SQL only; no CORS (native app only); no secrets in code.
+// validated; match requests are signed and time-limited (sign.ts); per-IP and per-player rate limits; parameterised SQL only; no CORS (native app only); no secrets in code.
 import type { Db } from "./db.ts";
 import { verifyIdentity, type IdentityProof } from "./gamecenter.ts";
 import { accountToken, fetchSubscription, notificationTransactionId, validTransactionId, type AppleConfig } from "./appstore.ts";
 import { issueSession, readSession, SESSION_SECONDS } from "./session.ts";
 import { ensurePlayer, report, startMatch, validMatchKey, validReport, type PlayerRow } from "./live.ts";
 import { allow } from "./ratelimit.ts";
+import { checkSigned, resultFields, startFields } from "./sign.ts";
 
 export interface Deps {
   db: Db;
@@ -200,6 +201,8 @@ export function createApp(deps: Deps) {
       const opponent = str(body.opponentId, 128);
       const seat = body.seat;
       if (!validMatchKey(key) || !opponent || (seat !== 0 && seat !== 1)) return fail(400, "bad request");
+      const startSig = await checkSigned(body, key, startFields(key, opponent, seat), now);
+      if (startSig) return fail(401, startSig);
       if (!(await entitlement(deps, me)).active) return fail(402, "Retro Hoops Live subscription needed");
       if (!(await entitlement(deps, opponent)).active) return fail(409, "opponent isn't verified: this game won't be rated");
       const r = await startMatch(deps.db, key, me, opponent, seat, now);
@@ -211,6 +214,8 @@ export function createApp(deps: Deps) {
       const body = await readJson(req);
       const key = body ? body.matchKey : null;
       if (!body || !validMatchKey(key) || !validReport(body)) return fail(400, "bad request");
+      const resultSig = await checkSigned(body, key, resultFields(key, body.scoreA as number, body.scoreB as number, body.hash as string, body.outcome as string), now);
+      if (resultSig) return fail(401, resultSig);
       const r = await report(deps.db, key, me, {
         scoreA: body.scoreA as number, scoreB: body.scoreB as number, hash: body.hash as string,
         outcome: body.outcome as "final" | "quit" | "opponent_left", at: now,

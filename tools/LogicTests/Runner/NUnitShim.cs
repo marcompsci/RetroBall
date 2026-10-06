@@ -50,6 +50,12 @@ namespace NUnit.Framework
             throw new AssertionException(message ?? "Expected collection to contain <" + expected + ">");
         }
 
+        public static void DoesNotThrow(System.Action code, string message = null)
+        {
+            try { code(); }
+            catch (System.Exception e) { throw new AssertionException((message ?? "") + " expected no exception but got " + e.GetType().Name + ": " + e.Message); }
+        }
+
         public static void IsTrue(bool condition, string message = null)
         {
             if (!condition) throw new AssertionException(M(message, "Expected true"));

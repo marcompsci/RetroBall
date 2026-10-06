@@ -59,3 +59,12 @@ Game Center must be on for the app (it already is, through the capability). Add 
 ## App Review notes for the subscription
 
 > Retro Hoops Live (auto-renewing monthly subscription) unlocks online head-to-head games through Game Center matchmaking. To review: sign in to Game Center, open PLAY ▸ LIVE, subscribe with the sandbox account, then FIND A GAME. A match needs a second device on the same build with a different Game Center account. Without one, the search keeps looking and BACK stops it. The rest of the game is free and offline.
+
+## Signed match requests (Phase 32)
+
+`/v1/match/start` and `/v1/match/result` bodies must carry `t` (ms since 1970) and `tag` (HMAC-SHA256, key = the
+match key, message = `"{t}|start|{matchKey}|{opponentId}|{seat}"` or
+`"{t}|result|{matchKey}|{scoreA}|{scoreB}|{hash}|{outcome}"`, lowercase hex). The server answers 401 for a missing
+or wrong tag, or a `t` more than 5 minutes from its clock. The game does this in `Backend.StartBody/ResultBody`
+(`server/src/sign.ts` on the server side). Phones need a roughly correct clock (automatic time is the iOS default).
+

@@ -16,6 +16,12 @@ namespace CallerRetroBall.Logic
 
         public static bool Enabled => IsSafeUrl(Url);
 
+        /// <summary>
+        /// Signed match requests are accepted for this long either side of the server's clock (5 minutes), so a captured
+        /// request can't be replayed later. Must match REQUEST_WINDOW_MS in server/src/sign.ts.
+        /// </summary>
+        public const double RequestWindowMs = 300_000.0;
+
         /// <summary>Only HTTPS, no user info or odd ports; the app never talks to the server in plain text.</summary>
         public static bool IsSafeUrl(string url)
         {
@@ -71,17 +77,64 @@ namespace CallerRetroBall.Logic
         public static string SubscriptionBody(string originalTransactionId) =>
             MiniJson.Write(new Dictionary<string, object> { ["originalTransactionId"] = originalTransactionId ?? "" }, false);
 
-        public static string StartBody(string matchKey, string opponentId, int seat) =>
-            MiniJson.Write(new Dictionary<string, object> { ["matchKey"] = matchKey, ["opponentId"] = opponentId ?? "", ["seat"] = seat }, false);
+        public static string StartBody(string matchKey, string opponentId, int seat) => StartBody(matchKey, opponentId, seat, double.NaN);
+
+        /// <summary>
+        /// Phase 32 (from the Mac session's Phase 30 security tests): with a timestamp, the body also carries "t" and a
+        /// "tag" = HMAC-SHA256 keyed by the match key over the request's fields and the time (see <see cref="RequestTag"/>).
+        /// The server rejects a tag that doesn't match or a time outside <see cref="BackendConfig.RequestWindowMs"/>.
+        /// </summary>
+        public static string StartBody(string matchKey, string opponentId, int seat, double timestampMs)
+        {
+            var d = new Dictionary<string, object> { ["matchKey"] = matchKey, ["opponentId"] = opponentId ?? "", ["seat"] = seat };
+            if (!double.IsNaN(timestampMs)) Sign(d, matchKey, "start|" + matchKey + "|" + (opponentId ?? "") + "|" + seat, timestampMs);
+            return MiniJson.Write(d, false);
+        }
 
         public enum Outcome { Final, Quit, OpponentLeft }
 
+        public static string OutcomeName(Outcome outcome) => outcome == Outcome.Quit ? "quit" : outcome == Outcome.OpponentLeft ? "opponent_left" : "final";
+
         public static string ResultBody(string matchKey, int scoreA, int scoreB, uint hash, Outcome outcome) =>
-            MiniJson.Write(new Dictionary<string, object>
+            ResultBody(matchKey, scoreA, scoreB, hash, outcome, double.NaN);
+
+        public static string ResultBody(string matchKey, int scoreA, int scoreB, uint hash, Outcome outcome, double timestampMs)
+        {
+            var d = new Dictionary<string, object>
             {
-                ["matchKey"] = matchKey, ["scoreA"] = scoreA, ["scoreB"] = scoreB, ["hash"] = HashHex(hash),
-                ["outcome"] = outcome == Outcome.Quit ? "quit" : outcome == Outcome.OpponentLeft ? "opponent_left" : "final",
-            }, false);
+                ["matchKey"] = matchKey, ["scoreA"] = scoreA, ["scoreB"] = scoreB, ["hash"] = HashHex(hash), ["outcome"] = OutcomeName(outcome),
+            };
+            if (!double.IsNaN(timestampMs))
+                Sign(d, matchKey, "result|" + matchKey + "|" + scoreA + "|" + scoreB + "|" + HashHex(hash) + "|" + OutcomeName(outcome), timestampMs);
+            return MiniJson.Write(d, false);
+        }
+
+        private static void Sign(Dictionary<string, object> d, string matchKey, string fields, double timestampMs)
+        {
+            double t = Math.Floor(timestampMs);
+            d["t"] = t;
+            d["tag"] = RequestTag(matchKey, fields, t);
+        }
+
+        /// <summary>
+        /// HMAC-SHA256 (lowercase hex) keyed by <paramref name="key"/> over "{time in whole ms}|{fields}". Mirrors
+        /// <c>requestTag()</c> in server/src/sign.ts. Defence in depth: requests already need a session over HTTPS;
+        /// the tag binds a body to its game and its moment so it can't be altered or replayed later.
+        /// </summary>
+        public static string RequestTag(string key, string fields, double timestampMs)
+        {
+            string msg = ((long)Math.Floor(double.IsNaN(timestampMs) ? 0 : timestampMs)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + (fields ?? "");
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key ?? "")))
+            {
+                var bytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(msg));
+                var sb = new StringBuilder(64);
+                foreach (var b in bytes) sb.Append(b.ToString("x2"));
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>True when a request's time is too far from now (either way) to accept.</summary>
+        public static bool IsExpired(double requestMs, double nowMs, double windowMs) => Math.Abs(nowMs - requestMs) > windowMs;
 
         private static string Clip(string s, int max) => string.IsNullOrEmpty(s) ? "" : (s.Length > max ? s.Substring(0, max) : s);
 

@@ -617,6 +617,25 @@
 - **Not verified:** Unity/Xcode compile and device behaviour, in particular the Keychain plugin, VoiceOver
   element positions (Unity's screen-space convention is assumed), and tape transfer between two phones.
 
+### Phase 32: joining up with the Mac session's work
+
+- **Found on the Mac:** another session had added `Assets/Tests/EditMode/Logic/Phase30SecurityTests.cs` (21 tests for
+  signed, time-limited Live server requests: `Backend.RequestTag`, `Backend.IsExpired`,
+  `BackendConfig.RequestWindowMs`, and signed `StartBody` / `ResultBody`) straight into `~/RetroHoops`, without the
+  code behind them. As it stood, Unity's test assembly would not have compiled. Nothing else in the Mac project
+  differed from the repo.
+- **Done:** the test file is now in the repo unchanged, and the code it describes is in `Backend.cs`. Match bodies
+  carry `t` (ms) and `tag` = HMAC-SHA256 keyed by the match key over `"{t}|start|key|opponent|seat"` or
+  `"{t}|result|key|scoreA|scoreB|hash|outcome"`. The game signs every `/v1/match/start` and `/v1/match/result`.
+  The server (`server/src/sign.ts`) now **requires** the signature and a time within 5 minutes; it was never
+  deployed, so no old client is affected. Shared test vectors prove the game and server compute identical tags.
+  This is defence in depth on top of the session token and HTTPS.
+- **Xcode state on the Mac:** the last ship run (5 Oct, 15:30 PDT) built and archived build 2 but failed the
+  upload with "Error Downloading App Information". That was before App Store Connect's bundle ID was switched
+  to com.phoronomicstudios.retrohoops, so the upload hasn't been retried since the fix. The Device Xcode project
+  in `iOSBuild/Device` is from 4 Oct (Phase 25 code). It was opened in Xcode later, but there's no log of a
+  newer device build.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

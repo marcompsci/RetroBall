@@ -6,6 +6,7 @@ import { accountToken, appleApiToken, fetchSubscription, notificationTransaction
 import { issueSession, readSession } from "../src/session.ts";
 import { winnerDelta, settleStale, SETTLE_AFTER_MS } from "../src/live.ts";
 import { b64UrlToStr, b64ToBytes, bytesToB64, concat } from "../src/b64.ts";
+import { requestTag, resultFields, startFields, REQUEST_WINDOW_MS } from "../src/sign.ts";
 import { memoryDb, makeGameCenterKey, signGameCenter, makeAppleKey, fakeFetch, fakeJws } from "./helpers.ts";
 
 const SECRET = "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz";
@@ -217,9 +218,15 @@ describe("Live ratings", () => {
     await subscribe(w, "T:bob", bob, "200");
   });
 
-  const start = (token: string, opponent: string, seat: number, key = KEY) => w.app(post("/v1/match/start", { matchKey: key, opponentId: opponent, seat }, token));
-  const result = (token: string, scoreA: number, scoreB: number, hash: string, outcome = "final", key = KEY) =>
-    w.app(post("/v1/match/result", { matchKey: key, scoreA, scoreB, hash, outcome }, token));
+  // The game signs match requests (Backend.StartBody / ResultBody with a timestamp); so do these helpers.
+  const start = async (token: string, opponent: string, seat: number, key = KEY) => {
+    const t = w.clock.t;
+    return w.app(post("/v1/match/start", { matchKey: key, opponentId: opponent, seat, t, tag: await requestTag(key, startFields(key, opponent, seat), t) }, token));
+  };
+  const result = async (token: string, scoreA: number, scoreB: number, hash: string, outcome = "final", key = KEY) => {
+    const t = w.clock.t;
+    return w.app(post("/v1/match/result", { matchKey: key, scoreA, scoreB, hash, outcome, t, tag: await requestTag(key, resultFields(key, scoreA, scoreB, hash, outcome), t) }, token));
+  };
 
   test("agreeing reports settle the game once; ratings change only on the server", async () => {
     assert.equal((await start(alice, "T:bob", 0)).status, 200);
@@ -325,3 +332,33 @@ test("the appAccountToken matches the game's (C#) version", async () => {
 });
 
 const ACCOUNT_TOKEN_T12345 = "d2742be6-91fe-55df-9feb-32f4c5b398c4";
+
+describe("signed match requests (Phase 32)", () => {
+  const KEY = "0123456789abcdef0123456789abcdef";
+
+  test("tags match the game's Backend.RequestTag byte for byte", async () => {
+    // Same vectors as SignedRequests_MatchTheServer in the game's Phase32Tests.cs.
+    assert.equal(await requestTag(KEY, startFields(KEY, "T:opp", 0), 1791250000000), "2e1abf95571a7a23b34a4b7bd646ada437cbc907198e0c7dd807ec1ac0dee222");
+    assert.equal(await requestTag(KEY, resultFields(KEY, 21, 15, "deadbeef", "final"), 1791250000000), "7cdaa7411f36ca4ae7cc371072db939704365cab0e750d0382b08e2091d421d7");
+  });
+
+  test("unsigned, tampered, stale and replayed-later requests are refused", async () => {
+    const w = await world();
+    const alice = await signIn(w, "T:alice");
+    const bob = await signIn(w, "T:bob");
+    await subscribe(w, "T:alice", alice, "100");
+    await subscribe(w, "T:bob", bob, "200");
+    const t = w.clock.t;
+    const tag = await requestTag(KEY, startFields(KEY, "T:bob", 0), t);
+    assert.equal((await w.app(post("/v1/match/start", { matchKey: KEY, opponentId: "T:bob", seat: 0 }, alice))).status, 401, "unsigned");
+    assert.equal((await w.app(post("/v1/match/start", { matchKey: KEY, opponentId: "T:bob", seat: 1, t, tag }, alice))).status, 401, "a changed field breaks the tag");
+    w.clock.t = t + REQUEST_WINDOW_MS + 1;
+    assert.equal((await w.app(post("/v1/match/start", { matchKey: KEY, opponentId: "T:bob", seat: 0, t, tag }, alice))).status, 401, "too old");
+    w.clock.t = t;
+    assert.equal((await w.app(post("/v1/match/start", { matchKey: KEY, opponentId: "T:bob", seat: 0, t, tag }, alice))).status, 200, "the real one");
+    const rTag = await requestTag(KEY, resultFields(KEY, 21, 15, "deadbeef", "final"), t);
+    assert.equal((await w.app(post("/v1/match/result", { matchKey: KEY, scoreA: 30, scoreB: 15, hash: "deadbeef", outcome: "final", t, tag: rTag }, alice))).status, 401, "a changed score breaks the tag");
+    assert.equal((await w.app(post("/v1/match/result", { matchKey: KEY, scoreA: 21, scoreB: 15, hash: "deadbeef", outcome: "final", t, tag: rTag }, alice))).status, 200);
+  });
+});
+

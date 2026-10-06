@@ -97,7 +97,7 @@ namespace CallerRetroBall.Core
         public static void StartMatch(string matchKey, string opponentId, int seat, Action<bool, string> done)
         {
             if (!Ready) { done?.Invoke(false, "not signed in to the Live server"); return; }
-            Runner().StartCoroutine(Send("POST", "/v1/match/start", Backend.StartBody(matchKey, opponentId, seat), true,
+            Runner().StartCoroutine(Send("POST", "/v1/match/start", Backend.StartBody(matchKey, opponentId, seat, NowMs()), true,
                 r => done?.Invoke(r.Ok, r.Ok ? null : r.Message("This game won't be rated."))));
         }
 
@@ -105,7 +105,7 @@ namespace CallerRetroBall.Core
         public static void ReportResult(string matchKey, int scoreA, int scoreB, uint hash, Backend.Outcome outcome, Action<string, int, Backend.PlayerInfo> done)
         {
             if (!Ready) { done?.Invoke("offline", 0, null); return; }
-            Runner().StartCoroutine(Send("POST", "/v1/match/result", Backend.ResultBody(matchKey, scoreA, scoreB, hash, outcome), true, r =>
+            Runner().StartCoroutine(Send("POST", "/v1/match/result", Backend.ResultBody(matchKey, scoreA, scoreB, hash, outcome, NowMs()), true, r =>
             {
                 if (!r.Ok) { done?.Invoke("error", 0, null); return; }
                 var p = Backend.ReadPlayer(Backend.Obj(r.Json, "player"));
@@ -185,5 +185,7 @@ namespace CallerRetroBall.Core
                 done(resp);
             }
         }
+
+        private static double NowMs() => System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     }
 }
