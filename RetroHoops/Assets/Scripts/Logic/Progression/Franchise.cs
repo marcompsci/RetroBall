@@ -113,6 +113,13 @@ namespace CallerRetroBall.Logic
         public List<FrAward> awards = new List<FrAward>();
         public List<FrMove> moves = new List<FrMove>();
         public int titles;
+        /// <summary>Phase 33: a trade another GM has offered you (null = none), and the week last checked for one.</summary>
+        public FrOffer offer;
+        public int offerWeek = -1;
+        /// <summary>Phase 33: what your team trains between seasons (<see cref="TrainingFocus"/>).</summary>
+        public int focus;
+        /// <summary>Phase 33: how your players changed last off-season, one line each.</summary>
+        public List<string> devReport = new List<string>();
     }
 
     public sealed class TradeVerdict
@@ -498,6 +505,7 @@ namespace CallerRetroBall.Logic
             foreach (var g in f.season.games)
                 if (!g.played && g.week == week && g.round == round) Simulate(f, g, rng);
             if (round == 0) f.season.currentWeek = Math.Max(f.season.currentWeek, week + 1);
+            if (round == 0) FranchiseDepth.AfterWeek(f, c);
 
             if (f.phase == FranchisePhase.Regular && SeasonEngine.RegularSeasonComplete(f.season))
             {
@@ -579,14 +587,24 @@ namespace CallerRetroBall.Logic
         {
             var rng = new SeededRandom(StableHash.Of("fr:age:" + f.seed + ":" + f.year));
             var retired = new List<FrPlayer>();
+            f.devReport = new List<string>();
+            f.offer = null;
             foreach (var p in f.players)
             {
                 if (p.prospect) continue;
                 p.age++;
                 if (p.gp > 0) p.seasons++;
                 if (p.team >= 0) p.years = Math.Max(0, p.years - 1);
+                int before = p.Overall;
                 int change = Progression(p, rng);
                 if (change != 0) p.attrs = p.attrs.Offset(change);
+                if (p.team == f.you)
+                {
+                    // Phase 33: your training focus adds to the young players' growth.
+                    p.attrs = FranchiseDepth.ApplyFocus(p, (TrainingFocus)f.focus);
+                    int diff = p.Overall - before;
+                    f.devReport.Add(p.Name + " (" + p.age + ")  " + before + " → " + p.Overall + (diff > 0 ? "  +" + diff : diff < 0 ? "  " + diff : "  ="));
+                }
                 p.peak = Math.Max(p.peak, p.Overall);
                 bool retire = p.age >= RetireAge || (p.age >= 33 && rng.Chance(0.3f)) || (p.age >= 30 && p.Overall < 48)
                               || (p.team < 0 && p.age >= 31 && rng.Chance(0.5f));

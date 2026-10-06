@@ -200,6 +200,7 @@ namespace CallerRetroBall.UI
         protected override void Update()
         {
             base.Update();
+            PollLiveInvites();
             float now = Time.unscaledTime;
             // The title logo bobs in two-pixel steps, like an old cartridge title screen.
             if (_logo != null && App.Career != null && !App.Career.settings.reduceMotion)

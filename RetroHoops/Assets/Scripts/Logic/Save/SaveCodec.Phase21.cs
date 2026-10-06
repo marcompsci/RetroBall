@@ -45,6 +45,13 @@ namespace CallerRetroBall.Logic
                 ["made"] = f.draftMade,
                 ["lottery"] = Strings(f.lottery),
                 ["scout"] = f.scoutPoints,
+                ["focus"] = f.focus,
+                ["offerWeek"] = f.offerWeek,
+                ["dev"] = Strings(f.devReport),
+                ["offer"] = f.offer == null ? null : (object)new Dictionary<string, object>
+                {
+                    ["team"] = f.offer.team, ["want"] = List(f.offer.want, id => (object)(double)id), ["send"] = List(f.offer.send, id => (object)(double)id), ["week"] = f.offer.week, ["pitch"] = f.offer.pitch ?? "",
+                },
                 ["history"] = List(f.history, h => new Dictionary<string, object>
                 {
                     ["y"] = h.year, ["t"] = h.team, ["w"] = h.wins, ["l"] = h.losses, ["f"] = h.finish, ["p"] = h.payroll, ["b"] = h.best,
@@ -105,6 +112,17 @@ namespace CallerRetroBall.Logic
                 f.draftMade = Math.Max(0, Int(o, "made", 0));
                 f.lottery = StrList(o, "lottery");
                 f.scoutPoints = Math.Max(0, Int(o, "scout", 0));
+                f.focus = Math.Max(0, Math.Min(FranchiseDepth.FocusNames.Length - 1, Int(o, "focus", 0)));
+                f.offerWeek = Int(o, "offerWeek", -1);
+                f.devReport = StrList(o, "dev");
+                var off = Obj(o, "offer");
+                if (off != null)
+                {
+                    f.offer = new FrOffer { team = Int(off, "team", -1), week = Int(off, "week", 0), pitch = Str(off, "pitch", "") };
+                    foreach (var v in Arr(off, "want")) if (v is double d) f.offer.want.Add((int)d);
+                    foreach (var v in Arr(off, "send")) if (v is double d) f.offer.send.Add((int)d);
+                    if (f.offer.team < 0 || f.offer.team >= f.teams.Count || f.offer.want.Count == 0 || f.offer.send.Count == 0) f.offer = null;
+                }
                 foreach (var item in Arr(o, "history"))
                     if (item is Dictionary<string, object> h)
                         f.history.Add(new FrHistory { year = Int(h, "y", 0), team = Int(h, "t", 0), wins = Int(h, "w", 0), losses = Int(h, "l", 0), finish = Int(h, "f", 0), payroll = Int(h, "p", 0), best = Str(h, "b", "") });

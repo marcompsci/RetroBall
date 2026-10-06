@@ -188,6 +188,9 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern string RetroLive_IdentitySignature();
         [DllImport("__Internal")] private static extern string RetroLive_IdentitySalt();
         [DllImport("__Internal")] private static extern double RetroLive_IdentityTimestamp();
+        [DllImport("__Internal")] private static extern void RetroLive_Invite(int group);
+        [DllImport("__Internal")] private static extern void RetroLive_ListenForInvites();
+        [DllImport("__Internal")] private static extern int RetroLive_TakeInvite();
         public static bool Supported => true;
 #else
         public static bool Supported => false;
@@ -202,6 +205,46 @@ namespace CallerRetroBall.Core
 #if UNITY_IOS && !UNITY_EDITOR
             RetroLive_Find(LiveMode.PlayerGroup(appVersion));
 #endif
+            return Current;
+        }
+
+        /// <summary>Phase 33: INVITE A FRIEND — Apple's Game Center invite screen, for a Live game with a friend.</summary>
+        public static LiveLink Invite(string appVersion)
+        {
+            Stop();
+            Current = new LiveLink();
+#if UNITY_IOS && !UNITY_EDITOR
+            RetroLive_Invite(LiveMode.PlayerGroup(appVersion));
+#endif
+            return Current;
+        }
+
+        private static bool _listening;
+
+        /// <summary>Lets friends' Game Center invites reach the game (once Game Center has signed in).</summary>
+        public static void ListenForInvites()
+        {
+            if (_listening) return;
+            _listening = true;
+#if UNITY_IOS && !UNITY_EDITOR
+            RetroLive_ListenForInvites();
+#endif
+        }
+
+        /// <summary>True once when a friend's invite was accepted outside the game; it is already connecting (use <see cref="AdoptInvite"/>).</summary>
+        public static bool TakeInvite()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            return RetroLive_TakeInvite() != 0;
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>The connection for an accepted invite (Game Center is already connecting it).</summary>
+        public static LiveLink AdoptInvite()
+        {
+            Current = new LiveLink();
             return Current;
         }
 

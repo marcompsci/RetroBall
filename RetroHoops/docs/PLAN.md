@@ -636,6 +636,29 @@
   in `iOSBuild/Device` is from 4 Oct (Phase 25 code). It was opened in Xcode later, but there's no log of a
   newer device build.
 
+### Phase 33: season depth, Live polish, store copy
+
+- **Merged GitHub:** the Mac session had pushed Phases 29–32 as snapshots of `~/RetroHoops` (game code only).
+  They matched this repo's code, so the merge kept the server, tools and docs they didn't include, plus
+  `RetroKeychain.mm`. Both `.gitignore` files were combined. The two sessions shouldn't edit the Mac project at the
+  same time; this session now does the code.
+- **Franchise depth:** the other GMs **call with trade offers** during the season (about 40% of weeks before the deadline).
+  Each offer is a deal their own valuation accepts, it never asks for your best player, and it lapses at the deadline.
+  ACCEPT or DECLINE on HOME. A **TRAINING FOCUS** (Balanced, Shooting, Defense, Playmaking, Athleticism) gives your
+  players aged 27 and under who are below their potential +2 in the two matching attributes each off-season. A
+  **PLAYER DEVELOPMENT** report lists every player's overall before → after.
+- **Playoff bracket picture** (Franchise ▸ LEAGUE and the Rise season screen): semifinals joined to the final, seeds,
+  scores, winners in bold, your team in gold. From mid-season it shows the bracket "if the season ended today".
+- **Live:** **INVITE A FRIEND** through Game Center's own invite screen, and an invite accepted from a notification
+  opens LIVE and joins. **REMATCH** after a Live game, with ratings carried over. A **monthly** recurring Game Center
+  leaderboard plus a `?period=month` server leaderboard.
+- **Store & marketing:** `APP_STORE.md` and `LAUNCH_KIT.md` were wrong after Live: they said "no purchases" and "Data
+  Not Collected". Both are corrected, with the App Privacy answer depending on whether the Live server is on. New
+  promo text (161 chars), description lines for Watch, Game Tapes, Season 6 and friend invites, a Phase 33
+  screenshot list, and a second 30 s preview storyboard ("Play your friends"). Keywords are unchanged (99 chars).
+- **Fix real build errors:** waiting on the Mac's `build_check.txt`. The Build Check hasn't been run yet, because the
+  other session was using the Mac.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

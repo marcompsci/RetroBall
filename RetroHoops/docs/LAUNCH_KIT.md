@@ -58,7 +58,22 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 | 14–17 s | A block on defense, then the AI switches to a ZONE | The AI adjusts. |
 | 17–21 s | The Arcade Ladder screen, then the boss court flickers | Find the secret boss. |
 | 21–24 s | Locker Room ▸ TEAM, cycling through colours | Build your team. |
-| 24–28 s | The post-game PLAY OF THE GAME replay, then the logo | No ads. No purchases. Offline. |
+| 24–28 s | The post-game PLAY OF THE GAME replay, then the logo | No ads. Plays offline. |
+
+**Second preview, "Play your friends" (about 30 s, Phase 33)**
+
+| Time | Shot | On-screen text |
+|---|---|---|
+| 0–3 s | 2 PLAYER ▸ TWO PHONES: HOST A GAME, the friend's phone name appears | Two phones. No internet. |
+| 3–9 s | The two-phone game: a steal, a fast break, a dunk with hands on the rim | Each on your own screen. |
+| 9–13 s | WATCH A GAME on a third phone: "1 FRIEND IS WATCHING" toast, the same play | Friends can watch live. |
+| 13–17 s | COUCH CUP bracket ▸ 2 PHONES, then the next game's tip-off card | Run a Couch Cup. |
+| 17–22 s | LIVE: rating and tier, INVITE A FRIEND, a Live game's final buzzer | Play anyone. Climb to Legend. |
+| 22–26 s | GAME TAPES: a tape playing, tap to 2x, the PLAY OF THE GAME | Save every big game. |
+| 26–30 s | The Lighthouse Keepers' scene, then the logo | Retro Hoops. Live is an optional subscription. |
+
+Record each phone's screen separately in its own Simulator or with QuickTime from a real device. Don't film the
+phones themselves: Apple wants app footage only.
 
 **How to record it**
 1. Run the Simulator build.
@@ -82,10 +97,10 @@ Apple's specs below were checked against App Store Connect Help in October 2026.
 
 | Question | Answer |
 |---|---|
-| Do you or your partners collect data? | **No** → "Data Not Collected" |
+| Do you or your partners collect data? | **Depends on the Live server** (Phase 33 correction). With the server switched on: **Yes**, User ID and Gameplay Content, linked, App Functionality, not tracking. With it off: see `APP_STORE.md` ▸ App Privacy. |
 | Tracking? | **No** |
-| Third-party SDKs that collect data? | None. Game Center is Apple's and it's opt-in. |
-| Privacy manifest | `Assets/Plugins/iOS/PrivacyInfo.xcprivacy` (no tracking, no collected data) |
+| Third-party SDKs that collect data? | None. Game Center and StoreKit are Apple's. |
+| Privacy manifest | `Assets/Plugins/iOS/PrivacyInfo.xcprivacy` (no tracking; declares User ID and Gameplay Content for the Live server) |
 
 ## 5. Launch day
 

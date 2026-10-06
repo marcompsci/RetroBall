@@ -68,3 +68,13 @@ match key, message = `"{t}|start|{matchKey}|{opponentId}|{seat}"` or
 or wrong tag, or a `t` more than 5 minutes from its clock. The game does this in `Backend.StartBody/ResultBody`
 (`server/src/sign.ts` on the server side). Phones need a roughly correct clock (automatic time is the iOS default).
 
+## Friends, rematches and the monthly board (Phase 33)
+
+- **INVITE A FRIEND** (LIVE screen) opens Apple's Game Center invite screen. A friend who accepts the notification lands
+  in the LIVE lobby and joins the game. Both players need the subscription, as for FIND A GAME. The game uses Apple's
+  invite screen, so it needs no Friends-list permission.
+- **REMATCH** after a Live game: both tap it and play again with a new seed, a new rated game, over the same
+  connection. The server's limit of 5 rated games a day per pair still applies.
+- **Monthly leaderboard:** Game Center recurring board `retrohoops.live.monthly` (see `GAME_CENTER.md`), and on the
+  server `GET /v1/leaderboard?period=month` (rating points won minus lost in games settled this UTC month).
+

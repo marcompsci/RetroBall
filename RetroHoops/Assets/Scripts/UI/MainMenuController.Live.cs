@@ -64,21 +64,31 @@ namespace CallerRetroBall.UI
                     })),
                     ("CANCEL", ButtonStyle.Ghost, null)), ButtonStyle.Ghost, 80f, 28f);
 
-            Button find = null;
+            Button find = null, invite = null;
             UiKit.Button(footer, "BACK", () => { LiveLink.Stop(); ShowPlayMenu(); }, ButtonStyle.Ghost, 130f, 44f);
-            find = UiKit.Button(footer, "FIND A GAME", () =>
+            // Phase 33: FIND A GAME (anyone) or INVITE A FRIEND (Game Center friends), or an invite you accepted outside the game.
+            void Go(int how)
             {
                 if (!LiveLink.Supported) return;
                 live.teamId = teams[teamIndex].id;
                 App.SaveCareer();
-                find.interactable = false;
+                if (find != null) find.interactable = false;
+                if (invite != null) invite.interactable = false;
                 var team = teams[teamIndex];
                 string me = LiveLink.LocalName;
                 if (string.IsNullOrEmpty(me)) me = "Player"; // only the Game Center name is shown to opponents (no typed names online)
                 var offer = new LiveOffer { AppVersion = App.Version, Name = me, Rating = live.rating, TeamData = LinkTeams.Write(c, team), CourtId = team.homeCourtId };
-                var link = LiveLink.Find(App.Version);
-                LivePoller.Attach(column, link, offer, status, () => { if (find != null) find.interactable = true; });
-            }, ButtonStyle.Primary, 130f);
+                var link = how == 0 ? LiveLink.Find(App.Version) : how == 1 ? LiveLink.Invite(App.Version) : LiveLink.AdoptInvite();
+                if (how > 0) status.text = how == 1 ? "Pick a friend in Game Center's invite screen…" : "Joining your friend's game…";
+                LivePoller.Attach(column, link, offer, status, () => { if (find != null) find.interactable = true; if (invite != null) invite.interactable = true; });
+            }
+            invite = UiKit.Button(footer, "INVITE A FRIEND", () => Go(1), ButtonStyle.Secondary, 130f, 32f);
+            find = UiKit.Button(footer, "FIND A GAME", () => Go(0), ButtonStyle.Primary, 130f);
+            if (_joinInvite)
+            {
+                _joinInvite = false;
+                Go(2);
+            }
 
             // With the Retro Hoops Live server switched on, sign in to it first: it checks the subscription with
             // Apple and keeps the official ratings. FIND A GAME waits until it says yes.
@@ -90,6 +100,20 @@ namespace CallerRetroBall.UI
                 watch.Find = find;
                 watch.OnReady = () => ShowLive();
             }
+        }
+
+        /// <summary>Phase 33: set when a friend's invite was accepted outside the game; the next LIVE screen joins it.</summary>
+        private static bool _joinInvite;
+
+        /// <summary>Called from the main menu's Update: listen for invites, and open LIVE when one is accepted.</summary>
+        private void PollLiveInvites()
+        {
+            if (!LiveLink.Supported || App.GameCenter == null || !App.GameCenter.IsSignedIn) return;
+            LiveLink.ListenForInvites();
+            if (!LiveLink.TakeInvite()) return;
+            _joinInvite = true;
+            ShowLive(); // the paywall shows instead if there's no subscription; the invite then lapses
+            if (!LiveStore.Active) { _joinInvite = false; LiveLink.Stop(); }
         }
 
         private void ShowLivePaywall()

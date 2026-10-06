@@ -2,7 +2,10 @@
 // Uses Apple's Game Center real-time matchmaking (GKMatchmaker / GKMatch): Apple finds an opponent
 // and relays the messages, so the game needs no server of its own. Only players in the same
 // playerGroup (same game version) are matched. Messages are small byte arrays, reliable and in order.
+// Phase 33: INVITE A FRIEND shows Apple's Game Center invite screen (GKMatchmakerViewController), and an invite a
+// friend sends you (accepted from the Game Center notification) opens the same screen and connects the match.
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <GameKit/GameKit.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,7 +13,7 @@
 // 0 idle, 1 searching, 2 connected, 3 lost/failed.
 enum { RLVIdle = 0, RLVSearching = 1, RLVConnected = 2, RLVLost = 3 };
 
-@interface RetroLiveManager : NSObject <GKMatchDelegate>
+@interface RetroLiveManager : NSObject <GKMatchDelegate, GKMatchmakerViewControllerDelegate, GKLocalPlayerListener>
 @property (nonatomic, strong) GKMatch* match;
 @property (nonatomic, strong) NSMutableArray<NSData*>* inbox;
 @property (nonatomic, strong) NSString* opponentName;
@@ -23,7 +26,25 @@ enum { RLVIdle = 0, RLVSearching = 1, RLVConnected = 2, RLVLost = 3 };
 @property (nonatomic, strong) NSString* idSignature;
 @property (nonatomic, strong) NSString* idSalt;
 @property (nonatomic, assign) double idTimestamp;
+// Phase 33: an accepted invite is waiting for the game to open LIVE; the player group for invites.
+@property (nonatomic, assign) BOOL invitePending;
+@property (nonatomic, assign) BOOL listening;
+@property (nonatomic, assign) NSUInteger group;
 @end
+
+// The view controller on top, to present Apple's invite screen from (no dependency on Unity's headers).
+static UIViewController* RetroLiveTopController(void)
+{
+    UIViewController* root = nil;
+    for (UIScene* scene in [UIApplication sharedApplication].connectedScenes)
+    {
+        if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+        for (UIWindow* w in ((UIWindowScene*)scene).windows)
+            if (w.isKeyWindow) root = w.rootViewController;
+    }
+    while (root != nil && root.presentedViewController != nil) root = root.presentedViewController;
+    return root;
+}
 
 @implementation RetroLiveManager
 
@@ -83,6 +104,95 @@ enum { RLVIdle = 0, RLVSearching = 1, RLVConnected = 2, RLVLost = 3 };
             [self checkConnected];
         });
     }];
+}
+
+// ------------------------------------------------------------------ Phase 33: invites
+
+- (void)listenForInvites
+{
+    if (self.listening || ![GKLocalPlayer localPlayer].isAuthenticated) return;
+    self.listening = YES;
+    [[GKLocalPlayer localPlayer] registerListener:self];
+}
+
+- (void)presentMatchmaker:(GKMatchmakerViewController*)vc
+{
+    UIViewController* top = RetroLiveTopController();
+    if (vc == nil || top == nil)
+    {
+        @synchronized (self) { self.state = RLVLost; self.error = @"Couldn't open Game Center's invite screen."; }
+        return;
+    }
+    vc.matchmakerDelegate = self;
+    [top presentViewController:vc animated:YES completion:nil];
+}
+
+- (void)inviteWithGroup:(NSUInteger)group
+{
+    [self teardown];
+    @synchronized (self)
+    {
+        [self.inbox removeAllObjects];
+        self.opponentName = @"";
+        self.opponentId = @"";
+        self.error = @"";
+        self.state = RLVSearching;
+    }
+    if (![GKLocalPlayer localPlayer].isAuthenticated)
+    {
+        @synchronized (self) { self.state = RLVLost; self.error = @"Sign in to Game Center first (Settings ▸ GAME CENTER)."; }
+        return;
+    }
+    GKMatchRequest* request = [[GKMatchRequest alloc] init];
+    request.minPlayers = 2;
+    request.maxPlayers = 2;
+    request.playerGroup = group;
+    GKMatchmakerViewController* vc = [[GKMatchmakerViewController alloc] initWithMatchRequest:request];
+    [self presentMatchmaker:vc];
+#if !__has_feature(objc_arc)
+    [request release];
+    [vc release];
+#endif
+}
+
+- (void)player:(GKPlayer*)player didAcceptInvite:(GKInvite*)invite
+{
+    // A friend's invite, accepted from the Game Center notification: connect, and tell the game to open LIVE.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self teardown];
+        @synchronized (self)
+        {
+            [self.inbox removeAllObjects];
+            self.error = @"";
+            self.state = RLVSearching;
+            self.invitePending = YES;
+        }
+        GKMatchmakerViewController* vc = [[GKMatchmakerViewController alloc] initWithInvite:invite];
+        [self presentMatchmaker:vc];
+#if !__has_feature(objc_arc)
+        [vc release];
+#endif
+    });
+}
+
+- (void)matchmakerViewControllerWasCancelled:(GKMatchmakerViewController*)viewController
+{
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+    @synchronized (self) { self.state = RLVLost; self.error = @"Invite cancelled."; self.invitePending = NO; }
+}
+
+- (void)matchmakerViewController:(GKMatchmakerViewController*)viewController didFailWithError:(NSError*)error
+{
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+    @synchronized (self) { self.state = RLVLost; self.error = error != nil ? error.localizedDescription : @"The invite failed."; self.invitePending = NO; }
+}
+
+- (void)matchmakerViewController:(GKMatchmakerViewController*)viewController didFindMatch:(GKMatch*)match
+{
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+    self.match = match;
+    match.delegate = self;
+    [self checkConnected];
 }
 
 - (void)checkConnected
@@ -190,6 +300,31 @@ void RetroLive_Stop(void)
     RetroLiveManager* m = RetroLiveShared();
     @synchronized (m) { m.state = RLVIdle; [m.inbox removeAllObjects]; }
     dispatch_async(dispatch_get_main_queue(), ^{ [m stop]; });
+}
+
+void RetroLive_Invite(int group)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { m.state = RLVSearching; }
+    dispatch_async(dispatch_get_main_queue(), ^{ [m inviteWithGroup:(NSUInteger)(group > 0 ? group : 1)]; });
+}
+
+void RetroLive_ListenForInvites(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    dispatch_async(dispatch_get_main_queue(), ^{ [m listenForInvites]; });
+}
+
+/// 1 once (then 0): an invite was accepted outside the game and is connecting; the game should open LIVE.
+int RetroLive_TakeInvite(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m)
+    {
+        if (!m.invitePending) return 0;
+        m.invitePending = NO;
+        return 1;
+    }
 }
 
 int RetroLive_State(void)

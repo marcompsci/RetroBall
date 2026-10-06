@@ -222,6 +222,16 @@ namespace CallerRetroBall.UI
         private void BuildHome()
         {
             var f = F;
+            // Phase 33: a GM on the phone.
+            if (f.offer != null && FranchiseDepth.StillValid(f, f.offer))
+            {
+                Heading("TRADE OFFER");
+                Line(f.offer.pitch, Theme.Cyan, 28f, 100f);
+                Row("", Theme.Cream, 70f,
+                    ("ACCEPT", ButtonStyle.Primary, () => { bool ok = FranchiseDepth.Accept(f); Save(); if (!ok) Toast("TRADE OFFER", "That deal isn't possible any more."); }),
+                    ("DECLINE", ButtonStyle.Ghost, () => { FranchiseDepth.Decline(f); Save(); }));
+            }
+            else if (f.offer != null) f.offer = null;
             switch (f.phase)
             {
                 case FranchisePhase.Regular:
@@ -231,6 +241,11 @@ namespace CallerRetroBall.UI
                 case FranchisePhase.Draft:
                     Heading("THE DRAFT");
                     foreach (var l in Franchise.LastReport(f)) Line(l, Theme.Cream);
+                    if (f.devReport.Count > 0)
+                    {
+                        Heading("PLAYER DEVELOPMENT  ·  " + FranchiseDepth.FocusNames[f.focus]);
+                        foreach (var l in f.devReport) Line(l, Theme.Cream, 26f, 40f);
+                    }
                     foreach (var l in f.lottery) Line(l, Theme.Cyan);
                     Big("GO TO THE DRAFT", () => Show(Tab.Draft));
                     break;
@@ -247,6 +262,7 @@ namespace CallerRetroBall.UI
                     Big("FINISH FREE AGENCY", () => { Franchise.FinishFreeAgency(f, C); Save(); });
                     break;
                 default:
+                    TrainingRow(f);
                     Heading("PRESEASON");
                     string why = Franchise.CannotStart(f);
                     Line(why ?? "Roster set: " + f.teams[f.you].roster.Count + " players. Your top five start; you control the first one.", why == null ? Theme.Cream : Theme.Pink, 28f, 90f);
@@ -260,6 +276,14 @@ namespace CallerRetroBall.UI
                 Heading("MOVES THIS YEAR");
                 for (int i = recent.Count - 1; i >= 0 && i >= recent.Count - 5; i--) Line(recent[i].text, Theme.Muted, 24f, 40f);
             }
+        }
+
+        /// <summary>Phase 33: what your team works on before next season (shown in the preseason and on the roster).</summary>
+        private void TrainingRow(FranchiseSaveData f)
+        {
+            Heading("TRAINING FOCUS");
+            Line("Players 27 and under who haven't reached their potential grow faster in what you train. It pays off next off-season.", Theme.Muted, 24f, 70f);
+            UiControls.ChoiceRow(_content, "FOCUS", FranchiseDepth.FocusNames, f.focus, i => { f.focus = i; Save(); });
         }
 
         private void BuildGameDay(FranchiseSaveData f)
@@ -331,6 +355,7 @@ namespace CallerRetroBall.UI
                     ("DOWN", ButtonStyle.Ghost, i < roster.Count - 1 ? (System.Action)(() => { Franchise.MoveInRotation(f, id, 1); Save(); }) : null),
                     ("CUT", ButtonStyle.Ghost, canRelease ? (System.Action)(() => ConfirmRelease(p)) : null));
             }
+            TrainingRow(f);
         }
 
         private void ConfirmRelease(FrPlayer p)
@@ -417,14 +442,8 @@ namespace CallerRetroBall.UI
                      + "   " + r.StreakText + (i == SeasonEngine.PlayoffTeams - 1 ? "\n<size=18><color=#8D99AE>— " + Loc.T("PLAYOFF LINE") + " —</color></size>" : ""),
                      mine ? Theme.Gold : Theme.Cream, 28f, i == SeasonEngine.PlayoffTeams - 1 ? 70f : 44f);
             }
-            for (int round = 1; round <= 2; round++)
-            {
-                var games = f.season.games.FindAll(g => g.round == round);
-                if (games.Count == 0) continue;
-                Heading(Franchise.RoundName(round));
-                foreach (var g in games)
-                    Line(Abbr(g.homeId) + (g.played ? "  " + g.homeScore + " - " + g.awayScore + "  " : "  vs  ") + Abbr(g.awayId), Theme.Cream, 30f, 48f, TextAlignmentOptions.Center, true);
-            }
+            // Phase 33: the playoff picture as a bracket (projected while the season is on).
+            BracketView.Draw(_content, PlayoffBracket.From(f.season), Abbr, Franchise.TeamId(f.you), Loc.T("PLAYOFFS"));
             int week = Mathf.Max(0, f.season.currentWeek - 1);
             var last = f.season.games.FindAll(g => g.round == 0 && g.week == week && g.played);
             if (last.Count > 0)

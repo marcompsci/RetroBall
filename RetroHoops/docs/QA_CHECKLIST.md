@@ -238,3 +238,11 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] VoiceOver on (Settings ▸ Accessibility): swipe through the main menu; every button is read and double-tap presses it; the focus box sits on the right button (if boxes are mirrored vertically, the screen-space convention needs flipping).
 - [ ] iOS Larger Text at a big size: menus use the largest UI scale; text still fits on iPhone SE / mini and iPad. Turning MATCH IPHONE TEXT SIZE off goes back to the chosen UI SCALE.
 
+## Phase 33
+- [ ] Franchise: sim week by week to the deadline; a TRADE OFFER appears on HOME some weeks; ACCEPT swaps the two players (MOVES shows it); DECLINE clears it; none after week 10.
+- [ ] Franchise ▸ ROSTER ▸ TRAINING FOCUS: pick DEFENSE, finish the season; the draft screen shows PLAYER DEVELOPMENT · DEFENSE with each player's overall before → after.
+- [ ] Franchise ▸ LEAGUE and the Rise season screen: the bracket picture fits on iPhone SE / mini and iPad; projected seeds mid-season, scores and the champion after.
+- [ ] LIVE ▸ INVITE A FRIEND: Game Center's invite screen opens; the friend accepts the notification, their phone opens LIVE and the game starts.
+- [ ] After a Live game both tap REMATCH: a new rated game starts without matchmaking again; HOME on one phone tells the other.
+- [ ] Game Center ▸ the monthly Live board shows your rating after a Live game this month.
+

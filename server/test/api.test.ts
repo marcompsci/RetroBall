@@ -228,6 +228,22 @@ describe("Live ratings", () => {
     return w.app(post("/v1/match/result", { matchKey: key, scoreA, scoreB, hash, outcome, t, tag: await requestTag(key, resultFields(key, scoreA, scoreB, hash, outcome), t) }, token));
   };
 
+  test("the monthly leaderboard counts this month's settled games only (Phase 33)", async () => {
+    assert.equal((await start(alice, "T:bob", 0)).status, 200);
+    assert.equal((await start(bob, "T:alice", 1)).status, 200);
+    await result(alice, 21, 15, "deadbeef");
+    await result(bob, 21, 15, "deadbeef");
+    const board = (await (await w.app(new Request("https://api.test/v1/leaderboard?period=month"))).json()) as { month: number; players: { name: string; points: number; games: number }[] };
+    assert.equal(board.month, 202610);
+    assert.equal(board.players.length, 2);
+    assert.ok(board.players[0].points > 0 && board.players[1].points < 0, "the winner gained, the loser lost");
+    assert.equal(board.players[0].points, -board.players[1].points);
+    w.clock.t = Date.UTC(2026, 10, 2); // November: a new month, nobody on it yet
+    const next = (await (await w.app(new Request("https://api.test/v1/leaderboard?period=month"))).json()) as { month: number; players: unknown[] };
+    assert.equal(next.month, 202611);
+    assert.equal(next.players.length, 0);
+  });
+
   test("agreeing reports settle the game once; ratings change only on the server", async () => {
     assert.equal((await start(alice, "T:bob", 0)).status, 200);
     assert.equal((await start(bob, "T:alice", 1)).status, 200);

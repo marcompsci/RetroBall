@@ -12,14 +12,14 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 | SKU | `retroball-ios-1` (any unique string) |
 | Primary category | Games ▸ Sports |
 | Secondary category | Games ▸ Arcade |
-| Price | Free, or a one-time paid price. The game has no in-app purchases. |
+| Price | Free. One optional in-app purchase: the Retro Hoops Live monthly subscription (see `LIVE.md`). |
 | Version | 1.0.0 (build 1). Raise the build number for every upload. |
 
 ## Promotional text (170)
 
-> Run a franchise, win the Dunk Contest, build your own court and kit. Retro 3v3 and 5v5 hoops with an original chiptune soundtrack. No ads. No purchases. Offline.
+> Play friends on two phones, watch their games on a third, climb Retro Hoops Live, and save every big game as a tape. Original retro 3v3 and 5v5 hoops. No ads.
 
-*(161 characters)*
+*(158 characters. Updated in Phase 33: the old text said "No purchases", which isn't true now that Live exists.)*
 
 ## Description (4000)
 
@@ -33,13 +33,13 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > One summer, eight games, one league title. Run with Nova, win over Big Sal, and take down Kojo Stride's Velvet Hour while Mic Tally calls every big play.
 >
 > **PLAY YOUR FRIENDS**
-> Head to head on one iPhone laid flat between you, on two phones nearby with no internet needed, or in a Couch Cup tournament for up to 8 friends.
+> Head to head on one iPhone laid flat between you, on two phones nearby with no internet needed, or in a Couch Cup tournament for up to 8 friends, on one phone or across two. Friends nearby can WATCH A GAME live on a third phone, and every two-phone, Live or watched game can be saved as a GAME TAPE to replay exactly or send to a friend.
 >
 > **RETRO HOOPS LIVE (subscription)**
-> Play people online through Game Center and climb from Rookie to Legend. Retro Hoops Live is an optional monthly subscription. Everything else is free.
+> Play people online through Game Center, or invite a Game Center friend, and climb from Rookie to Legend. Rematch without leaving, and chase the monthly leaderboard. Retro Hoops Live is an optional monthly subscription. Everything else is free.
 >
 > **FRANCHISE**
-> Be the GM of a league club, season after season. Set the rotation, trade with seven other GMs, re-sign your players, chase free agents under the salary cap, scout prospects, and win the draft lottery. Players age, improve, decline, and retire into the Hall of Fame. Play every game Full Court 5-on-5, or simulate.
+> Be the GM of a league club, season after season. Set the rotation, trade with seven other GMs (who call you with offers too), pick a training focus, re-sign your players, chase free agents under the salary cap, scout prospects, and win the draft lottery. Players age, improve, decline, and retire into the Hall of Fame. Play every game Full Court 5-on-5, or simulate.
 >
 > **LEGACY**
 > Take your own player from a high-school senior to the pros: recruiting stars, college or straight to the draft, draft night, contracts, sponsors, a skill tree, story choices, and a Hall of Fame vote.
@@ -48,7 +48,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > Call out twelve street legends, 1-on-1 up to 4-on-4. Street rules, make it take it, and crossovers that break ankles.
 >
 > **RISE MODE**
-> Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, rivals and story scenes. Halfway through, it's the All-Star Weekend.
+> Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, six rotating rival crews and story scenes. Halfway through, it's the All-Star Weekend.
 >
 > **ALL-STAR WEEKEND**
 > • Dunk Contest: pick a dunk, enter its combo in the air, time the slam, and face five judges
@@ -74,7 +74,7 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > • Optional Game Center and iCloud save sync
 >
 > **MADE TO RESPECT YOUR TIME**
-> Fully offline. No account, no ads, no in-app purchases, no tracking.
+> Everything except Live works offline. No account, no ads, no tracking. The only purchase is the optional Live subscription.
 >
 > All teams, players, courts, art and music are original.
 
@@ -88,7 +88,7 @@ Add **Spanish (Mexico)** as a localization in App Store Connect and paste these.
 |---|---|
 | Name | Retro Hoops |
 | Subtitle (30) | Básquet retro 3v3 callejero *(27)* |
-| Promotional text | Ponte al rojo vivo, lanza el alley-oop, sube la Escalera Arcade y crea tu propio equipo. Básquet retro 3v3 con secretos. Sin anuncios ni compras. |
+| Promotional text | Ponte al rojo vivo, lanza el alley-oop, sube la Escalera Arcade y crea tu propio equipo. Básquet retro 3v3 con secretos. Sin anuncios. |
 | Keywords (100) | `baloncesto,basquet,arcade,retro,pixel,3v3,callejero,offline,deportes,cancha,temporada,8-bit` |
 
 > **Anuncia tu tiro. Construye tu leyenda.**
@@ -97,7 +97,7 @@ Add **Spanish (Mexico)** as a localization in App Store Connect and paste these.
 >
 > Modo Franquicia (traspasos, agencia libre, draft y tope salarial), Fin de Semana de las Estrellas con concurso de clavadas y de triples, Cancha completa 5 contra 5, constructor de canchas, estudio de uniformes y nueve temas chiptune originales. Modo Ascenso, Escalera Arcade con jefe secreto, Rey de la Cancha, la Caller Cup, 1 contra 1, Reto Diario y 2 jugadores en un dispositivo. Crea tu jugador y tu propio equipo, descubre códigos secretos y llena tu sala de trofeos.
 >
-> Controles táctiles o mando Bluetooth. Sin conexión, sin cuenta, sin anuncios, sin compras y sin rastreo. Todo el contenido es original.
+> Controles táctiles o mando Bluetooth. Todo funciona sin conexión salvo Live. Sin cuenta, sin anuncios y sin rastreo; la única compra es la suscripción opcional a Live. Todo el contenido es original.
 
 ## Keywords (100)
 
@@ -121,7 +121,9 @@ The full text is in [`PRIVACY.md`](PRIVACY.md). It covers Live and two-phone pla
 
 ## App Privacy ("nutrition label")
 
-- **Data collection:** answer **No, we do not collect data from this app.** The result is **Data Not Collected**. Live doesn't change this: matchmaking and purchases go through Apple's Game Center and StoreKit, and the developer receives nothing. A player's Game Center name and rating go only to their opponent's device for that game. Re-read Apple's definitions before you submit, because this is your declaration, not mine.
+- **Data collection depends on whether the Live server is switched on** (`BackendConfig.Url`, see `server/README.md`). Re-read Apple's definitions before you submit, because this is your declaration, not mine.
+  - **Server off** (Url empty, Live ratings kept on each phone): nothing reaches the developer. Matchmaking and purchases go through Apple, and a player's Game Center name and rating go only to the opponent's device. That would be **Data Not Collected**, but `PrivacyInfo.xcprivacy` (since Phase 28) declares User ID and Gameplay Content, so for a server-off build either remove those two entries from the manifest or answer as below.
+  - **Server on:** answer **Yes**. Collected: **Identifiers ▸ User ID** (the Game Center team player ID) and **Usage Data ▸ Other / Gameplay Content** (Live results and rating). Both are **linked to the user**, **not used for tracking**, and the purpose is **App Functionality**. This matches the manifest. Game Center names on the leaderboard count too; Players can erase their data with LIVE ▸ DELETE MY LIVE DATA.
 - **Tracking:** none. `PrivacyInfo.xcprivacy` (in `Assets/Plugins/iOS`) declares no tracking, no collected data types, and no tracking domains for the game's own code. Unity's engine framework ships its own privacy manifest.
 
 ## Age rating questionnaire
@@ -146,6 +148,21 @@ The app uses no encryption beyond what iOS itself provides. The build post-proce
 ## Screenshots (YOU, after a device or simulator build)
 
 The 6.9" iPhone screenshots are required; App Store Connect scales them down for smaller iPhones. Take them on an iPhone Pro Max–class simulator with **⌘S**. Use portrait 1320×2868 (6.9"), or 1290×2796 (6.7") if Apple still accepts that size for your submission. Suggested set:
+
+Phase 33 set (replaces the old list; the new modes sell the update):
+
+1. A HEAT CHECK player with flames, mid-jumper (gameplay first)
+2. LIVE: the lobby with a Live rating and tier, INVITE A FRIEND visible
+3. WATCH A GAME on a third phone mid-game (two phones beside it in a real photo isn't allowed, so the in-game screen only)
+4. Franchise ▸ LEAGUE with the playoff bracket drawn
+5. The Lighthouse Keepers' story scene (Season 6 rival)
+6. 2 PLAYER ▸ GAME TAPES list, or a tape playing at 2x
+7. The Dunk Contest: a slam with the judges' cards up
+8. Locker Room ▸ KIT (Kit Studio) with the live preview
+9. Couch Cup bracket with the 2 PHONES button
+10. An ALLEY-OOP finish (gold pass arrow, then the slam)
+
+The earlier set, still good as alternates:
 
 1. A HEAT CHECK player with flames, mid-jumper
 2. Franchise ▸ TRADE with a deal the other GM accepts

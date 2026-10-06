@@ -430,19 +430,9 @@ namespace CallerRetroBall.UI
 
         private void Bracket(SeasonSaveData s)
         {
-            if (!SeasonEngine.HasRound(s, 1)) return;
-            UiKit.Size(UiKit.Label(_content, DefaultContent.ChampionshipName.ToUpperInvariant(), 40f, Theme.Pink, TextAlignmentOptions.Left, true), 60f);
-            foreach (var g in s.games)
-            {
-                if (g.round == 0) continue;
-                string label = g.round == 2 ? "FINAL" : "SEMI";
-                string line = label + "  " + Abbr(g.homeId) + (g.played ? " " + g.homeScore + " - " + g.awayScore + " " : "  vs  ") + Abbr(g.awayId);
-                bool mine = g.Involves(RiseEngine.CrewId);
-                UiKit.Size(UiKit.Label(_content, line, 34f, mine ? Theme.Gold : Theme.Cream, TextAlignmentOptions.Left, true), 50f);
-            }
-            if (!string.IsNullOrEmpty(s.championId))
-                UiKit.Size(UiKit.Label(_content, "CHAMPION: " + (App.Catalog.Team(s.championId)?.FullName ?? s.championId).ToUpperInvariant(),
-                                       34f, Theme.Cyan, TextAlignmentOptions.Left, true), 50f);
+            // Phase 33: drawn as a bracket (the projected picture from mid-season on).
+            if (!SeasonEngine.HasRound(s, 1) && s.currentWeek < s.weeks / 2) return;
+            BracketView.Draw(_content, PlayoffBracket.From(s), Abbr, RiseEngine.CrewId, DefaultContent.ChampionshipName.ToUpperInvariant());
         }
 
         private void StandingsTable(SeasonSaveData s)

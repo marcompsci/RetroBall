@@ -12,6 +12,8 @@ namespace CallerRetroBall.Logic
         public string teamId = "";
         /// <summary>Last known subscription end (Unix seconds), from the App Store. Only used to show the state while it refreshes.</summary>
         public double subscribedUntil;
+        /// <summary>Phase 33: the month (yyyymm, UTC) of the last Live game, for the monthly leaderboard.</summary>
+        public int month;
     }
 
     /// <summary>
@@ -34,6 +36,23 @@ namespace CallerRetroBall.Logic
         public const int StartRating = 1000;
         public const int K = 32;
         public const string LeaderboardId = "retrohoops.live.rating";
+        /// <summary>
+        /// Phase 33: a recurring Game Center leaderboard that starts over every month (set up in App Store Connect as
+        /// "recurring, 1 month"): your Live rating, posted only if you've played Live this month.
+        /// </summary>
+        public const string MonthlyLeaderboardId = "retrohoops.live.monthly";
+
+        public static int MonthKey(DateTime utc) => utc.Year * 100 + utc.Month;
+
+        /// <summary>The monthly board's score: your rating if you played Live this month, otherwise nothing.</summary>
+        public static long MonthlyScore(LiveSaveData s, DateTime utcNow) =>
+            s != null && s.games > 0 && s.month == MonthKey(utcNow) ? s.rating : 0;
+
+        /// <summary>
+        /// The opponent's rating after a game, for a Live rematch: Elo here is zero-sum, so they moved the opposite way
+        /// to you (clamped like yours).
+        /// </summary>
+        public static int OpponentAfter(int theirBefore, int myDelta) => Math.Max(100, theirBefore - myDelta);
         /// <summary>A game counts once it's this far in (quitting earlier is a loss for the quitter only after this).</summary>
         public const float CountsAfterSeconds = 20f;
 
@@ -106,6 +125,7 @@ namespace CallerRetroBall.Logic
                 wins = wins, losses = losses, games = games,
                 teamId = s.teamId ?? "",
                 subscribedUntil = Math.Max(0.0, s.subscribedUntil),
+                month = Math.Max(0, s.month),
             };
         }
 

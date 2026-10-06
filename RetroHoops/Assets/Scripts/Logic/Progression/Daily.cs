@@ -262,6 +262,7 @@ namespace CallerRetroBall.Logic
             L(BoardStreetRep, "Street Rep", false, "Integer", d => d.street?.rep ?? 0),
             L(BoardLegacy, "Legacy Points", false, "Integer", d => d.legacy?.legacyPoints ?? 0),
             L(LiveMode.LeaderboardId, "Live Rating (best)", false, "Integer", d => d.live != null && d.live.games > 0 ? d.live.best : 0),
+            L(LiveMode.MonthlyLeaderboardId, "Live Rating (this month)", false, "Integer", d => LiveMode.MonthlyScore(d.live, DateTime.UtcNow)),
         };
 
         public static readonly string[] AllAchievements = All.ConvertAll(a => a.Id).ToArray();

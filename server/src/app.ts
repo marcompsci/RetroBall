@@ -6,7 +6,7 @@
 //   POST /v1/me/delete             erase your Live data from the server
 //   POST /v1/match/start           register a Live game at tip-off (both players)
 //   POST /v1/match/result          report a finished Live game (both players)
-//   GET  /v1/leaderboard           top 50 ratings
+//   GET  /v1/leaderboard           top 50 ratings (?period=month: this month's rating gains)
 //   POST /v1/apple/notifications   App Store Server Notifications V2 (renewals, refunds, expiries)
 //   GET  /v1/health
 //
@@ -110,6 +110,20 @@ export function createApp(deps: Deps) {
     if (req.method === "GET" && path === "/v1/health") return json(200, { ok: true });
 
     if (req.method === "GET" && path === "/v1/leaderboard") {
+      if (url.searchParams.get("period") === "month") {
+        // Phase 33: this calendar month (UTC): rating points won minus lost in games settled this month.
+        const d = new Date(now);
+        const start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+        const rows = await deps.db.all<{ name: string; points: number; games: number }>(
+          `SELECT p.name AS name, SUM(m.pts) AS points, COUNT(*) AS games FROM (
+             SELECT CASE winner WHEN 0 THEN player_a ELSE player_b END AS pid, delta AS pts FROM matches WHERE state = 'settled' AND settled_at >= ?
+             UNION ALL
+             SELECT CASE winner WHEN 0 THEN player_b ELSE player_a END AS pid, -delta AS pts FROM matches WHERE state = 'settled' AND settled_at >= ?
+           ) m JOIN players p ON p.player_id = m.pid GROUP BY m.pid ORDER BY points DESC, games DESC LIMIT 50`,
+          start, start);
+        const month = d.getUTCFullYear() * 100 + d.getUTCMonth() + 1;
+        return json(200, { month, players: rows.map((r, i) => ({ rank: i + 1, name: r.name || "Player", points: r.points, games: r.games })) });
+      }
       const rows = await deps.db.all<{ name: string; rating: number; games: number }>(
         "SELECT name, rating, games FROM players WHERE games > 0 ORDER BY rating DESC LIMIT 50");
       return json(200, { players: rows.map((r, i) => ({ rank: i + 1, name: r.name || "Player", rating: r.rating, games: r.games })) });

@@ -30,6 +30,15 @@ In App Store Connect, open **App ▸ Features ▸ Game Center**. The IDs must ma
 | `retroball.lb.dunk_round` | Best Dunk Contest Round | High to low | Integer |
 | `retroball.lb.street_rep` | Street Rep | High to low | Integer |
 | `retroball.lb.legacy_points` | Legacy Points | High to low | Integer |
+| `retrohoops.live.rating` | Live Rating (best) | High to low | Integer |
+
+### Leaderboard (Recurring, Phase 33)
+
+| Leaderboard ID | Name | Sort | Score format | Recurrence |
+|---|---|---|---|---|
+| `retrohoops.live.monthly` | Live Rating (this month) | High to low | Integer | Starts on the 1st, lasts 1 month, repeats |
+
+In App Store Connect choose **Recurring** (not Classic) for this one. The game posts your Live rating to it only in a month you've played Live, so each month's board shows that month's active players.
 
 "Around the World" scores are sent in hundredths of a second (41.23 s = 4123), which is the format Game Center's "Elapsed time (to the hundredth of a second)" expects. A leaderboard only receives a score once you have one: zeros are never sent.
 

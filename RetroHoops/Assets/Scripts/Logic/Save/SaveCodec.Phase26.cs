@@ -34,7 +34,7 @@ namespace CallerRetroBall.Logic
             return new Dictionary<string, object>
             {
                 ["rating"] = l.rating, ["best"] = l.best, ["wins"] = l.wins, ["losses"] = l.losses, ["games"] = l.games,
-                ["team"] = l.teamId ?? "", ["until"] = l.subscribedUntil,
+                ["team"] = l.teamId ?? "", ["until"] = l.subscribedUntil, ["month"] = l.month,
             };
         }
 
@@ -49,6 +49,7 @@ namespace CallerRetroBall.Logic
             l.games = Math.Max(l.wins + l.losses, Int(o, "games", 0));
             l.teamId = Str(o, "team", "");
             l.subscribedUntil = o.TryGetValue("until", out var u) && u is double d ? d : 0.0;
+            l.month = Math.Max(0, Int(o, "month", 0));
             return LiveMode.Sanitize(l);
         }
 

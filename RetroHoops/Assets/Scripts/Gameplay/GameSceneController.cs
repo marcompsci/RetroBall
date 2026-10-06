@@ -89,6 +89,8 @@ namespace CallerRetroBall.Gameplay
         private LinkSetup _liveSetup;
         private string _opponent = "YOUR FRIEND";
         private bool _liveRated;
+        /// <summary>Phase 33: this game's rating change (local ratings), for the rematch's starting ratings.</summary>
+        private int _liveDelta;
         /// <summary>Set when the Live server accepted this game for rating.</summary>
         private string _serverMatchKey;
 
@@ -98,6 +100,7 @@ namespace CallerRetroBall.Gameplay
             if (_liveSetup == null || _liveRated || App.Career == null) return null;
             _liveRated = true;
             var live = App.Career.live ?? (App.Career.live = new LiveSaveData());
+            live.month = LiveMode.MonthKey(System.DateTime.UtcNow); // Phase 33: counts for this month's leaderboard
             if (_serverMatchKey != null)
             {
                 // Rated on the Retro Hoops Live server: it changes ratings only when both phones' reports agree.
@@ -113,6 +116,7 @@ namespace CallerRetroBall.Gameplay
             }
             int theirs = _link.Seat == 0 ? _liveSetup.GuestRating : _liveSetup.HostRating;
             int delta = LiveMode.Apply(live, theirs, won);
+            _liveDelta = delta;
             App.SaveCareer();
             App.ReportGameCenter();
             return "LIVE RATING " + live.rating + " (" + (delta >= 0 ? "+" : "") + delta + ")  ·  " + LiveMode.Tier(live.rating) + "  ·  " + live.wins + "-" + live.losses;
@@ -1081,10 +1085,19 @@ namespace CallerRetroBall.Gameplay
                 }
                 again = CouchCup.LinkSetupFor(cup, c, g, App.Career.settings.difficultyId, seed, App.Version, LinkMatch.Setup.HostName);
             }
-            else if (host) again = LinkMatch.Setup.Again(seed);
+            else if (host)
+            {
+                again = LinkMatch.Setup.Again(seed);
+                if (_liveSetup != null && App.Career?.live != null)
+                {
+                    // Phase 33: a Live rematch starts from the ratings after this game.
+                    again.HostRating = Mathf.Max(1, App.Career.live.rating);
+                    again.GuestRating = Mathf.Max(1, LiveMode.OpponentAfter(_liveSetup.GuestRating, _liveDelta));
+                }
+            }
             _rematch = new LinkLobby(host, again, App.Version, LinkProtocol.ContentFingerprint(c), c);
             _rematchWire = new ReplayWire(_wire, _link.Control);
-            _hud.Toast(_cupSetup != null ? "WAITING FOR THE OTHER PHONE TO TAP REMATCH…" : "WAITING FOR YOUR FRIEND TO TAP REMATCH…", 3f);
+            _hud.Toast(_cupSetup != null ? "WAITING FOR THE OTHER PHONE TO TAP REMATCH…" : "WAITING FOR " + _opponent + " TO TAP REMATCH…", 3f);
         }
 
         private void UpdateLinkRematch()
@@ -1092,7 +1105,7 @@ namespace CallerRetroBall.Gameplay
             if (_rematch == null || _rematching) return;
             if (_link.RemoteLeft && _rematch.Status == LobbyStatus.Waiting)
             {
-                _hud.Toast("YOUR FRIEND LEFT", 2f);
+                _hud.Toast(_opponent + " LEFT", 2f);
                 _rematch = null;
                 return;
             }
@@ -1785,16 +1798,17 @@ namespace CallerRetroBall.Gameplay
                 {
                     winner = _match.Winner < 0 ? "TIE" : (_match.Winner == _link.Seat ? "YOU WIN" : _opponent + " WINS");
                     if (_liveSetup != null) App.OpenLiveOnMenu = true;
-                    linkNote = _liveSetup != null ? (_match.Winner >= 0 ? RateLive(_match.Winner == _link.Seat, Backend.Outcome.Final) : "Tie: no rating change.") + "\nPLAY ▸ LIVE to find another game."
+                    linkNote = _liveSetup != null ? (_match.Winner >= 0 ? RateLive(_match.Winner == _link.Seat, Backend.Outcome.Final) : "Tie: no rating change.")
+                                                    + "\nREMATCH: you both tap it (a new rated game). HOME leaves."
                                                   : "REMATCH: you both tap it. HOME hangs up.";
                     if (_cupSetup != null) linkNote = CupResult(ref winner);
                 }
                 Haptics.Success();
                 if (couchTitle != null) winner = couchTitle;
-                bool twoPhones = _link != null && _liveSetup == null;
-                _hud.ShowPostGame(winner, vs, default, false, _link != null ? linkNote : couchNote, null, (_link == null && !couch) || twoPhones);
-                // Two phones stay connected for a rematch; Live games hang up.
-                if (!twoPhones) HangUp();
+                // Two-phone and (Phase 33) Live games stay connected for a rematch.
+                bool linked = _link != null;
+                _hud.ShowPostGame(winner, vs, default, false, linked ? linkNote : couchNote, null, (_link == null && !couch) || linked);
+                if (!linked) HangUp();
                 return;
             }
 
@@ -2683,7 +2697,7 @@ namespace CallerRetroBall.Gameplay
             }
             if (_link != null)
             {
-                if (_liveSetup == null && !_linkEnded && LinkMatch.Setup != null && _wire.State == LinkState.Connected) StartLinkRematch();
+                if (!_linkEnded && LinkMatch.Setup != null && _wire.State == LinkState.Connected) StartLinkRematch();
                 else Quit();
                 return;
             }
