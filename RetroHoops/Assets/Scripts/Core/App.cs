@@ -179,11 +179,24 @@ namespace CallerRetroBall.Core
             ApplySettings();
         }
 
+        /// <summary>The UI scale in use: the chosen one, or bigger when following a larger iPhone text size (Phase 31).</summary>
+        public static float EffectiveUiScale(SettingsData s)
+        {
+            float scale = s.uiScale;
+            if (s.followSystemText)
+            {
+                float system = 1f;
+                try { system = UnityEngine.Accessibility.AccessibilitySettings.fontScale; } catch (System.Exception) { }
+                scale = Mathf.Max(scale, ScreenReaderText.UiScaleForSystemText(system));
+            }
+            return scale;
+        }
+
         /// <summary>Pushes settings to the systems that use them.</summary>
         public static void ApplySettings()
         {
             if (Career == null) return;
-            UiKit.UiScale = Career.settings.uiScale;
+            UiKit.UiScale = EffectiveUiScale(Career.settings);
             Loc.Language = Loc.Normalize(Career.settings.language);
             AudioManager.ApplySettings();
             ApplyFrameRate();
@@ -228,6 +241,7 @@ namespace CallerRetroBall.Core
 
             Career = SaveStore.Load(Content.Catalog, out var status);
             CloudSync.EnsureExists();
+            ScreenReader.EnsureExists();
             Career = CloudSync.AtBoot(Career, Content.Catalog, out bool fromCloud);
             if (fromCloud)
             {

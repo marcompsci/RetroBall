@@ -581,6 +581,42 @@
 - **Not verified:** none of this has run in Unity, Xcode or on a device yet. Watching and the two-phone cup
   need three iPhones nearby to test properly.
 
+### Phase 31: save protection, game tapes, Season 6, onboarding & accessibility
+
+- **Save protection:** the career file is now sealed (HMAC-SHA256, `SaveGuard`) with a random 32-byte key kept in
+  the iOS Keychain (`RetroKeychain.mm`, this device only, readable after first unlock). On load (`SaveIntegrity`):
+  a plain pre-Phase 31 save is read and sealed (*Legacy*); a matching seal is *Verified*; a seal that can't be
+  checked because the key is new (restored to another phone, Keychain cleared, or Keychain locked at launch) is
+  trusted and resealed (*KeyLost*, never flagged); a mismatch with an existing key is *Tampered*. A tampered
+  career is **never wiped**: it loads with its numbers clamped to what the game can produce, a copy of the edited
+  file is kept, and it stops posting Game Center leaderboard scores (`saveFlagged`, kept inside the sealed file).
+  A one-time SAVE FILE CHANGED notice explains this. iCloud copies stay unsealed (other devices have their own
+  keys) and are clamped when adopted. This stops casual editing. Someone with a jailbroken phone can read the
+  Keychain, so this doesn't stop them.
+- **GAME TAPES:** after a two-phone, Live or watched game, SAVE GAME TAPE stores the setup plus both players'
+  inputs for every step (run-length coded: a whole game is a few KB). 2 PLAYER ▸ GAME TAPES replays a tape
+  exactly (tap the court for 1x/2x/4x), SEND / RECEIVE A TAPE moves one to a friend's phone over the two-phone
+  link, and up to 12 are kept. Tapes only play on the game version that recorded them. Watched games now get
+  the full post-game screen with PLAY OF THE GAME and SHARE HIGHLIGHT.
+- **Season 6:** a sixth rival, the **Lighthouse Keepers** (full-court press; leader Wren Marsh; a new lighthouse
+  logo, also in Custom Team), with their own story scenes (English + Spanish), badges LIGHTS OUT and FULL
+  ROTATION, two courts (Lighthouse Point, Glasshouse Roof), a store jersey (Harbor Fog), a Hoops Pass set
+  (Beacon, Fog Runners, Lighthouse Beam, and the pass-only **Spotlight** celebration), and three new weekly goals
+  (deep shots, alley-oops, heat-ups). Rivals now rotate every six seasons. The weekly pool only grows from the
+  week of 12 Oct 2026 and the four-set pass rotation starts with the pass season of 19 Oct 2026, so nothing
+  changes mid-week or mid-season. The Game Center "Every Rival" achievement still means the original five, so its
+  App Store Connect text doesn't need changing.
+- **Onboarding:** a short card the first time each newer mode is opened (Two Phones, Live, Couch Cup, Watch a
+  Game, Game Tapes), and one NEW IN RETRO HOOPS card for careers from before the update.
+- **Accessibility:** **VoiceOver** reads the menus via Unity's screen-reader API (`ScreenReader.cs`). Every
+  visible button and label is an element, and a double-tap presses it. The menus also grow with the iPhone's
+  **Larger Text** setting, up to the biggest UI scale (Settings ▸ MATCH IPHONE TEXT SIZE, on by default).
+  Gameplay itself isn't playable with VoiceOver.
+- **Updated old tests on purpose:** the rival rotation (Phases 16/19/25), the pass gear rotation (Phases 23/25),
+  the street-court count and the weekly-goal variety test now expect Season 6.
+- **Not verified:** Unity/Xcode compile and device behaviour, in particular the Keychain plugin, VoiceOver
+  element positions (Unity's screen-space convention is assumed), and tape transfer between two phones.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

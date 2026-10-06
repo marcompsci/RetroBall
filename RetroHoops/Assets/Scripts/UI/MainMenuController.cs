@@ -170,9 +170,31 @@ namespace CallerRetroBall.UI
                     ("KEEP THIS ONE", ButtonStyle.Ghost, CloudSync.KeepLocal));
             }
 
+            // Phase 31: one "what's new" card for careers from before the update.
+            Tours.SkipWhatsNewForNewPlayer(App.Career);
+            if (Tours.ShowWhatsNew(App.Career) && _overlay == null && !CloudSync.CloudAhead && !App.CareerFromCloud) FirstVisit(Tours.WhatsNew);
+
+            if (SaveStore.LastVerdict == SaveVerdict.Tampered && !_editNoticeShown)
+            {
+                _editNoticeShown = true;
+                UiControls.Dialog("SAVE FILE CHANGED", "Your save file was changed outside Retro Hoops. Your career is still here (with its numbers checked), but its scores won't go to Game Center leaderboards any more. A copy of the changed file was kept.",
+                                  ("OK", ButtonStyle.Primary, null));
+            }
+
             if (App.CareerLoadStatus == LoadStatus.Recovered)
                 UiControls.Dialog("SAVE RESET", "Your save file couldn't be read, so a fresh career was started. A backup of the old file was kept.",
                                   ("OK", ButtonStyle.Primary, null));
+        }
+
+        private static bool _editNoticeShown;
+
+        /// <summary>Shows a mode's "first time here" card once (Phase 31).</summary>
+        private static void FirstVisit(TourCard card)
+        {
+            if (App.Career == null || Tours.Seen(App.Career, card)) return;
+            Tours.MarkSeen(App.Career, card);
+            App.SaveCareer();
+            UiControls.Dialog(card.Title, card.Body, ("GOT IT", ButtonStyle.Primary, null));
         }
 
         protected override void Update()
@@ -615,6 +637,7 @@ namespace CallerRetroBall.UI
             UiKit.Button(column, "CHANGE TEAM", () => { p2 = Next(p2, p1); Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
             UiKit.Button(column, "TWO PHONES  ·  EACH ON YOUR OWN", ShowLinkMenu, ButtonStyle.Secondary, 100f, 32f);
             UiKit.Button(column, "COUCH CUP  ·  TOURNAMENT FOR 2-8", ShowCouchCup, ButtonStyle.Secondary, 100f, 32f);
+            UiKit.Button(column, "GAME TAPES  ·  WATCH AGAIN, SEND", ShowTapes, ButtonStyle.Secondary, 100f, 32f);
             UiKit.Size(UiKit.Label(column,
                 "One iPhone: lay it flat between you. P1 plays from the bottom edge, P2 from the top.\n" +
                 "Controllers: with two, P1 gets the first; with one, it's P2's (P1 uses touch).\n" +

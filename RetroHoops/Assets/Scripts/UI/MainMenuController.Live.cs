@@ -12,6 +12,7 @@ namespace CallerRetroBall.UI
     {
         private void ShowLive()
         {
+            FirstVisit(Tours.Live);
             LiveStore.EnsureStarted();
             if (!LiveStore.Active)
             {

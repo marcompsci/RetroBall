@@ -32,6 +32,9 @@ namespace CallerRetroBall.Logic
         public const string Rival5CrewId = "crew.cassette_club";
         public const string Rival5LeaderId = "player.csc.rivera";
         public const string Rival4LeaderId = "player.crn.vale";
+        /// <summary>Season 6 rival (every sixth Rise season).</summary>
+        public const string Rival6CrewId = "crew.lighthouse_keepers";
+        public const string Rival6LeaderId = "player.lhk.marsh";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -137,6 +140,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 6 courts.
+            c.Courts.Add(Court("court.lighthouse_point", "Lighthouse Point", CourtCircuit.Blacktop,
+                "On the rocks under the lighthouse. The beam sweeps the court every eight seconds.",
+                "#2E4057", "#F4F1DE", "#FFD60A", "#0B2545", "#13315C", 0.35f));
+            c.Courts.Add(Court("court.glasshouse_roof", "Glasshouse Roof", CourtCircuit.Blacktop,
+                "On top of the old greenhouse. The glass fogs up in the fourth quarter.",
+                "#52796F", "#F1FAEE", "#E9C46A", "#84A98C", "#CAD2C5", 0.4f));
 
             // Season 4 courts.
             c.Courts.Add(Court("court.laundromat_lot", "Laundromat Lot", CourtCircuit.Blacktop,
@@ -273,6 +284,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 6 rival: every sixth Rise season.
+            AddTeam(c, Rival6CrewId, "", "Lighthouse Keepers", "LHK", TeamTier.Rival,
+                "#0B2545", "#F4F1DE", "#FFD60A", LogoShape.Shield, LogoMotif.Lighthouse, TeamPattern.Diagonal,
+                "court.lighthouse_point", "We see you coming.", false,
+                P("marsh", "Wren", "Marsh", 1, Archetype.Playmaker, 4),
+                P("calder", "Otis", "Calder", 34, Archetype.PostAnchor, 4),
+                P("holt", "Juniper", "Holt", 30, Archetype.DeepShooter, 4));
+
             // Season 5 rival: every fifth Rise season.
             AddTeam(c, Rival5CrewId, "", "Cassette Club", "CSC", TeamTier.Rival,
                 "#F2E9E4", "#22223B", "#C9184A", LogoShape.Circle, LogoMotif.Signal, TeamPattern.Stripes,
@@ -403,6 +422,7 @@ namespace CallerRetroBall.Logic
             S(Rival3CrewId, DefenseScheme.PackLine);
             S(Rival4CrewId, DefenseScheme.ManToMan);
             S(Rival5CrewId, DefenseScheme.Zone);
+            S(Rival6CrewId, DefenseScheme.Pressure);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -715,6 +735,13 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.tape_runners", "Tape Runners", CosmeticSlot.Shoes, "#22223B", "#9A8C98"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.banner.boombox", "Boombox Banner", CosmeticSlot.CourtBanner, "#FF9F1C", "#2EC4B6"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.dunk.skyline", "Skyline Slam", CosmeticSlot.DunkPackage, "#FFFFFF", "#FFFFFF"));
+            // Season 6 pass set (the lighthouse), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.beacon", "Beacon", CosmeticSlot.JerseyPalette, "#0B2545", "#FFD60A"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.fog_runners", "Fog Runners", CosmeticSlot.Shoes, "#CAD2C5", "#52796F"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.lighthouse_beam", "Lighthouse Beam", CosmeticSlot.CourtBanner, "#FFD60A", "#0B2545"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            // Season 6 store kit.
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.harbor_fog", "Harbor Fog", CosmeticSlot.JerseyPalette, 350, 1500, false, "#52796F", "#CAD2C5"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.spin_cycle", "Spin Cycle", CosmeticSlot.DribbleMove, 450, 350, false, "#FFFFFF", "#FFFFFF"));
         }
 

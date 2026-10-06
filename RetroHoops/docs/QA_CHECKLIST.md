@@ -225,3 +225,16 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Crossover / Double Cross moves show the low crossover pose; Step Back shows the ball-up step-back pose.
 - [ ] Locker Room ▸ CHEST THUMP celebration: after scoring, the player thumps their chest twice and raises a fist.
 
+## Phase 31
+- [ ] Update over a Phase 30 install: the career is all there; the next launch shows no SAVE FILE CHANGED notice. A NEW IN RETRO HOOPS card shows once.
+- [ ] Edit `career.json` (Xcode ▸ Devices ▸ Download Container, change signalPoints, put it back): next launch shows SAVE FILE CHANGED once, the career keeps its games, coins are capped, a `career.edited.*.json` copy exists, and no leaderboard scores are posted.
+- [ ] Delete and reinstall the app with an iCloud career: it loads from iCloud with no SAVE FILE CHANGED notice.
+- [ ] Two phones: after the final, SAVE GAME TAPE on both. 2 PLAYER ▸ GAME TAPES ▸ WATCH plays the identical game; tapping the court cycles 1x / 2x / 4x; REMATCH watches it again.
+- [ ] GAME TAPES ▸ SEND on one phone, RECEIVE A TAPE on another: the tape arrives and plays there.
+- [ ] Watch a game on a third phone: the post-game has PLAY OF THE GAME, SHARE HIGHLIGHT and SAVE GAME TAPE.
+- [ ] Rise Season 6: the Lighthouse Keepers' intro scene, rival game (they press full court) and win scene; badges LIGHTS OUT / FULL ROTATION; their logo in Custom Team ▸ LOGO.
+- [ ] Week of 12 Oct 2026: weekly goals may include deep shots / alley-oops / heat-ups. Pass season from 19 Oct 2026: Beacon / Fog Runners / Lighthouse Beam / Spotlight.
+- [ ] First visit to TWO PHONES, LIVE, COUCH CUP, WATCH A GAME and GAME TAPES each shows its card once.
+- [ ] VoiceOver on (Settings ▸ Accessibility): swipe through the main menu; every button is read and double-tap presses it; the focus box sits on the right button (if boxes are mirrored vertically, the screen-space convention needs flipping).
+- [ ] iOS Larger Text at a big size: menus use the largest UI scale; text still fits on iPhone SE / mini and iPad. Turning MATCH IPHONE TEXT SIZE off goes back to the chosen UI SCALE.
+

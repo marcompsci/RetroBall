@@ -84,6 +84,7 @@ namespace CallerRetroBall.UI
 
         private void ShowCouchCup()
         {
+            FirstVisit(Tours.Couch);
             var cup = App.Career.couch ?? (App.Career.couch = new CouchCupSaveData());
             if (cup.Active)
             {

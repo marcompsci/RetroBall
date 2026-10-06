@@ -20,6 +20,7 @@ namespace CallerRetroBall.UI
         private void ShowLinkMenu()
         {
             var column = OpenOverlay("TWO PHONES", out var footer);
+            FirstVisit(Tours.TwoPhones);
             UiKit.Size(UiKit.Label(column,
                 "Play head to head, each on your own iPhone or iPad. Both phones need Retro Hoops (the same version) and to be near each other with Wi-Fi or Bluetooth on. No internet, no account.",
                 30f, Theme.Cream), 190f);
@@ -109,6 +110,7 @@ namespace CallerRetroBall.UI
         {
             var c = App.Catalog;
             var column = OpenOverlay("WATCH A GAME", out var footer);
+            FirstVisit(Tours.Watch);
             var status = UiKit.Label(column, "Looking for games nearby…", 32f, Theme.Muted, TextAlignmentOptions.Center);
             UiKit.Size(status, 130f);
             var list = UiKit.Column(column, 14f, null, "Hosts");

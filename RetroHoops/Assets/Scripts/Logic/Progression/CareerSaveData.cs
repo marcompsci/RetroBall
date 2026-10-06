@@ -55,6 +55,8 @@ namespace CallerRetroBall.Logic
         public bool captions;
         /// <summary>Keep the career in sync through the player's own iCloud (iOS key-value storage).</summary>
         public bool icloudSync = true;
+        /// <summary>Phase 31: menus grow with the iPhone's text size (Settings ▸ Accessibility ▸ Larger Text), up to the largest UI scale.</summary>
+        public bool followSystemText = true;
         /// <summary>Music Player: menu track (−1 = the menu theme) and match track (−1 = match theme, −2 = shuffle).</summary>
         public int musicMenu = -1;
         public int musicGame = -1;
@@ -275,6 +277,11 @@ namespace CallerRetroBall.Logic
         public CouchCupSaveData couch = new CouchCupSaveData();
         /// <summary>Retro Hoops Live: rating, record, Live team, cached subscription end.</summary>
         public LiveSaveData live = new LiveSaveData();
+        /// <summary>
+        /// Phase 31: the save file was edited outside the game (its seal didn't match this install's key).
+        /// The career still loads (values clamped to sane ranges), but its scores no longer go to Game Center leaderboards.
+        /// </summary>
+        public bool saveFlagged;
         /// <summary>Photo mode shots taken (for the badge).</summary>
         public int photosTaken;
         /// <summary>Badges already announced.</summary>

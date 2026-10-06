@@ -306,6 +306,8 @@ namespace CallerRetroBall.Gameplay
         {
             ClearFinal();
             Title(title, scoreLine);
+            if (SaveTapeRequested != null)
+                UiKit.Button(_finalColumn, "SAVE GAME TAPE", () => SaveTapeRequested?.Invoke(), ButtonStyle.Secondary, 100f, 36f);
             UiKit.Button(_finalColumn, "REMATCH", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
             UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 120f, 48f);
             Open();
@@ -344,6 +346,8 @@ namespace CallerRetroBall.Gameplay
                 if (ShareRequested != null)
                     UiKit.Button(_finalColumn, "SHARE HIGHLIGHT", () => ShareRequested?.Invoke(), ButtonStyle.Ghost, 100f, 36f);
             }
+            if (SaveTapeRequested != null)
+                UiKit.Button(_finalColumn, "SAVE GAME TAPE", () => SaveTapeRequested?.Invoke(), ButtonStyle.Ghost, 100f, 36f);
             if (continueLabel != null)
                 UiKit.Button(_finalColumn, continueLabel, () => ContinueRequested?.Invoke(), ButtonStyle.Primary, 140f);
             if (allowRematch)
@@ -431,6 +435,8 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>Set by the match controller when there's a highlight to show on the post-game card.</summary>
         public bool HasPlayOfTheGame { get; set; }
+        /// <summary>Phase 31: SAVE GAME TAPE on the end screens (two-phone, Live and watched games).</summary>
+        public event System.Action SaveTapeRequested;
 
         private void Open()
         {

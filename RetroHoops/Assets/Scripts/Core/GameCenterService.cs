@@ -71,6 +71,8 @@ namespace CallerRetroBall.Core
             if (gc == null || career == null || !career.settings.gameCenter || !gc.IsAvailable || !gc.IsSignedIn) return;
             foreach (var id in Achievements.Earned(career))
                 if (Reported.Add(id)) gc.UnlockAchievement(id);
+            // A save edited outside the game keeps its achievements on this device but posts no leaderboard scores.
+            if (career.saveFlagged) return;
             foreach (var kv in Achievements.Scores(career))
                 if (kv.Value > 0) gc.ReportScore(kv.Key, kv.Value);
         }

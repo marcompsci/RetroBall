@@ -96,6 +96,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Ball: return Ball;
                 case LogoMotif.Signal: return Signal;
                 case LogoMotif.Crane: return Crane;
+                case LogoMotif.Lighthouse: return Lighthouse;
                 default: return Ball;
             }
         }
@@ -115,6 +116,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // A lighthouse: beams out to both sides from the lamp, striped tower, rocks at the base.
+        private static readonly string[] Lighthouse =
+        {
+            ".....##.....",
+            "+...####...+",
+            ".++.#++#.++.",
+            "....####....",
+            ".....##.....",
+            "....####....",
+            "....#++#....",
+            "....####....",
+            "...#++++#...",
+            "...######...",
+            "..########..",
+            ".##########.",
         };
 
         // A folded paper bird: two wings up, beak to the left.
