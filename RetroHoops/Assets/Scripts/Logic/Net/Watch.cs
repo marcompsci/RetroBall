@@ -25,6 +25,9 @@ namespace CallerRetroBall.Logic
         public SpectatorFeed(LinkSetup setup) { Setup = setup; }
 
         public int Steps => _a.Count;
+        /// <summary>Both inputs for every step so far (a game tape is made from these).</summary>
+        public IReadOnlyList<PlayerInput> TeamA => _a;
+        public IReadOnlyList<PlayerInput> TeamB => _b;
         public int Watchers => _watchers;
 
         /// <summary>Call once per simulated step, in order, with the inputs that step used.</summary>
@@ -77,6 +80,8 @@ namespace CallerRetroBall.Logic
         public LinkSetup Setup { get; private set; }
         public string Error { get; private set; }
         public bool HostLeft { get; private set; }
+        /// <summary>Playing back a saved game tape rather than a game happening now.</summary>
+        public bool IsTape { get; set; }
         /// <summary>The host's next game, once its setup has arrived.</summary>
         public Spectator Next { get; private set; }
         /// <summary>Next step to simulate.</summary>
@@ -97,6 +102,9 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Steps received so far.</summary>
         public int Received => _a.Count;
+        /// <summary>Both inputs for every step received (a game tape is made from these).</summary>
+        public IReadOnlyList<PlayerInput> TeamA => _a;
+        public IReadOnlyList<PlayerInput> TeamB => _b;
         /// <summary>Steps received but not yet simulated.</summary>
         public int Behind => _a.Count - NextTick;
         public bool Ready => Setup != null && Error == null;
@@ -118,7 +126,7 @@ namespace CallerRetroBall.Logic
                     else if (s.Session != Setup.Session || s.Seed != Setup.Seed)
                     {
                         // The host started another game.
-                        Next = new Spectator(_appVersion, _content, _catalog);
+                        Next = new Spectator(_appVersion, _content, _catalog) { IsTape = IsTape };
                         Next.Receive(m);
                     }
                     break;

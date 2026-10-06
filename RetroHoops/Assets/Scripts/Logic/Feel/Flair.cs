@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9 }
 
     public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
@@ -57,6 +57,7 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.celebration.shoulder_brush": return CelebrationKind.ShoulderBrush;
                 case "cosmetic.celebration.paper_plane": return CelebrationKind.PaperPlane;
                 case "cosmetic.celebration.chest_thump": return CelebrationKind.ChestThump;
+                case "cosmetic.pass.celebration.spotlight": return CelebrationKind.Spotlight;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -123,6 +124,20 @@ namespace CallerRetroBall.Logic
                     p.Lift = t < 0.2f ? -1 : (t < 0.45f ? Hop(t, 0.2f, 0.25f, 2) : 0);
                     p.ArmsUp = t >= 0.2f && t < 0.5f;
                     p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
+                    break;
+                case CelebrationKind.Spotlight:
+                    // Slow turn in place (facing flips like a sweeping beam), then a chest thump, then arms up to the lights.
+                    if (t < 0.48f)
+                    {
+                        p.FlipOverride = (int)(t / 0.12f) % 2 == 1;
+                        p.Lift = (int)(t / 0.12f) % 2;
+                    }
+                    else if (t < 0.66f) p.Frame = PoseFrame.ChestThump;
+                    else
+                    {
+                        p.ArmsUp = true;
+                        p.Lift = Hop(t, 0.66f, 0.24f, 2);
+                    }
                     break;
                 case CelebrationKind.ChestThump:
                     // Two thumps on the chest (a little bounce on each), then the fist goes up to the crowd.

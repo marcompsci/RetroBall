@@ -75,6 +75,11 @@ namespace CallerRetroBall.Gameplay
         private Spectator _watch;
         /// <summary>Phase 30, host of a two-phone game: sends the game to phones watching it.</summary>
         private SpectatorFeed _feed;
+        /// <summary>The host shares this game with watchers (the feed itself is also kept for SAVE GAME TAPE).</summary>
+        private bool _broadcast;
+        private bool _tapeSaved;
+        /// <summary>Playing a saved tape: 1x, 2x or 4x (tap the court).</summary>
+        private int _tapeSpeed = 1;
         private NearbyLink _nearby;
         private int _watchersSeen;
         /// <summary>Phase 30: a Couch Cup game played on two phones (null otherwise).</summary>
@@ -251,7 +256,9 @@ namespace CallerRetroBall.Gameplay
                 }
                 // The host of a game nearby shares it with anyone who wants to watch.
                 _nearby = LinkMatch.Transport as NearbyLink;
-                if (_liveSetup == null && LinkMatch.Seat == 0 && _nearby != null) _feed = new SpectatorFeed(LinkMatch.Setup);
+                // Every two-phone and Live game keeps both inputs (for SAVE GAME TAPE); the host of a game nearby also shares it with watchers.
+                _feed = new SpectatorFeed(LinkMatch.Setup);
+                _broadcast = _liveSetup == null && LinkMatch.Seat == 0 && _nearby != null;
                 _lastLinkStep = Time.unscaledTime;
             }
 
@@ -367,6 +374,7 @@ namespace CallerRetroBall.Gameplay
                 OpenPhotoMode();
             };
             _hud.RematchRequested += Rematch;
+            if (_link != null || (_watch != null && !_watch.IsTape)) _hud.SaveTapeRequested += SaveTape;
 
             _myCelebration = Flair.CelebrationFor(App.Career?.equippedCelebration);
             _myMove = Flair.DribbleMoveFor(App.Career?.equippedMove);
@@ -943,7 +951,7 @@ namespace CallerRetroBall.Gameplay
         /// <summary>Host: sends the game so far to the phones watching (and says who's watching).</summary>
         private void FeedWatchers()
         {
-            if (_feed == null || _nearby == null) return;
+            if (!_broadcast || _feed == null || _nearby == null) return;
             int n = _nearby.WatcherCount;
             if (n > _watchersSeen) _hud.Toast(n == 1 ? "1 FRIEND IS WATCHING" : n + " FRIENDS ARE WATCHING", 2f);
             _watchersSeen = n;
@@ -963,13 +971,18 @@ namespace CallerRetroBall.Gameplay
             if (_rematching) return;
             UpdatePadMode();
             while (_wire.TryReceive(out var msg)) _watch.Receive(msg);
+            if (_watch.IsTape && !_paused && !_match.IsOver && AnyInputPressed())
+            {
+                _tapeSpeed = _tapeSpeed >= 4 ? 1 : _tapeSpeed * 2;
+                _hud.Toast("TAPE  " + _tapeSpeed + "x", 1f);
+            }
             int steps = 0;
-            bool catchingUp = _watch.Behind > 90;
+            bool catchingUp = !_watch.IsTape && _watch.Behind > 90;
             if (!_match.IsOver)
             {
                 _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
                 int due = Mathf.FloorToInt(_accumulator / FixedStep);
-                int n = Spectator.StepsThisFrame(_watch.Behind, due);
+                int n = _watch.IsTape ? Mathf.Min(_watch.Behind, due * _tapeSpeed) : Spectator.StepsThisFrame(_watch.Behind, due);
                 while (steps < n && !_match.IsOver && _watch.TryStep(out var a, out var b))
                 {
                     StepMarker.Begin();
@@ -1011,7 +1024,9 @@ namespace CallerRetroBall.Gameplay
                 _finalShown = true;
                 _hud.ShowPause(false);
                 HangUp();
-                _hud.ShowFinal("GAME STOPPED", "The players' phones disconnected at " + _match.Score[0] + " - " + _match.Score[1] + ".");
+                _hud.ShowFinal(_watch.IsTape ? "END OF TAPE" : "GAME STOPPED",
+                               _watch.IsTape ? "The game stopped here at " + _match.Score[0] + " - " + _match.Score[1] + "."
+                                             : "The players' phones disconnected at " + _match.Score[0] + " - " + _match.Score[1] + ".");
                 return;
             }
             if (_match.IsOver && !_finalShown)
@@ -1021,11 +1036,14 @@ namespace CallerRetroBall.Gameplay
                 string home = _watch.Setup.IsCup && !string.IsNullOrEmpty(_watch.Setup.HomeLabel) ? _watch.Setup.HomeLabel : setup.TeamA.FullName;
                 string away = _watch.Setup.IsCup && !string.IsNullOrEmpty(_watch.Setup.AwayLabel) ? _watch.Setup.AwayLabel : setup.TeamB.FullName;
                 string title = _match.Winner < 0 ? "TIE" : ((_match.Winner == 0 ? home : away).ToUpperInvariant() + " WIN" + (_watch.Setup.IsCup ? "S" : ""));
-                _hud.ShowFinal(title, setup.TeamA.abbreviation + "  " + _match.Score[0] + " - " + _match.Score[1] + "  " + setup.TeamB.abbreviation
-                                      + "\nStay here: if they play again, you'll watch that game too.");
+                // The full post-game: box scores, PLAY OF THE GAME and SHARE HIGHLIGHT (plus SAVE GAME TAPE when watching live).
+                _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
+                _hud.ShowPostGame(title, MatchSummary.From(_match, _request.Mode, "versus"), default, false,
+                                  _watch.IsTape ? "End of tape. REMATCH watches it again." : "Stay here: if they play again, you'll watch that game too.",
+                                  null, _watch.IsTape);
                 Haptics.Success();
             }
-            if (_match.IsOver && gone && !_watchEndShown && _watch.Next == null)
+            if (_match.IsOver && gone && !_watchEndShown && _watch.Next == null && !_watch.IsTape)
             {
                 _watchEndShown = true;
                 _hud.Toast("THE PLAYERS HAVE LEFT", 2.5f);
@@ -1120,12 +1138,12 @@ namespace CallerRetroBall.Gameplay
             if (_wire == null) return;
             // Leaving a Live game early (after the opening seconds) counts as a loss.
             if (_liveSetup != null && !_linkEnded && !_match.IsOver && _match.Time >= LiveMode.CountsAfterSeconds) RateLive(false, Backend.Outcome.Quit);
-            if (_feed != null && _nearby != null)
+            if (_broadcast && _feed != null && _nearby != null)
             {
                 // Tell the watchers the game is over for them too.
                 _feed.End();
                 foreach (var m in _feed.Take(_nearby.WatcherCount)) _nearby.SendWatchers(m);
-                _feed = null;
+                _broadcast = false;
             }
             if (_wire.State == LinkState.Connected) _wire.Send(LinkProtocol.Simple(LinkMessage.Bye));
             _wire = new ClosedWire();
@@ -2654,6 +2672,12 @@ namespace CallerRetroBall.Gameplay
         {
             if (_watch != null)
             {
+                if (_watch.IsTape && TapeStore.Playing != null && TapeStore.PrepareToWatch(TapeStore.Playing, out _))
+                {
+                    _rematching = true;
+                    SceneFlow.GoTo(SceneNames.Game);
+                    return;
+                }
                 _hud.Toast("IF THEY PLAY AGAIN, IT SHOWS UP HERE", 2f);
                 return;
             }
@@ -2673,6 +2697,20 @@ namespace CallerRetroBall.Gameplay
             _request.Seed = 0;
             App.PendingMatch = _request;
             SceneFlow.GoTo(SceneNames.Game);
+        }
+
+        /// <summary>SAVE GAME TAPE: the whole game (setup + both inputs every step) goes to 2 PLAYER ▸ GAME TAPES.</summary>
+        private void SaveTape()
+        {
+            if (_tapeSaved) { _hud.Toast("ALREADY SAVED", 1.2f); return; }
+            LinkSetup setup = _watch != null ? _watch.Setup : _feed?.Setup;
+            var a = _watch != null ? _watch.TeamA : _feed?.TeamA;
+            var b = _watch != null ? _watch.TeamB : _feed?.TeamB;
+            if (setup == null || a == null || a.Count == 0) { _hud.Toast("NOTHING TO SAVE", 1.2f); return; }
+            var tape = Tapes.From(setup, a, b, Tapes.TitleFor(setup, _match.Setup.TeamA.FullName, _match.Setup.TeamB.FullName),
+                                  System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(), _match.Score[0], _match.Score[1]);
+            _tapeSaved = TapeStore.Save(tape);
+            _hud.Toast(_tapeSaved ? "TAPE SAVED: 2 PLAYER ▸ GAME TAPES" : "COULDN'T SAVE THE TAPE", 2f);
         }
 
         /// <summary>Couch Cup on two phones: the host records the game in its bracket; both say what's next.</summary>

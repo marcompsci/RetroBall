@@ -95,7 +95,7 @@ namespace CallerRetroBall.Tests
         public void Goals_AreDeterministicDistinctAndVaried()
         {
             var seen = new HashSet<WeeklyGoal>();
-            for (int week = 1300; week < 1360; week++)
+            for (int week = Weekly.Season6Week; week < Weekly.Season6Week + 60; week++) // (Phase 31: all goals are in the pool from Season 6)
             {
                 var a = Weekly.For(week);
                 var b = Weekly.For(week);
@@ -219,7 +219,9 @@ namespace CallerRetroBall.Tests
                 if (r.CosmeticId == null) Assert.Greater(r.SignalPoints, 0);
             }
             Assert.AreNotEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(1, 5), "seasons alternate gear");
-            Assert.AreEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(HoopsPass.GearSets.Length, 5));
+            // Phase 31: from FourSetsFrom the four sets rotate (earlier seasons kept their three-set rotation).
+            Assert.AreEqual(HoopsPass.GearFor(HoopsPass.FourSetsFrom, 5), HoopsPass.GearFor(HoopsPass.FourSetsFrom + HoopsPass.GearSets.Length, 5));
+            Assert.AreEqual(HoopsPass.GearFor(0, 5), HoopsPass.GearFor(3, 5));
         }
 
         [Test]
@@ -233,7 +235,7 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(HoopsPass.Tiers, all.Count);
             Assert.AreEqual(HoopsPass.Tiers, _career.pass.granted);
             Assert.AreEqual(1, _career.pass.seasonsMaxed);
-            foreach (var id in HoopsPass.GearSets[season % HoopsPass.GearSets.Length]) Assert.IsTrue(_career.ownedCosmetics.Contains(id), id);
+            for (int t = 5; t <= HoopsPass.Tiers; t += 5) Assert.IsTrue(_career.ownedCosmetics.Contains(HoopsPass.GearFor(season, t)), "tier " + t);
             int expectSp = 0;
             for (int t = 1; t <= HoopsPass.Tiers; t++) if (!HoopsPass.IsGearTier(t)) expectSp += HoopsPass.TierSp(t);
             Assert.AreEqual(expectSp, _career.signalPoints - sp0);
@@ -244,7 +246,8 @@ namespace CallerRetroBall.Tests
         [Test]
         public void NextSeason_ResetsTrack_AndOwnedGearPaysSp()
         {
-            int day = DailyChallenges.DayNumber(new System.DateTime(2026, 10, 6));
+            // (A season in the four-set rotation, Phase 31.)
+            int day = DailyChallenges.DayNumber(new System.DateTime(2026, 10, 20));
             HoopsPass.AddXp(_career, _c, 99999, day);
             // A full rotation on, the same gear set comes back: owned tiers pay Signal Points instead.
             int later = day + HoopsPass.WeeksPerSeason * 7 * HoopsPass.GearSets.Length;

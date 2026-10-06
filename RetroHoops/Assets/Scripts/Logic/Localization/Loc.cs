@@ -383,6 +383,33 @@ namespace CallerRetroBall.Logic
             ["FLOOR"] = "PISO", ["FLOOR COLOUR"] = "COLOR DEL PISO", ["LINES"] = "LÍNEAS",
             ["PAINT"] = "ZONA", ["BEHIND"] = "FONDO", ["CROWD"] = "PÚBLICO",
             ["CENTRE LOGO"] = "LOGO CENTRAL", ["LOGO COLOUR"] = "COLOR DEL LOGO", ["SAVED"] = "GUARDADA",
+
+            // Phase 30-31: Season 6, game tapes, watching, save protection.
+            ["LIGHTHOUSE"] = "FARO", ["LIGHTS OUT"] = "LUCES FUERA", ["Beat the Lighthouse Keepers."] = "Vence a los Lighthouse Keepers.",
+            ["FULL ROTATION"] = "VUELTA COMPLETA", ["Beat all six rival crews."] = "Vence a los seis equipos rivales.",
+            ["We see you coming."] = "Te vemos venir.",
+            ["On the rocks under the lighthouse. The beam sweeps the court every eight seconds."] = "En las rocas bajo el faro. El haz barre la cancha cada ocho segundos.",
+            ["On top of the old greenhouse. The glass fogs up in the fourth quarter."] = "Encima del viejo invernadero. El cristal se empaña en el último cuarto.",
+            ["GAME TAPES"] = "CINTAS DE PARTIDOS", ["SAVE GAME TAPE"] = "GUARDAR CINTA", ["WATCH"] = "VER", ["SEND"] = "ENVIAR",
+            ["RECEIVE A TAPE"] = "RECIBIR UNA CINTA", ["SEND A TAPE"] = "ENVIAR UNA CINTA", ["END OF TAPE"] = "FIN DE LA CINTA",
+            ["WATCH A GAME"] = "VER UN PARTIDO", ["GAME STOPPED"] = "PARTIDO DETENIDO", ["SAVE FILE CHANGED"] = "PARTIDA MODIFICADA",
+            ["2 PHONES"] = "2 MÓVILES", ["GOT IT"] = "ENTENDIDO", ["MATCH IPHONE TEXT SIZE"] = "TAMAÑO DE TEXTO DEL IPHONE",
+            ["NEW IN RETRO HOOPS"] = "NOVEDADES EN RETRO HOOPS",
+            ["Watch friends' two-phone games on a third phone, save whole games as GAME TAPES, play the Couch Cup across two phones, and meet Season 6's rival: the Lighthouse Keepers."]
+                = "Mira las partidas a dos móviles de tus amigos en un tercer móvil, guarda partidos enteros como CINTAS, juega la Couch Cup en dos móviles y conoce al rival de la temporada 6: los Lighthouse Keepers.",
+            ["TWO PHONES"] = "DOS MÓVILES",
+            ["Each player on their own iPhone, side by side. One phone hosts and picks both teams; the other joins. No internet needed, just Wi-Fi or Bluetooth on."]
+                = "Cada jugador en su propio iPhone, uno al lado del otro. Un móvil crea la partida y elige los dos equipos; el otro se une. No hace falta internet, solo Wi-Fi o Bluetooth.",
+            ["RETRO HOOPS LIVE"] = "RETRO HOOPS LIVE",
+            ["Play people anywhere over the internet with your own team. Wins and losses move your Live rating. It's a monthly subscription you can cancel any time in iOS Settings."]
+                = "Juega contra gente de cualquier lugar por internet con tu propio equipo. Las victorias y derrotas mueven tu puntuación Live. Es una suscripción mensual que puedes cancelar cuando quieras en Ajustes de iOS.",
+            ["COUCH CUP"] = "COUCH CUP",
+            ["A knockout for 2 to 8 friends. Type everyone's name, pick teams, and the bracket says who's up. Pass one phone around, or use 2 PHONES."]
+                = "Un torneo de eliminación para 2 a 8 amigos. Escribe los nombres, elige equipos y el cuadro dice a quién le toca. Pasad un móvil o usad 2 MÓVILES.",
+            ["Watch two friends' TWO PHONES game live on this phone. Join any time: you'll catch up from the tip-off. Nothing you do here affects their game."]
+                = "Mira en directo en este móvil la partida a dos móviles de dos amigos. Únete cuando quieras: te pondrás al día desde el salto inicial. Nada de lo que hagas aquí afecta a su partida.",
+            ["After a two-phone, Live or watched game, tap SAVE GAME TAPE. Tapes replay the whole game exactly, and you can send one to a friend nearby."]
+                = "Después de una partida a dos móviles, Live o vista, toca GUARDAR CINTA. Las cintas repiten el partido entero tal cual, y puedes enviar una a un amigo cercano.",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>

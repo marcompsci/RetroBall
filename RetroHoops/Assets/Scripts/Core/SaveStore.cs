@@ -6,7 +6,8 @@ using UnityEngine;
 namespace CallerRetroBall.Core
 {
     /// <summary>
-    /// Local-only persistence for the career (no accounts, no network, no analytics).
+    /// Local-only persistence for the career (no accounts, no network, no analytics). Since Phase 31 the file is
+    /// sealed (SaveIntegrity / SaveGuard) with a per-install key from the Keychain.
     /// Writes are atomic (temp file then replace) so a crash mid-save can't corrupt progress,
     /// and an unreadable file is kept as a timestamped backup before starting fresh.
     /// </summary>
@@ -17,24 +18,41 @@ namespace CallerRetroBall.Core
         public static string Folder => Application.persistentDataPath;
         public static string FilePath => Path.Combine(Folder, FileName);
 
+        /// <summary>What the seal said at the last load (Phase 31).</summary>
+        public static SaveVerdict LastVerdict { get; private set; }
+
         public static CareerSaveData Load(ContentCatalog catalog, out LoadStatus status)
         {
-            string json = null;
+            string text = null;
             try
             {
-                if (File.Exists(FilePath)) json = File.ReadAllText(FilePath);
+                if (File.Exists(FilePath)) text = File.ReadAllText(FilePath);
             }
             catch (Exception e)
             {
                 Debug.LogWarning("[SaveStore] Could not read save: " + e.Message);
             }
 
-            var data = SaveCodec.Decode(json, catalog, out status);
-            if (status == LoadStatus.Recovered)
+            byte[] key = SaveKey.Get(out bool keyIsNew);
+            var data = SaveIntegrity.Open(text, key, keyIsNew, catalog, out status, out var verdict);
+            LastVerdict = verdict;
+            switch (verdict)
             {
-                Backup("unreadable");
-                Debug.LogWarning("[SaveStore] Save file was unreadable; started a fresh career. The old file was kept as a backup.");
-                Save(data);
+                case SaveVerdict.Unreadable:
+                    Backup("unreadable");
+                    Debug.LogWarning("[SaveStore] Save file was unreadable; started a fresh career. The old file was kept as a backup.");
+                    Save(data);
+                    break;
+                case SaveVerdict.Tampered:
+                    Backup("edited");
+                    Debug.LogWarning("[SaveStore] The save file was changed outside the game. It loaded with its numbers checked; leaderboard scores are off for this career.");
+                    Save(data);
+                    break;
+                case SaveVerdict.Legacy:
+                case SaveVerdict.KeyLost:
+                    // Seal it with this install's key from now on.
+                    Save(data);
+                    break;
             }
             return data;
         }
@@ -45,7 +63,7 @@ namespace CallerRetroBall.Core
             {
                 Directory.CreateDirectory(Folder);
                 string tmp = FilePath + ".tmp";
-                File.WriteAllText(tmp, SaveCodec.Encode(data));
+                File.WriteAllText(tmp, SaveIntegrity.Seal(data, SaveKey.Get(out _)));
                 if (File.Exists(FilePath)) File.Delete(FilePath);
                 File.Move(tmp, FilePath);
                 return true;

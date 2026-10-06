@@ -97,6 +97,8 @@ namespace CallerRetroBall.Logic
         {
             if (cloud == null) return local;
             if (local != null && local.settings != null) cloud.settings = local.settings;
+            // iCloud copies aren't sealed (each device has its own key): keep their numbers in range.
+            SaveIntegrity.Clamp(cloud);
             return cloud;
         }
     }

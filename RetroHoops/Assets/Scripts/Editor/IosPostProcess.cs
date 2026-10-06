@@ -69,6 +69,7 @@ namespace CallerRetroBall.EditorTools
             // Retro Hoops Live: StoreKit 2 (RetroStore.swift) for the subscription, GameKit matchmaking (RetroLive.mm).
             string fw = proj.GetUnityFrameworkTargetGuid();
             proj.AddFrameworkToProject(fw, "StoreKit.framework", false);
+            proj.AddFrameworkToProject(fw, "Security.framework", false); // RetroKeychain.mm (the save file's key)
             if (string.IsNullOrEmpty(proj.GetBuildPropertyForAnyConfig(fw, "SWIFT_VERSION"))) proj.SetBuildProperty(fw, "SWIFT_VERSION", "5.0");
             proj.SetBuildProperty(fw, "CLANG_ENABLE_MODULES", "YES");
             proj.WriteToFile(projPath);

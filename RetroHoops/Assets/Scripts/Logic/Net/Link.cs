@@ -22,7 +22,8 @@ namespace CallerRetroBall.Logic
 
     public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7, /** Live: the guest's team, name and rating. */ Hello = 8,
         /** Host → a watching phone: the game's setup (same text as Setup). */ WatchSetup = 9,
-        /** Host → watching phones: both players' inputs for a run of steps. */ Both = 10 }
+        /** Host → watching phones: both players' inputs for a run of steps. */ Both = 10,
+        /** A saved game tape, in chunks (Phase 31, Tape.cs). */ Tape = 11 }
 
     /// <summary>What a player brings to a Live game: their team (as text), their name and rating.</summary>
     public sealed class LiveOffer

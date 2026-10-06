@@ -92,6 +92,13 @@ namespace CallerRetroBall.UI
                 Save();
                 SceneFlow.GoTo(SceneNames.Settings); // rebuild canvases at the new scale
             });
+            UiControls.ToggleRow(column, "MATCH IPHONE TEXT SIZE", s.followSystemText, v =>
+            {
+                s.followSystemText = v;
+                Save();
+                SceneFlow.GoTo(SceneNames.Settings);
+            });
+            UiKit.Size(UiKit.Label(column, "With Larger Text on in iOS Settings, menus grow to match (up to the biggest UI SCALE). VoiceOver reads the menus' buttons and titles.", 28f, Theme.Muted), 90f);
             UiControls.ToggleRow(column, "TEAM PATTERNS", s.colorblindContrast, v => { s.colorblindContrast = v; Save(); });
             UiKit.Size(UiKit.Label(column, "Team patterns give each side a distinct jersey pattern, not just a colour.", 28f, Theme.Muted), 70f);
             UiControls.ChoiceRow(column, "COLOR FILTER", ColorAccess.FilterNames, (int)ColorAccess.Normalize(s.colorFilter), i => { s.colorFilter = i; Save(); });
