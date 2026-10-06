@@ -762,7 +762,12 @@
 - **Sharing and friends:**
   - SHARE SHOT CHART (post-game and Locker Room) sends a crisp pixel card through the share sheet.
   - The Skills Gauntlet has FRIENDS' BEST RUNS: `CallerGC_ShowLeaderboard`, a friends-only Game Center board view. It only passed a syntax check against stand-in headers.
-- **ProjectSettings** went missing from `~/RetroHoops` on the Mac: `tools/Restore Project Settings.command` (Time Machine → Unity Version Control → rebuild with `ProjectSetup.RestoreSettingsBatch`), then the Build Check. Not run yet (another session held the Mac's screen).
+- **The Mac project rebuilt, and the first real compile since Phase 25.** `~/RetroHoops` on the Mac had lost ProjectSettings, the scenes, the content data and the TextMeshPro essentials (none are in git; they are all generated).
+  - `tools/Restore Project Settings.command` tries Time Machine, then Unity Version Control, then rebuilds them. Neither backup existed, so it rebuilt: `ProjectSetup.RestoreSettingsBatch` (bundle ID, team, build 2, Input System only, IL2CPP), then `SetupBatch` (scenes, content, TMP essentials). Then it runs the Build Check.
+  - The repo's `Packages/manifest.json` had a module that doesn't exist (`com.unity.modules.vibration`) and old versions. It now matches the packages of the last working build (Input System 1.20.0, URP 17.6.0, uGUI 2.6.0).
+  - **Result:** the Build Check PASSED. Unity compiled the C# and Xcode compiled IL2CPP, Objective-C and Swift. The app launched on the iPhone 17 Pro Max simulator and the court and players draw. Text didn't show (the TMP essentials import doesn't finish in batch mode); it now imports straight from the uGUI package, not yet re-run.
+  - `RetroStore.swift`: the Swift 6 warning about NSLock in async code is fixed (synchronous helpers). Not compiled here, since there's no Swift toolchain in the cloud.
+  - The Build Check now ignores Xcode projects and apps left over from earlier runs and stops when Unity reports a failed build.
 
 ## Deviations from the brief (deliberate)
 

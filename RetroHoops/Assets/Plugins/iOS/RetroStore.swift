@@ -76,10 +76,13 @@ private final class RetroStoreModel {
         }
     }
 
+    // Phase 36: async code reads shared state through these synchronous helpers (NSLock's lock/unlock can't be
+    // called directly from an async context; that's an error in Swift 6 mode).
+    private func lockedProductId() -> String { lock.lock(); defer { lock.unlock() }; return productId }
+    private func lockedAccountToken() -> UUID? { lock.lock(); defer { lock.unlock() }; return accountToken }
+
     func refresh() async {
-        lock.lock()
-        let wanted = productId
-        lock.unlock()
+        let wanted = lockedProductId()
         var active = false
         var until: Double = 0
         var original = ""
@@ -110,7 +113,7 @@ private final class RetroStoreModel {
             guard let self = self else { return }
             do {
                 var options = Set<Product.PurchaseOption>()
-                self.lock.lock(); let token = self.accountToken; self.lock.unlock()
+                let token = self.lockedAccountToken()
                 if let token = token { options.insert(.appAccountToken(token)) }
                 let result = try await p.purchase(options: options)
                 switch result {
