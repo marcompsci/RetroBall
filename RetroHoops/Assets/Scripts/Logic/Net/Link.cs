@@ -80,6 +80,7 @@ namespace CallerRetroBall.Logic
         {
             var s = (LinkSetup)MemberwiseClone();
             s.Seed = seed == 0 ? 1u : seed;
+            s.Session = LinkProtocol.NewSession();
             return s;
         }
 

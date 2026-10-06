@@ -66,9 +66,15 @@ namespace CallerRetroBall.EditorTools
             proj.ReadFromFile(projPath);
             proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "GameKit.framework", false);
             proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "MultipeerConnectivity.framework", false);
+            // Retro Hoops Live: StoreKit 2 (RetroStore.swift) for the subscription, GameKit matchmaking (RetroLive.mm).
+            string fw = proj.GetUnityFrameworkTargetGuid();
+            proj.AddFrameworkToProject(fw, "StoreKit.framework", false);
+            if (string.IsNullOrEmpty(proj.GetBuildPropertyForAnyConfig(fw, "SWIFT_VERSION"))) proj.SetBuildProperty(fw, "SWIFT_VERSION", "5.0");
+            proj.SetBuildProperty(fw, "CLANG_ENABLE_MODULES", "YES");
             proj.WriteToFile(projPath);
             var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroHoops.entitlements", null, proj.GetUnityMainTargetGuid());
             caps.AddGameCenter();
+            caps.AddInAppPurchase();
             // iCloud key-value storage for save sync (Settings ▸ ICLOUD SYNC). No documents, no CloudKit.
             caps.AddiCloud(true, false, false, false, new string[0]);
             caps.WriteToFile();

@@ -106,4 +106,97 @@ namespace CallerRetroBall.Logic
             return p;
         }
     }
+
+    /// <summary>One moment of a drawn dunk: where the player stands, how high they are, and where the ball is.</summary>
+    public struct DunkFrame
+    {
+        /// <summary>Court position to draw the player at (moves from where they took off to just in front of the rim).</summary>
+        public Vec2 Ground;
+        /// <summary>Body lift in art pixels.</summary>
+        public int LiftPx;
+        /// <summary>The ball is still in the dunker's hands (drawn there, not on its flight path).</summary>
+        public bool BallInHands;
+        /// <summary>Hanging on the rim right after the slam.</summary>
+        public bool OnRim;
+    }
+
+    /// <summary>
+    /// The drawn path of a dunk, so the dunker's hands actually reach the rim: the player glides from the
+    /// take-off spot to just in front of the basket while rising, the hands meet the rim at the slam
+    /// (when the simulation's ball arrives), the player hangs on the rim for a beat, then drops back down.
+    /// Presentation only: the simulation (make/miss, positions, timing) is unchanged.
+    /// </summary>
+    public static class DunkPath
+    {
+        /// <summary>Metres in front of the rim's centre where the dunker meets it (portrait 3/4 view).</summary>
+        public const float Approach = 0.45f;
+        /// <summary>Side view (landscape): closer, since the rim is seen edge-on.</summary>
+        public const float ApproachSide = 0.3f;
+        /// <summary>Share of the time after the slam spent hanging on the rim.</summary>
+        public const float HangShare = 0.35f;
+        /// <summary>Art pixels the hands reach above the rim's centre line (hands over the rim).</summary>
+        public const int OverRimPx = 2;
+
+        /// <summary>Where the dunker meets the rim: <paramref name="approach"/> metres from the hoop toward the take-off spot.</summary>
+        public static Vec2 MeetPoint(Vec2 start, Vec2 hoop, float approach)
+        {
+            // Dunkers finish nearly square to the rim, whatever angle they came from.
+            var d = start - hoop;
+            d = new Vec2(d.x * 0.35f, d.y);
+            var dir = d.Magnitude < 0.05f ? new Vec2(0f, 1f) : d.Normalized;
+            return hoop + dir * approach;
+        }
+
+        /// <param name="start">Take-off spot (court metres).</param>
+        /// <param name="hoop">Rim centre on the floor (court metres).</param>
+        /// <param name="end">Where the simulation has the player when the leap ends (they land back there).</param>
+        /// <param name="u">0..1 through the leap.</param>
+        /// <param name="slamU">0..1 point where the ball reaches the rim (the simulation's flight time / leap time).</param>
+        /// <param name="liftAtRimPx">Body lift (art pixels) that puts the hands at the rim from the meet point.</param>
+        public static DunkFrame At(Vec2 start, Vec2 hoop, Vec2 end, float u, float slamU, int liftAtRimPx, float approach)
+        {
+            var meet = MeetPoint(start, hoop, approach);
+            slamU = Math.Max(0.15f, Math.Min(0.85f, slamU));
+            float hangEnd = slamU + HangShare * (1f - slamU);
+            var f = new DunkFrame();
+            if (u < 0f) u = 0f;
+            if (u >= 1f) { f.Ground = end; return f; }
+            if (u < slamU)
+            {
+                float p = u / slamU;
+                f.Ground = Vec2.Lerp(start, meet, Smooth(p));
+                f.LiftPx = (int)Math.Round(liftAtRimPx * (1f - (1f - p) * (1f - p)));
+                f.BallInHands = true;
+            }
+            else if (u < hangEnd)
+            {
+                f.Ground = meet;
+                // The slam frame is at full reach; hanging sags a pixel.
+                f.LiftPx = u - slamU < 0.04f ? liftAtRimPx : liftAtRimPx - 1;
+                f.OnRim = true;
+            }
+            else
+            {
+                float q = (u - hangEnd) / (1f - hangEnd);
+                f.Ground = Vec2.Lerp(meet, end, Smooth(q));
+                f.LiftPx = (int)Math.Round((liftAtRimPx - 1) * (1f - q * q));
+            }
+            if (f.LiftPx < 0) f.LiftPx = 0;
+            return f;
+        }
+
+        /// <summary>
+        /// Lift that puts the hands' top at the rim (+<see cref="OverRimPx"/>): rim height on screen minus the
+        /// meet point's floor height on screen, minus how high the hands reach above the feet.
+        /// </summary>
+        public static int LiftToRim(float rimScreenYPx, float meetFloorScreenYPx, int handReachPx) =>
+            Math.Max(0, (int)Math.Round(rimScreenYPx - meetFloorScreenYPx) - handReachPx + OverRimPx);
+
+        private static float Smooth(float t)
+        {
+            t = Math.Max(0f, Math.Min(1f, t));
+            return t * t * (3f - 2f * t);
+        }
+    }
 }
+

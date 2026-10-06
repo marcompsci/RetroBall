@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–26 implemented.** The engine-free game logic compiles on .NET and passes 536 automated tests. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload of that build has not gone through yet. The last on-device run was the Phase 18 build. Phase 26 (two-phone play, Couch Cup, Summer Story, commentary, frame pacing) has passed the logic tests and a C# compile check against Unity's assemblies here, but has not been compiled in Unity, built for iOS, or played on a device. See [Known limitations](#known-limitations).
+> **Status: Phases 1–28 implemented.** The engine-free game logic compiles on .NET and passes 568 automated tests, and the Live server (`server/`) passes 20 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–28 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -38,6 +38,7 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
   - **Daily Challenge:** one seeded challenge per day, the same for everyone and offline (e.g. "Win by 6", "Hit 3 GREEN releases"). Completing it pays 75 SP plus 15 per consecutive day (capped).
   - **2 Player:** local head to head, each person leading a 3-player side. P1 uses touch or WASD/K/J/L/C; P2 uses arrows + Num1 shoot / Num2 pass / Num3 steal / Num0 pick & roll, or game controllers. No rewards.
   - **Two Phones** (2 Player ▸ TWO PHONES): each player on their own iPhone or iPad nearby, over Wi-Fi or Bluetooth, no internet or account (Apple's Multipeer Connectivity). One hosts and picks both teams; the other joins. Both phones run the same simulation in lockstep and only controller input is sent.
+  - **Live** (PLAY ▸ LIVE, subscription): online head to head through Game Center matchmaking, with a Live rating. Needs the Retro Hoops Live subscription (see [`docs/LIVE.md`](docs/LIVE.md)).
   - **Couch Cup** (2 Player ▸ COUCH CUP): a knockout for 2 to 8 named players on one device, with byes, replayed ties, and a saved bracket.
   - **How to Play:** a guided tutorial (move, shoot, green, pass, ask, call, steal, jump), offered on first launch and from Settings; +100 SP the first time.
 - **Summer Story:** eight chapters from a 1-on-1 at the overpass to the Sunburst League final (Full Court), with scenes before and after each game and a goal per chapter (win by 4, three assists, three steals, break someone's ankles). Original cast: Nova Quinn, Big Sal, Mic Tally and Kojo Stride of the Velvet Hour. Mic Tally also calls big moments as text commentary in every mode (Settings ▸ COMMENTARY).
@@ -126,6 +127,8 @@ Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 
 ## Known limitations
 
+- **The Live server isn't deployed.** `server/` is ready (see `server/README.md`). Until `BackendConfig.Url` is set, Live keeps ratings on each phone.
+- **Live is untested.** `Plugins/iOS/RetroStore.swift` (StoreKit 2) has had no compile check at all, because there's no Swift compiler here. `RetroLive.mm` passed only a syntax check against stand-in headers. The subscription doesn't exist in App Store Connect until you create it (`docs/LIVE.md`).
 - **Phase 26 is not compiled in Unity yet.** It passed a compile check against Unity's reference assemblies here; the new native plugin (`Plugins/iOS/RetroLink.mm`) passed only a syntax check against stand-in headers, not the real iOS SDK. Two-phone play needs two real devices to test; it can't run in the Editor.
 - **Device testing is behind.** The last device run was the Phase 18 build. iPad and Mac layouts have not been checked on hardware.
 - Not tuned by hand: balance numbers come from AI-vs-AI simulations (AI field-goal rate about 29 % Rookie, 38 % Caller, 56 % Legend), not from people playing.

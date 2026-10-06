@@ -110,6 +110,11 @@ namespace CallerRetroBall.UI
                 App.OpenStoryOnMenu = false;
                 ShowStoryAfterGame();
             }
+            else if (App.OpenLiveOnMenu)
+            {
+                App.OpenLiveOnMenu = false;
+                ShowLive();
+            }
             else if (App.OpenCouchOnMenu)
             {
                 App.OpenCouchOnMenu = false;
@@ -377,6 +382,11 @@ namespace CallerRetroBall.UI
             Mode(column, "SUMMER STORY", story.finished ? "Sunburst champions. Replay any chapter."
                  : "Chapter " + System.Math.Min(StoryMode.Chapters, story.cleared + 1) + " of " + StoryMode.Chapters + ": " + StoryMode.Chapter(System.Math.Min(StoryMode.Chapters, story.cleared + 1)).Title.ToLowerInvariant()
                    + ". Nova, Big Sal, Mic Tally and the Velvet Hour.", ShowStoryMode, ButtonStyle.Primary);
+
+            Section(column, "ONLINE");
+            Mode(column, "LIVE", LiveStore.Active
+                ? "Play people online. Rating " + (career.live?.rating ?? LiveMode.StartRating) + "  ·  " + LiveMode.Tier(career.live?.rating ?? LiveMode.StartRating)
+                : "Play people online with Retro Hoops Live (" + LiveStore.Price + "/month).", ShowLive, ButtonStyle.Secondary);
 
             Section(column, "PLAY NOW");
             Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);

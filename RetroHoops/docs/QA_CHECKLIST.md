@@ -181,3 +181,27 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Menus: leave a menu untouched for a few seconds with SHOW FPS on; the game stays responsive when you touch it again. Gameplay stays smooth at 60/120.
 - [ ] Build size: compare the .ipa size with build 2 (stripping and size-optimised code).
 
+## Phase 27
+- [ ] PLAY ▸ LIVE without a subscription: the paywall shows the App Store price (not "$10.99" if your store uses another currency), the terms, RESTORE PURCHASES, TERMS OF USE and PRIVACY POLICY (both links open).
+- [ ] Sandbox tester: SUBSCRIBE; the App Store sheet appears; after paying, the LIVE lobby opens. Relaunch: LIVE opens straight away. After ~5 minutes the sandbox renews; after it lapses (or you cancel) LIVE shows the paywall again.
+- [ ] Ask to Buy (child account): "Waiting for approval".
+- [ ] RESTORE PURCHASES on a reinstall brings Live back.
+- [ ] Not signed in to Game Center: LIVE says to sign in and SIGN IN TO GAME CENTER works.
+- [ ] Two devices, two Game Center accounts, both subscribed, same build: FIND A GAME on both, they match within a minute, each plays their own team, scores match on both screens.
+- [ ] Live result: winner's rating goes up, loser's down by the same amount for equal ratings (±16); record and tier update; leaderboard shows the best rating.
+- [ ] Live: HOME mid-game after 20 s counts a loss for you and a win ("... LEFT") for the opponent. Airplane mode mid-game: CONNECTION LOST, no rating change.
+- [ ] Live: BACK while searching stops the search.
+- [ ] Two phones: after the final, both tap REMATCH → a new game starts on both with the same teams. One taps HOME instead → the other sees "YOUR FRIEND LEFT".
+- [ ] Xcode build: RetroStore.swift compiles (Swift) and the In-App Purchase capability is present.
+
+## Phase 28
+- [ ] Dunk (DUNK button near the rim, and an AI dunk): the dunker glides in, the raised hands reach the rim as the ball goes in, they hang on the rim for a moment (the rim dips), then drop. Check a short and a tall player, Full Court in landscape, a 360 and a windmill.
+- [ ] Alley-oop finish: the same hands-on-the-rim slam.
+- [ ] Reduce Motion on: dunks still reach the rim (no spin or ball swing).
+- [ ] Two-phone game with dunks: the scores still match on both phones.
+- [ ] Server (after `server/README.md` setup and `BackendConfig.Url`): LIVE shows "Signing in to Retro Hoops Live…", then the server rating; FIND A GAME is enabled only after that.
+- [ ] Server: two subscribed devices play a Live game; both post-game screens say the result was sent; within seconds a toast shows the rating change; `curl <server>/v1/leaderboard` lists both players.
+- [ ] Server: one player taps HOME mid-game after 20 s: the other gets the win when the game settles (immediately or within 10 minutes).
+- [ ] Server: sandbox subscription expires → LIVE says the server couldn't confirm it; refund in sandbox → same after Apple's notification.
+- [ ] LIVE ▸ DELETE MY LIVE DATA: the server forgets the player; `/v1/me` returns 404 until the next sign-in.
+

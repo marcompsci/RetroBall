@@ -102,11 +102,26 @@ namespace CallerRetroBall.Gameplay
             SyncHead((int)view, frame, flip);
         }
 
+        // Drawn-only position and lift for one frame (a dunk gliding to the rim); cleared every frame.
+        private bool _override;
+        private Vec2 _overrideGround;
+        private int _overrideLiftPx;
+
+        public void SetOverride(Vec2 ground, int liftPx)
+        {
+            _override = true;
+            _overrideGround = ground;
+            _overrideLiftPx = liftPx;
+        }
+
+        public void ClearOverride() => _override = false;
+
         /// <summary>Called by the match controller after each simulation update.</summary>
         public void Sync(float dt, bool controlled, bool shooting = false, float jump01 = 0f, FlairPose flair = default)
         {
             var motion = _state.Motion;
-            transform.position = CourtSpace.ToWorldSnapped(motion.position);
+            var ground = _override ? _overrideGround : motion.position;
+            transform.position = CourtSpace.ToWorldSnapped(ground);
 
             bool moving = motion.IsMoving;
             _animTime += dt;
@@ -120,10 +135,10 @@ namespace CallerRetroBall.Gameplay
             // Jumping lifts the sprite off its shadow (0.7 m at the peak), snapped to art pixels.
             // Celebrations and dribble moves add a few art pixels on top (presentation only).
             const float px = 1f / CourtSpace.PixelsPerUnit;
-            float lift = Mathf.Round(jump01 * 0.7f * CourtSpace.PixelsPerUnit) * px + flair.Lift * px;
+            float lift = _override ? _overrideLiftPx * px : Mathf.Round(jump01 * 0.7f * CourtSpace.PixelsPerUnit) * px + flair.Lift * px;
             _body.transform.localPosition = new Vector3(flair.OffsetX * px, lift, 0f);
 
-            int order = CourtSpace.SortingOrder(motion.position);
+            int order = CourtSpace.SortingOrder(ground);
             _body.sortingOrder = order;
             _shadow.sortingOrder = order - 2;
             _ring.sortingOrder = order - 1;

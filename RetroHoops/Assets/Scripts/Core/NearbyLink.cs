@@ -129,6 +129,8 @@ namespace CallerRetroBall.Core
         /// <summary>0 = host (team A, player 1), 1 = guest (team B, player 2).</summary>
         public static int Seat;
         public static LinkSetup Setup;
+        /// <summary>Live only: both Game Center teamPlayerIDs (for the server's match key).</summary>
+        public static string LocalId = "", OpponentId = "";
         public static bool Active => Transport != null && Setup != null;
 
         public static void Clear()
