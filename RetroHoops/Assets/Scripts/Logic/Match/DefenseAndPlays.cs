@@ -49,11 +49,22 @@ namespace CallerRetroBall.Logic
         public float staminaDeadBallRecover = 0.15f;
         /// <summary>Top speed lost at zero stamina.</summary>
         public float staminaSpeedPenalty = 0.12f;
+        /// <summary>AI good enough to double-team a heated-up scorer (Caller and Legend).</summary>
+        public float trapMinQuality = 0.6f;
+        /// <summary>Only near the basket: within this distance of the rim.</summary>
+        public float trapRange = 8f;
 
         public static DefenseTuning Default => new DefenseTuning();
     }
 
-    public enum PlayCall { None = 0, PickAndRoll = 1, GiveAndGo = 2, ClearOut = 3 }
+    public enum PlayCall
+    {
+        None = 0, PickAndRoll = 1, GiveAndGo = 2, ClearOut = 3,
+        /// <summary>A wing jogs out high, then cuts behind their defender to the rim (pass it to them on the cut).</summary>
+        Backdoor = 4,
+        /// <summary>Your best big seals on the low block on the ball side; everyone else clears to the corners.</summary>
+        PostUp = 5,
+    }
 
     public sealed partial class MatchSimulation
     {
@@ -66,8 +77,18 @@ namespace CallerRetroBall.Logic
         private bool _screenSet;
         private float _screenSetAt;
         private int _giveAndGoPartner = -1;
+        private float _playStart;
+        private bool _backdoorCut;
+        private int _lastTrapHolder = -1;
+        private float _lastTrapAt = -99f;
+        /// <summary>Backdoor cutter or post-up big, -1 when none.</summary>
+        private int _playMate = -1;
+
+        /// <summary>Seconds a backdoor cutter fakes high before cutting.</summary>
+        public const float BackdoorFakeSeconds = 0.9f;
 
         public PlayCall ActivePlay => _play;
+        public int PlayMate => _playMate;
         public int ActivePlayTeam => _playTeam;
         public int Screener => _screener;
 
@@ -328,11 +349,22 @@ namespace CallerRetroBall.Logic
             _screenRolling = false;
             _screenSet = false;
             _giveAndGoPartner = -1;
+            _playStart = Time;
+            _playMate = -1;
+            _backdoorCut = false;
             switch (play)
             {
                 case PlayCall.PickAndRoll:
                     _screener = BestScreener(team, ballHandler);
                     _playUntil = Time + 3.5f;
+                    break;
+                case PlayCall.Backdoor:
+                    _playMate = BestBy(team, ballHandler, p => p.Tendencies.cut + p.Def.attributes.speed / 200f);
+                    _playUntil = Time + 4.5f;
+                    break;
+                case PlayCall.PostUp:
+                    _playMate = BestBy(team, ballHandler, p => p.Def.attributes.finishing + p.Def.attributes.rebounding);
+                    _playUntil = Time + 5f;
                     break;
                 case PlayCall.GiveAndGo:
                     _playUntil = Time + 5f;
@@ -345,6 +377,20 @@ namespace CallerRetroBall.Logic
                 if (Players[i].Team == team) _ai[i].NextDecision = Time; // react now
             Events.Add(new MatchEvent(MatchEventType.PlayCalled, ballHandler, team, (int)play));
             return true;
+        }
+
+        private int BestBy(int team, int exclude, Func<PlayerRuntimeState, float> score)
+        {
+            int best = -1;
+            float bestScore = float.MinValue;
+            for (int slot = 0; slot < TeamSize; slot++)
+            {
+                int i = Index(team, slot);
+                if (i == exclude || (Ball.IsHeld && i == Ball.HolderIndex) || IsBenched(i)) continue;
+                float s = score(Players[i]);
+                if (s > bestScore) { bestScore = s; best = i; }
+            }
+            return best;
         }
 
         private int BestScreener(int team, int exclude)
@@ -372,6 +418,13 @@ namespace CallerRetroBall.Logic
             {
                 EndPlay();
                 return;
+            }
+
+            // Backdoor: the moment the fake is over, the cutter goes (don't wait for their next decision).
+            if (_play == PlayCall.Backdoor && !_backdoorCut && _playMate >= 0 && Time - _playStart >= BackdoorFakeSeconds)
+            {
+                _backdoorCut = true;
+                _ai[_playMate].NextDecision = Time;
             }
 
             if (_play == PlayCall.PickAndRoll && _screener >= 0 && !_screenRolling && Ball.IsHeld)
@@ -418,6 +471,7 @@ namespace CallerRetroBall.Logic
             _screenRolling = false;
             _screenSet = false;
             _giveAndGoPartner = -1;
+            _playMate = -1;
         }
 
         /// <summary>AI off-ball behaviour while a play is running; returns false when not involved.</summary>
@@ -444,6 +498,43 @@ namespace CallerRetroBall.Logic
                     s.Target = court.Clamp(anchor + new Vec2(side * 0.55f, 0.35f));
                     return true;
 
+                case PlayCall.Backdoor:
+                    if (Ball.IsHeld && p.Index == Ball.HolderIndex) return false;
+                    if (p.Index == _playMate)
+                    {
+                        float wing = p.Position.x >= 0f ? 1f : -1f;
+                        if (Time - _playStart < BackdoorFakeSeconds)
+                        {
+                            // Sell it: jog out high on the wing, pulling the defender away from the rim.
+                            s.Intent = AiIntent.Space;
+                            s.Target = court.Clamp(new Vec2(wing * (court.CornerLineX - 0.4f), court.hoopY + 5.6f));
+                        }
+                        else
+                        {
+                            s.Intent = AiIntent.Cut;
+                            s.Target = court.Clamp(new Vec2(wing * 0.5f, court.hoopY + 0.9f));
+                        }
+                        return true;
+                    }
+                    // Everyone else stays wide so the lane is empty.
+                    s.Intent = AiIntent.Space;
+                    s.Target = new Vec2((p.Position.x >= 0f ? 1f : -1f) * (court.CornerLineX + 0.3f), 1.2f);
+                    return true;
+
+                case PlayCall.PostUp:
+                    if (Ball.IsHeld && p.Index == Ball.HolderIndex) return false;
+                    float ballSide = Ball.Position.x >= 0f ? 1f : -1f;
+                    if (p.Index == _playMate)
+                    {
+                        // Seal on the low block on the ball side.
+                        s.Intent = AiIntent.Hold;
+                        s.Target = court.Clamp(new Vec2(ballSide * 1.7f, court.hoopY + 1.3f));
+                        return true;
+                    }
+                    s.Intent = AiIntent.Space;
+                    s.Target = new Vec2(-ballSide * (court.CornerLineX + 0.3f), 1.0f);
+                    return true;
+
                 case PlayCall.ClearOut:
                     if (Ball.IsHeld && p.Index == Ball.HolderIndex) return false;
                     s.Intent = AiIntent.Space;
@@ -454,6 +545,38 @@ namespace CallerRetroBall.Logic
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Smart AI sends a second defender at a heated-up scorer near the basket (the nearest off-ball
+        /// defender doubles from the middle). Somebody is open: find them.
+        /// </summary>
+        private bool TrapHotHand(PlayerRuntimeState p, AiState s, PlayerRuntimeState holder, DifficultyDef profile)
+        {
+            if (holder == null || holder.Team == p.Team || IsBenched(p.Index) || !IsHeatedUp(holder.Index)) return false;
+            if (profile == null || profile.decisionQuality < Setup.Defense.trapMinQuality) return false;
+            var court = Setup.Court;
+            if (court.DistanceToHoop(holder.Position) > Setup.Defense.trapRange) return false;
+            int onBall = DefenderOf(holder.Index);
+            if (onBall == p.Index) return false;
+            int nearest = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < Players.Length; i++)
+            {
+                if (Players[i].Team != p.Team || i == onBall || IsBenched(i)) continue;
+                float d = Vec2.Distance(Players[i].Position, holder.Position);
+                if (d < best) { best = d; nearest = i; }
+            }
+            if (nearest != p.Index) return false;
+            // Double from the middle of the floor, a step off the ball.
+            float side = holder.Position.x > 0f ? -1f : 1f;
+            s.Intent = AiIntent.Help;
+            s.Target = court.Clamp(holder.Position + new Vec2(side * 0.9f, -0.2f));
+            if (holder.Index != _lastTrapHolder || Time - _lastTrapAt > 4f)
+                Events.Add(new MatchEvent(MatchEventType.Trap, p.Index, p.Team, holder.Index));
+            _lastTrapHolder = holder.Index;
+            _lastTrapAt = Time;
+            return true;
         }
 
         private int DefenderOf(int offensePlayer)

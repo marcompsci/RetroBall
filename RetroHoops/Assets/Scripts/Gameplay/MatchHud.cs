@@ -55,6 +55,12 @@ namespace CallerRetroBall.Gameplay
             if (_barSet && landscape == _barLandscape) return;
             _barSet = true;
             _barLandscape = landscape;
+            if (_callMenu != null)
+            {
+                // Five plays: the menu is tall, so in landscape it starts lower to fit under the score bar.
+                var crt = (RectTransform)_callMenu.transform;
+                crt.anchoredPosition = new Vector2(crt.anchoredPosition.x, landscape ? 120f : 520f);
+            }
             if (landscape)
             {
                 _bar.anchorMin = _bar.anchorMax = new Vector2(0.5f, 1f);
@@ -74,7 +80,7 @@ namespace CallerRetroBall.Gameplay
             var rt = (RectTransform)_callMenu.transform;
             rt.anchorMin = rt.anchorMax = new Vector2(left ? 0f : 1f, 0f);
             rt.pivot = new Vector2(left ? 0f : 1f, 0f);
-            rt.anchoredPosition = new Vector2(left ? 24f : -24f, 520f);
+            rt.anchoredPosition = new Vector2(left ? 24f : -24f, rt.anchoredPosition.y);
         }
         private const float PunchSeconds = 0.3f;
 
@@ -232,7 +238,7 @@ namespace CallerRetroBall.Gameplay
             var rt = panel.rectTransform;
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
             rt.pivot = new Vector2(1f, 0f);
-            rt.sizeDelta = new Vector2(460f, 520f);
+            rt.sizeDelta = new Vector2(460f, 760f);
             rt.anchoredPosition = new Vector2(-24f, 520f);
             var column = UiKit.Column(rt, 14f, new RectOffset(20, 20, 20, 20));
             UiKit.Stretch(column);
@@ -240,6 +246,8 @@ namespace CallerRetroBall.Gameplay
             UiKit.Button(column, "PICK & ROLL", () => Choose(PlayCall.PickAndRoll), ButtonStyle.Secondary, 100f, 36f);
             UiKit.Button(column, "GIVE & GO", () => Choose(PlayCall.GiveAndGo), ButtonStyle.Secondary, 100f, 36f);
             UiKit.Button(column, "CLEAR OUT", () => Choose(PlayCall.ClearOut), ButtonStyle.Secondary, 100f, 36f);
+            UiKit.Button(column, "BACKDOOR", () => Choose(PlayCall.Backdoor), ButtonStyle.Secondary, 100f, 36f);
+            UiKit.Button(column, "POST UP", () => Choose(PlayCall.PostUp), ButtonStyle.Secondary, 100f, 36f);
             UiKit.Button(column, "CANCEL", () => ShowCallMenu(false), ButtonStyle.Ghost, 80f, 30f);
             _callMenu = panel.gameObject;
             _callMenu.SetActive(false);
@@ -317,6 +325,7 @@ namespace CallerRetroBall.Gameplay
                 UiKit.Size(UiKit.Label(_finalColumn, "PLAYER OF THE GAME  <color=#FFD166>" + pog.name.ToUpperInvariant() + "</color>  " +
                                        pog.stats.points + " PTS", 34f, Theme.Cream, TextAlignmentOptions.Center, true), 56f);
 
+            TeamComparison(s);
             BoxScore(s, 0);
             BoxScore(s, 1);
 
@@ -341,6 +350,36 @@ namespace CallerRetroBall.Gameplay
                 UiKit.Button(_finalColumn, "REMATCH", () => RematchRequested?.Invoke(), continueLabel == null ? ButtonStyle.Primary : ButtonStyle.Secondary, 120f, 48f);
             UiKit.Button(_finalColumn, "HOME", () => QuitRequested?.Invoke(), ButtonStyle.Ghost, 110f, 44f);
             Open();
+        }
+
+        /// <summary>TEAM STATS: each row shows both teams' numbers with a two-colour bar split by who did more.</summary>
+        private void TeamComparison(MatchSummary s)
+        {
+            UiKit.Size(UiKit.Label(_finalColumn, "TEAM STATS", 34f, Theme.Gold, TextAlignmentOptions.Center, true), 50f);
+            var colA = s.humanTeam == 0 ? Theme.Cyan : Theme.Pink;
+            var colB = s.humanTeam == 1 ? Theme.Cyan : Theme.Pink;
+            foreach (var row in s.Comparison())
+            {
+                var line = UiKit.NewRect("Stat " + row.label, _finalColumn);
+                UiKit.Size(line, 46f);
+                var a = UiKit.Label(line, row.textA, 28f, Theme.Cream, TextAlignmentOptions.Left, true);
+                a.rectTransform.anchorMin = new Vector2(0f, 0f); a.rectTransform.anchorMax = new Vector2(0.18f, 1f);
+                a.rectTransform.offsetMin = a.rectTransform.offsetMax = Vector2.zero;
+                var b = UiKit.Label(line, row.textB, 28f, Theme.Cream, TextAlignmentOptions.Right, true);
+                b.rectTransform.anchorMin = new Vector2(0.82f, 0f); b.rectTransform.anchorMax = new Vector2(1f, 1f);
+                b.rectTransform.offsetMin = b.rectTransform.offsetMax = Vector2.zero;
+                float total = row.a + row.b;
+                float split = total <= 0f ? 0.5f : row.a / total;
+                var barA = UiKit.Panel(line, colA, name: "BarA");
+                barA.rectTransform.anchorMin = new Vector2(0.2f, 0.62f); barA.rectTransform.anchorMax = new Vector2(0.2f + 0.6f * split, 0.92f);
+                barA.rectTransform.offsetMin = barA.rectTransform.offsetMax = Vector2.zero;
+                var barB = UiKit.Panel(line, colB, name: "BarB");
+                barB.rectTransform.anchorMin = new Vector2(0.2f + 0.6f * split, 0.62f); barB.rectTransform.anchorMax = new Vector2(0.8f, 0.92f);
+                barB.rectTransform.offsetMin = barB.rectTransform.offsetMax = Vector2.zero;
+                var label = UiKit.Label(line, row.label, 22f, Theme.Muted, TextAlignmentOptions.Center, true);
+                label.rectTransform.anchorMin = new Vector2(0.2f, 0f); label.rectTransform.anchorMax = new Vector2(0.8f, 0.6f);
+                label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            }
         }
 
         private void BoxScore(MatchSummary s, int team)
@@ -425,6 +464,58 @@ namespace CallerRetroBall.Gameplay
             Punch(_scoreA, _punchA);
             Punch(_scoreB, _punchB);
             if (_micPanel != null && _micPanel.gameObject.activeSelf && Time.unscaledTime > _micUntil) _micPanel.gameObject.SetActive(false);
+            UpdateIntro();
+        }
+
+        private GameObject _intro;
+        private float _introUntil;
+
+        /// <summary>
+        /// Tip-off card: where tonight's game is, both teams and their starters. It fades on its own after a
+        /// few seconds or on any tap, and never stops the game (the ball is still being checked).
+        /// </summary>
+        public void ShowIntro(string courtName, TeamDef a, TeamDef b, System.Collections.Generic.List<string> startersA, System.Collections.Generic.List<string> startersB)
+        {
+            if (_intro != null) Destroy(_intro);
+            var canvas = UiKit.CreateScreenCanvas("IntroCanvas", 25);
+            _intro = canvas.gameObject;
+            var scrim = UiKit.Panel(canvas.transform, new Color(0.04f, 0.04f, 0.09f, 0.82f), name: "Scrim");
+            UiKit.Stretch(scrim.rectTransform);
+            scrim.raycastTarget = true;
+            var tap = scrim.gameObject.AddComponent<UnityEngine.UI.Button>();
+            tap.transition = UnityEngine.UI.Selectable.Transition.None;
+            tap.onClick.AddListener(() => _introUntil = 0f);
+            var safe = UiKit.SafeArea(canvas.transform);
+            var col = UiKit.Column(safe, 10f, new RectOffset(40, 40, 0, 0));
+            UiKit.Band(col, 0.2f, 0.85f, 40f);
+            col.GetComponent<UnityEngine.UI.VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            UiKit.Size(UiKit.Label(col, "TONIGHT AT " + courtName.ToUpperInvariant(), 34f, Theme.Muted, TextAlignmentOptions.Center, true), 50f);
+            UiKit.Size(UiKit.Label(col, a.FullName.ToUpperInvariant(), 56f, ToColor(a.primary), TextAlignmentOptions.Center, true), 76f);
+            UiKit.Size(UiKit.Label(col, string.Join("  ·  ", startersA), 28f, Theme.Cream, TextAlignmentOptions.Center, false), 44f);
+            UiKit.Size(UiKit.Label(col, "VS", 44f, Theme.Gold, TextAlignmentOptions.Center, true), 66f);
+            UiKit.Size(UiKit.Label(col, b.FullName.ToUpperInvariant(), 56f, ToColor(b.primary), TextAlignmentOptions.Center, true), 76f);
+            UiKit.Size(UiKit.Label(col, string.Join("  ·  ", startersB), 28f, Theme.Cream, TextAlignmentOptions.Center, false), 44f);
+            _introUntil = Time.unscaledTime + 3.2f;
+        }
+
+        private static Color ToColor(RgbColor c)
+        {
+            // Very dark team colours stay readable on the dark card.
+            var col = (Color)new Color32(c.r, c.g, c.b, 255);
+            return c.Luminance < 0.18f ? Color.Lerp(col, Color.white, 0.55f) : col;
+        }
+
+        private void UpdateIntro()
+        {
+            if (_intro == null) return;
+            float left = _introUntil - Time.unscaledTime;
+            var group = _intro.GetComponent<CanvasGroup>() ?? _intro.AddComponent<CanvasGroup>();
+            group.alpha = Mathf.Clamp01(left / 0.4f);
+            if (left <= 0f)
+            {
+                Destroy(_intro);
+                _intro = null;
+            }
         }
 
         /// <summary>Shows a commentary line ("MIC: ...") for a few seconds under the score bar.</summary>

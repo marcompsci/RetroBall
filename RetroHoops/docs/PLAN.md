@@ -533,6 +533,30 @@
   save). Its tamper test was fixed: it looked for compact JSON, but saves are pretty-printed.
 - **Not done this phase (moved to Phase 29):** gameplay depth, polish & juice, spectator / two-phone Couch Cup / replay sharing.
 
+### Phase 29: gameplay depth, arena polish
+
+- **Two new plays** in the CALL menu: **BACKDOOR** (the best cutter jogs out high for 0.9 s, then cuts behind
+  their defender to the rim; the others stay wide) and **POST UP** (the best finisher + rebounder seals on the
+  ball-side block; the others clear to the corners). AI teams now mix them in with the pick-and-roll. Both
+  travel in two-phone and Live games.
+- **Smart defences double the hot hand:** Caller and Legend AI send the nearest off-ball defender at a
+  heated-up scorer within 8 m of the rim ("DOUBLE TEAM! FIND THE OPEN MAN"), which leaves someone open. Rookie
+  AI never does. Mic Tally calls it.
+- **Half-court benches:** a team's own extra player (street crews, story crews, your crew) sits on the bench
+  and checks in for a tired AI player at a dead ball, as in Full Court. There's no bench in 1-on-1, practice
+  or the tutorial.
+- **Difficulty curve check** (AI vs an idle player, 16 games each): opponent FG% 34 / 39 / 51 and an average margin of
+  +5.7 / +7.6 / +14.3 for Rookie / Caller / Legend. The curve climbs. Rookie and Caller are close, so there's room
+  to spread them once real players give feedback. A test now guards the ordering.
+- **Arena sounds:** a crowd "OOOH" swell (blocks, broken ankles), an arena horn (final buzzer, substitutions)
+  and rhythmic crowd clapping in a tight finish (last 20 s, within 3).
+- **Tip-off card:** tonight's court, both teams in their colours, and the starters' numbers and names. It's
+  skippable and fades after 3 s without stopping play.
+- **Post-game TEAM STATS:** FG%, deep shots, assists, rebounds, steals, blocks and turnovers side by side, with
+  split bars, above the box scores.
+- Two-phone games already offer PLAY OF THE GAME and SHARE HIGHLIGHT after the final.
+- **Not done (still open):** spectator view on a third phone, a Couch Cup across two phones, new animation frames.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

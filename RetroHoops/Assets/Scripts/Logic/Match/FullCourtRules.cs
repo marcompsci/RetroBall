@@ -135,7 +135,7 @@ namespace CallerRetroBall.Logic
         /// <summary>At a dead ball: tired AI players come out for fresher bench players.</summary>
         private void MakeSubstitutions()
         {
-            if (!Setup.FullCourt || _bench.Count == 0) return;
+            if (_bench.Count == 0) return;
             foreach (var p in Players)
             {
                 if (p.IsHuman || IsHumanControlled(p.Index) || p.Stamina >= SubBelowStamina) continue;

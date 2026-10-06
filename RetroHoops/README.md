@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–28 implemented.** The engine-free game logic compiles on .NET and passes 568 automated tests, and the Live server (`server/`) passes 20 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–28 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
+> **Status: Phases 1–29 implemented.** The engine-free game logic compiles on .NET and passes 576 automated tests, and the Live server (`server/`) passes 20 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–29 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 

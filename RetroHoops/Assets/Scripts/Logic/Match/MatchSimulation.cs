@@ -140,6 +140,13 @@ namespace CallerRetroBall.Logic
                     if (archetype != null && i + 1 < setup.ArchetypesA.Count) setup.ArchetypesA[i + 1] = archetype;
                 }
             }
+            // Half court: a team's own extra player (if it has one) waits on the bench and comes in for a tired AI player.
+            bool halfCourtBench = !full && !drills && request.Mode != GameMode.OneOnOne && request.Mode != GameMode.Tutorial && setup.TeamB != setup.TeamA;
+            if (halfCourtBench)
+            {
+                FillHalfCourtBench(setup.BenchA, setup.RosterA, setup.TeamA, c);
+                FillHalfCourtBench(setup.BenchB, setup.RosterB, setup.TeamB, c);
+            }
             if (request.HumanPlayer != null)
             {
                 setup.RosterA[0] = request.HumanPlayer;
@@ -158,6 +165,18 @@ namespace CallerRetroBall.Logic
                 };
             }
             return setup;
+        }
+
+        /// <summary>Half court: up to one bench player, only from the team's own roster (no generated reserves).</summary>
+        private static void FillHalfCourtBench(List<PlayerDef> bench, List<PlayerDef> roster, TeamDef team, ContentCatalog c)
+        {
+            if (team == null) return;
+            foreach (var id in team.rosterPlayerIds)
+            {
+                if (bench.Count >= 1) return;
+                var p = c.Player(id);
+                if (p != null && !roster.Exists(r => r.id == id) && !bench.Exists(b => b.id == id)) bench.Add(p);
+            }
         }
 
         /// <summary>Two bench players: the team's own extras first, then generated reserves.</summary>
@@ -279,6 +298,8 @@ namespace CallerRetroBall.Logic
         DunkToLayup = 32,
         /// <summary>A driving player side-stepped a defender in the lane (PlayerIndex = driver, Value = defender).</summary>
         EuroStep = 33,
+        /// <summary>A second defender doubles a heated-up scorer (PlayerIndex = the trapper, Value = the ball handler).</summary>
+        Trap = 34,
     }
 
     public struct MatchEvent
@@ -538,7 +559,7 @@ namespace CallerRetroBall.Logic
         {
             OffenseTeam = offenseTeam;
             var court = Setup.Court;
-            if (Setup.FullCourt && Time > 0f) MakeSubstitutions();
+            if (Time > 0f && _bench.Count > 0) MakeSubstitutions();
             if (Setup.FullCourt) PlaceFullCourt(offenseTeam);
             else
             {

@@ -153,7 +153,7 @@ namespace CallerRetroBall.Logic
                 DefensePressed = (f & DefenseBit) != 0,
                 DunkPressed = (f & DunkBit) != 0,
                 LayupPressed = (f & LayupBit) != 0,
-                CallPlay = call <= (byte)PlayCall.ClearOut ? (PlayCall)call : PlayCall.None,
+                CallPlay = call <= (byte)PlayCall.PostUp ? (PlayCall)call : PlayCall.None,
             };
         }
 

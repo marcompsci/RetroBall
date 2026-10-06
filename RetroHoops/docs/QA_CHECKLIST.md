@@ -205,3 +205,13 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Server: sandbox subscription expires → LIVE says the server couldn't confirm it; refund in sandbox → same after Apple's notification.
 - [ ] LIVE ▸ DELETE MY LIVE DATA: the server forgets the player; `/v1/me` returns 404 until the next sign-in.
 
+## Phase 29
+- [ ] CALL ▸ BACKDOOR: a teammate jogs out to the wing, then sprints to the rim; pass to them on the cut for a layup or dunk. CALL ▸ POST UP: your big walks to the block on the ball side; feed them.
+- [ ] The CALL menu (5 plays) fits in portrait and in landscape Full Court.
+- [ ] AI teams sometimes run backdoor cuts and post-ups.
+- [ ] Heat up (three in a row) on Caller or Legend and drive toward the rim: a second defender comes ("DOUBLE TEAM!"), and passing to the open teammate gets an easy look. On Rookie there's no double team.
+- [ ] Street game vs GLIDE (2-on-2) or a 3-on-3 crew with four players: late in the game, tired AI players sub out ("SUB:" toast, arena horn).
+- [ ] Sounds: a block or broken ankles gets a crowd "OOOH"; the final buzzer adds an arena horn; a close game in its last 20 seconds gets rhythmic clapping.
+- [ ] Tip-off: the TONIGHT AT … card shows both teams and their starters, fades after ~3 s, and a tap skips it.
+- [ ] Post-game: TEAM STATS bars are above the box scores and readable on iPhone and iPad.
+

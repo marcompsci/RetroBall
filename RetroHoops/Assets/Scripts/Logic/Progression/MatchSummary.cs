@@ -59,6 +59,40 @@ namespace CallerRetroBall.Logic
             }
         }
 
+        /// <summary>The whole team's box score added up (for the post-game comparison).</summary>
+        public PlayerStatLine TeamTotals(int team)
+        {
+            var t = new PlayerStatLine();
+            foreach (var l in lines)
+            {
+                if (l.team != team || l.stats == null) continue;
+                var x = l.stats;
+                t.points += x.points; t.fieldGoalsMade += x.fieldGoalsMade; t.fieldGoalsAttempted += x.fieldGoalsAttempted;
+                t.arcMade += x.arcMade; t.arcAttempted += x.arcAttempted; t.assists += x.assists; t.rebounds += x.rebounds;
+                t.steals += x.steals; t.blocks += x.blocks; t.turnovers += x.turnovers; t.greenReleases += x.greenReleases;
+                t.alleyOops += x.alleyOops; t.alleyOopPasses += x.alleyOopPasses; t.heatUps += x.heatUps; t.ankleBreakers += x.ankleBreakers;
+            }
+            return t;
+        }
+
+        /// <summary>Rows for the post-game TEAM STATS comparison: label, team A value, team B value, and text for each.</summary>
+        public System.Collections.Generic.List<(string label, float a, float b, string textA, string textB)> Comparison()
+        {
+            var A = TeamTotals(0);
+            var B = TeamTotals(1);
+            string Pct(PlayerStatLine x) => x.fieldGoalsAttempted == 0 ? "-" : (int)Math.Round(x.FieldGoalPercentage * 100f) + "%";
+            return new System.Collections.Generic.List<(string, float, float, string, string)>
+            {
+                ("FG%", A.FieldGoalPercentage, B.FieldGoalPercentage, Pct(A), Pct(B)),
+                ("DEEP", A.arcMade, B.arcMade, A.arcMade + "/" + A.arcAttempted, B.arcMade + "/" + B.arcAttempted),
+                ("ASSISTS", A.assists, B.assists, A.assists.ToString(), B.assists.ToString()),
+                ("REBOUNDS", A.rebounds, B.rebounds, A.rebounds.ToString(), B.rebounds.ToString()),
+                ("STEALS", A.steals, B.steals, A.steals.ToString(), B.steals.ToString()),
+                ("BLOCKS", A.blocks, B.blocks, A.blocks.ToString(), B.blocks.ToString()),
+                ("TURNOVERS", A.turnovers, B.turnovers, A.turnovers.ToString(), B.turnovers.ToString()),
+            };
+        }
+
         public SummaryLine Line(int playerIndex)
         {
             foreach (var l in lines) if (l.playerIndex == playerIndex) return l;

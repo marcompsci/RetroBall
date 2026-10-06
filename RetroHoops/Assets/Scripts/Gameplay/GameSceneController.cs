@@ -303,6 +303,19 @@ namespace CallerRetroBall.Gameplay
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
+            // Tip-off card with tonight's court and both starting lineups (real games only; quick and skippable).
+            if (!Demo && _practice == null && _tutorial == null && _horse == null && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
+            {
+                var startersA = new System.Collections.Generic.List<string>();
+                var startersB = new System.Collections.Generic.List<string>();
+                foreach (var pl in _match.Players)
+                {
+                    if (IsBenchedSlot(pl)) continue;
+                    string n = string.IsNullOrEmpty(pl.Def.lastName) ? pl.Def.firstName : pl.Def.lastName;
+                    (pl.Team == 0 ? startersA : startersB).Add("#" + pl.Def.jerseyNumber + " " + (n ?? "").ToUpperInvariant());
+                }
+                _hud.ShowIntro(court != null ? court.displayName : "THE COURT", setup.TeamA, setup.TeamB, startersA, startersB);
+            }
             // Mic Tally on the call (Settings ▸ COMMENTARY), except in practice and the tutorial.
             if ((settings == null || settings.commentary) && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
                 _mic = new Commentary(setup.TeamA.nickname, setup.TeamB.nickname, _request.Seed);
@@ -575,6 +588,7 @@ namespace CallerRetroBall.Gameplay
             ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: false);
             ViewsMarker.End();
+            if (_practice == null && _tutorial == null && _horse == null) UpdateCrowdChant();
 
             if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
             else if (_practice != null && _practice.Finished && !_finalShown) ShowPracticeEnd();
@@ -1060,6 +1074,19 @@ namespace CallerRetroBall.Gameplay
 
         private Commentary _mic;
 
+        private bool IsBenchedSlot(PlayerRuntimeState p) => _match.IsBenched(p.Index);
+        private float _nextHornAt, _nextClapAt;
+
+        /// <summary>Tight finish (last 20 seconds, within one score): the crowd claps along every few seconds.</summary>
+        private void UpdateCrowdChant()
+        {
+            if (_match == null || _match.IsOver || _match.Phase != MatchPhase.Live || !_match.Setup.Rules.useGameClock) return;
+            if (_match.GameClock > 20f || System.Math.Abs(_match.Score[0] - _match.Score[1]) > 3) return;
+            if (Time.unscaledTime < _nextClapAt) return;
+            _nextClapAt = Time.unscaledTime + 4.5f;
+            Sfx(SfxId.ClapChant, 0.5f);
+        }
+
         private void HandleEvents()
         {
             if (_mic != null && _match.Events.Count > 0)
@@ -1096,6 +1123,9 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(HoopWorld, new Color32(0x4C, 0xC9, 0xF0, 255), 20, 4.5f, 0.6f);
                         _cameraRig.Shake(0.2f);
                         if (e.Team == human || Versus) Haptics.Heavy();
+                        break;
+                    case MatchEventType.Trap:
+                        if (_match.IsHumanControlled(e.Value)) _hud.Toast("DOUBLE TEAM! FIND THE OPEN MAN", 1.1f);
                         break;
                     case MatchEventType.EuroStep:
                         if (_match.IsHumanControlled(e.PlayerIndex)) _hud.Toast("EURO STEP", 0.7f);
@@ -1189,6 +1219,7 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.PlayerIndex].Position, 2f), new Color32(0xF4, 0xF1, 0xDE, 255), 14, 3.5f, 0.5f);
                         _hud.Toast(e.Team == human ? "BLOCKED!" : "SENT BACK", 1.1f);
                         Sfx(SfxId.Block);
+                        Sfx(SfxId.CrowdOooh, 0.7f);
                         _cameraRig.Shake(0.18f);
                         Haptics.Medium();
                         break;
@@ -1206,6 +1237,7 @@ namespace CallerRetroBall.Gameplay
                         break;
                     case MatchEventType.GameOver:
                         Sfx(SfxId.Buzzer, 0.8f);
+                        Sfx(SfxId.ArenaHorn, 0.55f);
                         break;
                     case MatchEventType.Interception:
                         _hud.Toast(e.Team == human ? "PICKED OFF!" : "STOLEN", 1.1f);
@@ -1235,12 +1267,14 @@ namespace CallerRetroBall.Gameplay
                         if (!_reduceMotion) _bursts.Spawn(CourtSpace.ToWorldSnapped(_match.Players[e.Value].Position, 0.5f), new Color32(0xFF, 0xD1, 0x66, 255), 12, 3f, 0.5f);
                         _hud.Toast(e.Team == human ? "ANKLES!" : "GOT YOU!", 1.2f);
                         Sfx(SfxId.CrowdCheer, 0.9f);
+                        Sfx(SfxId.CrowdOooh, 0.8f);
                         Sfx(SfxId.Squeak, 0.8f, 0.8f);
                         _cameraRig.Shake(0.15f);
                         if (e.Team == human) { Haptics.Medium(); Audio.AudioManager.Voice("OOOH!"); }
                         break;
                     case MatchEventType.Substitution:
                         RedrawPlayer(e.PlayerIndex);
+                        if (Time.unscaledTime >= _nextHornAt) { Sfx(SfxId.ArenaHorn, 0.3f); _nextHornAt = Time.unscaledTime + 3f; }
                         if (e.Team == human) _hud.Toast("SUB: " + _match.Players[e.PlayerIndex].Def.lastName.ToUpperInvariant() + " IN", 1.1f);
                         break;
                     case MatchEventType.CheckBall:
@@ -1510,6 +1544,8 @@ namespace CallerRetroBall.Gameplay
                 case PlayCall.PickAndRoll: return "PICK & ROLL";
                 case PlayCall.GiveAndGo: return "GIVE & GO";
                 case PlayCall.ClearOut: return "CLEAR OUT";
+                case PlayCall.Backdoor: return "BACKDOOR: HIT THE CUTTER";
+                case PlayCall.PostUp: return "POST UP: FEED THE BIG";
                 default: return "";
             }
         }
