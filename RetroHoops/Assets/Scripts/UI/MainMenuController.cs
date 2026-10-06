@@ -105,6 +105,16 @@ namespace CallerRetroBall.UI
                 App.OpenFranchiseOnMenu = false;
                 FranchiseScreen.Open();
             }
+            else if (App.OpenStoryOnMenu)
+            {
+                App.OpenStoryOnMenu = false;
+                ShowStoryAfterGame();
+            }
+            else if (App.OpenCouchOnMenu)
+            {
+                App.OpenCouchOnMenu = false;
+                ShowCouchCup();
+            }
             else if (App.OpenParkOnMenu)
             {
                 App.OpenParkOnMenu = false;
@@ -362,6 +372,12 @@ namespace CallerRetroBall.UI
             var column = OpenOverlay("PLAY", out var footer);
             var career = App.Career;
 
+            Section(column, "STORY");
+            var story = career.story ?? new StorySaveData();
+            Mode(column, "SUMMER STORY", story.finished ? "Sunburst champions. Replay any chapter."
+                 : "Chapter " + System.Math.Min(StoryMode.Chapters, story.cleared + 1) + " of " + StoryMode.Chapters + ": " + StoryMode.Chapter(System.Math.Min(StoryMode.Chapters, story.cleared + 1)).Title.ToLowerInvariant()
+                   + ". Nova, Big Sal, Mic Tally and the Velvet Hour.", ShowStoryMode, ButtonStyle.Primary);
+
             Section(column, "PLAY NOW");
             Mode(column, "QUICK CALL", "Pick a team and an opponent. One game. Score and it's still your ball.", ShowQuickCall, ButtonStyle.Primary);
             Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
@@ -414,7 +430,7 @@ namespace CallerRetroBall.UI
                  ShowTournamentBuilder, ButtonStyle.Secondary);
 
             Section(column, "WITH FRIENDS");
-            Mode(column, "2 PLAYER", "Head to head on one iPhone or iPad: lay it flat between you, or use controllers.", ShowVersus, ButtonStyle.Secondary);
+            Mode(column, "2 PLAYER", "Head to head on one iPhone, on two phones nearby, or a Couch Cup tournament for up to 8 friends.", ShowVersus, ButtonStyle.Secondary);
             Mode(column, "PARTY GAMES", "H-O-R-S-E, 21, Around the World, and the Shootout.", ShowParty, ButtonStyle.Secondary);
             Mode(column, "HOW TO PLAY", "Two-minute guided tutorial.", StartTutorial, ButtonStyle.Ghost);
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
@@ -587,6 +603,8 @@ namespace CallerRetroBall.UI
             p2Label = UiKit.Label(column, "", 40f, Theme.Cream, TextAlignmentOptions.Center, true);
             UiKit.Size(p2Label, 60f);
             UiKit.Button(column, "CHANGE TEAM", () => { p2 = Next(p2, p1); Refresh(); }, ButtonStyle.Ghost, 90f, 34f);
+            UiKit.Button(column, "TWO PHONES  ·  EACH ON YOUR OWN", ShowLinkMenu, ButtonStyle.Secondary, 100f, 32f);
+            UiKit.Button(column, "COUCH CUP  ·  TOURNAMENT FOR 2-8", ShowCouchCup, ButtonStyle.Secondary, 100f, 32f);
             UiKit.Size(UiKit.Label(column,
                 "One iPhone: lay it flat between you. P1 plays from the bottom edge, P2 from the top.\n" +
                 "Controllers: with two, P1 gets the first; with one, it's P2's (P1 uses touch).\n" +

@@ -166,3 +166,18 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Settings ▸ LANDSCAPE: ALL GAMES on: Quick Call, Park, practice turn sideways; 2 Player stays upright; off again: back to portrait.
 - [ ] Rise Season 5: the Cassette Club challenge, Echo's story scenes (English and Spanish), REWOUND badge.
 - [ ] Hoops Pass third season: Cassette Deck / Tape Runners / Boombox / Skyline Slam.
+
+## Phase 26
+- [ ] Two phones: on phone A, 2 PLAYER ▸ TWO PHONES ▸ HOST A GAME, pick teams, WAIT FOR FRIEND; iOS asks for local network access (Allow). On phone B, JOIN A GAME: A's name appears; tap it; both go to tip-off. Each phone controls its own player; scores and positions match on both screens all game.
+- [ ] Two phones: the guest's buttons say SHOOT/PASS on offense and BLOCK/SWITCH/STEAL on defense for team B; CALL runs a pick and roll.
+- [ ] Two phones: pausing on one phone shows the menu but the game keeps going on both. HOME on one phone ends the game on the other ("YOUR FRIEND LEFT"). Turning Wi-Fi and Bluetooth off mid-game: "CONNECTION LOST".
+- [ ] Two phones with different app versions: the guest sees "Both phones need the same version".
+- [ ] Two phones: also try iPhone + iPad, and an iPhone with HIGH FRAME RATE on (120 Hz) against one without.
+- [ ] Couch Cup with 5 players: byes shown, games play in order, a tie says "PLAY IT AGAIN", the champion is crowned, the bracket survives closing the app. NEW CUP keeps the names.
+- [ ] Summer Story: chapter 1 scene plays, then the 1-on-1. Win: CHAPTER CLEARED +150 SP, HOME plays the closing scene, chapter 2 opens. Miss the goal in chapter 3 (win by less than 4): SO CLOSE. Chapter 8 is Full Court in landscape.
+- [ ] Story scenes show Nova, Big Sal, Mic Tally and Kojo with their own colours and portraits; Kojo stands on the right.
+- [ ] Rise Season 5 story scenes (Echo of the Cassette Club) open without a crash.
+- [ ] Mic Tally lines appear under the score bar on dunks, oops, runs and lead changes, not constantly; Settings ▸ COMMENTARY off hides them.
+- [ ] Menus: leave a menu untouched for a few seconds with SHOW FPS on; the game stays responsive when you touch it again. Gameplay stays smooth at 60/120.
+- [ ] Build size: compare the .ipa size with build 2 (stripping and size-optimised code).
+

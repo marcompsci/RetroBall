@@ -9,7 +9,7 @@ namespace CallerRetroBall.EditorTools
     /// <summary>
     /// After an iOS build, sets the Info.plist keys App Store Connect would otherwise ask about
     /// (no non-exempt encryption, full screen, hidden status bar, Sports Games category), links
-    /// GameKit, and adds the Game Center and iCloud (key-value storage) capabilities.
+    /// GameKit and MultipeerConnectivity (two-phone play, with the local-network keys), and adds the Game Center and iCloud (key-value storage) capabilities.
     /// </summary>
     public static class IosPostProcess
     {
@@ -47,6 +47,15 @@ namespace CallerRetroBall.EditorTools
                 schemes.AddString("retrohoops");
                 schemes.AddString("retroball"); // links shared before the rename
             }
+            // Two-phone play (2 PLAYER ▸ TWO PHONES): nearby discovery over Wi-Fi / Bluetooth, no internet.
+            root.SetString("NSLocalNetworkUsageDescription", "Find a friend's iPhone or iPad nearby to play Retro Hoops head to head.");
+            var bonjour = root["NSBonjourServices"] as PlistElementArray ?? root.CreateArray("NSBonjourServices");
+            foreach (var service in new[] { "_retrohoops._tcp", "_retrohoops._udp" })
+            {
+                bool present = false;
+                foreach (var v in bonjour.values) if (v is PlistElementString str && str.value == service) present = true;
+                if (!present) bonjour.AddString(service);
+            }
             if (root["GCSupportedGameControllers"] == null)
                 root.CreateArray("GCSupportedGameControllers").AddDict().SetString("ProfileName", "ExtendedGamepad");
             plist.WriteToFile(plistPath);
@@ -56,6 +65,7 @@ namespace CallerRetroBall.EditorTools
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
             proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "GameKit.framework", false);
+            proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "MultipeerConnectivity.framework", false);
             proj.WriteToFile(projPath);
             var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroHoops.entitlements", null, proj.GetUnityMainTargetGuid());
             caps.AddGameCenter();

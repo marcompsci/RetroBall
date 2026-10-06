@@ -94,6 +94,12 @@ namespace CallerRetroBall.Core
         public static bool OpenParkOnMenu { get; set; }
         public static bool OpenCustomCupOnMenu { get; set; }
 
+        /// <summary>After a Summer Story game: open the story on the menu (and play chapter N's closing scene if it was just cleared).</summary>
+        public static bool OpenStoryOnMenu { get; set; }
+        public static int StoryOutroPending { get; set; }
+        /// <summary>After a Couch Cup game: open the bracket on the menu.</summary>
+        public static bool OpenCouchOnMenu { get; set; }
+
         /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
         public static int SimulationRate { get; private set; } = 60;
 

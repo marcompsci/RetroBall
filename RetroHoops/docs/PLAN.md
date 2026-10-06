@@ -465,6 +465,30 @@
   and Spanish; REWOUND badge; NO RIVALS LEFT now needs all five), Record Shop Roof and Night Bus Depot courts,
   and a third Hoops Pass gear set (Cassette Deck jersey, Tape Runners, Boombox banner, Skyline Slam).
 
+### Phase 26: two phones, Couch Cup, Summer Story, performance
+
+- **Two-phone play** (Logic/Net/Link.cs, Core/NearbyLink.cs, Plugins/iOS/RetroLink.mm): Multipeer Connectivity,
+  no server. The host picks both teams; both teams' rosters and ratings travel in the setup, so career changes
+  on either phone don't matter. Hand-shake checks the link version, app version and content (courts, rules,
+  play styles). Deterministic lockstep: input is quantized to 4 bytes per step and scheduled 4 steps (67 ms)
+  ahead; a step runs only when both inputs are in; checksums are compared every second. Both phones simulate
+  at 60 Hz; no hit-stop, mid-game replays or photo mode; the pause menu doesn't stop the game. A friend leaving,
+  a dropped connection or a checksum mismatch ends the game with no result. Info.plist gets
+  NSLocalNetworkUsageDescription and NSBonjourServices (_retrohoops._tcp/_udp).
+- **Couch Cup:** 2-8 players, shuffled knockout with byes, ties replayed, saved between games.
+- **Summer Story:** 8 chapters with goals, scenes before and after, SP for first clears (150, finale 600).
+  New original cast in StoryMode.Cast. Fixed a crash in story scenes for the fifth rival (the portrait cache
+  was one slot short).
+- **Mic Tally commentary** (Logic/Feel/Commentary.cs): runs, lead changes, ties, game point, dunks, threes,
+  oops, blocks, steals, heat, euro steps, broken ankles, buzzer beaters; one line per 5 s at most (big
+  moments can cut in), no back-to-back repeats.
+- **Performance and battery:** menus draw at 60 fps while touched and 30 when idle (15 when saving power);
+  gameplay draws every frame (OnDemandRendering, PowerPolicy.RenderInterval). Low-memory warnings drop cached
+  art. Boot timing goes to the device log. Release builds strip engine code, use Low managed stripping with
+  Assets/link.xml keeping our assemblies, and size-optimised IL2CPP code. Measured here (desktop .NET):
+  a simulation step costs about 10 µs and the biggest generated texture (Full Court floor) about 5 ms, so
+  neither is a battery or load-time problem; drawing is.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

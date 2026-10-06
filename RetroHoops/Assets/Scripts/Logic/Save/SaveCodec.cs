@@ -65,6 +65,7 @@ namespace CallerRetroBall.Logic
                     ["largeButtons"] = d.settings.largeButtons,
                     ["controlLayout"] = d.settings.controlLayout ?? "",
                     ["landscapeAll"] = d.settings.landscapeAll,
+                    ["commentary"] = d.settings.commentary,
                     ["tapToShoot"] = d.settings.tapToShoot,
                     ["reduceMotion"] = d.settings.reduceMotion,
                 },
@@ -115,6 +116,8 @@ namespace CallerRetroBall.Logic
                 ["customCup"] = EncodeCustomCup(d.customCup),
                 ["weekly"] = EncodeWeekly(d.weekly),
                 ["pass"] = EncodePass(d.pass),
+                ["story"] = EncodeStory(d.story),
+                ["couch"] = EncodeCouch(d.couch),
                 ["photos"] = d.photosTaken,
                 ["rival"] = new Dictionary<string, object>
                 {
@@ -496,6 +499,7 @@ namespace CallerRetroBall.Logic
                     largeButtons = Bool(st, "largeButtons", false),
                     controlLayout = ControlLayout.Serialize(ControlLayout.Parse(Str(st, "controlLayout", ""))),
                     landscapeAll = Bool(st, "landscapeAll", false),
+                    commentary = Bool(st, "commentary", true),
                     tapToShoot = Bool(st, "tapToShoot", false),
                     reduceMotion = Bool(st, "reduceMotion", false),
                 };
@@ -547,6 +551,8 @@ namespace CallerRetroBall.Logic
                 d.customCup = DecodeCustomCup(Obj(o, "customCup"));
                 d.weekly = DecodeWeekly(Obj(o, "weekly"));
                 d.pass = DecodePass(Obj(o, "pass"));
+                d.story = DecodeStory(Obj(o, "story"));
+                d.couch = DecodeCouch(Obj(o, "couch"));
                 d.photosTaken = Math.Max(0, Int(o, "photos", 0));
                 CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);

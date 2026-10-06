@@ -16,6 +16,22 @@ namespace CallerRetroBall.Logic
         /// <summary>Frame rate to ask for: 120 only when allowed, supported, and not saving power.</summary>
         public static int TargetFrameRate(bool highFrameRateSetting, int screenHz, bool savePower) =>
             highFrameRateSetting && screenHz >= 119 && !savePower ? 120 : 60;
+
+        /// <summary>Seconds without a touch, key or button before a menu drops to its idle rate.</summary>
+        public const float MenuIdleSeconds = 3f;
+
+        /// <summary>
+        /// How many screen updates to skip between drawn frames (OnDemandRendering): live gameplay draws
+        /// every frame; menus draw at most 60 fps while you touch them and 30 fps once they sit idle
+        /// (15 fps while saving power). Game logic still updates every frame, only drawing is skipped.
+        /// </summary>
+        public static int RenderInterval(int targetFps, bool gameplay, float idleSeconds, bool savePower)
+        {
+            if (targetFps <= 0) targetFps = 60;
+            if (gameplay) return 1;
+            int fps = idleSeconds >= MenuIdleSeconds ? (savePower ? 15 : 30) : (savePower ? 30 : 60);
+            return Math.Max(1, targetFps / fps);
+        }
     }
 
     /// <summary>Rolling frame-time statistics for the optional SHOW FPS readout (no allocations).</summary>

@@ -1,0 +1,629 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace CallerRetroBall.Logic
+{
+    // Two-phone play with no servers: two iPhones (or iPads / Macs) find each other nearby over
+    // Wi-Fi or Bluetooth (Apple's peer-to-peer link) and play a 2 Player game with each player on
+    // their own screen. Both phones run the same deterministic simulation; only the controller
+    // input travels between them (4 bytes a step), so it is light and never drifts apart.
+
+    public enum LinkState { Idle = 0, Searching = 1, Connected = 2, Lost = 3 }
+
+    /// <summary>The wire between two phones: ordered, reliable messages (Multipeer Connectivity on iOS, memory in tests).</summary>
+    public interface ILinkTransport
+    {
+        LinkState State { get; }
+        string PeerName { get; }
+        void Send(byte[] message);
+        bool TryReceive(out byte[] message);
+    }
+
+    public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7 }
+
+    /// <summary>What the host picked; both phones build the same match from it.</summary>
+    public sealed class LinkSetup
+    {
+        public int Protocol = LinkProtocol.Version;
+        public string AppVersion = "";
+        public uint Content;
+        public uint Seed = 1;
+        public string HostName = "";
+        public string HomeTeamId = "", AwayTeamId = "", CourtId = "", RulesId = "", DifficultyId = "";
+        /// <summary>Both teams written out in full (names, colours, rosters, ratings), so the guest plays the host's exact teams.</summary>
+        public string HomeTeamData = "", AwayTeamData = "";
+
+        public const string HomeId = "team.link.home", AwayId = "team.link.away";
+
+        /// <summary>The host's pick, with both teams copied from the host's catalog.</summary>
+        public static LinkSetup From(ContentCatalog c, string homeTeamId, string awayTeamId, string courtId, string difficultyId, uint seed, string appVersion, string hostName)
+        {
+            return new LinkSetup
+            {
+                AppVersion = appVersion ?? "",
+                Content = LinkProtocol.ContentFingerprint(c),
+                Seed = seed == 0 ? 1u : seed,
+                HostName = hostName ?? "",
+                HomeTeamId = homeTeamId,
+                AwayTeamId = awayTeamId,
+                CourtId = courtId ?? "",
+                RulesId = DefaultContent.DefaultRulesId,
+                DifficultyId = difficultyId ?? DefaultContent.DefaultDifficultyId,
+                HomeTeamData = LinkTeams.Write(c, c.Team(homeTeamId)),
+                AwayTeamData = LinkTeams.Write(c, c.Team(awayTeamId)),
+            };
+        }
+
+        /// <summary>Adds the two link teams to <paramref name="c"/> (replacing earlier copies). False if the data is bad.</summary>
+        public bool Register(ContentCatalog c) =>
+            LinkTeams.Read(c, HomeTeamData, HomeId, "player.link.home.") != null && LinkTeams.Read(c, AwayTeamData, AwayId, "player.link.away.") != null;
+
+        public MatchRequest ToRequest() => new MatchRequest
+        {
+            Mode = GameMode.Versus,
+            HomeTeamId = HomeId,
+            AwayTeamId = AwayId,
+            CourtId = CourtId,
+            RulesId = string.IsNullOrEmpty(RulesId) ? DefaultContent.DefaultRulesId : RulesId,
+            DifficultyId = string.IsNullOrEmpty(DifficultyId) ? DefaultContent.DefaultDifficultyId : DifficultyId,
+            Seed = Seed == 0 ? 1u : Seed,
+            ContextId = "link",
+        };
+    }
+
+    public static class LinkProtocol
+    {
+        /// <summary>Bump when the message format or the simulation changes in a way that breaks old builds.</summary>
+        public const int Version = 1;
+        /// <summary>Bonjour service name (Info.plist NSBonjourServices: _retrohoops._tcp and _retrohoops._udp).</summary>
+        public const string ServiceType = "retrohoops";
+        public const int InputBytes = 4;
+
+        private const byte ShootPressedBit = 1, ShootHeldBit = 2, PassBit = 4, DefenseBit = 8, DunkBit = 16, LayupBit = 32;
+
+        // ------------------------------------------------------------------ inputs
+
+        public static void PackInput(PlayerInput input, byte[] buffer, int offset)
+        {
+            buffer[offset] = (byte)(sbyte)Axis(input.Move.x);
+            buffer[offset + 1] = (byte)(sbyte)Axis(input.Move.y);
+            byte f = 0;
+            if (input.ShootPressed) f |= ShootPressedBit;
+            if (input.ShootHeld) f |= ShootHeldBit;
+            if (input.PassPressed) f |= PassBit;
+            if (input.DefensePressed) f |= DefenseBit;
+            if (input.DunkPressed) f |= DunkBit;
+            if (input.LayupPressed) f |= LayupBit;
+            buffer[offset + 2] = f;
+            buffer[offset + 3] = (byte)input.CallPlay;
+        }
+
+        public static PlayerInput UnpackInput(byte[] buffer, int offset)
+        {
+            byte f = buffer[offset + 2];
+            byte call = buffer[offset + 3];
+            return new PlayerInput
+            {
+                Move = new Vec2((sbyte)buffer[offset] / 127f, (sbyte)buffer[offset + 1] / 127f),
+                ShootPressed = (f & ShootPressedBit) != 0,
+                ShootHeld = (f & ShootHeldBit) != 0,
+                PassPressed = (f & PassBit) != 0,
+                DefensePressed = (f & DefenseBit) != 0,
+                DunkPressed = (f & DunkBit) != 0,
+                LayupPressed = (f & LayupBit) != 0,
+                CallPlay = call <= (byte)PlayCall.ClearOut ? (PlayCall)call : PlayCall.None,
+            };
+        }
+
+        /// <summary>The input exactly as the other phone will see it (both phones must simulate the same numbers).</summary>
+        public static PlayerInput Quantize(PlayerInput input)
+        {
+            var b = new byte[InputBytes];
+            PackInput(input, b, 0);
+            return UnpackInput(b, 0);
+        }
+
+        private static int Axis(float v)
+        {
+            if (float.IsNaN(v)) return 0;
+            return (int)Math.Round(Math.Max(-1f, Math.Min(1f, v)) * 127f);
+        }
+
+        // ------------------------------------------------------------------ messages
+
+        public static byte[] Inputs(int firstTick, IList<PlayerInput> inputs, int start, int count)
+        {
+            var m = new byte[1 + 4 + 1 + count * InputBytes];
+            m[0] = (byte)LinkMessage.Inputs;
+            WriteInt(m, 1, firstTick);
+            m[5] = (byte)count;
+            for (int i = 0; i < count; i++) PackInput(inputs[start + i], m, 6 + i * InputBytes);
+            return m;
+        }
+
+        public static bool ReadInputs(byte[] m, out int firstTick, List<PlayerInput> into)
+        {
+            firstTick = 0;
+            if (m == null || m.Length < 6 || m[0] != (byte)LinkMessage.Inputs) return false;
+            int count = m[5];
+            if (m.Length < 6 + count * InputBytes) return false;
+            firstTick = ReadInt(m, 1);
+            for (int i = 0; i < count; i++) into.Add(UnpackInput(m, 6 + i * InputBytes));
+            return true;
+        }
+
+        public static byte[] Hash(int tick, uint hash)
+        {
+            var m = new byte[9];
+            m[0] = (byte)LinkMessage.Hash;
+            WriteInt(m, 1, tick);
+            WriteInt(m, 5, (int)hash);
+            return m;
+        }
+
+        public static byte[] Simple(LinkMessage type) => new[] { (byte)type };
+
+        public static byte[] Text(LinkMessage type, string text)
+        {
+            var body = Encoding.UTF8.GetBytes(text ?? "");
+            var m = new byte[1 + body.Length];
+            m[0] = (byte)type;
+            Array.Copy(body, 0, m, 1, body.Length);
+            return m;
+        }
+
+        public static string ReadText(byte[] m) => m == null || m.Length < 1 ? "" : Encoding.UTF8.GetString(m, 1, m.Length - 1);
+
+        public static byte[] SetupMessage(LinkSetup s)
+        {
+            var sb = new StringBuilder();
+            void Kv(string k, string v) => sb.Append(k).Append('=').Append((v ?? "").Replace('\n', ' ')).Append('\n');
+            Kv("protocol", s.Protocol.ToString());
+            Kv("app", s.AppVersion);
+            Kv("content", s.Content.ToString());
+            Kv("seed", s.Seed.ToString());
+            Kv("host", s.HostName);
+            Kv("home", s.HomeTeamId);
+            Kv("away", s.AwayTeamId);
+            Kv("court", s.CourtId);
+            Kv("rules", s.RulesId);
+            Kv("difficulty", s.DifficultyId);
+            Kv("homedata", s.HomeTeamData);
+            Kv("awaydata", s.AwayTeamData);
+            return Text(LinkMessage.Setup, sb.ToString());
+        }
+
+        public static LinkSetup ReadSetup(byte[] m)
+        {
+            if (m == null || m.Length < 1 || m[0] != (byte)LinkMessage.Setup) return null;
+            var s = new LinkSetup { Protocol = -1 };
+            foreach (var line in ReadText(m).Split('\n'))
+            {
+                int eq = line.IndexOf('=');
+                if (eq <= 0) continue;
+                string k = line.Substring(0, eq), v = line.Substring(eq + 1);
+                switch (k)
+                {
+                    case "protocol": s.Protocol = int.TryParse(v, out int p) ? p : -1; break;
+                    case "app": s.AppVersion = v; break;
+                    case "content": s.Content = uint.TryParse(v, out uint c) ? c : 0; break;
+                    case "seed": s.Seed = uint.TryParse(v, out uint seed) ? seed : 1; break;
+                    case "host": s.HostName = v; break;
+                    case "home": s.HomeTeamId = v; break;
+                    case "away": s.AwayTeamId = v; break;
+                    case "court": s.CourtId = v; break;
+                    case "rules": s.RulesId = v; break;
+                    case "difficulty": s.DifficultyId = v; break;
+                    case "homedata": s.HomeTeamData = v; break;
+                    case "awaydata": s.AwayTeamData = v; break;
+                }
+            }
+            return s;
+        }
+
+        /// <summary>
+        /// Why the two phones can't play together, or null if they can: same link version, same game
+        /// version, same built-in teams and courts, and the teams picked exist on this phone.
+        /// </summary>
+        public static string Incompatible(LinkSetup host, string myAppVersion, uint myContent, ContentCatalog c)
+        {
+            if (host == null) return "Couldn't read the game setup.";
+            if (host.Protocol != Version || host.AppVersion != myAppVersion)
+                return "Both phones need the same version of Retro Hoops (" + (string.IsNullOrEmpty(host.AppVersion) ? "?" : host.AppVersion) + " vs " + myAppVersion + "). Update both, then try again.";
+            if (host.Content != myContent) return "The two games have different courts or rules. Update both phones, then try again.";
+            if (c != null && c.Court(host.CourtId) == null) return "The picked court isn't on this phone.";
+            if (c != null && (LinkTeams.Read(null, host.HomeTeamData, LinkSetup.HomeId, "x.") == null || LinkTeams.Read(null, host.AwayTeamData, LinkSetup.AwayId, "x.") == null))
+                return "Couldn't read the teams from the other phone.";
+            return null;
+        }
+
+        /// <summary>
+        /// A fingerprint of the content the simulation reads that isn't sent with the setup (play styles,
+        /// rules, difficulties, court ids). Teams travel in the setup, so career changes to rosters don't matter.
+        /// </summary>
+        public static uint ContentFingerprint(ContentCatalog c)
+        {
+            var sb = new StringBuilder();
+            foreach (var a in c.Archetypes) sb.Append(a.id).Append(a.baseline.Overall).Append(';');
+            foreach (var court in c.Courts) sb.Append(court.id).Append(';');
+            foreach (var r in c.Rules) sb.Append(r.id).Append(';');
+            foreach (var d in c.Difficulties) sb.Append(d.id).Append(';');
+            return StableHash.Of(sb.ToString());
+        }
+
+        internal static void WriteInt(byte[] b, int o, int v)
+        {
+            b[o] = (byte)v; b[o + 1] = (byte)(v >> 8); b[o + 2] = (byte)(v >> 16); b[o + 3] = (byte)(v >> 24);
+        }
+
+        internal static int ReadInt(byte[] b, int o) => b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24);
+    }
+
+    /// <summary>Writes a team and its roster as one line of text, and reads it back as a new team.</summary>
+    public static class LinkTeams
+    {
+        public static string Write(ContentCatalog c, TeamDef t)
+        {
+            if (t == null) return "";
+            var sb = new StringBuilder();
+            sb.Append(Clean(t.city)).Append('|').Append(Clean(t.nickname)).Append('|').Append(Clean(t.abbreviation)).Append('|')
+              .Append(t.primary.ToHex(true)).Append('|').Append(t.secondary.ToHex(true)).Append('|').Append(t.accent.ToHex(true)).Append('|')
+              .Append((int)t.logoShape).Append('|').Append((int)t.logoMotif).Append('|').Append((int)t.pattern).Append('|').Append((int)t.scheme).Append('|')
+              .Append(t.shorts.ToHex(true)).Append('|').Append(t.shoes.ToHex(true)).Append('|').Append(Clean(t.homeCourtId));
+            foreach (var id in t.rosterPlayerIds)
+            {
+                var p = c.Player(id);
+                if (p == null) continue;
+                var a = p.attributes;
+                var l = p.appearance;
+                sb.Append('~').Append(Clean(p.firstName)).Append('|').Append(Clean(p.lastName)).Append('|').Append(p.jerseyNumber).Append('|').Append(Clean(p.archetypeId)).Append('|')
+                  .Append(a.finishing).Append(',').Append(a.shooting).Append(',').Append(a.playmaking).Append(',').Append(a.defense).Append(',')
+                  .Append(a.rebounding).Append(',').Append(a.speed).Append(',').Append(a.stamina).Append(',').Append(a.clutch).Append('|')
+                  .Append(l.skinTone).Append(',').Append(l.hairStyle).Append(',').Append(l.hairColor).Append(',').Append((int)l.body).Append(',').Append(l.heightTier);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Builds the team (adding it and its players to <paramref name="c"/> when given). Null if the text is malformed.</summary>
+        public static TeamDef Read(ContentCatalog c, string text, string teamId, string playerPrefix)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            try
+            {
+                var parts = text.Split('~');
+                var f = parts[0].Split('|');
+                if (f.Length < 13 || parts.Length < 2) return null;
+                var t = new TeamDef
+                {
+                    id = teamId, city = f[0], nickname = f[1], abbreviation = f[2],
+                    primary = RgbColor.FromHex(f[3]), secondary = RgbColor.FromHex(f[4]), accent = RgbColor.FromHex(f[5]),
+                    logoShape = (LogoShape)int.Parse(f[6]), logoMotif = (LogoMotif)int.Parse(f[7]), pattern = (TeamPattern)int.Parse(f[8]),
+                    scheme = (DefenseScheme)int.Parse(f[9]), shorts = RgbColor.FromHex(f[10]), shoes = RgbColor.FromHex(f[11]),
+                    homeCourtId = f[12], tier = TeamTier.Franchise, unlockedByDefault = false,
+                };
+                var players = new List<PlayerDef>();
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    var g = parts[i].Split('|');
+                    var a = g[4].Split(',');
+                    var l = g[5].Split(',');
+                    if (g.Length < 6 || a.Length < 8 || l.Length < 5) return null;
+                    players.Add(new PlayerDef
+                    {
+                        id = playerPrefix + (i - 1), firstName = g[0], lastName = g[1], jerseyNumber = int.Parse(g[2]), archetypeId = g[3],
+                        attributes = new AttributeSet(int.Parse(a[0]), int.Parse(a[1]), int.Parse(a[2]), int.Parse(a[3]), int.Parse(a[4]), int.Parse(a[5]), int.Parse(a[6]), int.Parse(a[7])),
+                        appearance = new AppearanceDef(int.Parse(l[0]), int.Parse(l[1]), int.Parse(l[2]), (BodyType)int.Parse(l[3]), int.Parse(l[4])),
+                    });
+                    t.rosterPlayerIds.Add(playerPrefix + (i - 1));
+                }
+                if (c != null)
+                {
+                    c.Teams.RemoveAll(x => x.id == teamId);
+                    c.Players.RemoveAll(x => x.id != null && x.id.StartsWith(playerPrefix, StringComparison.Ordinal));
+                    c.Teams.Add(t);
+                    c.Players.AddRange(players);
+                }
+                return t;
+            }
+            catch (FormatException) { return null; }
+            catch (IndexOutOfRangeException) { return null; }
+            catch (OverflowException) { return null; }
+        }
+
+        private static string Clean(string s) => (s ?? "").Replace("|", "/").Replace("~", "-").Replace("\n", " ");
+    }
+
+    /// <summary>
+    /// A checksum of everything that matters in the match (positions, ball, score, clock), compared
+    /// between the phones every second so a mismatch is caught instead of two different games going on.
+    /// </summary>
+    public static class SimHash
+    {
+        public static uint Of(MatchSimulation m)
+        {
+            unchecked
+            {
+                uint h = 2166136261;
+                void Add(int v) { h ^= (uint)v; h *= 16777619; }
+                void F(float f) => Add(BitConverter.SingleToInt32Bits(f));
+                foreach (var p in m.Players)
+                {
+                    F(p.Motion.position.x); F(p.Motion.position.y);
+                    F(p.Motion.velocity.x); F(p.Motion.velocity.y);
+                    Add((int)p.Motion.facing);
+                    F(p.Stamina);
+                }
+                F(m.Ball.Position.x); F(m.Ball.Position.y); F(m.Ball.Height);
+                Add((int)m.Ball.Phase); Add(m.Ball.HolderIndex);
+                Add(m.Score[0]); Add(m.Score[1]);
+                Add((int)m.Phase); Add(m.OffenseTeam);
+                F(m.GameClock); F(m.ShotClock);
+                return h;
+            }
+        }
+    }
+
+    public enum LobbyStatus { Waiting = 0, Started = 1, Rejected = 2, Lost = 3 }
+
+    /// <summary>
+    /// The hand-shake before tip-off. The host sends its <see cref="LinkSetup"/>; the guest checks it
+    /// can play that game and answers Ready (or Reject with the reason); the host answers Start.
+    /// Messages after Start are left for <see cref="Lockstep"/>.
+    /// </summary>
+    public sealed class LinkLobby
+    {
+        public readonly bool IsHost;
+        public LobbyStatus Status { get; private set; }
+        public LinkSetup Setup { get; private set; }
+        public string Error { get; private set; }
+        private bool _sentSetup;
+        private readonly string _appVersion;
+        private readonly uint _content;
+        private readonly ContentCatalog _catalog;
+
+        public LinkLobby(bool host, LinkSetup hostSetup, string appVersion, uint content, ContentCatalog catalog)
+        {
+            IsHost = host;
+            Setup = host ? hostSetup : null;
+            _appVersion = appVersion;
+            _content = content;
+            _catalog = catalog;
+        }
+
+        public void Update(ILinkTransport t)
+        {
+            if (Status != LobbyStatus.Waiting) return;
+            if (t.State == LinkState.Lost)
+            {
+                Status = LobbyStatus.Lost;
+                Error = "Lost the connection to the other phone.";
+                return;
+            }
+            if (t.State != LinkState.Connected) return;
+            if (IsHost && !_sentSetup)
+            {
+                t.Send(LinkProtocol.SetupMessage(Setup));
+                _sentSetup = true;
+            }
+            while (Status == LobbyStatus.Waiting && t.TryReceive(out var m))
+            {
+                if (m == null || m.Length == 0) continue;
+                switch ((LinkMessage)m[0])
+                {
+                    case LinkMessage.Setup when !IsHost:
+                        var s = LinkProtocol.ReadSetup(m);
+                        string why = LinkProtocol.Incompatible(s, _appVersion, _content, _catalog);
+                        if (why != null)
+                        {
+                            t.Send(LinkProtocol.Text(LinkMessage.Reject, why));
+                            Error = why;
+                            Status = LobbyStatus.Rejected;
+                        }
+                        else
+                        {
+                            Setup = s;
+                            t.Send(LinkProtocol.Simple(LinkMessage.Ready));
+                        }
+                        break;
+                    case LinkMessage.Ready when IsHost:
+                        t.Send(LinkProtocol.Simple(LinkMessage.Start));
+                        Status = LobbyStatus.Started;
+                        break;
+                    case LinkMessage.Start when !IsHost && Setup != null:
+                        Status = LobbyStatus.Started;
+                        break;
+                    case LinkMessage.Reject:
+                        Error = LinkProtocol.ReadText(m);
+                        Status = LobbyStatus.Rejected;
+                        break;
+                    case LinkMessage.Bye:
+                        Error = "The other player left.";
+                        Status = LobbyStatus.Lost;
+                        break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Deterministic lockstep for two phones. Each phone samples its own controller once per
+    /// simulation step and schedules it <see cref="Delay"/> steps ahead; a step is simulated only
+    /// when both players' inputs for it have arrived, so both simulations see exactly the same
+    /// inputs in the same order. Seat 0 (the host) plays team A, seat 1 (the guest) team B.
+    /// </summary>
+    public sealed class Lockstep
+    {
+        /// <summary>4 steps (67 ms at 60 Hz) covers a nearby Wi-Fi / Bluetooth hop without feeling laggy.</summary>
+        public const int DefaultDelay = 4;
+        /// <summary>How far past the last simulated step a phone may schedule input before it waits.</summary>
+        public const int MaxAhead = 30;
+        /// <summary>Checksums are compared every this many steps (once a second at 60 Hz).</summary>
+        public const int HashEvery = 60;
+
+        public readonly int Seat;
+        public readonly int Delay;
+        /// <summary>Next step to simulate.</summary>
+        public int NextTick { get; private set; }
+        /// <summary>Next step the local input will be scheduled for.</summary>
+        public int NextLocalTick { get; private set; }
+        public bool Desynced { get; private set; }
+        public int DesyncTick { get; private set; } = -1;
+        public bool RemoteLeft { get; private set; }
+
+        private readonly Dictionary<int, PlayerInput>[] _inputs = { new Dictionary<int, PlayerInput>(), new Dictionary<int, PlayerInput>() };
+        private readonly List<PlayerInput> _outgoing = new List<PlayerInput>();
+        private int _outgoingFirst;
+        private readonly Dictionary<int, uint> _localHashes = new Dictionary<int, uint>();
+        private readonly Dictionary<int, uint> _remoteHashes = new Dictionary<int, uint>();
+        private readonly List<byte[]> _sendHashes = new List<byte[]>();
+        private readonly List<PlayerInput> _scratch = new List<PlayerInput>();
+
+        public Lockstep(int seat, int delay = DefaultDelay)
+        {
+            Seat = seat;
+            Delay = Math.Max(1, delay);
+            // The first Delay steps have no input from anyone yet.
+            for (int t = 0; t < Delay; t++)
+            {
+                _inputs[0][t] = default;
+                _inputs[1][t] = default;
+            }
+            NextLocalTick = Delay;
+            _outgoingFirst = Delay;
+        }
+
+        public int RemoteSeat => 1 - Seat;
+
+        /// <summary>False when this phone has run too far ahead of the other one (it waits for them).</summary>
+        public bool CanQueueLocal => NextLocalTick < NextTick + Delay + MaxAhead;
+
+        /// <summary>Schedules this phone's input (already quantized) for the next free step. Returns that step.</summary>
+        public int QueueLocal(PlayerInput input)
+        {
+            input = LinkProtocol.Quantize(input);
+            int tick = NextLocalTick++;
+            _inputs[Seat][tick] = input;
+            _outgoing.Add(input);
+            return tick;
+        }
+
+        /// <summary>Messages to send now (new inputs in one message, plus any due checksums).</summary>
+        public List<byte[]> TakeOutgoing()
+        {
+            var list = new List<byte[]>();
+            int sent = 0;
+            while (sent < _outgoing.Count)
+            {
+                int n = Math.Min(200, _outgoing.Count - sent);
+                list.Add(LinkProtocol.Inputs(_outgoingFirst + sent, _outgoing, sent, n));
+                sent += n;
+            }
+            _outgoingFirst += _outgoing.Count;
+            _outgoing.Clear();
+            list.AddRange(_sendHashes);
+            _sendHashes.Clear();
+            return list;
+        }
+
+        public void Receive(byte[] m)
+        {
+            if (m == null || m.Length == 0) return;
+            switch ((LinkMessage)m[0])
+            {
+                case LinkMessage.Inputs:
+                    _scratch.Clear();
+                    if (!LinkProtocol.ReadInputs(m, out int first, _scratch)) return;
+                    for (int i = 0; i < _scratch.Count; i++)
+                        if (first + i >= NextTick) _inputs[RemoteSeat][first + i] = _scratch[i];
+                    break;
+                case LinkMessage.Hash:
+                    if (m.Length < 9) return;
+                    int tick = LinkProtocol.ReadInt(m, 1);
+                    uint hash = (uint)LinkProtocol.ReadInt(m, 5);
+                    _remoteHashes[tick] = hash;
+                    Compare(tick);
+                    break;
+                case LinkMessage.Bye:
+                    RemoteLeft = true;
+                    break;
+            }
+        }
+
+        /// <summary>True if both inputs for <see cref="NextTick"/> are here: returns them (team A, team B) and moves on.</summary>
+        public bool TryStep(out PlayerInput teamA, out PlayerInput teamB)
+        {
+            teamA = teamB = default;
+            if (Desynced) return false;
+            int t = NextTick;
+            if (!_inputs[0].TryGetValue(t, out teamA) || !_inputs[1].TryGetValue(t, out teamB)) return false;
+            _inputs[0].Remove(t);
+            _inputs[1].Remove(t);
+            NextTick++;
+            return true;
+        }
+
+        /// <summary>Waiting on the other phone's input for the next step.</summary>
+        public bool WaitingForRemote => !_inputs[RemoteSeat].ContainsKey(NextTick);
+
+        /// <summary>Call after simulating step <paramref name="tick"/>: every <see cref="HashEvery"/> steps the checksum is shared.</summary>
+        public void AfterStep(int tick, uint hash)
+        {
+            if ((tick + 1) % HashEvery != 0) return;
+            _localHashes[tick] = hash;
+            _sendHashes.Add(LinkProtocol.Hash(tick, hash));
+            Compare(tick);
+        }
+
+        private void Compare(int tick)
+        {
+            if (!_localHashes.TryGetValue(tick, out uint mine) || !_remoteHashes.TryGetValue(tick, out uint theirs)) return;
+            _localHashes.Remove(tick);
+            _remoteHashes.Remove(tick);
+            if (mine != theirs && !Desynced)
+            {
+                Desynced = true;
+                DesyncTick = tick;
+            }
+        }
+    }
+
+    /// <summary>Two connected in-memory transports with an adjustable delivery delay (tests and the Editor).</summary>
+    public sealed class MemoryTransport : ILinkTransport
+    {
+        private readonly Queue<(int at, byte[] m)> _inbox = new Queue<(int, byte[])>();
+        private MemoryTransport _other;
+        private int _now;
+        public int LatencyTicks;
+        public LinkState State { get; set; } = LinkState.Connected;
+        public string PeerName { get; set; } = "Other phone";
+        public int Sent { get; private set; }
+
+        public static void Pair(out MemoryTransport a, out MemoryTransport b, int latencyTicks = 0)
+        {
+            a = new MemoryTransport { LatencyTicks = latencyTicks };
+            b = new MemoryTransport { LatencyTicks = latencyTicks };
+            a._other = b;
+            b._other = a;
+        }
+
+        /// <summary>Advance this end's clock (messages are delivered after <see cref="LatencyTicks"/>).</summary>
+        public void Tick() => _now++;
+
+        public void Send(byte[] message)
+        {
+            Sent++;
+            if (State != LinkState.Connected || _other == null) return;
+            var copy = (byte[])message.Clone();
+            _other._inbox.Enqueue((_other._now + LatencyTicks, copy));
+        }
+
+        public bool TryReceive(out byte[] message)
+        {
+            message = null;
+            if (_inbox.Count == 0 || _inbox.Peek().at > _now) return false;
+            message = _inbox.Dequeue().m;
+            return true;
+        }
+    }
+}

@@ -1,10 +1,10 @@
-# RetroBall
+# Retro Hoops
 
 *Call your shot. Build your legacy.*
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–13 implemented.** The engine-free game logic (rules, AI, 2-player, tutorial, daily challenges, progression, save, art and audio generation) compiles on .NET and passes 278 automated tests. The Unity project compiled in Unity 6000.6.3f1 with 0 errors as of Phase 8, after small first-open fixes. Phase 11 also compiled in Unity with 0 errors. Phase 12 also compiled in Unity with 0 errors. Phase 13 Unity changes have only been syntax- and name-checked so far. There has been no full playtest, iOS build, or device run yet. See [Known limitations](#known-limitations).
+> **Status: Phases 1–26 implemented.** The engine-free game logic compiles on .NET and passes 536 automated tests. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload of that build has not gone through yet. The last on-device run was the Phase 18 build. Phase 26 (two-phone play, Couch Cup, Summer Story, commentary, frame pacing) has passed the logic tests and a C# compile check against Unity's assemblies here, but has not been compiled in Unity, built for iOS, or played on a device. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -37,7 +37,10 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
   - **Quick Call:** pick one of your two unlocked teams, cycle the opponent, choose difficulty, tip off. Pays half rewards.
   - **Daily Challenge:** one seeded challenge per day, the same for everyone and offline (e.g. "Win by 6", "Hit 3 GREEN releases"). Completing it pays 75 SP plus 15 per consecutive day (capped).
   - **2 Player:** local head to head, each person leading a 3-player side. P1 uses touch or WASD/K/J/L/C; P2 uses arrows + Num1 shoot / Num2 pass / Num3 steal / Num0 pick & roll, or game controllers. No rewards.
+  - **Two Phones** (2 Player ▸ TWO PHONES): each player on their own iPhone or iPad nearby, over Wi-Fi or Bluetooth, no internet or account (Apple's Multipeer Connectivity). One hosts and picks both teams; the other joins. Both phones run the same simulation in lockstep and only controller input is sent.
+  - **Couch Cup** (2 Player ▸ COUCH CUP): a knockout for 2 to 8 named players on one device, with byes, replayed ties, and a saved bracket.
   - **How to Play:** a guided tutorial (move, shoot, green, pass, ask, call, steal, jump), offered on first launch and from Settings; +100 SP the first time.
+- **Summer Story:** eight chapters from a 1-on-1 at the overpass to the Sunburst League final (Full Court), with scenes before and after each game and a goal per chapter (win by 4, three assists, three steals, break someone's ankles). Original cast: Nova Quinn, Big Sal, Mic Tally and Kojo Stride of the Velvet Hour. Mic Tally also calls big moments as text commentary in every mode (Settings ▸ COMMENTARY).
 - **Rise Mode:** play as the First Callers, recruit players from teams you beat (YOUR CREW), take on rival crew Neon Static once a season, with story scenes along the way. Beat five street crews in The Blacktop Circuit, join The Caller League for a 10-game season (event cards between games, energy and chemistry), then a four-team bracket for The Gold Signal Cup. Next season starts from the hub.
 - **First Call Classic:** a four-team knockout. Your First Callers (fourth seed) face three league teams drawn at random; win the semi and the final for the title (+200 SP bonus). Enter a new Classic any time it's over.
 - **Practice Lab:** Free Shoot (60 s), Passing Targets (45 s), Dribble Lane (5 cones, timed). Personal bests are saved. No rewards.
@@ -123,7 +126,8 @@ Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 
 ## Known limitations
 
-- **Partly compiled in Unity.** The Phase 8 code compiled in Unity 6000.6.3f1. Phase 9–11 Unity changes have passed only a syntax check and a name-resolution check here, and could still hit Unity compile errors. No iOS build, simulator run, or device test has happened.
+- **Phase 26 is not compiled in Unity yet.** It passed a compile check against Unity's reference assemblies here; the new native plugin (`Plugins/iOS/RetroLink.mm`) passed only a syntax check against stand-in headers, not the real iOS SDK. Two-phone play needs two real devices to test; it can't run in the Editor.
+- **Device testing is behind.** The last device run was the Phase 18 build. iPad and Mac layouts have not been checked on hardware.
 - Not tuned by hand: balance numbers come from AI-vs-AI simulations (AI field-goal rate about 29 % Rookie, 38 % Caller, 56 % Legend), not from people playing.
 - The URP asset must be assigned by hand (setup step 4).
 - The app icon and launch image are generated, but not yet checked in Xcode or on a device. There is no localisation (English only).

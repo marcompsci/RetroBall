@@ -25,7 +25,7 @@ namespace CallerRetroBall.UI
         private TextMeshProUGUI _name, _text;
         private UnityEngine.UI.RawImage _portrait;
         private RectTransform _portraitRt;
-        private readonly Texture2D[] _faces = new Texture2D[6];
+        private readonly Texture2D[] _faces = new Texture2D[System.Enum.GetValues(typeof(StorySpeaker)).Length + 1];
         private float _openedAt;
 
         /// <summary>Plays <paramref name="beat"/> and marks it seen; <paramref name="onDone"/> runs afterwards.</summary>
@@ -122,8 +122,11 @@ namespace CallerRetroBall.UI
             }
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
-            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5;
-            _name.color = l.Speaker == StorySpeaker.Rival ? Theme.Cyan
+            var cast = StoryMode.Character(l.Speaker);
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5
+                         || (cast != null && cast.Right);
+            _name.color = cast != null ? ToColor(RgbColor.FromHex(cast.Color))
+                        : l.Speaker == StorySpeaker.Rival ? Theme.Cyan
                         : l.Speaker == StorySpeaker.Rival2 ? (Color)new Color32(0xFF, 0x8C, 0x42, 255)
                         : l.Speaker == StorySpeaker.Rival3 ? (Color)new Color32(0x0E, 0xA5, 0xE9, 255)
                         : l.Speaker == StorySpeaker.Rival4 ? (Color)new Color32(0xE1, 0x1D, 0x48, 255)
@@ -139,8 +142,12 @@ namespace CallerRetroBall.UI
             Audio.AudioManager.Click();
         }
 
+        private static Color ToColor(RgbColor c) => new Color32(c.r, c.g, c.b, 255);
+
         private static string SpeakerName(StorySpeaker s)
         {
+            var cast = StoryMode.Character(s);
+            if (cast != null) return cast.Name;
             switch (s)
             {
                 case StorySpeaker.Coach: return Story.CoachName;
@@ -155,14 +162,21 @@ namespace CallerRetroBall.UI
 
         private Texture2D Face(StorySpeaker s)
         {
-            int i = (int)s;
+            int i = Mathf.Clamp((int)s, 0, _faces.Length - 1);
             if (_faces[i] != null) return _faces[i];
             var c = App.Catalog;
             var crew = c.Team(DefaultContent.PlayerCrewId);
             AppearanceDef look;
             RgbColor jersey, trim, accent;
-            switch (s)
+            var cast = StoryMode.Character(s);
+            switch (cast != null ? (StorySpeaker)(-1) : s)
             {
+                case (StorySpeaker)(-1):
+                    look = cast.Look;
+                    jersey = RgbColor.FromHex(cast.Jersey);
+                    trim = RgbColor.FromHex(cast.Trim);
+                    accent = RgbColor.FromHex(cast.Accent);
+                    break;
                 case StorySpeaker.Coach:
                     // Coach Dee: an original character in a gold coach's top.
                     look = new AppearanceDef(3, 4, 0, BodyType.Standard, 1);

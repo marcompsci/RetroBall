@@ -293,7 +293,8 @@ namespace CallerRetroBall.Logic
 
     public enum StorySpeaker { Coach = 0, Rival = 1, You = 2, /** Kaia Sol of the Sundown Syndicate (chapter 2). */ Rival2 = 3,
         /** Mara Quill of the Midnight Tide (chapter 3). */ Rival3 = 4, /** Juno Vale of the Paper Cranes (chapter 4). */ Rival4 = 5,
-        /** Echo Rivera of the Cassette Club (chapter 5). */ Rival5 = 6 }
+        /** Echo Rivera of the Cassette Club (chapter 5). */ Rival5 = 6,
+        /** Summer Story (original cast): Nova Quinn, Big Sal, Mic Tally, Kojo Stride. */ Nova = 7, Sal = 8, Mic = 9, Kojo = 10 }
 
     public struct StoryLine
     {

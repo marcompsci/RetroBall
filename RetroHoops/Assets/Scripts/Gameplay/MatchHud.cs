@@ -35,6 +35,9 @@ namespace CallerRetroBall.Gameplay
         private string _lastInfo = "";
         private int _lastScoreA = -1, _lastScoreB = -1, _lastClock = -1, _lastShot = -1, _lastOffense = -1;
         private float _toastUntil;
+        private UnityEngine.UI.Image _micPanel;
+        private TextMeshProUGUI _micText;
+        private float _micUntil;
         private float _punchA = -10f, _punchB = -10f;
 
         /// <summary>Accessibility: no score bounce.</summary>
@@ -124,6 +127,21 @@ namespace CallerRetroBall.Gameplay
             _info.fontSizeMin = 20f;
             _info.fontSizeMax = 36f;
             _info.rectTransform.anchoredPosition = new Vector2(0f, -172f);
+
+            // Mic Tally's commentary ticker, under the score bar.
+            _micPanel = UiKit.Panel(safe, new Color(0.04f, 0.04f, 0.09f, 0.78f), name: "MicTicker");
+            var mrt = _micPanel.rectTransform;
+            mrt.anchorMin = mrt.anchorMax = new Vector2(0.5f, 1f);
+            mrt.pivot = new Vector2(0.5f, 1f);
+            mrt.sizeDelta = new Vector2(980f, 64f);
+            mrt.anchoredPosition = new Vector2(0f, -236f);
+            _micPanel.raycastTarget = false;
+            _micText = UiKit.Label(mrt, "", 30f, Theme.Cream, TextAlignmentOptions.Center, true, "MicText");
+            UiKit.Stretch(_micText.rectTransform, 10f);
+            _micText.enableAutoSizing = true;
+            _micText.fontSizeMin = 18f;
+            _micText.fontSizeMax = 30f;
+            _micPanel.gameObject.SetActive(false);
 
             BuildCallMenu(safe);
             BuildReplayUi(safe);
@@ -406,6 +424,16 @@ namespace CallerRetroBall.Gameplay
             if (_replayButton != null && _replayButton.activeSelf && Time.unscaledTime > _replayButtonUntil) _replayButton.SetActive(false);
             Punch(_scoreA, _punchA);
             Punch(_scoreB, _punchB);
+            if (_micPanel != null && _micPanel.gameObject.activeSelf && Time.unscaledTime > _micUntil) _micPanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>Shows a commentary line ("MIC: ...") for a few seconds under the score bar.</summary>
+        public void Commentary(string speaker, string line)
+        {
+            if (_micPanel == null || string.IsNullOrEmpty(line)) return;
+            _micText.text = "<color=#4CC9F0>" + speaker + ":</color> " + Loc.T(line);
+            _micUntil = Time.unscaledTime + 3f;
+            _micPanel.gameObject.SetActive(true);
         }
 
         /// <summary>Score bounce: pops to 140 % and settles back over 0.3 s.</summary>

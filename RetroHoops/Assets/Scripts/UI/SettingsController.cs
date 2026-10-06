@@ -102,6 +102,7 @@ namespace CallerRetroBall.UI
             UiControls.ToggleRow(column, "LARGE BUTTONS", s.largeButtons, v => { s.largeButtons = v; Save(); });
             UiKit.Button(column, "CUSTOMIZE CONTROLS", () => Controls.ControlEditor.Open(), ButtonStyle.Secondary, 100f, 36f);
             UiControls.ToggleRow(column, "LANDSCAPE: ALL GAMES", s.landscapeAll, v => { s.landscapeAll = v; Save(); });
+            UiControls.ToggleRow(column, "COMMENTARY (MIC TALLY)", s.commentary, v => { s.commentary = v; Save(); });
             UiKit.Size(UiKit.Label(column, "Full Court always plays sideways. Turn this on to play every mode sideways (2 Player stays upright).", 28f, Theme.Muted), 80f);
             UiControls.ToggleRow(column, "TAP TO SHOOT", s.tapToShoot, v => { s.tapToShoot = v; Save(); });
             UiControls.ToggleRow(column, "REDUCE MOTION", s.reduceMotion, v => { s.reduceMotion = v; Save(); });

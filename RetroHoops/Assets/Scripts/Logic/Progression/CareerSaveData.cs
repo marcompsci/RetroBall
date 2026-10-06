@@ -31,6 +31,8 @@ namespace CallerRetroBall.Logic
         public string controlLayout = "";
         /// <summary>Play every mode in landscape, not only Full Court (2 Player and the demo stay portrait).</summary>
         public bool landscapeAll;
+        /// <summary>Mic Tally's text commentary during games.</summary>
+        public bool commentary = true;
         /// <summary>Tap SHOOT to start the meter and tap again to release (no holding).</summary>
         public bool tapToShoot;
         /// <summary>No screen shake, sparks, or score bounce.</summary>
@@ -267,6 +269,10 @@ namespace CallerRetroBall.Logic
         public WeeklySaveData weekly = new WeeklySaveData();
         /// <summary>The free Hoops Pass season track.</summary>
         public PassSaveData pass = new PassSaveData();
+        /// <summary>Summer Story progress.</summary>
+        public StorySaveData story = new StorySaveData();
+        /// <summary>The Couch Cup in progress (2 Player tournament on one device).</summary>
+        public CouchCupSaveData couch = new CouchCupSaveData();
         /// <summary>Photo mode shots taken (for the badge).</summary>
         public int photosTaken;
         /// <summary>Badges already announced.</summary>

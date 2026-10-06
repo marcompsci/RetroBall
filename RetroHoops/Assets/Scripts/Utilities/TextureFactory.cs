@@ -85,6 +85,9 @@ namespace CallerRetroBall.Utilities
             return tex;
         }
 
+        /// <summary>Drops the cache without destroying anything (textures still on screen stay; the rest can be unloaded).</summary>
+        public static void ForgetCache() => Cache.Clear();
+
         public static void ClearCache()
         {
             if (Application.isPlaying)

@@ -64,6 +64,15 @@ namespace CallerRetroBall.Gameplay
         private DailyChallenge _daily;
         private readonly InputBuffer _buffer2 = new InputBuffer();
         private bool Versus => _request != null && _request.Mode == GameMode.Versus;
+
+        // Two-phone play (2 PLAYER ▸ TWO PHONES): lockstep with the other phone; null otherwise.
+        private Lockstep _link;
+        private ILinkTransport _wire;
+        private PlayerInput _linkCarry;
+        private float _lastLinkStep, _nextWaitToast;
+        private bool _linkEnded;
+        /// <summary>The team this phone plays: the guest of a two-phone game is team B.</summary>
+        private int LocalTeam => _link != null ? _link.Seat : _match.Setup.HumanTeam;
         /// <summary>Full Court on a landscape screen.</summary>
         private bool _landscape;
 
@@ -161,8 +170,15 @@ namespace CallerRetroBall.Gameplay
             _request = App.PrepareRequest(App.PendingMatch ?? MatchRequest.QuickCallDefault(catalog));
             App.PendingMatch = null;
             if (_request.Seed == 0) _request.Seed = (uint)System.Environment.TickCount | 1u;
+            if (_request.ContextId == "link" && LinkMatch.Active)
+            {
+                _link = new Lockstep(LinkMatch.Seat);
+                _wire = LinkMatch.Transport;
+                _lastLinkStep = Time.unscaledTime;
+            }
 
-            int rate = App.SimulationRate;
+            // Both phones in a two-phone game step at 60 Hz, whatever their screens do.
+            int rate = _link != null ? 60 : App.SimulationRate;
             FixedStep = 1f / rate;
             MaxStepsPerFrame = rate / 12;
             var setup = MatchSetup.FromRequest(_request, catalog);
@@ -219,7 +235,7 @@ namespace CallerRetroBall.Gameplay
             _reduceMotion = settings != null && settings.reduceMotion;
             _tapToShoot = settings != null && settings.tapToShoot;
             // 2 Player with no controllers on a touch screen: tabletop mode, each player gets half the screen.
-            bool tabletop = Versus && TabletopWanted();
+            bool tabletop = Versus && _link == null && TabletopWanted();
             _controls = TouchControls.Create(_buffer, settings != null && settings.leftHanded, settings != null && settings.largeButtons,
                                              tabletop ? TouchControls.Seat.Bottom : TouchControls.Seat.Full, settings?.controlLayout);
             if (tabletop)
@@ -235,7 +251,10 @@ namespace CallerRetroBall.Gameplay
             _controls.Call.UnavailableHint = "OFFENSE";
             _hud = MatchHud.Create(setup.TeamA, setup.TeamB);
             _hud.PlayChosen += play => _pendingCall = play;
-            _recorder = new ReplayRecorder(_match.Players.Length, ReplayRecorder.DefaultSeconds, App.SimulationRate);
+            // Mic Tally on the call (Settings ▸ COMMENTARY), except in practice and the tutorial.
+            if ((settings == null || settings.commentary) && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
+                _mic = new Commentary(setup.TeamA.nickname, setup.TeamB.nickname, _request.Seed);
+            _recorder = new ReplayRecorder(_match.Players.Length, ReplayRecorder.DefaultSeconds, rate);
             _rainbowBall = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.RainbowBall);
             _skyHigh = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.SkyHigh);
             if (Demo)
@@ -251,7 +270,11 @@ namespace CallerRetroBall.Gameplay
             _hud.PauseRequested += () => SetPaused(true);
             _hud.ResumeRequested += () => SetPaused(false);
             _hud.QuitRequested += Quit;
-            _hud.PhotoRequested += OpenPhotoMode;
+            _hud.PhotoRequested += () =>
+            {
+                if (_link != null) { _hud.Toast("NOT IN A TWO-PHONE GAME", 1.2f); return; }
+                OpenPhotoMode();
+            };
             _hud.RematchRequested += Rematch;
 
             _myCelebration = Flair.CelebrationFor(App.Career?.equippedCelebration);
@@ -418,6 +441,7 @@ namespace CallerRetroBall.Gameplay
         private void Update()
         {
             if (_match == null) return;
+            PowerMonitor.Gameplay = Replaying || (!_paused && !_finalShown && _photo == null);
             UI.ControllerCursor.Suppressed = !_paused && !_finalShown && !Replaying;
             if (Replaying)
             {
@@ -433,8 +457,14 @@ namespace CallerRetroBall.Gameplay
                     return;
                 }
             }
-            else if (_photo != null) return;
+            else if (_photo != null && _link == null) return;
             else if (EscapePressed() && !_match.IsOver) SetPaused(!_paused);
+            if (_link != null)
+            {
+                // Two phones: the game keeps going while the pause menu is open (the other phone is still playing).
+                LinkFrame();
+                return;
+            }
             if (_paused) return;
             if (Time.unscaledTime < _hitStopUntil)
             {
@@ -721,8 +751,210 @@ namespace CallerRetroBall.Gameplay
             return input;
         }
 
+        // ------------------------------------------------------------------ two-phone play
+
+        /// <summary>
+        /// One frame of a two-phone game: schedule this phone's input at 60 Hz, swap messages, and
+        /// simulate every step both inputs have arrived for. A stall (the other phone hasn't sent yet)
+        /// just holds the picture; a dropped connection, a player leaving, or a checksum mismatch ends the game.
+        /// </summary>
+        private void LinkFrame()
+        {
+            UpdatePadMode();
+            if (!_match.IsOver && !_linkEnded)
+            {
+                var local = _paused ? default : (_link.Seat == 0 ? ReadInput() : ReadGuestInput());
+                // Presses wait here until a step is scheduled, so none are lost on frames without one.
+                _linkCarry.Move = local.Move;
+                _linkCarry.ShootHeld = local.ShootHeld;
+                _linkCarry.ShootPressed |= local.ShootPressed;
+                _linkCarry.PassPressed |= local.PassPressed;
+                _linkCarry.DefensePressed |= local.DefensePressed;
+                _linkCarry.DunkPressed |= local.DunkPressed;
+                _linkCarry.LayupPressed |= local.LayupPressed;
+                if (local.CallPlay != PlayCall.None) _linkCarry.CallPlay = local.CallPlay;
+
+                _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
+                while (_accumulator >= FixedStep && _link.CanQueueLocal)
+                {
+                    _link.QueueLocal(_linkCarry);
+                    _linkCarry.ShootPressed = _linkCarry.PassPressed = _linkCarry.DefensePressed = _linkCarry.DunkPressed = _linkCarry.LayupPressed = false;
+                    _linkCarry.CallPlay = PlayCall.None;
+                    _accumulator -= FixedStep;
+                }
+                // While waiting on the other phone, don't bank time (that would make a burst later).
+                if (_accumulator > FixedStep * MaxStepsPerFrame) _accumulator = FixedStep * MaxStepsPerFrame;
+            }
+
+            foreach (var m in _link.TakeOutgoing()) _wire.Send(m);
+            while (_wire.TryReceive(out var msg)) _link.Receive(msg);
+
+            int steps = 0;
+            while (steps < MaxStepsPerFrame * 2 && !_match.IsOver && !_linkEnded && _link.TryStep(out var a, out var b))
+            {
+                int tick = _link.NextTick - 1;
+                StepMarker.Begin();
+                _match.Step(FixedStep, a, b);
+                StepMarker.End();
+                _link.AfterStep(tick, SimHash.Of(_match));
+                CourtSpace.Flip = _match.Flipped;
+                _recorder.Capture(_match);
+                HandleEvents();
+                steps++;
+            }
+            _hitStopUntil = 0f; // no hit-stop: both phones keep the same pace
+            if (steps > 0)
+            {
+                _lastLinkStep = Time.unscaledTime;
+                foreach (var m in _link.TakeOutgoing()) _wire.Send(m); // checksums due after those steps
+            }
+
+            ViewsMarker.Begin();
+            SyncViews(steps * FixedStep, snapCamera: false);
+            ViewsMarker.End();
+
+            if (_linkEnded) return;
+            string problem = _link.Desynced ? "OUT OF SYNC"
+                           // (inputs already received are played out first, so a friend leaving right at the buzzer still finishes the game)
+                           : _link.RemoteLeft && _link.WaitingForRemote ? "YOUR FRIEND LEFT"
+                           : (_wire.State == LinkState.Lost || _wire.State == LinkState.Idle) && _link.WaitingForRemote ? "CONNECTION LOST" : null;
+            if (problem != null && !_match.IsOver)
+            {
+                EndLink(problem);
+                return;
+            }
+            if (!_match.IsOver && Time.unscaledTime - _lastLinkStep > 0.6f && Time.unscaledTime >= _nextWaitToast)
+            {
+                _nextWaitToast = Time.unscaledTime + 1f;
+                _hud.Toast("WAITING FOR YOUR FRIEND…", 1.1f);
+            }
+            if (_match.IsOver && !_finalShown) ShowFinal();
+        }
+
+        private void EndLink(string why)
+        {
+            _linkEnded = true;
+            _finalShown = true;
+            SetTouchVisible(false);
+            _hud.ShowPause(false);
+            HangUp();
+            string detail = why == "OUT OF SYNC"
+                ? "The two games stopped matching (step " + _link.DesyncTick + "). Both phones need the same version. No result counted."
+                : "Score " + _match.Score[0] + " - " + _match.Score[1] + ". No result counted.";
+            _hud.ShowFinal(why, detail);
+            Haptics.Heavy();
+        }
+
+        /// <summary>Tells the other phone we're leaving (once) and closes the connection.</summary>
+        private void HangUp()
+        {
+            if (_wire == null) return;
+            if (_wire.State == LinkState.Connected) _wire.Send(LinkProtocol.Simple(LinkMessage.Bye));
+            _wire = new ClosedWire();
+            NearbyLink.Stop();
+            LinkMatch.Clear();
+        }
+
+        /// <summary>Stands in for the connection after hanging up.</summary>
+        private sealed class ClosedWire : ILinkTransport
+        {
+            public LinkState State => LinkState.Idle;
+            public string PeerName => "";
+            public void Send(byte[] message) { }
+            public bool TryReceive(out byte[] message) { message = null; return false; }
+        }
+
+        /// <summary>The guest phone's controls (team B, player 2): full-screen touch, keyboard, or a controller.</summary>
+        private PlayerInput ReadGuestInput()
+        {
+            var move = ScreenToCourt(_controls.ScreenStick);
+            bool shootHeld = _controls.Shoot.IsHeld;
+            float now = Time.unscaledTime;
+            bool callPressed = false;
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                float x = (kb.dKey.isPressed || kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || kb.leftArrowKey.isPressed ? 1f : 0f);
+                float y = (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f);
+                if (x != 0f || y != 0f) move = ScreenToCourt(Vec2.ClampMagnitude(new Vec2(x, y), 1f));
+                if (kb.uKey.wasPressedThisFrame) _buffer.Press(ActionButton.Dunk, now);
+                if (kb.iKey.wasPressedThisFrame) _buffer.Press(ActionButton.Layup, now);
+                if (kb.jKey.wasPressedThisFrame) _buffer.Press(ActionButton.Pass, now);
+                if (kb.kKey.wasPressedThisFrame) _buffer.Press(ActionButton.Shoot, now);
+                if (kb.lKey.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, now);
+                if (kb.cKey.wasPressedThisFrame) callPressed = true;
+                shootHeld |= kb.kKey.isPressed;
+            }
+            var pad = Gamepad.current;
+            if (pad != null)
+            {
+                var stick = pad.leftStick.ReadValue();
+                if (stick.sqrMagnitude > 0.02f) move = ScreenToCourt(new Vec2(stick.x, stick.y));
+                if (pad.rightShoulder.wasPressedThisFrame) _buffer.Press(ActionButton.Dunk, now);
+                if (pad.leftShoulder.wasPressedThisFrame) _buffer.Press(ActionButton.Layup, now);
+                if (pad.buttonSouth.wasPressedThisFrame) _buffer.Press(ActionButton.Shoot, now);
+                if (pad.buttonWest.wasPressedThisFrame) _buffer.Press(ActionButton.Pass, now);
+                if (pad.buttonEast.wasPressedThisFrame) _buffer.Press(ActionButton.Defense, now);
+                if (pad.buttonNorth.wasPressedThisFrame) callPressed = true;
+                shootHeld |= pad.buttonSouth.isPressed;
+            }
+#endif
+            if (_buffer.Consume(ActionButton.Call, now)) callPressed = true;
+            int me = _match.SecondControlledIndex;
+            var input = new PlayerInput { Move = move, ShootHeld = shootHeld };
+            if (me < 0) return input;
+            int team = _match.Players[me].Team;
+            bool live = _match.Phase == MatchPhase.Live || _match.Phase == MatchPhase.CheckBall;
+            bool hasBall = _match.Ball.IsHeld && _match.Ball.HolderIndex == me;
+            bool teamHasBall = _match.Ball.IsHeld && _match.Players[_match.Ball.HolderIndex].Team == team;
+            if (_match.OffenseTeam == team)
+            {
+                if (live && hasBall && !_match.MustClear && _match.ChargingIndex < 0 && _buffer.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
+                if (live && teamHasBall && _match.ChargingIndex < 0 && _buffer.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                bool finish = _match.Phase == MatchPhase.Live && hasBall && !_match.MustClear && !_match.MustInbound && _match.ChargingIndex < 0;
+                if (finish && _buffer.Consume(ActionButton.Dunk, now)) input.DunkPressed = true;
+                if (finish && _buffer.Consume(ActionButton.Layup, now)) input.LayupPressed = true;
+                _buffer.Consume(ActionButton.Defense, now);
+                if (callPressed && teamHasBall && _match.Phase == MatchPhase.Live && _match.ActivePlay == PlayCall.None) input.CallPlay = PlayCall.PickAndRoll;
+            }
+            else if (_match.Phase == MatchPhase.Live)
+            {
+                if (_buffer.Consume(ActionButton.Defense, now)) input.DefensePressed = true;
+                if (_buffer.Consume(ActionButton.Shoot, now)) input.ShootPressed = true;
+                if (_buffer.Consume(ActionButton.Pass, now)) input.PassPressed = true;
+                if (_buffer.Consume(ActionButton.Dunk, now)) input.DefensePressed = true;
+                _buffer.Consume(ActionButton.Layup, now);
+            }
+            return input;
+        }
+
+        /// <summary>Button labels on the guest phone (it plays team B).</summary>
+        private void UpdateGuestLabels()
+        {
+            int me = _match.SecondControlledIndex;
+            bool offense = me >= 0 && _match.OffenseTeam == _match.Players[me].Team;
+            bool hasBall = me >= 0 && _match.Ball.IsHeld && _match.Ball.HolderIndex == me;
+            int state = 128 | (offense ? 1 : 0) | (hasBall ? 2 : 0) | (_match.MustClear ? 4 : 0);
+            if (state == _lastLabelState) return;
+            _lastLabelState = state;
+            _controls.SetRole(!offense, false);
+            if (offense) _controls.SetLabels(_match.MustClear && hasBall ? "CLEAR" : "SHOOT", hasBall ? "PASS" : "ASK", "DUNK");
+            else _controls.SetLabels("BLOCK", "SWITCH", "STEAL");
+            bool canShoot = !offense || (hasBall && !_match.MustClear);
+            _controls.SetAvailability(canShoot, true, canShoot, canShoot, offense);
+            _controls.Call.SetLabel("P&R");
+        }
+
+        private Commentary _mic;
+
         private void HandleEvents()
         {
+            if (_mic != null && _match.Events.Count > 0)
+            {
+                string line = _mic.React(_match, i => { var d = _match.Players[i].Def; return string.IsNullOrEmpty(d.lastName) ? d.firstName : d.lastName; }, _match.Ball.ShotType);
+                if (line != null) _hud.Commentary(Commentary.Speaker, line);
+            }
             int human = _match.Setup.HumanTeam;
             float stop = 0f;
             foreach (var e in _match.Events)
@@ -997,6 +1229,11 @@ namespace CallerRetroBall.Gameplay
 
         private void UpdateControlLabels()
         {
+            if (_link != null && _link.Seat == 1)
+            {
+                UpdateGuestLabels();
+                return;
+            }
             bool offense = _match.OffenseTeam == _match.Setup.HumanTeam;
             bool oop = offense && _match.HumanHasBall && _match.Phase == MatchPhase.Live && _match.AlleyOopCandidate(_match.ControlledIndex) >= 0;
             string shoot, pass, dunk;
@@ -1154,6 +1391,22 @@ namespace CallerRetroBall.Gameplay
             {
                 // Local 2-player: box score, no rewards (only counted for a badge and an achievement).
                 var vs = MatchSummary.From(_match, _request.Mode, "versus");
+                bool couch = CouchCup.IsCouch(_request.ContextId) && App.Career?.couch != null && App.Career.couch.Active;
+                string couchNote = null, couchTitle = null;
+                if (couch && !_resultApplied)
+                {
+                    var cup = App.Career.couch;
+                    var game = CouchCup.NextGame(cup);
+                    string nameA = game != null ? cup.names[game.a].ToUpperInvariant() : "PLAYER 1", nameB = game != null ? cup.names[game.b].ToUpperInvariant() : "PLAYER 2";
+                    var outcome = CouchCup.Report(cup, _match.Score[0], _match.Score[1]);
+                    App.OpenCouchOnMenu = true;
+                    couchTitle = outcome == CouchOutcome.TieReplay ? "TIE: PLAY IT AGAIN" : (_match.Score[0] > _match.Score[1] ? nameA : nameB) + " WINS";
+                    var after = CouchCup.NextGame(cup);
+                    couchNote = outcome == CouchOutcome.Champion ? cup.names[cup.champion].ToUpperInvariant() + " WINS THE COUCH CUP!"
+                              : outcome == CouchOutcome.TieReplay ? "Ties don't count in the Couch Cup. HOME, then PLAY to go again."
+                              : after != null ? "Next: " + cup.names[after.a] + " vs " + cup.names[after.b] + " (" + CouchCup.RoundName(cup, after.round) + ")" : null;
+                    if (outcome == CouchOutcome.Champion) Sfx(SfxId.Fanfare);
+                }
                 if (App.Career != null && !_resultApplied)
                 {
                     _resultApplied = true;
@@ -1163,8 +1416,11 @@ namespace CallerRetroBall.Gameplay
                 }
                 _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
                 string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
+                if (_link != null) winner = _match.Winner < 0 ? "TIE" : (_match.Winner == _link.Seat ? "YOU WIN" : "YOUR FRIEND WINS");
                 Haptics.Success();
-                _hud.ShowPostGame(winner, vs, default, false, null, null, true);
+                if (couchTitle != null) winner = couchTitle;
+                _hud.ShowPostGame(winner, vs, default, false, _link != null ? "Host again from 2 PLAYER ▸ TWO PHONES for a rematch." : couchNote, null, _link == null && !couch);
+                HangUp();
                 return;
             }
 
@@ -1302,6 +1558,26 @@ namespace CallerRetroBall.Gameplay
                     title = summary.HumanWon ? "YOU RUN THE PARK" : street.Nickname + " WINS";
                     note = (rep >= 0 ? "+" : "") + rep + " REP  ·  " + Street.RepNames[Street.RepLevel(App.Career.street.rep)]
                            + (ankles > 0 ? "  ·  " + ankles + " ANKLE BREAKER" + (ankles == 1 ? "" : "S") : "");
+                }
+                var storyChapter = StoryMode.FromContext(_request.ContextId);
+                if (rewarded && storyChapter != null)
+                {
+                    var st = App.Career.story ?? (App.Career.story = new StorySaveData());
+                    var outcome = StoryMode.ApplyResult(st, storyChapter, summary, out int storyReward);
+                    App.OpenStoryOnMenu = true;
+                    if (outcome == StoryOutcome.Cleared)
+                    {
+                        App.Career.signalPoints += storyReward;
+                        App.StoryOutroPending = storyChapter.Number;
+                        title = storyChapter.Number == StoryMode.Chapters ? "SUNBURST CHAMPIONS" : "CHAPTER CLEARED";
+                        note = storyChapter.Title + (storyReward > 0 ? "  ·  +" + storyReward + " SP" : "") + "  ·  HOME for the next scene";
+                        Sfx(SfxId.Fanfare);
+                    }
+                    else
+                    {
+                        title = outcome == StoryOutcome.GoalMissed ? "SO CLOSE" : "NOT THIS TIME";
+                        note = "Goal: " + StoryMode.GoalText(storyChapter) + ". REMATCH to try again.";
+                    }
                 }
                 if (rewarded && _request.Mode == GameMode.CustomCup)
                 {
@@ -1678,7 +1954,7 @@ namespace CallerRetroBall.Gameplay
                 _oopFinisher = -1;
                 _recorder.OfferBestPlay("ALLEY-OOP!", 95);
                 _lastHighlight = _recorder.Snapshot(3.5f, "ALLEY-OOP!", 95);
-                _hud.OfferReplay(3f);
+                if (_link == null) _hud.OfferReplay(3f);
                 return;
             }
             if (e.Type == MatchEventType.ShotMissed || e.Type == MatchEventType.Block) _oopFinisher = -1;
@@ -1691,7 +1967,7 @@ namespace CallerRetroBall.Gameplay
             if (score >= 50)
             {
                 _lastHighlight = _recorder.Snapshot(3.5f, label, score);
-                _hud.OfferReplay(3f);
+                if (_link == null) _hud.OfferReplay(3f);
             }
         }
 
@@ -2020,6 +2296,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Rematch()
         {
+            if (_link != null) { Quit(); return; } // a two-phone rematch is hosted again from the menu
             if (IsRun) { Continue(); return; }
             if (_request.ContextId != null && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal))
             {
@@ -2034,6 +2311,7 @@ namespace CallerRetroBall.Gameplay
 
         private void Quit()
         {
+            HangUp();
             SceneFlow.GoTo(SceneNames.MainMenu);
         }
 
@@ -2050,6 +2328,8 @@ namespace CallerRetroBall.Gameplay
 
         private void OnDestroy()
         {
+            PowerMonitor.Gameplay = false;
+            HangUp();
             UI.ControllerCursor.Suppressed = false;
             CourtSpace.Flip = false;
             if (_landscape)

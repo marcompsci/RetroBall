@@ -287,9 +287,23 @@ namespace CallerRetroBall.EditorTools
 
         // ------------------------------------------------------------------ builds
 
+        /// <summary>
+        /// Smaller download: strip unused engine modules and unused .NET library code (Assets/link.xml keeps
+        /// all of Retro Hoops' own code), and let IL2CPP share generic code. The match simulation costs about
+        /// 10 µs a step, so the size-optimised code generation has no visible cost.
+        /// </summary>
+        public static void EnsureSizeSettings()
+        {
+            PlayerSettings.stripEngineCode = true;
+            if (PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.iOS) < ManagedStrippingLevel.Low)
+                PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.iOS, ManagedStrippingLevel.Low);
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.iOS, Il2CppCodeGeneration.OptimizeSize);
+        }
+
         private static void Build(iOSSdkVersion sdk, string output)
         {
             EnsureOrientations();
+            EnsureSizeSettings();
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {

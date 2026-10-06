@@ -35,8 +35,12 @@ namespace CallerRetroBall.Core
             // Let the title screen draw before the (blocking) content and save loading.
             yield return null;
             yield return null;
+            float initStart = Time.realtimeSinceStartup;
             App.EnsureInitialized();
             UiKit.CheckTextMeshProReady();
+            // Startup timing in the device log (Xcode console), for keeping launch fast.
+            Debug.Log("[Retro Hoops] Boot: title shown at " + Mathf.RoundToInt(started * 1000f) + " ms after launch, content + save loaded in "
+                      + Mathf.RoundToInt((Time.realtimeSinceStartup - initStart) * 1000f) + " ms");
 
             while (Time.realtimeSinceStartup - started < minimumSplashSeconds) yield return null;
             SceneFlow.GoTo(SceneNames.MainMenu);
