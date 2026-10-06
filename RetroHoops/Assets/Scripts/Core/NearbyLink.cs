@@ -24,6 +24,9 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern int RetroLink_Send(byte[] data, int length);
         [DllImport("__Internal")] private static extern int RetroLink_NextLength();
         [DllImport("__Internal")] private static extern int RetroLink_Receive(byte[] buffer, int capacity);
+        [DllImport("__Internal")] private static extern int RetroLink_Watch(int index);
+        [DllImport("__Internal")] private static extern int RetroLink_WatcherCount();
+        [DllImport("__Internal")] private static extern int RetroLink_SendWatchers(byte[] data, int length);
         public static bool Supported => true;
 #else
         public static bool Supported => false;
@@ -99,6 +102,36 @@ namespace CallerRetroBall.Core
 #endif
         }
 
+        /// <summary>Joins a nearby host's game to watch it (a third phone).</summary>
+        public void Watch(int index)
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            RetroLink_Watch(index);
+#endif
+        }
+
+        /// <summary>Host: phones watching this game right now.</summary>
+        public int WatcherCount
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return RetroLink_WatcherCount();
+#else
+                return 0;
+#endif
+            }
+        }
+
+        /// <summary>Host: sends to every watching phone.</summary>
+        public void SendWatchers(byte[] message)
+        {
+            if (message == null || message.Length == 0) return;
+#if UNITY_IOS && !UNITY_EDITOR
+            RetroLink_SendWatchers(message, message.Length);
+#endif
+        }
+
         public void Send(byte[] message)
         {
             if (message == null || message.Length == 0) return;
@@ -131,12 +164,15 @@ namespace CallerRetroBall.Core
         public static LinkSetup Setup;
         /// <summary>Live only: both Game Center teamPlayerIDs (for the server's match key).</summary>
         public static string LocalId = "", OpponentId = "";
-        public static bool Active => Transport != null && Setup != null;
+        public static bool Active => Transport != null && Setup != null && Watching == null;
+        /// <summary>A third phone watching the host's game (null when playing).</summary>
+        public static Spectator Watching;
 
         public static void Clear()
         {
             Transport = null;
             Setup = null;
+            Watching = null;
         }
     }
 }

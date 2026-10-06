@@ -215,3 +215,13 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Tip-off: the TONIGHT AT … card shows both teams and their starters, fades after ~3 s, and a tap skips it.
 - [ ] Post-game: TEAM STATS bars are above the box scores and readable on iPhone and iPad.
 
+## Phase 30
+- [ ] Double-click `tools/Build Check (Simulator).command` (Unity closed): it ends with BUILD CHECK PASSED and Retro Hoops opens in the Simulator.
+- [ ] Three phones: A hosts a TWO PHONES game, B joins, C opens TWO PHONES ▸ WATCH A GAME and taps A's game. C shows the same game (same score, same plays); A shows "1 FRIEND IS WATCHING".
+- [ ] C joins ~1 minute into the game: it fast-forwards and then plays along in real time.
+- [ ] REMATCH on A and B: C follows them into the new game. HOME on A: C says the players have left.
+- [ ] WATCH A GAME before B has joined: A's game isn't listed (or can't be joined) until both players are in.
+- [ ] COUCH CUP with 4 names ▸ 2 PHONES on A; B joins: the first-named player is on A, the other on B. After the final, A's bracket has the result; REMATCH on both plays the next bracket game; a tie replays it.
+- [ ] Crossover / Double Cross moves show the low crossover pose; Step Back shows the ball-up step-back pose.
+- [ ] Locker Room ▸ CHEST THUMP celebration: after scoring, the player thumps their chest twice and raises a fist.
+

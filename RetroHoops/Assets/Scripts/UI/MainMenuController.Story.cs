@@ -177,6 +177,8 @@ namespace CallerRetroBall.UI
             }
 
             UiKit.Button(footer, "BACK", ShowVersus, ButtonStyle.Ghost, 130f, 44f);
+            if (next != null && NearbyLink.Supported)
+                UiKit.Button(footer, "2 PHONES", ShowLinkCupHost, ButtonStyle.Secondary, 130f, 36f);
             if (next != null)
                 UiKit.Button(footer, "PLAY", () =>
                 {

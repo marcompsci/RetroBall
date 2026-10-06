@@ -156,6 +156,28 @@ namespace CallerRetroBall.Logic
             };
         }
 
+        /// <summary>
+        /// The game for TWO PHONES: the first-named player plays on the host phone (Player 1), the other on
+        /// the second phone. The cup itself stays on the host phone.
+        /// </summary>
+        public static LinkSetup LinkSetupFor(CouchCupSaveData c, ContentCatalog catalog, CouchGame g, string difficultyId, uint seed, string appVersion, string hostName)
+        {
+            var home = catalog.Team(c.teamIds[g.a]);
+            var s = LinkSetup.From(catalog, c.teamIds[g.a], c.teamIds[g.b], home?.homeCourtId, difficultyId, seed, appVersion, hostName);
+            s.Cup = ContextPrefix + GameIndex(c, g);
+            s.HomeLabel = c.names[g.a];
+            s.AwayLabel = c.names[g.b];
+            return s;
+        }
+
+        /// <summary>Records a two-phone cup game, only while it is still the cup's next game (so never twice).</summary>
+        public static CouchOutcome ReportLink(CouchCupSaveData c, string cupGame, int scoreA, int scoreB)
+        {
+            var g = NextGame(c);
+            if (g == null || cupGame != ContextPrefix + GameIndex(c, g)) return CouchOutcome.NoGame;
+            return Report(c, scoreA, scoreB);
+        }
+
         public static bool IsCouch(string contextId) => contextId != null && contextId.StartsWith(ContextPrefix, StringComparison.Ordinal);
 
         /// <summary>Clears the cup (names and teams are kept for next time by the menu, not here).</summary>

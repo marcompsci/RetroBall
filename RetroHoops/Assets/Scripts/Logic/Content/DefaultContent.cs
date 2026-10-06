@@ -683,6 +683,8 @@ namespace CallerRetroBall.Logic
 
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.shoulder_brush", "Shoulder Brush", CosmeticSlot.Celebration, 350, 1000, false, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.celebration.paper_plane", "Paper Plane", CosmeticSlot.Celebration, 450, 1200, false, "#FFFFFF", "#FFFFFF"));
+            // Phase 30: its own sprite frame (fist on the chest).
+            c.Cosmetics.Add(Cosmetic("cosmetic.celebration.chest_thump", "Chest Thump", CosmeticSlot.Celebration, 400, 1400, false, "#FFFFFF", "#FFFFFF"));
 
             c.Cosmetics.Add(Cosmetic("cosmetic.move.basic_cross", "Basic Crossover", CosmeticSlot.DribbleMove, 0, 0, true, "#FFFFFF", "#FFFFFF"));
             c.Cosmetics.Add(Cosmetic("cosmetic.move.hesi_hop", "Hesitation Hop", CosmeticSlot.DribbleMove, 300, 150, false, "#FFFFFF", "#FFFFFF"));

@@ -557,6 +557,30 @@
 - Two-phone games already offer PLAY OF THE GAME and SHARE HIGHLIGHT after the final.
 - **Not done (still open):** spectator view on a third phone, a Couch Cup across two phones, new animation frames.
 
+### Phase 30: build-ready pass, watch on a third phone, Couch Cup on two phones, new animation frames
+
+- **Build-ready pass:** reviewed the Phase 26–29 native code and Unity settings for anything Unity, IL2CPP or
+  Xcode could reject. `link.xml` now marks the package assemblies `ignoreIfMissing` so a renamed package can't
+  fail the linker. Both Objective-C plugins that use Multipeer / Game Center pass a syntax check under ARC and
+  manual retain/release. New double-click **`tools/Build Check (Simulator).command`**: Unity build → Xcode
+  Simulator compile (no signing) → launch, with the C#, linker, Xcode and Swift errors summarised in
+  `~/RetroHoops/Logs/build_check.txt`. This is the real compile check; it hasn't been run yet.
+- **WATCH A GAME (third phone):** 2 PLAYER ▸ TWO PHONES ▸ WATCH A GAME lists nearby games; up to 3 phones can
+  watch once both players are in. The host forwards both players' inputs for every step it simulates (8 bytes a
+  step), so the watcher runs the identical deterministic game. A late watcher gets the game from tip-off and
+  fast-forwards (up to 10x) to catch up. Watchers follow the players into a rematch or the next cup game. The
+  host's phone shows "1 FRIEND IS WATCHING". Natively, the host keeps advertising after its opponent joins,
+  accepts "watch" invitations separately, and listens only to its opponent; a joined phone listens only to its host.
+- **COUCH CUP on two phones:** the bracket's new **2 PHONES** button hosts the next cup game. The first-named
+  player plays on the host phone, the other on the second phone (JOIN A GAME). After the final, the host records the
+  result in its bracket (only once, and only for that game), and REMATCH on both phones plays the bracket's next
+  game (a tie is replayed). Names show in the toasts and the post-game screen.
+- **New animation frames** (each player sheet now has 10 frames per view): a low, wide **crossover dribble**
+  pose (Crossover and Double Cross moves), a **step-back** pose with the ball held up, and a **chest thump**
+  (a new celebration, CHEST THUMP, 400 coins: two thumps, then the fist goes up).
+- **Not verified:** none of this has run in Unity, Xcode or on a device yet. Watching and the two-phone cup
+  need three iPhones nearby to test properly.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).
