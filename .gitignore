@@ -41,3 +41,6 @@ tools/**/bin/
 tools/**/obj/
 
 .DS_Store
+xcuserdata/
+DerivedData/
+build/
