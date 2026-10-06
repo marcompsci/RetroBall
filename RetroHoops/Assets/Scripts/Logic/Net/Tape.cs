@@ -17,6 +17,8 @@ namespace CallerRetroBall.Logic
         /// <summary>Unix seconds when it was saved.</summary>
         public long SavedAt;
         public int ScoreA, ScoreB;
+        /// <summary>Phase 35: your own marks in the replay theater (step numbers), saved with the tape.</summary>
+        public readonly List<int> Marks = new List<int>();
 
         public int Steps => TeamA.Count;
         public float Seconds => Steps / 60f;
@@ -28,6 +30,9 @@ namespace CallerRetroBall.Logic
         public const int MaxSteps = 60 * 60 * 40; // 40 minutes at 60 Hz: more than any game
         public const int MaxBytes = 2 * 1024 * 1024;
         private static readonly byte[] Magic = { (byte)'R', (byte)'H', (byte)'T', (byte)'1' };
+        /// <summary>Phase 35: the same file plus your marks at the end ("RHT2"). Tapes without marks stay RHT1.</summary>
+        private static readonly byte[] Magic2 = { (byte)'R', (byte)'H', (byte)'T', (byte)'2' };
+        public const int MaxMarks = 64;
 
         /// <summary>A tape of a game that just ended.</summary>
         public static GameTape From(LinkSetup setup, IReadOnlyList<PlayerInput> a, IReadOnlyList<PlayerInput> b, string title, long savedAt, int scoreA, int scoreB)
@@ -49,7 +54,8 @@ namespace CallerRetroBall.Logic
         public static byte[] Encode(GameTape t)
         {
             var o = new List<byte>(4096);
-            o.AddRange(Magic);
+            int marks = Math.Min(MaxMarks, t.Marks.Count);
+            o.AddRange(marks > 0 ? Magic2 : Magic);
             Bytes(o, LinkProtocol.SetupMessage(t.Setup));
             Bytes(o, Encoding.UTF8.GetBytes(t.Title ?? ""));
             Long(o, t.SavedAt);
@@ -79,6 +85,11 @@ namespace CallerRetroBall.Logic
                 o.AddRange(cur);
                 i += run;
             }
+            if (marks > 0)
+            {
+                Int(o, marks);
+                for (int k = 0; k < marks; k++) Int(o, t.Marks[k]);
+            }
             return o.ToArray();
         }
 
@@ -88,7 +99,9 @@ namespace CallerRetroBall.Logic
             try
             {
                 if (data == null || data.Length < 4 || data.Length > MaxBytes) return null;
-                for (int k = 0; k < 4; k++) if (data[k] != Magic[k]) return null;
+                for (int k = 0; k < 3; k++) if (data[k] != Magic[k]) return null;
+                if (data[3] != Magic[3] && data[3] != Magic2[3]) return null;
+                bool withMarks = data[3] == Magic2[3];
                 int p = 4;
                 var setup = LinkProtocol.ReadSetup(ReadBytes(data, ref p));
                 if (setup == null) return null;
@@ -114,6 +127,17 @@ namespace CallerRetroBall.Logic
                     var a = LinkProtocol.UnpackInput(buf, 0);
                     var b = LinkProtocol.UnpackInput(buf, 4);
                     for (int r = 0; r < run; r++) { t.TeamA.Add(a); t.TeamB.Add(b); }
+                }
+                if (withMarks)
+                {
+                    int marks = ReadInt(data, ref p);
+                    if (marks < 0 || marks > MaxMarks) return null;
+                    for (int k = 0; k < marks; k++)
+                    {
+                        int tick = ReadInt(data, ref p);
+                        if (tick < 0 || tick > n) return null;
+                        t.Marks.Add(tick);
+                    }
                 }
                 return p == data.Length ? t : null;
             }

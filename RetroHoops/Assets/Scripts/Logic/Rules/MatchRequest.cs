@@ -74,6 +74,8 @@ namespace CallerRetroBall.Logic
         public bool StartHeated;
         /// <summary>Play this game Full Court 5-on-5 whatever the mode (the Rise Mode final).</summary>
         public bool FullCourt;
+        /// <summary>Phase 35 COACH MODE: your players are all AI and you call plays, defence and subs.</summary>
+        public bool Coach;
         /// <summary>Half-court players a side (2, 3 or 4); 0 = the usual 3.</summary>
         public int TeamSize;
         /// <summary>Street rules: sharp crossovers can break a defender's ankles.</summary>

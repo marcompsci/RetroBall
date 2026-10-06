@@ -125,6 +125,8 @@ namespace CallerRetroBall.Logic
                 t.greens += line.greenReleases;
                 t.alleyOops += line.alleyOops + line.alleyOopPasses;
                 t.heatUps += line.heatUps;
+                if (data.shotChart == null) data.shotChart = new ShotChartData();
+                ShotZones.Merge(data.shotChart, line.chart);
             }
             return true;
         }

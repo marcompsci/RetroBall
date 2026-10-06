@@ -46,6 +46,7 @@ namespace CallerRetroBall.Logic
                     ["res"] = h.result, ["aw"] = Strings(h.awards),
                 }),
                 ["seen"] = Strings(l.seenEvents), ["event"] = l.pendingEvent, ["legacy"] = l.legacyPoints, ["hof"] = l.hallOfFame,
+                ["shots"] = ShotCharts.Encode(l.seasonChart), ["careerShots"] = ShotCharts.Encode(l.careerChart),
             };
         }
 
@@ -102,6 +103,8 @@ namespace CallerRetroBall.Logic
                 if (l.pendingEvent != null && Array.Find(Legacy.Events, e => e.Id == l.pendingEvent) == null) l.pendingEvent = null;
                 l.legacyPoints = Math.Max(0, Int(o, "legacy", 0));
                 l.hallOfFame = Bool(o, "hof", false);
+                l.seasonChart = ShotCharts.Decode(Str(o, "shots", ""));
+                l.careerChart = ShotCharts.Decode(Str(o, "careerShots", ""));
                 // A season stage with no schedule can't continue: rebuild where it's safe (the UI starts the next one).
                 if ((l.stage == LegacyStage.HighSchool) && l.season == null) return new LegacySaveData();
             }

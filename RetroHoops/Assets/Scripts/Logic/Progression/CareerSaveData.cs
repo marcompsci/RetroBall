@@ -288,6 +288,8 @@ namespace CallerRetroBall.Logic
         public bool saveFlagged;
         /// <summary>Photo mode shots taken (for the badge).</summary>
         public int photosTaken;
+        /// <summary>Phase 35: every shot you've taken in games that count, by spot.</summary>
+        public ShotChartData shotChart = new ShotChartData();
         /// <summary>Badges already announced.</summary>
         public List<string> badgesSeen = new List<string>();
         /// <summary>Coach tips already shown.</summary>

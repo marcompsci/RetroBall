@@ -77,6 +77,9 @@ namespace CallerRetroBall.Logic
         public string pendingEvent;
         public int legacyPoints;
         public bool hallOfFame;
+        /// <summary>Phase 35: your shots in games you played, this season and over the whole career.</summary>
+        public ShotChartData seasonChart = new ShotChartData();
+        public ShotChartData careerChart = new ShotChartData();
     }
 
     /// <summary>A skill-tree node: costs points, needs a node from the tier below in its branch.</summary>
@@ -488,6 +491,11 @@ namespace CallerRetroBall.Logic
             var g = NextGame(s);
             if (g == null) return null;
             line = line ?? new PlayerStatLine();
+            if (line.chart != null)
+            {
+                ShotZones.Merge(s.seasonChart ?? (s.seasonChart = new ShotChartData()), line.chart);
+                ShotZones.Merge(s.careerChart ?? (s.careerChart = new ShotChartData()), line.chart);
+            }
             return Finish(s, c, g, us, them, line.points, line.assists, line.rebounds, line.steals, line.blocks, line.turnovers, false);
         }
 
@@ -668,6 +676,7 @@ namespace CallerRetroBall.Logic
             s.age++;
             s.growth += Growth(s.age);
             s.games.Clear();
+            s.seasonChart = new ShotChartData();
             if (s.stage == LegacyStage.Pro && s.age >= RetireAge) Retire(s);
         }
 

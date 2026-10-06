@@ -305,7 +305,9 @@ namespace CallerRetroBall.UI
                 }
                 Line((home ? Loc.T("HOME vs") : Loc.T("AWAY at")) + " " + C.Team(opp)?.FullName.ToUpperInvariant() + "  (" + Record(Franchise.IndexOf(opp)) + ")",
                      Theme.Cream, 32f, 60f, TextAlignmentOptions.Center, true);
-                Big("PLAY GAME", () =>
+                // Phase 35: play it, or coach it from the sideline.
+                UiControls.ChoiceRow(_content, "GAME DAY", new[] { "PLAY", "COACH" }, f.coach ? 1 : 0, i => { f.coach = i == 1; Save(); });
+                Big(f.coach ? "COACH GAME" : "PLAY GAME", () =>
                 {
                     var req = Franchise.NextMatch(f, C, App.Career.settings.difficultyId);
                     if (req == null) return;
@@ -315,7 +317,8 @@ namespace CallerRetroBall.UI
                 Big("SIM GAME", () => { Franchise.SimNext(f, C); Save(); }, ButtonStyle.Secondary);
                 Big(f.phase == FranchisePhase.Regular ? "SIM TO PLAYOFFS" : "SIM PLAYOFFS", () => { Franchise.SimToEnd(f, C); Save(); }, ButtonStyle.Ghost);
                 var mine = Franchise.Roster(f, f.you);
-                if (mine.Count > 0) Line(Loc.T("You control") + " " + mine[0].Name + ". " + Loc.T("Change it in ROSTER."), Theme.Muted, 24f, 40f, TextAlignmentOptions.Center);
+                if (f.coach) Line("COACH MODE: your players play; you call plays, the offense, the defense and subs.", Theme.Muted, 24f, 40f, TextAlignmentOptions.Center);
+                else if (mine.Count > 0) Line(Loc.T("You control") + " " + mine[0].Name + ". " + Loc.T("Change it in ROSTER."), Theme.Muted, 24f, 40f, TextAlignmentOptions.Center);
             }
             else if (f.phase == FranchisePhase.Playoffs)
             {
@@ -333,6 +336,9 @@ namespace CallerRetroBall.UI
                 Line((won ? "<color=#4CC9F0>W</color> " : "<color=#F72585>L</color> ") + Abbr(x.awayId) + " " + x.awayScore + " @ " + Abbr(x.homeId) + " " + x.homeScore
                      + (x.round > 0 ? "  · " + Franchise.RoundName(x.round) : ""), Theme.Cream, 28f);
             }
+            // Phase 35: where your team shoots from this season (games you played or coached).
+            if (ShotCharts.Attempts(f.teamChart) > 0)
+                ShotChartView.Build(_content, "TEAM SHOT CHART  ·  YEAR " + f.year, f.teamChart, 300f);
         }
 
         // ------------------------------------------------------------------ roster

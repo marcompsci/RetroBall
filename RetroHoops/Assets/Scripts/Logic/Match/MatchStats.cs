@@ -26,6 +26,8 @@ namespace CallerRetroBall.Logic
         public int heatUps;
         /// <summary>Street rules: defenders sent stumbling.</summary>
         public int ankleBreakers;
+        /// <summary>Phase 35: where every shot came from (made / attempted per spot).</summary>
+        public ShotChartData chart = new ShotChartData();
 
         public float FieldGoalPercentage => fieldGoalsAttempted == 0 ? 0f : (float)fieldGoalsMade / fieldGoalsAttempted;
     }

@@ -120,6 +120,10 @@ namespace CallerRetroBall.Logic
         public int focus;
         /// <summary>Phase 33: how your players changed last off-season, one line each.</summary>
         public List<string> devReport = new List<string>();
+        /// <summary>Phase 35: your team's shots this season (games you played or coached), by spot.</summary>
+        public ShotChartData teamChart = new ShotChartData();
+        /// <summary>Phase 35: COACH MODE (you call plays and subs while your players play), remembered between games.</summary>
+        public bool coach;
     }
 
     public sealed class TradeVerdict
@@ -381,6 +385,7 @@ namespace CallerRetroBall.Logic
                 }
             }
             f.season = s;
+            f.teamChart = new ShotChartData();
             foreach (var p in f.players) { p.gp = 0; p.pts = 0; }
         }
 
@@ -454,11 +459,15 @@ namespace CallerRetroBall.Logic
             }
         }
 
-        /// <summary>Records the game you just played (your score first) and simulates the rest of that week or round.</summary>
-        public static bool RecordYourGame(FranchiseSaveData f, ContentCatalog c, int yourScore, int theirScore)
+        /// <summary>
+        /// Records the game you just played (your score first) and simulates the rest of that week or round.
+        /// <paramref name="teamShots"/> (Phase 35) is your team's shot chart from that game.
+        /// </summary>
+        public static bool RecordYourGame(FranchiseSaveData f, ContentCatalog c, int yourScore, int theirScore, ShotChartData teamShots = null)
         {
             var g = NextGame(f);
             if (g == null) return false;
+            if (teamShots != null) ShotZones.Merge(f.teamChart ?? (f.teamChart = new ShotChartData()), teamShots);
             if (yourScore == theirScore) yourScore++;
             bool home = g.homeId == TeamId(f.you);
             g.homeScore = home ? yourScore : theirScore;
@@ -1106,6 +1115,7 @@ namespace CallerRetroBall.Logic
                 DifficultyId = difficultyId,
                 ContextId = "fr:y" + f.year + ":w" + g.week + ":r" + g.round,
                 Round = g.round,
+                Coach = f.coach,
             };
         }
 

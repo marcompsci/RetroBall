@@ -48,6 +48,8 @@ namespace CallerRetroBall.Logic
                 ["focus"] = f.focus,
                 ["offerWeek"] = f.offerWeek,
                 ["dev"] = Strings(f.devReport),
+                ["shots"] = ShotCharts.Encode(f.teamChart),
+                ["coach"] = f.coach,
                 ["offer"] = f.offer == null ? null : (object)new Dictionary<string, object>
                 {
                     ["team"] = f.offer.team, ["want"] = List(f.offer.want, id => (object)(double)id), ["send"] = List(f.offer.send, id => (object)(double)id), ["week"] = f.offer.week, ["pitch"] = f.offer.pitch ?? "",
@@ -115,6 +117,8 @@ namespace CallerRetroBall.Logic
                 f.focus = Math.Max(0, Math.Min(FranchiseDepth.FocusNames.Length - 1, Int(o, "focus", 0)));
                 f.offerWeek = Int(o, "offerWeek", -1);
                 f.devReport = StrList(o, "dev");
+                f.teamChart = ShotCharts.Decode(Str(o, "shots", ""));
+                f.coach = Bool(o, "coach", false);
                 var off = Obj(o, "offer");
                 if (off != null)
                 {

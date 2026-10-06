@@ -246,6 +246,7 @@ namespace CallerRetroBall.Logic
             Stats[blocker].blocks++;
             Stats[shooter].fieldGoalsAttempted++;
             if (Setup.Court.ZoneOf(s.Position) == ShotZone.BeyondArc) Stats[shooter].arcAttempted++;
+            Stats[shooter].chart.spots[(int)ShotZones.SpotOf(s.Position, Setup.Court)].attempted++;
             CoolOff(s);
             CancelCharge();
             var away = (s.Position - b.Position).Normalized;

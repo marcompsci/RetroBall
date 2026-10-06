@@ -29,7 +29,7 @@ namespace CallerRetroBall.UI
                 UiKit.Size(row, 70f);
                 UiKit.Button(row, "WATCH", () =>
                 {
-                    if (TapeStore.PrepareToWatch(entry.Tape, out string why)) SceneFlow.GoTo(SceneNames.Game);
+                    if (TapeStore.PrepareToWatch(entry.Tape, entry.Path, out string why)) SceneFlow.GoTo(SceneNames.Game);
                     else UiControls.Dialog("CAN'T PLAY THIS TAPE", why, ("OK", ButtonStyle.Primary, null));
                 }, ButtonStyle.Primary, 64f, 28f);
                 if (NearbyLink.Supported) UiKit.Button(row, "SEND", () => ShowTapeSend(entry.Tape), ButtonStyle.Secondary, 64f, 28f);

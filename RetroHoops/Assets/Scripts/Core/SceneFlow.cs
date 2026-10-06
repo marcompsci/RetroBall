@@ -23,6 +23,10 @@ namespace CallerRetroBall.Core
 
         private CanvasGroup _fade;
         private bool _busy;
+        // Phase 35: the wipe changes look each time, and a tip shows while the screen is covered.
+        private int _transitions;
+        private int _style;
+        private TMPro.TextMeshProUGUI _tip;
 
         public static bool IsTransitioning => _instance != null && _instance._busy;
 
@@ -68,13 +72,38 @@ namespace CallerRetroBall.Core
             _fade = imageGo.AddComponent<CanvasGroup>();
             _fade.alpha = 0f;
             _fade.blocksRaycasts = false;
+
+            try
+            {
+                _tip = UI.UiKit.Label(imageGo.transform, "", 34f, UI.Theme.Cream, TMPro.TextAlignmentOptions.Center, true, "Tip");
+                var trt = _tip.rectTransform;
+                trt.anchorMin = new Vector2(0.08f, 0.08f);
+                trt.anchorMax = new Vector2(0.92f, 0.22f);
+                trt.offsetMin = trt.offsetMax = Vector2.zero;
+                _tip.enableAutoSizing = true;
+                _tip.fontSizeMin = 20f;
+                _tip.fontSizeMax = 34f;
+                _tip.gameObject.SetActive(false);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[SceneFlow] No tip label: " + e.Message);
+                _tip = null;
+            }
         }
 
         private IEnumerator Transition(string sceneName)
         {
             _busy = true;
             _fade.blocksRaycasts = true;
+            _style = _transitions % Logic.ScreenWipe.Styles;
             yield return Fade(0f, 1f);
+            if (_tip != null && _transitions > 0)
+            {
+                _tip.text = "<color=#FFD166>TIP</color>  " + Logic.LoadingTips.Tip(_transitions);
+                _tip.gameObject.SetActive(true);
+            }
+            _transitions++;
 
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
             if (op == null)
@@ -86,6 +115,7 @@ namespace CallerRetroBall.Core
                 while (!op.isDone) yield return null;
             }
 
+            if (_tip != null) _tip.gameObject.SetActive(false);
             yield return Fade(1f, 0f);
             _fade.blocksRaycasts = false;
             _busy = false;
@@ -127,7 +157,7 @@ namespace CallerRetroBall.Core
             var clear = new Color32(0, 0, 0, 0);
             for (int y = 0; y < WipeRows; y++)
                 for (int x = 0; x < WipeCols; x++)
-                    _wipePixels[y * WipeCols + x] = Logic.ScreenWipe.Covered(x, WipeRows - 1 - y, WipeCols, WipeRows, t) ? WipeColor : clear;
+                    _wipePixels[y * WipeCols + x] = Logic.ScreenWipe.Covered(_style, x, WipeRows - 1 - y, WipeCols, WipeRows, t) ? WipeColor : clear;
             _wipe.SetPixels32(_wipePixels);
             _wipe.Apply(false);
         }

@@ -328,6 +328,7 @@ namespace CallerRetroBall.Gameplay
                                        pog.stats.points + " PTS", 34f, Theme.Cream, TextAlignmentOptions.Center, true), 56f);
 
             TeamComparison(s);
+            ShotChart(s);
             BoxScore(s, 0);
             BoxScore(s, 1);
 
@@ -384,6 +385,17 @@ namespace CallerRetroBall.Gameplay
                 label.rectTransform.anchorMin = new Vector2(0.2f, 0f); label.rectTransform.anchorMax = new Vector2(0.8f, 0.6f);
                 label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
             }
+        }
+
+        /// <summary>Phase 35: your shot chart (or your team's when nobody was yours to play).</summary>
+        private void ShotChart(MatchSummary s)
+        {
+            var mine = s.HumanLine;
+            bool own = mine?.stats?.chart != null && ShotCharts.Attempts(mine.stats.chart) > 0;
+            var chart = own ? mine.stats.chart : s.TeamTotals(s.humanTeam).chart;
+            if (ShotCharts.Attempts(chart) == 0) return;
+            string team = (s.humanTeam == 0 ? s.teamAName : s.teamBName) ?? "";
+            ShotChartView.Build(_finalColumn, own ? "YOUR SHOT CHART" : team.ToUpperInvariant() + " SHOT CHART", chart, 300f);
         }
 
         private void BoxScore(MatchSummary s, int team)

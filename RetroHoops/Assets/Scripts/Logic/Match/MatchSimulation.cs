@@ -66,6 +66,8 @@ namespace CallerRetroBall.Logic
         public float ChemistryBonus;
         /// <summary>Attract-mode demo: every player is AI (nobody's input is read).</summary>
         public bool Demo;
+        /// <summary>Phase 35 coach mode: the human's team is all AI and takes the coach's calls (see <see cref="MatchSimulation.Coaching"/>).</summary>
+        public bool Coach;
         /// <summary>Secret code: the human's player starts the game heated up.</summary>
         public bool HumanStartsHeated;
         /// <summary>1-on-1: only slot 0 of each team plays; the others sit out.</summary>
@@ -115,6 +117,7 @@ namespace CallerRetroBall.Logic
                 HumanTeamStartingStamina = request.StartingStamina,
                 ChemistryBonus = request.ChemistryBonus,
                 Demo = request.Mode == GameMode.Demo,
+                Coach = request.Coach && request.Mode != GameMode.Versus && request.Mode != GameMode.Demo,
                 HumanStartsHeated = request.StartHeated,
                 OneOnOne = request.Mode == GameMode.OneOnOne,
             };
@@ -400,7 +403,7 @@ namespace CallerRetroBall.Logic
                         Slot = slot,
                         Def = roster[slot],
                         Archetype = slot < archetypes.Count ? archetypes[slot] : null,
-                        IsHuman = slot == 0 && (team == setup.HumanTeam || setup.SecondHuman),
+                        IsHuman = slot == 0 && !setup.Coach && (team == setup.HumanTeam || setup.SecondHuman),
                         Motion = new MotionState(Vec2.Zero),
                     };
                 }
@@ -416,7 +419,7 @@ namespace CallerRetroBall.Logic
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = Index(setup.HumanTeam, 0);
             SecondControlledIndex = setup.SecondHuman ? Index(1 - setup.HumanTeam, 0) : -1;
-            if (setup.HumanStartsHeated && !setup.Demo) Players[ControlledIndex].HotStreak = setup.Shot.heatThreshold;
+            if (setup.HumanStartsHeated && !setup.Demo && !setup.Coach) Players[ControlledIndex].HotStreak = setup.Shot.heatThreshold;
             CheckBall(setup.StartingOffense);
         }
 
@@ -426,10 +429,10 @@ namespace CallerRetroBall.Logic
 
         /// <summary>The human-controlled player on <paramref name="team"/>, or -1 if that team is all AI.</summary>
         public int HumanIndexOf(int team) =>
-            team == Setup.HumanTeam ? ControlledIndex : (SecondControlledIndex >= 0 && Players[SecondControlledIndex].Team == team ? SecondControlledIndex : -1);
+            Setup.Coach ? -1 : team == Setup.HumanTeam ? ControlledIndex : (SecondControlledIndex >= 0 && Players[SecondControlledIndex].Team == team ? SecondControlledIndex : -1);
 
         /// <summary>True if <paramref name="index"/> is driven by a person (player 1 or player 2).</summary>
-        public bool IsHumanControlled(int index) => !Setup.Demo && (index == ControlledIndex || (index >= 0 && index == SecondControlledIndex));
+        public bool IsHumanControlled(int index) => !NoHuman && (index == ControlledIndex || (index >= 0 && index == SecondControlledIndex));
         public int HolderIndex => Ball.IsHeld ? Ball.HolderIndex : -1;
         public PlayerRuntimeState Holder => Ball.IsHeld ? Players[Ball.HolderIndex] : null;
         public int DefenseTeam => 1 - OffenseTeam;
@@ -671,10 +674,11 @@ namespace CallerRetroBall.Logic
 
         private void StepLive(float dt, PlayerInput input)
         {
-            if (!Setup.Demo) HandleHuman(ControlledIndex, input);
+            if (!NoHuman) HandleHuman(ControlledIndex, input);
             if (SecondControlledIndex >= 0) HandleHuman(SecondControlledIndex, _input2);
             UpdateDrive();
             UpdatePlay();
+            TryRunPendingPlay();
             UpdateAi(dt);
             UpdateCharge(dt, input);
 
@@ -685,7 +689,7 @@ namespace CallerRetroBall.Logic
                 if (i == _driveIndex) { _desired[i] = DriveDesired(Players[i]); continue; }
                 // The inbounder stays on the baseline until the pass is away.
                 if (MustInbound && Ball.IsHeld && i == Ball.HolderIndex) { _desired[i] = Vec2.Zero; continue; }
-                if (i == ControlledIndex && !Setup.Demo) { _desired[i] = FrameMove(input.Move); continue; }
+                if (i == ControlledIndex && !NoHuman) { _desired[i] = FrameMove(input.Move); continue; }
                 if (i == SecondControlledIndex) { _desired[i] = FrameMove(_input2.Move); continue; }
                 _desired[i] = AiDesired(Players[i]);
             }
@@ -890,7 +894,7 @@ namespace CallerRetroBall.Logic
             float overHold = 1f + Setup.Shot.overHoldSeconds / fill;
 
             bool release = _autoRelease ? meter >= _aiReleaseMeter
-                         : ChargingIndex == ControlledIndex && !Setup.Demo ? !input.ShootHeld
+                         : ChargingIndex == ControlledIndex && !NoHuman ? !input.ShootHeld
                          : ChargingIndex == SecondControlledIndex ? !_input2.ShootHeld
                          : meter >= _aiReleaseMeter;
             if (release || meter >= overHold) ReleaseShot(ChargingIndex, meter);
@@ -969,6 +973,7 @@ namespace CallerRetroBall.Logic
             if (eval.Grade == TimingGrade.Green) line.greenReleases++;
             line.fieldGoalsAttempted++;
             if (zone == ShotZone.BeyondArc) line.arcAttempted++;
+            line.chart.spots[(int)ShotZones.SpotOf(p.Position, court)].attempted++;
 
             CancelCharge();
             Ball.Phase = BallPhase.Shot;
@@ -1009,6 +1014,8 @@ namespace CallerRetroBall.Logic
                 line.points += Ball.ShotPoints;
                 line.fieldGoalsMade++;
                 if (Ball.ShotPoints >= Setup.Rules.beyondArcPoints) line.arcMade++;
+                var chartSpot = line.chart.spots[(int)ShotZones.SpotOf(Ball.FlightFrom, court)];
+                if (chartSpot.made < chartSpot.attempted) chartSpot.made++;
                 p.HotStreak++;
                 OnMadeForHeat(p);
                 AdjustScheme(p.Team, Ball.ShotPoints, Ball.ShotType);

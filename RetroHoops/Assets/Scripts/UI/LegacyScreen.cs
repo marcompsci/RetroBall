@@ -287,6 +287,8 @@ namespace CallerRetroBall.UI
                          + "   " + l.pts + " PTS  " + l.ast + " AST  " + l.reb + " REB   <color=#FFD166>" + l.grade + "</color>" + (l.simmed ? "  (SIM)" : ""), Theme.Cream, 26f, 44f);
                 }
             }
+            // Phase 35: where you've been shooting from this season.
+            if (ShotCharts.Attempts(s.seasonChart) > 0) ShotChartView.Build(_content, "YOUR SHOT CHART THIS SEASON", s.seasonChart, 300f);
             Line(Loc.T("COACH'S TRUST") + " " + s.trust + "  ·  XP " + s.xp + "  ·  " + Loc.T("SKILL POINTS") + " " + s.skillPoints, Theme.Muted, 24f, 40f);
         }
 
@@ -387,6 +389,7 @@ namespace CallerRetroBall.UI
             var t = Legacy.Totals(s);
             if (t.seasons > 0) UiControls.Stat(_content, "PRO CAREER", t.seasons + " SEASONS  ·  " + (t.games > 0 ? (t.pts / (float)t.games).ToString("0.0") : "0") + " PPG");
             if (s.draftPick > 0) UiControls.Stat(_content, "DRAFTED", "PICK " + s.draftPick);
+            if (ShotCharts.Attempts(s.careerChart) > 0) ShotChartView.Build(_content, "CAREER SHOT CHART", s.careerChart, 300f);
             for (int i = s.history.Count - 1; i >= 0; i--) LastSeason(s.history[i]);
             if (s.history.Count == 0) Line("Your first season is still being written.", Theme.Muted);
             if (s.stage != LegacyStage.Retired)

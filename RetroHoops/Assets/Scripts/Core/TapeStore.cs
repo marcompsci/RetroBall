@@ -13,6 +13,28 @@ namespace CallerRetroBall.Core
 
         /// <summary>The tape being watched right now (for WATCH AGAIN).</summary>
         public static GameTape Playing;
+        /// <summary>Phase 35: the file the tape being watched came from (so new marks can be saved into it), or null.</summary>
+        public static string PlayingPath;
+        /// <summary>Phase 35: the replay theater for <see cref="Playing"/> (kept across a jump back, which restarts the scene).</summary>
+        public static TapeTheater Theater;
+        /// <summary>Phase 35: where the next start of <see cref="Playing"/> begins (a jump back), in steps.</summary>
+        public static int StartAt;
+
+        /// <summary>Writes <paramref name="t"/> back over its own file (its marks changed).</summary>
+        public static bool Overwrite(string path, GameTape t)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
+                File.WriteAllBytes(path, Tapes.Encode(t));
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Tapes] Couldn't save the marks: " + e.Message);
+                return false;
+            }
+        }
 
         public struct Entry
         {
@@ -71,7 +93,9 @@ namespace CallerRetroBall.Core
         }
 
         /// <summary>Sets up the game scene to play <paramref name="tape"/>; false (with a reason) if it can't play here.</summary>
-        public static bool PrepareToWatch(GameTape tape, out string why)
+        public static bool PrepareToWatch(GameTape tape, out string why) => PrepareToWatch(tape, PlayingPath, out why);
+
+        public static bool PrepareToWatch(GameTape tape, string path, out string why)
         {
             why = null;
             var c = App.Catalog;
@@ -86,7 +110,13 @@ namespace CallerRetroBall.Core
                 why = "Couldn't read the teams on this tape.";
                 return false;
             }
+            if (Playing != tape)
+            {
+                Theater = null;
+                StartAt = 0;
+            }
             Playing = tape;
+            PlayingPath = path;
             LinkMatch.Transport = new TapeWire();
             LinkMatch.Seat = 1;
             LinkMatch.Setup = w.Setup;

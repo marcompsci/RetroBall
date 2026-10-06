@@ -26,6 +26,12 @@ namespace CallerRetroBall.Audio
         private int _next;
         private float _musicVolume = 0.6f;
         private float _sfxVolume = 0.9f;
+        // Phase 35 mix: the announcer has a voice of his own (never cut off by a bounce), the music and crowd dip
+        // under him, the crowd follows the game's mood, and repeats of one sound in a moment are softened.
+        private AudioSource _voice;
+        private float _duck = 1f, _crowdDuck = 1f, _crowd = 1f, _crowdTarget = 1f;
+        private readonly Dictionary<SfxId, float> _lastPlayed = new Dictionary<SfxId, float>();
+        private readonly Dictionary<SfxId, int> _repeats = new Dictionary<SfxId, int>();
 
         public static void EnsureExists()
         {
@@ -53,6 +59,9 @@ namespace CallerRetroBall.Audio
             _ambience.loop = true;
             _ambience.playOnAwake = false;
 
+            _voice = gameObject.AddComponent<AudioSource>();
+            _voice.playOnAwake = false;
+
             _sfx = new AudioSource[SfxVoices];
             for (int i = 0; i < SfxVoices; i++)
             {
@@ -77,8 +86,7 @@ namespace CallerRetroBall.Audio
             var s = App.Career?.settings;
             _instance._musicVolume = s != null ? s.musicVolume : 0.6f;
             _instance._sfxVolume = s != null ? s.sfxVolume : 0.9f;
-            _instance._music.volume = _instance._musicVolume * (_instance._ambienceOn ? 0.3f : 0.5f);
-            _instance._ambience.volume = _instance._sfxVolume * 0.22f;
+            _instance.ApplyLevels();
         }
 
         /// <summary>
@@ -134,6 +142,7 @@ namespace CallerRetroBall.Audio
 
         private void Update()
         {
+            Mix();
             if (_pending == null || !_pending.IsCompleted) return;
             var task = _pending;
             int track = _pendingTrack;
@@ -192,16 +201,47 @@ namespace CallerRetroBall.Audio
             _instance._ambienceOn = on;
             if (on) _instance._ambience.Play();
             else _instance._ambience.Stop();
-            _instance._music.volume = _instance._musicVolume * (on ? 0.3f : 0.5f);
+            _instance._crowdTarget = 1f;
+            _instance.ApplyLevels();
+        }
+
+        /// <summary>Phase 35: how loud the crowd murmur should sit (see <see cref="AudioMix.CrowdLevel"/>); it eases there.</summary>
+        public static void SetCrowdLevel(float level)
+        {
+            if (_instance != null) _instance._crowdTarget = Mathf.Clamp(level, 0.3f, 2.5f);
+        }
+
+        /// <summary>Phase 35: eases the duck and the crowd level each frame.</summary>
+        private void Mix()
+        {
+            float dt = Time.unscaledDeltaTime;
+            bool speaking = _voice != null && _voice.isPlaying;
+            _duck = AudioMix.Duck(_duck, speaking, dt);
+            _crowdDuck = AudioMix.Duck(_crowdDuck, speaking, dt, AudioMix.CrowdDuckDepth);
+            _crowd = AudioMix.Approach(_crowd, _crowdTarget, dt, 2.5f, 0.8f);
+            ApplyLevels();
+        }
+
+        private void ApplyLevels()
+        {
+            if (_music == null) return;
+            _music.volume = _musicVolume * (_ambienceOn ? 0.3f : 0.5f) * _duck;
+            _ambience.volume = Mathf.Min(1f, _sfxVolume * 0.22f * _crowd * _crowdDuck);
         }
 
         public static void Play(SfxId id, float volume = 1f, float pitch = 1f)
         {
             if (_instance == null || _instance._sfxVolume <= 0f) return;
+            // The same sound again in the same moment (a scramble of bounces, a flurry of cheers) is played softer.
+            float now = Time.unscaledTime;
+            int repeats = _instance._lastPlayed.TryGetValue(id, out float last) && now - last < AudioMix.RepeatWindow
+                ? (_instance._repeats.TryGetValue(id, out int r) ? r + 1 : 1) : 0;
+            _instance._lastPlayed[id] = now;
+            _instance._repeats[id] = repeats;
             var src = _instance._sfx[_instance._next];
             _instance._next = (_instance._next + 1) % SfxVoices;
             src.pitch = pitch;
-            src.PlayOneShot(_instance._clips[id], volume * _instance._sfxVolume);
+            src.PlayOneShot(_instance._clips[id], volume * _instance._sfxVolume * AudioMix.RepeatGain(repeats));
         }
 
         public static void Click() => Play(SfxId.Click, 0.6f);
@@ -220,10 +260,13 @@ namespace CallerRetroBall.Audio
                 clip = MakeClip("voice." + phrase, AudioSynth.Voice(phrase));
                 _instance._voices[phrase] = clip;
             }
-            var src = _instance._sfx[_instance._next];
-            _instance._next = (_instance._next + 1) % SfxVoices;
+            // His own source: a new call replaces the last one instead of piling up, and nothing else cuts him off.
+            var src = _instance._voice;
+            src.Stop();
             src.pitch = 1f;
-            src.PlayOneShot(clip, volume * _instance._sfxVolume);
+            src.clip = clip;
+            src.volume = Mathf.Clamp01(volume * _instance._sfxVolume);
+            src.Play();
         }
 
         private void OnDestroy()

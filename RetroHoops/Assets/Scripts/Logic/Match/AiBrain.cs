@@ -257,7 +257,7 @@ namespace CallerRetroBall.Logic
 
             var tend = p.Tendencies;
             float dist = court.DistanceToHoop(p.Position);
-            if (p.Team != Setup.HumanTeam && ShotClock > 4f && TryPostMove(p, s, dist)) return;
+            if ((p.Team != Setup.HumanTeam || Coaching) && ShotClock > 4f && TryPostMove(p, s, dist)) return;
             float urgency = ShotClock < 3f && Setup.Rules.shotClockSeconds < 99f ? 1f : 0f;
 
             // Shoot: expected chance with a clean release vs. this difficulty's quality bar.
@@ -267,6 +267,8 @@ namespace CallerRetroBall.Logic
                 var type = ShotModel.Classify(dist, court.ZoneOf(p.Position), p.Def.attributes.finishing, dist < 2.5f, Setup.Shot);
                 var expected = ShotModel.Evaluate(ShotContextFor(p.Index, type, Setup.Shot.greenCenter), Setup.Shot);
                 uShoot = (expected.MakeChance - profile.shotQualityThreshold) * 2f + tend.shoot * 0.25f + urgency;
+                // Phase 35: lean on the spots he's hot from this game, shy away from the cold ones.
+                uShoot += ShotCharts.AiShootBias(Stats[p.Index].chart, ShotZones.SpotOf(p.Position, court));
             }
 
             // Pass: best open teammate. Friendly AI looks for the human first ("pass back").
@@ -297,9 +299,10 @@ namespace CallerRetroBall.Logic
                 uDrive = tend.drive * 0.35f + (laneOpen ? 0.15f : -0.1f);
             }
             float uHold = 0.05f;
+            CoachBias(p, dist, ref uShoot, ref uDrive, ref target, ref uPass);
 
             // AI teams occasionally run a play.
-            if (p.Team != Setup.HumanTeam && _play == PlayCall.None && dist > 4f
+            if ((p.Team != Setup.HumanTeam || Coaching && PendingPlay == PlayCall.None) && _play == PlayCall.None && dist > 4f
                 && _rng.NextFloat() < 0.12f * (0.5f + tend.drive) * profile.decisionQuality)
             {
                 // Mix it up (no extra random draw, so seeded games keep their shape): mostly pick-and-roll,
@@ -408,6 +411,9 @@ namespace CallerRetroBall.Logic
             int spot = p.Slot == 0 ? handlerSlot : p.Slot;
             if (spot == 0) spot = p.Slot == 1 ? 1 : 2;
             var at = Formation.OffenseSpot(spot, court);
+            // Phase 35: a shooter who's hot from a spot drifts toward it for the kick-out.
+            var hunt = ShotCharts.HuntSpot(Stats[p.Index].chart);
+            if (hunt != null) at = court.Clamp(Vec2.Lerp(at, ShotCharts.CourtPoint(hunt.Value, court), HuntPull));
             // Phase 34, drive-and-kick spacing: never stand where the ball handler has driven to. If he's within
             // SpaceFromBall of this spot, take the mirror-image spot on the far side, ready for the kick-out.
             if (Ball.IsHeld && Players[Ball.HolderIndex].Team == p.Team)
@@ -421,6 +427,9 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Phase 34: post moves the AI has made this game (for tests and tuning).</summary>
         public int PostMoves { get; private set; }
+
+        /// <summary>Phase 35: how far (0..1) an off-ball shooter moves from his spacing spot toward his hot spot.</summary>
+        public const float HuntPull = 0.6f;
 
         /// <summary>Phase 34: off-ball players keep at least this far (m) from their own ball handler.</summary>
         public const float SpaceFromBall = 2.6f;

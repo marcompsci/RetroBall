@@ -542,6 +542,9 @@ namespace CallerRetroBall.UI
             Line("GREEN RELEASES", t.greens.ToString());
             Line("CHAMPIONSHIPS", t.championships.ToString());
             Line("CLASSIC TITLES", career.classic.titles.ToString());
+            // Phase 35: every shot of your career, by spot.
+            if (ShotCharts.Attempts(career.shotChart) > 0)
+                ShotChartView.Build(_content, "CAREER SHOT CHART", career.shotChart, 320f);
 
             Header("RECORDS (ONE GAME)");
             var r = career.records;

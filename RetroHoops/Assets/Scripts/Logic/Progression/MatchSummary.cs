@@ -71,6 +71,7 @@ namespace CallerRetroBall.Logic
                 t.arcMade += x.arcMade; t.arcAttempted += x.arcAttempted; t.assists += x.assists; t.rebounds += x.rebounds;
                 t.steals += x.steals; t.blocks += x.blocks; t.turnovers += x.turnovers; t.greenReleases += x.greenReleases;
                 t.alleyOops += x.alleyOops; t.alleyOopPasses += x.alleyOopPasses; t.heatUps += x.heatUps; t.ankleBreakers += x.ankleBreakers;
+                ShotZones.Merge(t.chart, x.chart);
             }
             return t;
         }

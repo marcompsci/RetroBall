@@ -256,3 +256,21 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] VoiceOver: the menus are read once (no doubled elements).
 - [ ] Rise Season 7: the Comet Couriers' intro scene, game and win scene; badges SIGNED FOR / SEVEN FOR SEVEN.
 
+## Phase 35
+- [ ] Play a Quick Call game: the post-game shows YOUR SHOT CHART (discs on the spots you shot from, red hot / blue cold, "made/attempted" under each) and a HOT/COLD line.
+- [ ] Locker Room ▸ career: CAREER SHOT CHART adds up your games (practice and 2 Player don't count).
+- [ ] Franchise ▸ GAME DAY ▸ COACH ▸ COACH GAME: no stick or buttons; the sideline bar shows CALL A PLAY, O: BALANCED, D: MAN, SUBS.
+- [ ] Coach: CALL A PLAY ▸ PICK AND ROLL on defense says "ON THE NEXT TRIP" and runs when you get the ball; the list holds the game while open.
+- [ ] Coach: tap D: until ZONE; it stays ZONE all game. Tap O: to LET IT FLY; your team shoots more from deep.
+- [ ] Coach: SUBS ▸ pick a player ▸ pick a bench player: the button shows SUBS (1); the swap happens at the next dead ball and the new player is drawn in your kit.
+- [ ] Coach: AUTO SUBS OFF: nobody on your team comes out unless you call it.
+- [ ] Franchise home: TEAM SHOT CHART · YEAR n appears after your first game and resets next season.
+- [ ] Legacy: YOUR SHOT CHART THIS SEASON on game day; CAREER SHOT CHART in history.
+- [ ] Watch a saved tape: the theater bar shows clock, scrub bar with gold (auto) and pink (yours) ticks, < MARK, SLOWER, PAUSE, FASTER, MARK >, CAMERA, ADD MARK, ALL MARKS.
+- [ ] Theater: 0.25x and 0.5x play smoothly; 4x keeps up; PAUSE freezes; drag the scrub bar forward and back (back restarts at that moment).
+- [ ] Theater: ADD MARK, leave, watch the tape again: your mark is still there (pink, "* MARK 1").
+- [ ] Theater: CAMERA cycles BALL CAM, PLAYER CAM (each player), RIM CAM, CLOSE-UP (closer zoom, follows up and down).
+- [ ] Old tapes (saved before this update) still open.
+- [ ] Menus: the wipe changes look between screens; on the way into a game a TIP shows while the screen is covered.
+- [ ] Dunk or hit a deep shot: a few camera flashes pop in the crowd (none with Reduce Motion). A 6-0 run starts the wave; a close finish has the crowd up and bouncing.
+- [ ] Sound: the music dips under the announcer and comes back; a scramble of bounces doesn't get loud; the crowd swells on a big play and in a close finish.

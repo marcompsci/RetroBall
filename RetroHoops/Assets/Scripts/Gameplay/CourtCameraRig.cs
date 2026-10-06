@@ -33,6 +33,17 @@ namespace CallerRetroBall.Gameplay
 
         public int Zoom { get; private set; } = 1;
 
+        /// <summary>Phase 35 replay theater CLOSE-UP: one zoom step closer, following the play up and down too (portrait only).</summary>
+        private bool _closeUp;
+
+        public void SetCloseUp(bool on)
+        {
+            if (_landscape) on = false;
+            if (on == _closeUp || _camera == null) return;
+            _closeUp = on;
+            Recompute();
+        }
+
         private float _shake;
 
         /// <summary>Brief camera shake (dunks, blocks). Ignored when Screen Shake is off in Settings.</summary>
@@ -82,18 +93,19 @@ namespace CallerRetroBall.Gameplay
 
             float halfW = _camera.orthographicSize * _camera.aspect;
             float goalY = _targetY;
-            if (_vertical)
+            bool vertical = _vertical || _closeUp;
+            if (vertical)
             {
                 // Keep the play a little above the middle (the thumbs cover the bottom of the screen),
                 // between the top of the court (under the HUD) and the bottom stands.
                 goalY = Mathf.Clamp(-target.y - _camera.orthographicSize * 0.12f, _minY, _targetY);
             }
-            var current = new Vec2(transform.position.x, _vertical ? _y : _targetY);
+            var current = new Vec2(transform.position.x, vertical ? _y : _targetY);
             var goal = new Vec2(target.x, goalY);
             var next = snap ? goal : CameraMath.Follow(current, goal, dt, followStiffness);
             next = CameraMath.ClampView(next, halfW, _camera.orthographicSize,
                                         new Vec2(_minX, -1000f), new Vec2(_maxX, 1000f));
-            float camY = _vertical ? Mathf.Clamp(next.y, _minY, _targetY) : _targetY;
+            float camY = vertical ? Mathf.Clamp(next.y, _minY, _targetY) : _targetY;
             _y = camY;
             // Snap the camera to the pixel grid of the current zoom to avoid shimmering.
             float step = 1f / (CourtSpace.PixelsPerUnit * Zoom);
@@ -151,7 +163,7 @@ namespace CallerRetroBall.Gameplay
                 return;
             }
 
-            Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, minVisibleHeight, CourtSpace.PixelsPerUnit);
+            Zoom = CameraMath.IntegerZoom(Screen.width, Screen.height, minVisibleWidth, minVisibleHeight, CourtSpace.PixelsPerUnit) + (_closeUp ? 1 : 0);
             _camera.orthographicSize = CameraMath.OrthographicSize(Screen.height, Zoom, CourtSpace.PixelsPerUnit);
 
             // Top of the court art (crowd strip) sits just below the HUD and the notch.

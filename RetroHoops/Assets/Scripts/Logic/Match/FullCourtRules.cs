@@ -136,9 +136,11 @@ namespace CallerRetroBall.Logic
         private void MakeSubstitutions()
         {
             if (_bench.Count == 0) return;
+            ApplyCoachSubs();
             foreach (var p in Players)
             {
                 if (p.IsHuman || IsHumanControlled(p.Index) || p.Stamina >= SubBelowStamina) continue;
+                if (Coaching && p.Team == Setup.HumanTeam && !CoachAutoSubs) continue;
                 BenchPlayer best = null;
                 foreach (var b in _bench)
                     if (b.Team == p.Team && b.Stamina > p.Stamina + 0.25f && (best == null || b.Stamina > best.Stamina)) best = b;

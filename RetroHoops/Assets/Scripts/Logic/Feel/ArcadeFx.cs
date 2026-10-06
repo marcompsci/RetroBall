@@ -123,6 +123,42 @@ namespace CallerRetroBall.Logic
             float threshold = diag * 0.7f + dither * 0.3f;
             return t > threshold;
         }
+
+        /// <summary>Phase 35: the transition looks, taken in turn so menus don't always wipe the same way.</summary>
+        public const int Styles = 3;
+
+        /// <summary>
+        /// Style 0 is the diagonal sweep above; 1 closes in from the edges like an old TV iris; 2 drops shutters
+        /// band by band. Every style only ever covers more as <paramref name="t"/> grows.
+        /// </summary>
+        public static bool Covered(int style, int x, int y, int cols, int rows, float t)
+        {
+            if (t <= 0f) return false;
+            if (t >= 1f) return true;
+            float dither = Bayer4[(y & 3) * 4 + (x & 3)] / 16f;
+            switch (((style % Styles) + Styles) % Styles)
+            {
+                case 1:
+                {
+                    // Iris: blocks far from the centre go first (aspect-corrected), the middle last.
+                    float dx = (x + 0.5f) / cols - 0.5f, dy = ((y + 0.5f) / rows - 0.5f) * rows / (float)cols;
+                    float d = (float)Math.Sqrt(dx * dx + dy * dy) / 0.5f / (float)Math.Sqrt(1f + (rows / (float)cols) * (rows / (float)cols));
+                    float threshold = (1f - Math.Min(1f, d)) * 0.75f + dither * 0.25f;
+                    return t > threshold;
+                }
+                case 2:
+                {
+                    // Shutters: six bands top to bottom, each sweeping left to right a little after the one above.
+                    int bands = 6;
+                    int band = Math.Min(bands - 1, y * bands / Math.Max(1, rows));
+                    float across = x / (float)Math.Max(1, cols - 1);
+                    float threshold = band / (float)bands * 0.45f + across * 0.4f + dither * 0.15f;
+                    return t > threshold;
+                }
+                default:
+                    return Covered(x, y, cols, rows, t);
+            }
+        }
     }
 
     /// <summary>

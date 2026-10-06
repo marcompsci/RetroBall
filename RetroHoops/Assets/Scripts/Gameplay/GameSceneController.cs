@@ -22,7 +22,7 @@ namespace CallerRetroBall.Gameplay
     /// Editor/dev: WASD/arrows move, K shoot/jump (hold), J pass/switch, L steal, C call,
     /// Esc pause, B knocks the ball loose.
     /// </summary>
-    public sealed class GameSceneController : MonoBehaviour
+    public sealed partial class GameSceneController : MonoBehaviour
     {
         /// <summary>Simulation step: 1/60 s, or 1/120 s on 120 Hz screens with high frame rate on.</summary>
         private float FixedStep = 1f / 60f;
@@ -384,6 +384,8 @@ namespace CallerRetroBall.Gameplay
             _myMove = Flair.DribbleMoveFor(App.Career?.equippedMove);
             Audio.AudioManager.SetAmbience(true);
 
+            StartTheater();
+            StartCoach();
             SyncViews(0f, snapCamera: true);
             if (!Demo) Sfx(SfxId.TipOff, 0.7f);
             _hud.Toast(_tutorial != null ? "HOW TO PLAY"
@@ -550,6 +552,10 @@ namespace CallerRetroBall.Gameplay
             if (_match == null) return;
             PowerMonitor.Gameplay = Replaying || (!_paused && !_finalShown && _photo == null);
             UI.ControllerCursor.Suppressed = !_paused && !_finalShown && !Replaying;
+            // Phase 35: the coach's sideline and the tape controls step aside for the end screen, pause, replays and photos.
+            bool sideline = !_paused && !_finalShown && !Replaying && _photo == null;
+            _coach?.SetVisible(sideline);
+            _theaterBar?.SetVisible(sideline);
             if (Replaying)
             {
                 StepReplay();
@@ -586,7 +592,12 @@ namespace CallerRetroBall.Gameplay
             }
 
             UpdatePadMode();
-            var input = ReadInput();
+            if (CoachHolding())
+            {
+                SyncViews(0f, snapCamera: false);
+                return;
+            }
+            var input = Coaching ? default : ReadInput();
             var input2 = Versus ? ReadInput2() : default;
             _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
             int steps = 0;
@@ -631,6 +642,7 @@ namespace CallerRetroBall.Gameplay
             ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: false);
             ViewsMarker.End();
+            SyncCoach();
             if (_practice == null && _tutorial == null && _horse == null) UpdateCrowdChant();
 
             if (_tutorial != null && _tutorial.Finished && !_finalShown) ShowTutorialEnd();
@@ -658,7 +670,7 @@ namespace CallerRetroBall.Gameplay
 
         private void SetTouchVisible(bool visible)
         {
-            if (_watch != null) visible = false; // watching: nothing to control
+            if (_watch != null || Coaching) visible = false; // watching or coaching: nothing to steer
             _controls.SetVisible(visible);
             if (_controls2 != null) _controls2.SetVisible(visible);
         }
@@ -975,7 +987,8 @@ namespace CallerRetroBall.Gameplay
             if (_rematching) return;
             UpdatePadMode();
             while (_wire.TryReceive(out var msg)) _watch.Receive(msg);
-            if (_watch.IsTape && !_paused && !_match.IsOver && AnyInputPressed())
+            if (Theater && !_paused && TheaterSeek()) return;
+            if (_watch.IsTape && !Theater && !_paused && !_match.IsOver && AnyInputPressed())
             {
                 _tapeSpeed = _tapeSpeed >= 4 ? 1 : _tapeSpeed * 2;
                 _hud.Toast("TAPE  " + _tapeSpeed + "x", 1f);
@@ -986,7 +999,8 @@ namespace CallerRetroBall.Gameplay
             {
                 _accumulator += Mathf.Min(Time.unscaledDeltaTime, FixedStep * MaxStepsPerFrame);
                 int due = Mathf.FloorToInt(_accumulator / FixedStep);
-                int n = _watch.IsTape ? Mathf.Min(_watch.Behind, due * _tapeSpeed) : Spectator.StepsThisFrame(_watch.Behind, due);
+                int n = Theater ? (_paused || _theaterBar.Dragging || _theaterBar.ListOpen ? 0 : Mathf.Min(_watch.Behind, _theater.StepsFor(Time.unscaledDeltaTime, FixedStep, MaxStepsPerFrame * 4)))
+                      : _watch.IsTape ? Mathf.Min(_watch.Behind, due * _tapeSpeed) : Spectator.StepsThisFrame(_watch.Behind, due);
                 while (steps < n && !_match.IsOver && _watch.TryStep(out var a, out var b))
                 {
                     StepMarker.Begin();
@@ -1005,6 +1019,7 @@ namespace CallerRetroBall.Gameplay
             ViewsMarker.Begin();
             SyncViews(steps * FixedStep, snapCamera: catchingUp);
             ViewsMarker.End();
+            SyncTheaterBar();
 
             // The players started another game: watch that one too.
             var next = _watch.Next;
@@ -1369,6 +1384,7 @@ namespace CallerRetroBall.Gameplay
                         }
                         bool crowdHappy = Versus || e.Team == human;
                         SetCrowd(crowdHappy ? CrowdMood.Cheer : CrowdMood.Groan, crowdHappy ? 1.6f : 1.1f);
+                        ArenaOnBasket(e.Team, e.Value, dunk);
                         if (_match.IsHumanControlled(e.PlayerIndex))
                         {
                             int streak = _match.Players[e.PlayerIndex].HotStreak;
@@ -1557,7 +1573,7 @@ namespace CallerRetroBall.Gameplay
             }
 
             // 2-player and Full Court: follow the ball so nobody is left off screen.
-            var follow = Versus || FullCourtGame ? _match.Ball.Position : _match.Controlled.Position;
+            var follow = TheaterFollow() ?? (Versus || FullCourtGame || Coaching ? _match.Ball.Position : _match.Controlled.Position);
             _cameraRig.Follow(_match.ToWorldCourt(follow), Mathf.Max(dt, Time.unscaledDeltaTime), snapCamera);
             _hud.Sync(_match);
             // The info line builds a string, so refresh it ~10x a second rather than every frame.
@@ -1990,7 +2006,7 @@ namespace CallerRetroBall.Gameplay
                     var frGame = Franchise.NextGame(fr);
                     int frRound = frGame != null ? frGame.round : 0;
                     App.OpenFranchiseOnMenu = true;
-                    if (Franchise.RecordYourGame(fr, App.Catalog, summary.HumanScore, summary.OpponentScore))
+                    if (Franchise.RecordYourGame(fr, App.Catalog, summary.HumanScore, summary.OpponentScore, summary.TeamTotals(summary.humanTeam).chart))
                     {
                         string champ = Franchise.ChampionId(fr);
                         if (frRound == 2 && champ == Franchise.TeamId(fr.you))
@@ -2110,7 +2126,7 @@ namespace CallerRetroBall.Gameplay
         {
             if (Time.unscaledTime < _nextTipCheck || App.Career == null) return;
             _nextTipCheck = Time.unscaledTime + 0.25f;
-            if (_practice != null || _horse != null || _tutorial != null || Demo || Versus || _match.IsOver) return;
+            if (_practice != null || _horse != null || _tutorial != null || Demo || Versus || Coaching || _watch != null || _match.IsOver) return;
             int me = _match.ControlledIndex;
             int handler = _match.HolderIndex;
             bool onDefense = _match.OffenseTeam != _match.Setup.HumanTeam;
@@ -2642,14 +2658,24 @@ namespace CallerRetroBall.Gameplay
             if (_fans.Length == 0) return;
             if (_crowdMood != CrowdMood.Idle && now > _crowdMoodUntil) _crowdMood = CrowdMood.Idle;
             const float px = 1f / CourtSpace.PixelsPerUnit;
+            bool still = _reduceMotion || Core.PowerMonitor.SavingPower;
             for (int i = 0; i < _fans.Length; i++)
             {
                 ref var f = ref _fans[i];
                 bool armsUp = _crowdMood == CrowdMood.Cheer && (i % 3 != 0);
+                int bob = still ? 0 : CrowdGenerator.Bob(_crowdMood, now, i);
+                // Phase 35: the wave rolls through on a run; on a close finish everyone's up and bouncing.
+                if (!still && _crowdMood != CrowdMood.Groan)
+                {
+                    int lift = ArenaLift(i, now, out bool waving);
+                    bob = Mathf.Max(bob, lift);
+                    armsUp |= waving;
+                }
                 f.Renderer.sprite = armsUp ? f.Cheer : f.Idle;
-                int bob = _reduceMotion || Core.PowerMonitor.SavingPower ? 0 : CrowdGenerator.Bob(_crowdMood, now, i);
                 f.Renderer.transform.position = f.Base + new Vector3(0f, bob * px, 0f);
             }
+            SyncFlashes(now);
+            SyncCrowdSound();
         }
 
         private static CosmeticDef Cosmetic(string id)
@@ -2712,6 +2738,8 @@ namespace CallerRetroBall.Gameplay
             _buffer.Clear();
             SetTouchVisible(!paused && !_padMode);
             _hud.ShowPause(paused);
+            _coach?.SetVisible(!paused && !_finalShown);
+            _theaterBar?.SetVisible(!paused && !_finalShown);
         }
 
         /// <summary>Modes that continue a run (no rematch button).</summary>
@@ -2724,6 +2752,7 @@ namespace CallerRetroBall.Gameplay
         {
             if (_watch != null)
             {
+                TapeStore.StartAt = 0;
                 if (_watch.IsTape && TapeStore.Playing != null && TapeStore.PrepareToWatch(TapeStore.Playing, out _))
                 {
                     _rematching = true;

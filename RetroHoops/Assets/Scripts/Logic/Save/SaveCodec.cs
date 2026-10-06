@@ -124,6 +124,7 @@ namespace CallerRetroBall.Logic
                 ["live"] = EncodeLive(d.live),
                 ["flagged"] = d.saveFlagged,
                 ["photos"] = d.photosTaken,
+                ["shots"] = ShotCharts.Encode(d.shotChart),
                 ["rival"] = new Dictionary<string, object>
                 {
                     ["wins"] = (d.rival ?? new RivalSaveData()).wins,
@@ -566,6 +567,7 @@ namespace CallerRetroBall.Logic
                 d.live = DecodeLive(Obj(o, "live"));
                 d.saveFlagged = Bool(o, "flagged", false);
                 d.photosTaken = Math.Max(0, Int(o, "photos", 0));
+                d.shotChart = ShotCharts.Decode(Str(o, "shots", ""));
                 CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);
                 var rv = Obj(o, "rival");

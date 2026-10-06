@@ -697,6 +697,41 @@
   Rivals now rotate every seven seasons; the rotation tests were updated again.
 - **Still not compiled for real:** the Mac's Build Check hasn't run, because another session was using the Mac.
 
+### Phase 35: shot charts, replay theater, coach mode, polish
+
+- **SHOT CHARTS** (built on `ShotZones` from the Mac session): every shot is filed under one of nine spots in the box
+  score (`PlayerStatLine.chart`, `Logic/Match/ShotCharts.cs`, art in `Logic/PixelArt/ShotChartArt.cs`). Spots are
+  hot or cold against what that spot usually gives up (rim 55%, mid-range 42%, deep 34%; 3+ shots needed).
+  Shown on the post-game screen (yours, or your team's), Locker Room career, Franchise team (per season) and Legacy
+  (season and career). Saved as `shots` in the career, franchise and legacy blocks.
+  The AI leans toward shooting from spots it's hot from that game, away from cold ones, and off-ball shooters drift
+  toward their hot spot. It uses no extra random draws, so seeded and two-phone games stay in step.
+- **REPLAY THEATER** (game tapes): pause, 0.25x / 0.5x / 1x / 2x / 4x, a scrub bar, previous/next mark, BALL /
+  PLAYER / RIM / CLOSE-UP cameras, and marks. Every basket, block and steal is marked by simulating the tape once
+  when it opens. ADD MARK saves your own marks with the tape: tapes with marks are written as "RHT2", and RHT1
+  tapes still read. Going forward simulates ahead; going back restarts the game scene and simulates up to that
+  moment before the first frame.
+  Measured here: a Full Court game is about 16,500 steps and simulates in about 0.18 s on the cloud machine. iPhone
+  timing hasn't been measured.
+- **COACH MODE** (Franchise GAME DAY: PLAY / COACH): all your players are AI. From the sideline you can:
+  - call a play: pick-and-roll, backdoor or post-up (it runs on the next trip if you're on defense);
+  - set the offense's focus: BALANCED, ATTACK THE RIM, LET IT FLY or FEED THE HOT HAND;
+  - pick the defense: MAN, PRESSURE, PACK LINE or ZONE (your AI never changes it);
+  - make subs, which go in at the next dead ball, with an AUTO SUBS switch.
+
+  The play and sub lists hold the game while they're open. Coached games count for the record and the team chart,
+  but not for your player's career stats. Over 3 seeds, LET IT FLY took 64 deep shots and ATTACK THE RIM took 40.
+- **Polish:**
+  - The screen wipe rotates between three looks: diagonal, iris and shutters (plain fade with Reduce Motion).
+  - A tip shows while the screen is covered (24 original tips, in turn).
+  - Camera flashes pop in the crowd after dunks and deep shots (not with Reduce Motion or Low Power). The crowd does
+    the wave on a 6-0 run and stands for a close finish.
+  - Sound mix: the announcer has his own voice channel (no longer cut off by SFX). The music dips 45% and the crowd
+    25% under him. The crowd's volume follows its mood (louder in a close finish). The same sound repeated within
+    60 ms is softened.
+- **Still not compiled for real:** the cloud checks pass (logic tests, the Unity API check, Objective-C syntax),
+  but no Unity or Xcode build has run since Phase 25.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).
