@@ -189,7 +189,7 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern string RetroLive_IdentitySalt();
         [DllImport("__Internal")] private static extern double RetroLive_IdentityTimestamp();
         [DllImport("__Internal")] private static extern void RetroLive_Invite(int group);
-        [DllImport("__Internal")] private static extern void RetroLive_ListenForInvites();
+        [DllImport("__Internal")] private static extern int RetroLive_ListenForInvites();
         [DllImport("__Internal")] private static extern int RetroLive_TakeInvite();
         public static bool Supported => true;
 #else
@@ -225,9 +225,10 @@ namespace CallerRetroBall.Core
         public static void ListenForInvites()
         {
             if (_listening) return;
-            _listening = true;
 #if UNITY_IOS && !UNITY_EDITOR
-            RetroLive_ListenForInvites();
+            _listening = RetroLive_ListenForInvites() != 0; // 0 = not signed in yet: try again next time
+#else
+            _listening = true;
 #endif
         }
 

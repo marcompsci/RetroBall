@@ -304,6 +304,13 @@ namespace CallerRetroBall.EditorTools
         {
             EnsureOrientations();
             EnsureSizeSettings();
+            // Phase 34: StoreKit 2 (RetroStore.swift) and the Keychain/GameKit code need iOS 15. Never build below it,
+            // even if the project was set up without ProjectSetup / Apply Release Settings.
+            if (!System.Version.TryParse(PlayerSettings.iOS.targetOSVersionString, out var minOs) || minOs < new System.Version(15, 0))
+            {
+                Debug.Log("[ReleaseTools] Minimum iOS raised from " + PlayerSettings.iOS.targetOSVersionString + " to 15.0");
+                PlayerSettings.iOS.targetOSVersionString = "15.0";
+            }
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {

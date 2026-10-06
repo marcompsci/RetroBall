@@ -246,3 +246,13 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] After a Live game both tap REMATCH: a new rated game starts without matchmaking again; HOME on one phone tells the other.
 - [ ] Game Center ▸ the monthly Live board shows your rating after a Live game this month.
 
+## Phase 34
+- [ ] Unity ▸ Window ▸ General ▸ Test Runner ▸ PlayMode ▸ Run All: NewModesSmokeTests pass (tape plays, tape store, sealed save, Franchise).
+- [ ] Xcode (generated project) ▸ Build Phases ▸ Compile Sources: our .mm files show `-fobjc-arc`.
+- [ ] EVENTS ▸ SKILLS GAUNTLET: four stations; each end screen offers NEXT: <station>; the fourth shows the run total; the Gauntlet screen lists points per station, today's and all-time best; Game Center board updates.
+- [ ] Watch AI offense: when the AI drives, its teammates clear to the far side; AI bigs drop-step on the block.
+- [ ] Shoot a slightly late jumper: the callout reads e.g. "CLEAN LOOK · SLIGHTLY LATE · 54%".
+- [ ] Settings ▸ DIFFICULTY BY MODE: set RISE to LEGEND and THE PARK to ROOKIE; Rise games play at Legend, Park games at Rookie, Quick Call at the main DIFFICULTY.
+- [ ] VoiceOver: the menus are read once (no doubled elements).
+- [ ] Rise Season 7: the Comet Couriers' intro scene, game and win scene; badges SIGNED FOR / SEVEN FOR SEVEN.
+

@@ -120,6 +120,11 @@ namespace CallerRetroBall.UI
                 App.OpenCouchOnMenu = false;
                 ShowCouchCup();
             }
+            else if (App.OpenGauntletOnMenu)
+            {
+                App.OpenGauntletOnMenu = false;
+                ShowGauntlet();
+            }
             else if (App.OpenParkOnMenu)
             {
                 App.OpenParkOnMenu = false;
@@ -440,6 +445,8 @@ namespace CallerRetroBall.UI
             bool done = DailyChallenges.CompletedToday(career.daily, App.Today);
             int streak = DailyChallenges.LiveStreak(career.daily, App.Today);
             Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
+            var g = career.gauntlet ?? (career.gauntlet = new GauntletSaveData());
+            Mode(column, "SKILLS GAUNTLET", "4 drills back to back, new every day  ·  best " + g.best, ShowGauntlet, ButtonStyle.Secondary);
             career.weekly = career.weekly ?? new WeeklySaveData();
             Weekly.Sync(career.weekly, App.Today);
             int weeklyDone = career.weekly.done.FindAll(x => x).Count;

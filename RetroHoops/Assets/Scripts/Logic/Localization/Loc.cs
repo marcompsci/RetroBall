@@ -393,6 +393,12 @@ namespace CallerRetroBall.Logic
             ["GAME TAPES"] = "CINTAS DE PARTIDOS", ["SAVE GAME TAPE"] = "GUARDAR CINTA", ["WATCH"] = "VER", ["SEND"] = "ENVIAR",
             ["RECEIVE A TAPE"] = "RECIBIR UNA CINTA", ["SEND A TAPE"] = "ENVIAR UNA CINTA", ["END OF TAPE"] = "FIN DE LA CINTA",
             ["WATCH A GAME"] = "VER UN PARTIDO", ["GAME STOPPED"] = "PARTIDO DETENIDO", ["SAVE FILE CHANGED"] = "PARTIDA MODIFICADA",
+            ["SIGNED FOR"] = "ENTREGADO", ["Beat the Comet Couriers."] = "Vence a los Comet Couriers.",
+            ["SEVEN FOR SEVEN"] = "SIETE DE SIETE", ["Beat all seven rival crews."] = "Vence a los siete equipos rivales.",
+            ["Delivered before you set up."] = "Entregado antes de que te coloques.",
+            ["Between the parked trams at the end of the line. The bell is the shot clock."] = "Entre los tranvías aparcados al final de la línea. La campana es el reloj de posesión.",
+            ["On the courier depot roof, where the riders wait for the next run."] = "En la azotea del depósito de mensajeros, donde los ciclistas esperan el próximo encargo.",
+            ["SKILLS GAUNTLET"] = "DESAFÍO DE HABILIDADES",
             ["2 PHONES"] = "2 MÓVILES", ["GOT IT"] = "ENTENDIDO", ["MATCH IPHONE TEXT SIZE"] = "TAMAÑO DE TEXTO DEL IPHONE",
             ["NEW IN RETRO HOOPS"] = "NOVEDADES EN RETRO HOOPS",
             ["Watch friends' two-phone games on a third phone, save whole games as GAME TAPES, play the Couch Cup across two phones, and meet Season 6's rival: the Lighthouse Keepers."]

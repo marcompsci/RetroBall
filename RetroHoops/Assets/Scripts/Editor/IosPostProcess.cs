@@ -72,6 +72,18 @@ namespace CallerRetroBall.EditorTools
             proj.AddFrameworkToProject(fw, "Security.framework", false); // RetroKeychain.mm (the save file's key)
             if (string.IsNullOrEmpty(proj.GetBuildPropertyForAnyConfig(fw, "SWIFT_VERSION"))) proj.SetBuildProperty(fw, "SWIFT_VERSION", "5.0");
             proj.SetBuildProperty(fw, "CLANG_ENABLE_MODULES", "YES");
+            // Swift in UnityFramework: allow Unity's own non-modular headers inside the framework module.
+            proj.SetBuildProperty(fw, "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES", "YES");
+            // Phase 34: compile our Objective-C++ plugins with ARC (Unity's project doesn't turn it on). They were
+            // written to be correct either way; ARC stops the small leaks they'd have under manual retain/release.
+            foreach (var plugin in new[] { "RetroLink.mm", "RetroLive.mm", "RetroKeychain.mm", "RetroCloud.mm", "RetroPower.mm", "RetroShare.mm", "CallerGameCenter.mm", "CallerHaptics.mm" })
+            {
+                string guid = proj.FindFileGuidByProjectPath("Libraries/Plugins/iOS/" + plugin);
+                if (string.IsNullOrEmpty(guid)) continue;
+                var flags = proj.GetCompileFlagsForFile(fw, guid) ?? new System.Collections.Generic.List<string>();
+                if (!flags.Contains("-fobjc-arc")) flags.Add("-fobjc-arc");
+                proj.SetCompileFlagsForFile(fw, guid, flags);
+            }
             proj.WriteToFile(projPath);
             var caps = new ProjectCapabilityManager(projPath, "Unity-iPhone/RetroHoops.entitlements", null, proj.GetUnityMainTargetGuid());
             caps.AddGameCenter();

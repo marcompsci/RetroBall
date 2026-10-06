@@ -26,6 +26,8 @@ namespace CallerRetroBall.Logic
         public Vec2 Target;
         public float NextDecision;
         public float IntentUntil;
+        /// <summary>Phase 34: when this player last made a post move (one at a time).</summary>
+        public float LastPostMove = -99f;
     }
 
     /// <summary>
@@ -255,6 +257,7 @@ namespace CallerRetroBall.Logic
 
             var tend = p.Tendencies;
             float dist = court.DistanceToHoop(p.Position);
+            if (p.Team != Setup.HumanTeam && ShotClock > 4f && TryPostMove(p, s, dist)) return;
             float urgency = ShotClock < 3f && Setup.Rules.shotClockSeconds < 99f ? 1f : 0f;
 
             // Shoot: expected chance with a clean release vs. this difficulty's quality bar.
@@ -404,7 +407,40 @@ namespace CallerRetroBall.Logic
             // Spots 1 and 2 are the wings; the handler's absence frees slot 0's spot (top).
             int spot = p.Slot == 0 ? handlerSlot : p.Slot;
             if (spot == 0) spot = p.Slot == 1 ? 1 : 2;
-            return Formation.OffenseSpot(spot, court);
+            var at = Formation.OffenseSpot(spot, court);
+            // Phase 34, drive-and-kick spacing: never stand where the ball handler has driven to. If he's within
+            // SpaceFromBall of this spot, take the mirror-image spot on the far side, ready for the kick-out.
+            if (Ball.IsHeld && Players[Ball.HolderIndex].Team == p.Team)
+            {
+                var holder = Players[Ball.HolderIndex].Position;
+                var mirror = court.Clamp(new Vec2(-at.x, at.y));
+                if (Vec2.Distance(at, holder) < SpaceFromBall && Vec2.Distance(mirror, holder) > Vec2.Distance(at, holder)) at = mirror;
+            }
+            return at;
+        }
+
+        /// <summary>Phase 34: post moves the AI has made this game (for tests and tuning).</summary>
+        public int PostMoves { get; private set; }
+
+        /// <summary>Phase 34: off-ball players keep at least this far (m) from their own ball handler.</summary>
+        public const float SpaceFromBall = 2.6f;
+
+        /// <summary>
+        /// Phase 34 post move: a strong finisher with the ball close to the rim and a defender on his back drop-steps to
+        /// the baseline side of the rim (no extra random draw, so seeded and two-phone games stay in step), then finishes.
+        /// </summary>
+        private bool TryPostMove(PlayerRuntimeState p, AiState s, float dist)
+        {
+            if (dist > 2.8f || dist < 1.1f || p.Def.attributes.finishing < 60 || Time - s.LastPostMove < 3f) return false;
+            if (NearestOpponentDistance(p) > 1.4f) return false; // nobody on him: just shoot
+            var court = Setup.Court;
+            float side = p.Position.x >= court.Hoop.x ? 1f : -1f;
+            s.LastPostMove = Time;
+            PostMoves++;
+            s.Intent = AiIntent.Drive;
+            s.Target = court.Clamp(court.Hoop + new Vec2(side * 0.9f, 0.35f));
+            s.IntentUntil = Time + 0.45f;
+            return true;
         }
 
         private Vec2 CutSpot(PlayerRuntimeState p, CourtGeometry court)

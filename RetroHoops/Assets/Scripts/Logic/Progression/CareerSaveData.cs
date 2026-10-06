@@ -57,6 +57,8 @@ namespace CallerRetroBall.Logic
         public bool icloudSync = true;
         /// <summary>Phase 31: menus grow with the iPhone's text size (Settings ▸ Accessibility ▸ Larger Text), up to the largest UI scale.</summary>
         public bool followSystemText = true;
+        /// <summary>Phase 34: difficulty per kind of game ("GROUP=difficulty.id", see ModeDifficulty).</summary>
+        public System.Collections.Generic.List<string> modeDifficulty = new System.Collections.Generic.List<string>();
         /// <summary>Music Player: menu track (−1 = the menu theme) and match track (−1 = match theme, −2 = shuffle).</summary>
         public int musicMenu = -1;
         public int musicGame = -1;
@@ -275,6 +277,8 @@ namespace CallerRetroBall.Logic
         public StorySaveData story = new StorySaveData();
         /// <summary>The Couch Cup in progress (2 Player tournament on one device).</summary>
         public CouchCupSaveData couch = new CouchCupSaveData();
+        /// <summary>Phase 34: the daily Skills Gauntlet.</summary>
+        public GauntletSaveData gauntlet = new GauntletSaveData();
         /// <summary>Retro Hoops Live: rating, record, Live team, cached subscription end.</summary>
         public LiveSaveData live = new LiveSaveData();
         /// <summary>

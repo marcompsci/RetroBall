@@ -136,6 +136,20 @@ namespace CallerRetroBall.UI
                 Save();
             });
             UiKit.Size(UiKit.Label(column, "Difficulty changes how fast and how well the AI decides. It never boosts their ratings.", 28f, Theme.Muted), 70f);
+            // Phase 34: DIFFICULTY BY MODE (DEFAULT = the DIFFICULTY above).
+            var names = new System.Collections.Generic.List<string> { "DEFAULT" };
+            names.AddRange(diffs.ConvertAll(d => d.displayName.ToUpperInvariant()));
+            foreach (var group in ModeDifficulty.Groups)
+            {
+                string g = group;
+                string current = ModeDifficulty.Get(s, g);
+                int idx = current == null ? 0 : Mathf.Max(0, diffs.FindIndex(d => d.id == current) + 1);
+                UiControls.ChoiceRow(column, g, names.ToArray(), idx, i =>
+                {
+                    ModeDifficulty.Set(s, g, i == 0 ? null : diffs[i - 1].id);
+                    Save();
+                });
+            }
 
             UiKit.Button(column, "HOW TO PLAY", MainMenuController.StartTutorial, ButtonStyle.Secondary, 110f, 40f);
 

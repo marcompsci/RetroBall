@@ -95,5 +95,34 @@ namespace CallerRetroBall.Logic
             }
             return c;
         }
+
+        // Phase 34: the Skills Gauntlet.
+        private static object EncodeGauntlet(GauntletSaveData g)
+        {
+            g = g ?? new GauntletSaveData();
+            var pts = new List<object>();
+            foreach (var p in g.points ?? new List<int>()) pts.Add(p);
+            return new Dictionary<string, object>
+            {
+                ["day"] = g.day, ["points"] = pts, ["todayBest"] = g.todayBest, ["bestDay"] = g.bestDay, ["best"] = g.best, ["runs"] = g.runs,
+            };
+        }
+
+        private static GauntletSaveData DecodeGauntlet(Dictionary<string, object> o)
+        {
+            var g = new GauntletSaveData();
+            if (o == null) return g;
+            g.day = Int(o, "day", -1);
+            foreach (var item in Arr(o, "points"))
+            {
+                if (g.points.Count >= Gauntlet.Stations) break;
+                if (item is double d) g.points.Add(Math.Max(0, Math.Min(5000, (int)d)));
+            }
+            g.todayBest = Math.Max(0, Int(o, "todayBest", 0));
+            g.bestDay = Int(o, "bestDay", -1);
+            g.best = Math.Max(g.todayBest, Math.Max(0, Int(o, "best", 0)));
+            g.runs = Math.Max(0, Int(o, "runs", 0));
+            return g;
+        }
     }
 }

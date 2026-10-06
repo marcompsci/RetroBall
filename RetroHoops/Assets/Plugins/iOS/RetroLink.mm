@@ -18,14 +18,15 @@ enum { RLIdle = 0, RLSearching = 1, RLConnected = 2, RLLost = 3 };
 
 @interface RetroLinkManager : NSObject <MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate>
 @property (nonatomic, strong) MCPeerID* me;
-@property (nonatomic, strong) MCSession* session;
+// atomic: Multipeer's delegate callbacks (its own queue) read these while teardown (main thread) clears them.
+@property (atomic, strong) MCSession* session;
 @property (nonatomic, strong) MCNearbyServiceAdvertiser* advertiser;
 @property (nonatomic, strong) MCNearbyServiceBrowser* browser;
 @property (nonatomic, strong) NSMutableArray<MCPeerID*>* found;
 @property (nonatomic, strong) NSMutableArray<NSData*>* inbox;
 @property (nonatomic, strong) NSString* peerName;
 @property (nonatomic, assign) int state;
-@property (nonatomic, assign) BOOL hosting;
+@property (atomic, assign) BOOL hosting;
 @property (nonatomic, assign) BOOL everConnected;
 // Host: the opponent, and the phones watching. Guest / watcher: the host it joined.
 @property (nonatomic, strong) MCPeerID* playerPeer;
@@ -59,7 +60,10 @@ static const int kRetroLinkMaxWatchers = 3;
     [self teardown];
     if (name.length == 0) name = @"Retro Hoops";
     // MCPeerID display names are limited to 63 bytes of UTF-8.
-    while ([name lengthOfBytesUsingEncoding:NSUTF8StringEncoding] > 63) name = [name substringToIndex:name.length - 1];
+    // Trim whole characters (an emoji is two UTF-16 units; cutting one in half makes an invalid name).
+    while (name.length > 0 && [name lengthOfBytesUsingEncoding:NSUTF8StringEncoding] > 63)
+        name = [name substringToIndex:[name rangeOfComposedCharacterSequenceAtIndex:name.length - 1].location];
+    if (name.length == 0) name = @"Retro Hoops";
     self.me = [[MCPeerID alloc] initWithDisplayName:name];
     self.session = [[MCSession alloc] initWithPeer:self.me securityIdentity:nil encryptionPreference:MCEncryptionRequired];
     self.session.delegate = self;

@@ -99,6 +99,8 @@ namespace CallerRetroBall.Core
         public static int StoryOutroPending { get; set; }
         /// <summary>After a Couch Cup game: open the bracket on the menu.</summary>
         public static bool OpenCouchOnMenu { get; set; }
+        /// <summary>Phase 34: back to the Skills Gauntlet screen after a station.</summary>
+        public static bool OpenGauntletOnMenu { get; set; }
         /// <summary>After a Live game: open LIVE on the menu.</summary>
         public static bool OpenLiveOnMenu { get; set; }
 
@@ -134,6 +136,8 @@ namespace CallerRetroBall.Core
             if (Secrets.IsOn(Career.secrets, Secrets.AlwaysHeat) && request.Mode != GameMode.Practice && request.Mode != GameMode.Tutorial
                 && request.Mode != GameMode.Versus && request.Mode != GameMode.Demo)
                 request.StartHeated = true;
+            // Phase 34: Settings ▸ DIFFICULTY BY MODE.
+            request.DifficultyId = ModeDifficulty.Resolve(Career.settings, request, Catalog);
             if (request.Mode == GameMode.Rise || request.Mode == GameMode.Rival)
             {
                 request.StartingStamina = RiseEngine.StartingStamina(Career.rise);
@@ -241,7 +245,6 @@ namespace CallerRetroBall.Core
 
             Career = SaveStore.Load(Content.Catalog, out var status);
             CloudSync.EnsureExists();
-            ScreenReader.EnsureExists();
             Career = CloudSync.AtBoot(Career, Content.Catalog, out bool fromCloud);
             if (fromCloud)
             {
@@ -259,7 +262,7 @@ namespace CallerRetroBall.Core
             SceneFlow.EnsureExists();
             ControllerCursor.EnsureExists();
             PowerMonitor.EnsureExists();
-            ScreenReader.EnsureExists();
+            UI.ScreenReader.EnsureExists(); // VoiceOver for the menus (Phase 31 briefly added a weaker duplicate in Core; removed in Phase 34)
 
             Application.deepLinkActivated -= OnDeepLink;
             Application.deepLinkActivated += OnDeepLink;

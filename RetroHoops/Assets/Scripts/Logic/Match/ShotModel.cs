@@ -210,6 +210,19 @@ namespace CallerRetroBall.Logic
             return e;
         }
 
+        /// <summary>
+        /// Phase 34: the fuller release callout: the read on the look, how the timing was off when it wasn't green, and
+        /// the make chance at release ("CLEAN LOOK · SLIGHTLY LATE · 54%").
+        /// </summary>
+        public static string FeedbackLine(ShotFeedback f, TimingGrade g, float makeChance)
+        {
+            string line = FeedbackText(f);
+            if (g == TimingGrade.SlightlyEarly) line += "  ·  SLIGHTLY EARLY";
+            else if (g == TimingGrade.SlightlyLate) line += "  ·  SLIGHTLY LATE";
+            int pct = (int)Math.Round(Math.Max(0f, Math.Min(1f, makeChance)) * 100f);
+            return line + "  ·  " + pct + "%";
+        }
+
         public static string FeedbackText(ShotFeedback f)
         {
             switch (f)

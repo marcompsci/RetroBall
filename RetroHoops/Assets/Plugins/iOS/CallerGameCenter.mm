@@ -5,6 +5,7 @@
 #import <UIKit/UIKit.h>
 
 extern UIViewController* UnityGetGLViewController(void);
+extern "C" int RetroLive_ListenForInvites(void); // RetroLive.mm: friends' Live invites (Phase 34: right after sign-in)
 
 @interface CallerGCDelegate : NSObject <GKGameCenterControllerDelegate>
 @end
@@ -27,6 +28,8 @@ void CallerGC_Authenticate(void)
         player.authenticateHandler = ^(UIViewController *viewController, NSError *error) {
             if (viewController != nil)
                 [UnityGetGLViewController() presentViewController:viewController animated:YES completion:nil];
+            else if ([GKLocalPlayer localPlayer].isAuthenticated)
+                RetroLive_ListenForInvites(); // Apple delivers an invite accepted at launch once a listener is registered
         };
     });
 }

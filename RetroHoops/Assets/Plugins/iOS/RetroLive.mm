@@ -309,10 +309,13 @@ void RetroLive_Invite(int group)
     dispatch_async(dispatch_get_main_queue(), ^{ [m inviteWithGroup:(NSUInteger)(group > 0 ? group : 1)]; });
 }
 
-void RetroLive_ListenForInvites(void)
+/// Registers for friends' invites (main thread). 1 once registered; 0 if Game Center isn't signed in yet (call again later).
+int RetroLive_ListenForInvites(void)
 {
     RetroLiveManager* m = RetroLiveShared();
-    dispatch_async(dispatch_get_main_queue(), ^{ [m listenForInvites]; });
+    if ([NSThread isMainThread]) [m listenForInvites];
+    else dispatch_sync(dispatch_get_main_queue(), ^{ [m listenForInvites]; });
+    return m.listening ? 1 : 0;
 }
 
 /// 1 once (then 0): an invite was accepted outside the game and is connecting; the game should open LIVE.

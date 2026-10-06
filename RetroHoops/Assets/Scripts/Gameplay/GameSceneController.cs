@@ -1353,7 +1353,8 @@ namespace CallerRetroBall.Gameplay
                             _tooLate = e.Value == (int)ShotFeedback.TooLate;
                             if (e.Value == (int)ShotFeedback.Green) Haptics.Light();
                             _meter.ShowRelease(_match.LastReleaseMeter, _match.Ball.ShotGrade);
-                            _hud.Toast(ShotModel.FeedbackText((ShotFeedback)e.Value), 0.9f);
+                            // Phase 34: the look, the timing and the make chance at release.
+                            _hud.Toast(ShotModel.FeedbackLine((ShotFeedback)e.Value, _match.Ball.ShotGrade, e.Chance), 1.1f);
                         }
                         break;
                     case MatchEventType.ShotMade:
@@ -2191,6 +2192,11 @@ namespace CallerRetroBall.Gameplay
                 ShowThreeContestEnd();
                 return;
             }
+            if (Gauntlet.TryParse(_request.ContextId, out int gDay, out int gStation))
+            {
+                ShowGauntletEnd(gDay, gStation);
+                return;
+            }
             bool best = false;
             if (App.Career != null)
             {
@@ -2213,6 +2219,38 @@ namespace CallerRetroBall.Gameplay
             if (_practice.ShootoutWon) Sfx(SfxId.Fanfare, 0.8f);
             _hud.ShowPracticeEnd(endTitle, _practice.ResultText().ToUpperInvariant(), best);
         }
+
+        /// <summary>Phase 34: a Skills Gauntlet station: score it, add it to the run, and offer the next one.</summary>
+        private void ShowGauntletEnd(int day, int station)
+        {
+            var p = _practice;
+            int partial = p.Kind == DrillKind.AroundTheWorld ? p.WorldSpot : p.NextCone;
+            int points = Gauntlet.Points(p.Kind, p.Makes, p.BestStreak, p.PassScore, p.CourseTime, p.Finished && p.CourseTime > 0f,
+                                         p.ContestPoints, p.Stops, partial);
+            var g = App.Career.gauntlet ?? (App.Career.gauntlet = new GauntletSaveData());
+            int bestBefore = g.best;
+            bool finished = Gauntlet.Record(g, day, station, points);
+            App.SaveCareer();
+            Sfx(SfxId.Whistle, 0.7f);
+            if (finished)
+            {
+                int total = Gauntlet.Total(g);
+                bool record = total > bestBefore;
+                if (record) { Sfx(SfxId.Fanfare, 0.8f); Haptics.Success(); }
+                App.ReportGameCenter();
+                _gauntletNext = -1;
+                _hud.ShowPracticeEnd("GAUNTLET: " + total + " POINTS", Gauntlet.StationName(p.Kind) + " +" + points + "  ·  TODAY'S BEST " + g.todayBest, record, "SEE RESULTS");
+                return;
+            }
+            _gauntletNext = Gauntlet.NextStation(g, day);
+            var next = Gauntlet.For(day)[Mathf.Clamp(_gauntletNext, 0, Gauntlet.Stations - 1)];
+            _hud.ShowPracticeEnd(Gauntlet.StationName(p.Kind) + " +" + points,
+                                 "STATION " + (station + 1) + "/" + Gauntlet.Stations + "  ·  RUN SO FAR " + Gauntlet.Total(g), false,
+                                 "NEXT: " + Gauntlet.StationName(next));
+        }
+
+        /// <summary>The Gauntlet station REMATCH goes to (-1 = back to the Gauntlet screen).</summary>
+        private int _gauntletNext = -1;
 
         private bool IsThreeContest => _request != null && _request.ContextId != null
                                        && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal)
@@ -2702,6 +2740,20 @@ namespace CallerRetroBall.Gameplay
                 return;
             }
             if (IsRun) { Continue(); return; }
+            if (Gauntlet.TryParse(_request.ContextId, out int gDay, out _))
+            {
+                if (_gauntletNext > 0 && _gauntletNext < Gauntlet.Stations)
+                {
+                    App.PendingMatch = Gauntlet.Request(gDay, _gauntletNext);
+                    SceneFlow.GoTo(SceneNames.Game);
+                }
+                else
+                {
+                    App.OpenGauntletOnMenu = true;
+                    SceneFlow.GoTo(SceneNames.MainMenu);
+                }
+                return;
+            }
             if (_request.ContextId != null && _request.ContextId.StartsWith(AllStar.ThreeContext, System.StringComparison.Ordinal))
             {
                 App.OpenAllStar = true;

@@ -659,6 +659,44 @@
 - **Fix real build errors:** waiting on the Mac's `build_check.txt`. The Build Check hasn't been run yet, because the
   other session was using the Mac.
 
+### Phase 34: pre-compile hardening, Skills Gauntlet, AI & feel, Season 7
+
+- **Pre-compile hardening** (a separate review pass over Phases 26–33, then fixes):
+  - **Correction to Phase 31:** VoiceOver support already existed (`UI/ScreenReader.cs`, an earlier phase). Phase 31's
+    `Core/ScreenReader.cs` duplicated it, more weakly, and was the one actually running. It's deleted, and `App`
+    now starts the original.
+  - `ReleaseTools` builds never go below iOS 15 (StoreKit 2 needs it), even if Project Setup wasn't run.
+  - `IosPostProcess`: all our `.mm` plugins compile with `-fobjc-arc` (Unity's project doesn't turn ARC on). They
+    were correct either way, and ARC removes their small leaks. Also sets
+    `CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES` for the Swift file in UnityFramework.
+  - `Packages/manifest.json`: added the built-in modules the code uses (UnityWebRequest, Image Conversion, Screen
+    Capture, Accessibility).
+  - `RetroLink.mm`: player names are trimmed by whole characters (an emoji cut in half could crash), and the
+    session/hosting properties are atomic (Multipeer's callbacks race teardown).
+  - Live invites register right after Game Center sign-in (`CallerGameCenter.mm`) and retry until they're
+    registered. `RetroStore.swift` reads the product id under its lock.
+  - New PlayMode smoke tests (`Tests/PlayMode/NewModesSmokeTests.cs`: a game tape playing in the game scene, the
+    tape store, a sealed save through the real store, and Franchise with offers). Run them in Unity's Test Runner.
+- **SKILLS GAUNTLET** (EVENTS): four practice drills back to back, the same four for everyone each day. Each result
+  becomes points (a strong station is about 300), and the run total is kept as today's best and an all-time best.
+  The all-time best goes to Game Center board `retrohoops.lb.gauntlet`. A replayed or out-of-order station never
+  counts twice.
+- **AI & feel:**
+  - Off-ball AI players never stand where their ball handler has driven (they take the mirror spot for the
+    kick-out). Over 6 Legend games, teammates crowding the handler fell from 5.1% to 2.7% of possessions and AI FG%
+    rose from 43.8% to 50.9%.
+  - AI bigs with a finishing rating of 60+ and a defender on their back **drop-step** to the baseline side of the
+    rim. This adds no random draws, so two-phone and seeded games stay in step.
+  - The release callout now shows the timing and the make chance ("CLEAN LOOK · SLIGHTLY LATE · 54%").
+  - **DIFFICULTY BY MODE** (Settings): Quick Call, Rise, Franchise, The Park, Events and Legacy can each have their
+    own level. Fixed-difficulty games (two phones, Live) keep theirs.
+- **Season 7:** the **Comet Couriers** (bike couriers who run the break off every rebound; leader Remy Okoro),
+  story scenes in English and Spanish, badges SIGNED FOR and SEVEN FOR SEVEN, Tram Yard and Dispatch Roof courts,
+  a Signal Orange store jersey, a Hoops Pass set (Courier, Spoke Runners, Express Lane, pass-only **Victory Lap**
+  celebration) from the pass season of 30 Nov 2026, and a Full Court wins weekly goal from the week of 9 Nov 2026.
+  Rivals now rotate every seven seasons; the rotation tests were updated again.
+- **Still not compiled for real:** the Mac's Build Check hasn't run, because another session was using the Mac.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

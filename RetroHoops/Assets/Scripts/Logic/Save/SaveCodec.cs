@@ -103,6 +103,7 @@ namespace CallerRetroBall.Logic
                     ["captions"] = d.settings.captions,
                     ["icloud"] = d.settings.icloudSync,
                     ["systemText"] = d.settings.followSystemText,
+                    ["modeDifficulty"] = Strings(d.settings.modeDifficulty),
                     ["musicMenu"] = d.settings.musicMenu,
                     ["musicGame"] = d.settings.musicGame,
                 },
@@ -119,6 +120,7 @@ namespace CallerRetroBall.Logic
                 ["pass"] = EncodePass(d.pass),
                 ["story"] = EncodeStory(d.story),
                 ["couch"] = EncodeCouch(d.couch),
+                ["gauntlet"] = EncodeGauntlet(d.gauntlet),
                 ["live"] = EncodeLive(d.live),
                 ["flagged"] = d.saveFlagged,
                 ["photos"] = d.photosTaken,
@@ -130,6 +132,7 @@ namespace CallerRetroBall.Logic
                     ["cranesWins"] = (d.rival ?? new RivalSaveData()).cranesWins,
                     ["cassetteWins"] = (d.rival ?? new RivalSaveData()).cassetteWins,
                     ["keeperWins"] = (d.rival ?? new RivalSaveData()).keeperWins,
+                    ["courierWins"] = (d.rival ?? new RivalSaveData()).courierWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -542,6 +545,7 @@ namespace CallerRetroBall.Logic
                 d.settings.captions = Bool(disp, "captions", false);
                 d.settings.icloudSync = Bool(disp, "icloud", true);
                 d.settings.followSystemText = Bool(disp, "systemText", true);
+                d.settings.modeDifficulty = StrList(disp, "modeDifficulty");
                 d.settings.musicMenu = Math.Max(-1, Math.Min(Soundtrack.Count - 1, Int(disp, "musicMenu", -1)));
                 d.settings.musicGame = Math.Max(-2, Math.Min(Soundtrack.Count - 1, Int(disp, "musicGame", -1)));
                 d.tipsSeen = StrList(o, "tipsSeen");
@@ -558,6 +562,7 @@ namespace CallerRetroBall.Logic
                 d.pass = DecodePass(Obj(o, "pass"));
                 d.story = DecodeStory(Obj(o, "story"));
                 d.couch = DecodeCouch(Obj(o, "couch"));
+                d.gauntlet = DecodeGauntlet(Obj(o, "gauntlet"));
                 d.live = DecodeLive(Obj(o, "live"));
                 d.saveFlagged = Bool(o, "flagged", false);
                 d.photosTaken = Math.Max(0, Int(o, "photos", 0));
@@ -572,6 +577,7 @@ namespace CallerRetroBall.Logic
                     cranesWins = Math.Max(0, Int(rv, "cranesWins", 0)),
                     cassetteWins = Math.Max(0, Int(rv, "cassetteWins", 0)),
                     keeperWins = Math.Max(0, Int(rv, "keeperWins", 0)),
+                    courierWins = Math.Max(0, Int(rv, "courierWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

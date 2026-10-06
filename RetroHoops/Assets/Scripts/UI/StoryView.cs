@@ -123,7 +123,7 @@ namespace CallerRetroBall.UI
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
             var cast = StoryMode.Character(l.Speaker);
-            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6 || l.Speaker == StorySpeaker.Rival7
                          || (cast != null && cast.Right);
             _name.color = cast != null ? ToColor(RgbColor.FromHex(cast.Color))
                         : l.Speaker == StorySpeaker.Rival ? Theme.Cyan
@@ -132,6 +132,7 @@ namespace CallerRetroBall.UI
                         : l.Speaker == StorySpeaker.Rival4 ? (Color)new Color32(0xE1, 0x1D, 0x48, 255)
                         : l.Speaker == StorySpeaker.Rival5 ? (Color)new Color32(0xC9, 0x18, 0x4A, 255)
                         : l.Speaker == StorySpeaker.Rival6 ? (Color)new Color32(0xFF, 0xD6, 0x0A, 255)
+                        : l.Speaker == StorySpeaker.Rival7 ? (Color)new Color32(0xFB, 0x56, 0x07, 255)
                         : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
             _text.text = l.Text;
             _text.maxVisibleCharacters = 0;
@@ -158,6 +159,7 @@ namespace CallerRetroBall.UI
                 case StorySpeaker.Rival4: return Story.Rival4Name;
                 case StorySpeaker.Rival5: return Story.Rival5Name;
                 case StorySpeaker.Rival6: return Story.Rival6Name;
+                case StorySpeaker.Rival7: return Story.Rival7Name;
                 default: return (App.Career?.nickname ?? "ROOK").ToUpperInvariant();
             }
         }
@@ -192,6 +194,13 @@ namespace CallerRetroBall.UI
                     jersey = rival.primary;
                     trim = rival.secondary;
                     accent = rival.accent;
+                    break;
+                case StorySpeaker.Rival7:
+                    var couriers = c.Team(DefaultContent.Rival7CrewId);
+                    look = c.Player(DefaultContent.Rival7LeaderId)?.appearance ?? new AppearanceDef(5, 3, 0, BodyType.Slim, 1);
+                    jersey = couriers.primary;
+                    trim = couriers.secondary;
+                    accent = couriers.accent;
                     break;
                 case StorySpeaker.Rival6:
                     var keepers = c.Team(DefaultContent.Rival6CrewId);

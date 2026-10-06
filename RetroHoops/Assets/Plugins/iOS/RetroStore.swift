@@ -49,7 +49,7 @@ private final class RetroStoreModel {
     }
 
     func start(_ id: String) {
-        productId = id
+        lock.lock(); productId = id; lock.unlock()
         if listener == nil {
             // Renewals, refunds and purchases made on other devices arrive here while the game runs.
             listener = Task.detached { [weak self] in
@@ -77,11 +77,14 @@ private final class RetroStoreModel {
     }
 
     func refresh() async {
+        lock.lock()
+        let wanted = productId
+        lock.unlock()
         var active = false
         var until: Double = 0
         var original = ""
         for await result in Transaction.currentEntitlements {
-            guard case .verified(let t) = result, t.productID == productId, t.revocationDate == nil else { continue }
+            guard case .verified(let t) = result, t.productID == wanted, t.revocationDate == nil else { continue }
             if let end = t.expirationDate {
                 if end > Date() {
                     active = true

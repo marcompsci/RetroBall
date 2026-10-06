@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9, /** Season 7 (pass only). */ VictoryLap = 10 }
 
     public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
@@ -58,6 +58,7 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.celebration.paper_plane": return CelebrationKind.PaperPlane;
                 case "cosmetic.celebration.chest_thump": return CelebrationKind.ChestThump;
                 case "cosmetic.pass.celebration.spotlight": return CelebrationKind.Spotlight;
+                case "cosmetic.pass.celebration.victory_lap": return CelebrationKind.VictoryLap;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -124,6 +125,16 @@ namespace CallerRetroBall.Logic
                     p.Lift = t < 0.2f ? -1 : (t < 0.45f ? Hop(t, 0.2f, 0.25f, 2) : 0);
                     p.ArmsUp = t >= 0.2f && t < 0.5f;
                     p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
+                    break;
+                case CelebrationKind.VictoryLap:
+                    // A quick lap: run out to one side, turn, run back past the start, and finish with arms up.
+                    {
+                        float u = t / CelebrationSeconds;
+                        p.OffsetX = (int)Math.Round(Math.Sin(u * 2.0 * Math.PI) * 4.0);
+                        p.FlipOverride = u > 0.25f && u < 0.75f;
+                        p.Lift = (int)(t / 0.1f) % 2;
+                        p.ArmsUp = u > 0.8f;
+                    }
                     break;
                 case CelebrationKind.Spotlight:
                     // Slow turn in place (facing flips like a sweeping beam), then a chest thump, then arms up to the lights.
