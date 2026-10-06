@@ -53,7 +53,8 @@ Game Center must be on for the app (it already is, through the capability). Add 
 - The player whose Game Center ID sorts first hosts. The host's team is home and the host's home court is used. AI teammates play at Caller difficulty.
 - The game uses the same lockstep as two-phone play, with an 8-step (133 ms) input delay for internet latency. Only controller input travels between the phones, and checksums catch any mismatch.
 - **Rating:** Elo starting at 1000 (K 32). Tiers are ROOKIE, HOOPER (900), STARTER (1100), ALL-STAR (1300) and LEGEND (1500). Leaving after the first 20 seconds counts as a loss. If your opponent leaves, you win. A dropped connection or a mismatch counts for nobody.
-- Ratings live on each player's phone and in their own iCloud save. There's no server, so a determined cheater could edit their own number. Treat the leaderboard as casual.
+- **Without the server:** ratings live on each player's phone, so a determined cheater could edit their own number.
+- **With the server** (`server/README.md`, Phase 28): sign-in is checked with Game Center's signature, and the subscription is checked with Apple's App Store Server API. Ratings change only on the server, and only when both players' reports agree.
 
 ## App Review notes for the subscription
 

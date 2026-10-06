@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–27 implemented.** The engine-free game logic compiles on .NET and passes 543 automated tests. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload of that build hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–27 (two-phone play, Couch Cup, Summer Story, Retro Hoops Live) have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. See [Known limitations](#known-limitations).
+> **Status: Phases 1–28 implemented.** The engine-free game logic compiles on .NET and passes 550 automated tests, and the Live server (`server/`) passes 20 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–28 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -127,6 +127,7 @@ Assets/Tests/         EditMode/Logic, EditMode/Unity, PlayMode
 
 ## Known limitations
 
+- **The Live server isn't deployed.** `server/` is ready (see `server/README.md`). Until `BackendConfig.Url` is set, Live keeps ratings on each phone.
 - **Live is untested.** `Plugins/iOS/RetroStore.swift` (StoreKit 2) has had no compile check at all, because there's no Swift compiler here. `RetroLive.mm` passed only a syntax check against stand-in headers. The subscription doesn't exist in App Store Connect until you create it (`docs/LIVE.md`).
 - **Phase 26 is not compiled in Unity yet.** It passed a compile check against Unity's reference assemblies here; the new native plugin (`Plugins/iOS/RetroLink.mm`) passed only a syntax check against stand-in headers, not the real iOS SDK. Two-phone play needs two real devices to test; it can't run in the Editor.
 - **Device testing is behind.** The last device run was the Phase 18 build. iPad and Mac layouts have not been checked on hardware.

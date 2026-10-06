@@ -509,6 +509,26 @@
   replays, gameplay depth (fatigue/subs in half court, new plays, AI defence, tuning) and the polish items
   (crowd sounds, new animation frames, court intro, post-game screen).
 
+### Phase 28: dunks that reach the rim, the Live server (backend security)
+
+- **Real dunks** (Omari's request: "the hands of the players touch the basket"): `DunkPath` (Logic/Feel/Dunks.cs). The dunker
+  glides from the take-off spot to just in front of the rim while rising, the raised hands meet the rim
+  (+2 px over it) at the exact moment the simulation's ball arrives, then they hang on the rim for a beat (the rim dips a
+  pixel) and drop back to where the simulation has them. The ball rides in the hands until the slam, and the dunk packages
+  swing it. The lift comes from the sprite's real hand height (`CharacterSpriteGenerator.HandReachPx`) and the rim's screen
+  height, so it works for every player height and in landscape. Drawing only; the simulation is unchanged, so two-phone
+  and Live games stay in sync.
+- **Live server** (`server/`, Cloudflare Workers + D1, TypeScript): Game Center identity verification
+  (RSA-SHA256 over teamPlayerID + bundle + timestamp + salt, cert only from https://*.apple.com, 10-minute window,
+  single use), HS256 sessions (1 h), subscription checks through Apple's App Store Server API (ES256 key; one
+  subscription ↔ one player, `appAccountToken` tagging), App Store Server Notifications V2 (re-check with Apple), server-side
+  Elo that only changes when both reports agree (score + final SimHash), stale games settled by cron, a pair farming cap,
+  rate limits, an 8 KB body cap with strict validation, parameterised SQL, security headers with no CORS, and data deletion. 20 tests;
+  type-checked; ran in the local Workers runtime. Game side: `BackendConfig.Url` (off until deployed), `BackendClient`
+  (UnityWebRequest, token in memory only), Game Center identity fetch in RetroLive.mm, `originalTransactionId` +
+  `appAccountToken` in RetroStore.swift, rated Live games report results, LIVE ▸ DELETE MY LIVE DATA.
+- **Not done this phase (moved to Phase 29):** gameplay depth, polish & juice, spectator / two-phone Couch Cup / replay sharing.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

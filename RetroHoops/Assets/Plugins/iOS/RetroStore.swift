@@ -23,15 +23,24 @@ private final class RetroStoreModel {
     private var priceValue = ""
     private var expiresValue: Double = 0
     private var errorValue = ""
+    private var originalIdValue = ""
+    private var accountToken: UUID?
     private var listener: Task<Void, Never>?
 
     var state: Int32 { lock.lock(); defer { lock.unlock() }; return stateValue }
     var price: String { lock.lock(); defer { lock.unlock() }; return priceValue }
     var expires: Double { lock.lock(); defer { lock.unlock() }; return expiresValue }
     var error: String { lock.lock(); defer { lock.unlock() }; return errorValue }
+    var originalId: String { lock.lock(); defer { lock.unlock() }; return originalIdValue }
 
-    private func apply(state: Int32? = nil, price: String? = nil, expires: Double? = nil, error: String? = nil) {
+    /// Tags purchases with the player's account token (from the Retro Hoops server) so the server can tell whose they are.
+    func setAccountToken(_ s: String) {
+        lock.lock(); accountToken = UUID(uuidString: s); lock.unlock()
+    }
+
+    private func apply(state: Int32? = nil, price: String? = nil, expires: Double? = nil, error: String? = nil, originalId: String? = nil) {
         lock.lock()
+        if let o = originalId { originalIdValue = o }
         if let s = state { stateValue = s }
         if let p = price { priceValue = p }
         if let e = expires { expiresValue = e }
@@ -70,6 +79,7 @@ private final class RetroStoreModel {
     func refresh() async {
         var active = false
         var until: Double = 0
+        var original = ""
         for await result in Transaction.currentEntitlements {
             guard case .verified(let t) = result, t.productID == productId, t.revocationDate == nil else { continue }
             if let end = t.expirationDate {
@@ -77,13 +87,14 @@ private final class RetroStoreModel {
                     active = true
                     until = max(until, end.timeIntervalSince1970)
                 }
+                original = String(t.originalID)
             } else {
                 active = true
             }
         }
         let current = state
         if current == kPurchasing && !active { return } // a purchase in progress decides the state
-        apply(state: active ? kSubscribed : kNotSubscribed, expires: until)
+        apply(state: active ? kSubscribed : kNotSubscribed, expires: until, originalId: original)
     }
 
     func buy() {
@@ -95,7 +106,10 @@ private final class RetroStoreModel {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                let result = try await p.purchase()
+                var options = Set<Product.PurchaseOption>()
+                self.lock.lock(); let token = self.accountToken; self.lock.unlock()
+                if let token = token { options.insert(.appAccountToken(token)) }
+                let result = try await p.purchase(options: options)
                 switch result {
                 case .success(let verification):
                     if case .verified(let t) = verification {
@@ -162,6 +176,17 @@ public func RetroStore_Error() -> UnsafeMutablePointer<CChar>? {
 @_cdecl("RetroStore_Expires")
 public func RetroStore_Expires() -> Double {
     return RetroStoreModel.shared.expires
+}
+
+@_cdecl("RetroStore_OriginalTransactionId")
+public func RetroStore_OriginalTransactionId() -> UnsafeMutablePointer<CChar>? {
+    return retroCopy(RetroStoreModel.shared.originalId)
+}
+
+@_cdecl("RetroStore_SetAccountToken")
+public func RetroStore_SetAccountToken(_ token: UnsafePointer<CChar>?) {
+    guard let token = token else { return }
+    RetroStoreModel.shared.setAccountToken(String(cString: token))
 }
 
 @_cdecl("RetroStore_Buy")

@@ -145,6 +145,17 @@ namespace CallerRetroBall.Logic.PixelArt
             return 1 + legLen + 2 + bob + 5 + 1 + 1;
         }
 
+        /// <summary>
+        /// How far (art pixels) the raised hands reach above the sprite's pivot (one pixel above the feet) in
+        /// the arms-up frame. Mirrors the layout in <see cref="DrawFrame"/>; used to put dunkers' hands on the rim.
+        /// </summary>
+        public static int HandReachPx(AppearanceDef look)
+        {
+            int headTop = HeadBottomRow(look, ShootFrame) + 4;
+            int top = Math.Min(FrameHeight - 1, headTop + 2);
+            return top + 1 - 1; // top edge of the hand row, measured from the pivot row
+        }
+
         private static void DrawFrame(PixelCanvas c, CharacterView view, int frame, AppearanceDef look, Palette p)
         {
             bool shooting = frame == ShootFrame;

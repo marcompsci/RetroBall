@@ -222,5 +222,67 @@ namespace CallerRetroBall.Tests
             Assert.IsTrue(ia.ShootHeld);
         }
     }
+
+    public class DunkPathTests
+    {
+        [Test]
+        public void HandsReachTheRim_AtTheSlam_ThenHangAndLand()
+        {
+            var hoop = new Vec2(0f, 1.575f);
+            var start = new Vec2(1.2f, 3.6f);
+            var end = new Vec2(1.0f, 3.2f);
+            var meet = DunkPath.MeetPoint(start, hoop, DunkPath.Approach);
+            Assert.AreEqual(DunkPath.Approach, Vec2.Distance(meet, hoop), 1e-3f);
+            Assert.Greater(meet.y, hoop.y, "in front of the rim");
+            Assert.Less(System.Math.Abs(meet.x), 0.2f, "nearly square to the rim");
+
+            // Portrait: rim 1.525 m up the screen (3.05 x 0.5), the meet point 0.45 m further down the screen.
+            int reach = 22;
+            int lift = DunkPath.LiftToRim((-hoop.y + 1.525f) * 16f, -meet.y * 16f, reach);
+            Assert.AreEqual((int)System.Math.Round((1.525f + meet.y - hoop.y) * 16f) - reach + DunkPath.OverRimPx, lift);
+
+            const float slam = 0.45f;
+            var takeOff = DunkPath.At(start, hoop, end, 0f, slam, lift, DunkPath.Approach);
+            Assert.AreEqual(0, takeOff.LiftPx);
+            Assert.IsTrue(takeOff.BallInHands);
+            int prev = -1;
+            for (float u = 0f; u < slam; u += 0.05f)
+            {
+                var f = DunkPath.At(start, hoop, end, u, slam, lift, DunkPath.Approach);
+                Assert.IsTrue(f.BallInHands, "the ball stays in the hands on the way up");
+                Assert.GreaterOrEqual(f.LiftPx, prev, "rising");
+                prev = f.LiftPx;
+            }
+            var atRim = DunkPath.At(start, hoop, end, slam, slam, lift, DunkPath.Approach);
+            Assert.AreEqual(lift, atRim.LiftPx, "hands on the rim at the slam");
+            Assert.IsTrue(atRim.OnRim);
+            Assert.IsFalse(atRim.BallInHands);
+            Assert.AreEqual(meet.x, atRim.Ground.x, 1e-4f);
+            var hang = DunkPath.At(start, hoop, end, slam + 0.1f, slam, lift, DunkPath.Approach);
+            Assert.IsTrue(hang.OnRim);
+            Assert.AreEqual(lift - 1, hang.LiftPx);
+            var landing = DunkPath.At(start, hoop, end, 0.99f, slam, lift, DunkPath.Approach);
+            Assert.Less(landing.LiftPx, 3);
+            Assert.AreEqual(end.y, DunkPath.At(start, hoop, end, 1f, slam, lift, DunkPath.Approach).Ground.y, 1e-4f);
+        }
+
+        [Test]
+        public void HandReach_MatchesTheArmsUpSprite()
+        {
+            foreach (int tier in new[] { 0, 1, 2 })
+            {
+                var look = new AppearanceDef(1, 1, 1, BodyType.Standard, tier);
+                var sheet = CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.GenerateSheet(look, RgbColor.FromHex("#FF0000"), RgbColor.FromHex("#FFFFFF"), RgbColor.FromHex("#000000"));
+                CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.FrameOrigin(CallerRetroBall.Logic.PixelArt.CharacterView.Back, CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.ShootFrame, out int fx, out int fy);
+                int top = -1;
+                for (int y = 0; y < CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.FrameHeight; y++)
+                    for (int x = 0; x < CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.FrameWidth; x++)
+                        if (sheet.Get(fx + x, fy + y).a > 0) top = System.Math.Max(top, y);
+                // The pivot is one pixel above the feet; the outline adds a pixel above the hands.
+                int reach = CallerRetroBall.Logic.PixelArt.CharacterSpriteGenerator.HandReachPx(look);
+                Assert.LessOrEqual(System.Math.Abs((top) - reach), 1, "tier " + tier);
+            }
+        }
+    }
 }
 

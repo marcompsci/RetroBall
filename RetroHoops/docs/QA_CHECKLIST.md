@@ -194,3 +194,14 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Two phones: after the final, both tap REMATCH → a new game starts on both with the same teams. One taps HOME instead → the other sees "YOUR FRIEND LEFT".
 - [ ] Xcode build: RetroStore.swift compiles (Swift) and the In-App Purchase capability is present.
 
+## Phase 28
+- [ ] Dunk (DUNK button near the rim, and an AI dunk): the dunker glides in, the raised hands reach the rim as the ball goes in, they hang on the rim for a moment (the rim dips), then drop. Check a short and a tall player, Full Court in landscape, a 360 and a windmill.
+- [ ] Alley-oop finish: the same hands-on-the-rim slam.
+- [ ] Reduce Motion on: dunks still reach the rim (no spin or ball swing).
+- [ ] Two-phone game with dunks: the scores still match on both phones.
+- [ ] Server (after `server/README.md` setup and `BackendConfig.Url`): LIVE shows "Signing in to Retro Hoops Live…", then the server rating; FIND A GAME is enabled only after that.
+- [ ] Server: two subscribed devices play a Live game; both post-game screens say the result was sent; within seconds a toast shows the rating change; `curl <server>/v1/leaderboard` lists both players.
+- [ ] Server: one player taps HOME mid-game after 20 s: the other gets the win when the game settles (immediately or within 10 minutes).
+- [ ] Server: sandbox subscription expires → LIVE says the server couldn't confirm it; refund in sandbox → same after Apple's notification.
+- [ ] LIVE ▸ DELETE MY LIVE DATA: the server forgets the player; `/v1/me` returns 404 until the next sign-in.
+

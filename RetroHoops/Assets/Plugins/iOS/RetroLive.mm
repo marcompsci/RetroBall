@@ -17,6 +17,12 @@ enum { RLVIdle = 0, RLVSearching = 1, RLVConnected = 2, RLVLost = 3 };
 @property (nonatomic, strong) NSString* opponentId;
 @property (nonatomic, strong) NSString* error;
 @property (nonatomic, assign) int state;
+// Game Center identity proof for the Retro Hoops Live server (0 none, 1 fetching, 2 ready, 3 failed).
+@property (nonatomic, assign) int idState;
+@property (nonatomic, strong) NSString* idKeyUrl;
+@property (nonatomic, strong) NSString* idSignature;
+@property (nonatomic, strong) NSString* idSalt;
+@property (nonatomic, assign) double idTimestamp;
 @end
 
 @implementation RetroLiveManager
@@ -87,7 +93,8 @@ enum { RLVIdle = 0, RLVSearching = 1, RLVConnected = 2, RLVLost = 3 };
     @synchronized (self)
     {
         self.opponentName = other.displayName ?: @"";
-        self.opponentId = other.gamePlayerID ?: @"";
+        // teamPlayerID: the same id the server verifies at sign-in (both phones use it to pick the host).
+        self.opponentId = other.teamPlayerID ?: @"";
         self.state = RLVConnected;
     }
 }
@@ -211,7 +218,64 @@ char* RetroLive_OpponentId(void)
 
 char* RetroLive_LocalId(void)
 {
-    return RetroLiveCopy([GKLocalPlayer localPlayer].gamePlayerID);
+    return RetroLiveCopy([GKLocalPlayer localPlayer].teamPlayerID);
+}
+
+void RetroLive_FetchIdentity(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { m.idState = 1; }
+    if (![GKLocalPlayer localPlayer].isAuthenticated)
+    {
+        @synchronized (m) { m.idState = 3; }
+        return;
+    }
+    [[GKLocalPlayer localPlayer] fetchItemsForIdentityVerificationSignature:^(NSURL* publicKeyURL, NSData* signature, NSData* salt, uint64_t timestamp, NSError* error) {
+        @synchronized (m)
+        {
+            if (error != nil || publicKeyURL == nil || signature == nil || salt == nil)
+            {
+                m.idState = 3;
+                m.error = error != nil ? error.localizedDescription : @"Game Center didn't sign in.";
+                return;
+            }
+            m.idKeyUrl = publicKeyURL.absoluteString ?: @"";
+            m.idSignature = [signature base64EncodedStringWithOptions:0];
+            m.idSalt = [salt base64EncodedStringWithOptions:0];
+            m.idTimestamp = (double)timestamp;
+            m.idState = 2;
+        }
+    }];
+}
+
+int RetroLive_IdentityState(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { return m.idState; }
+}
+
+char* RetroLive_IdentityKeyUrl(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { return RetroLiveCopy(m.idKeyUrl); }
+}
+
+char* RetroLive_IdentitySignature(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { return RetroLiveCopy(m.idSignature); }
+}
+
+char* RetroLive_IdentitySalt(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { return RetroLiveCopy(m.idSalt); }
+}
+
+double RetroLive_IdentityTimestamp(void)
+{
+    RetroLiveManager* m = RetroLiveShared();
+    @synchronized (m) { return m.idTimestamp; }
 }
 
 char* RetroLive_LocalName(void)

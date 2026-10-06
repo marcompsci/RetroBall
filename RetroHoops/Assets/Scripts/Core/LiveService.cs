@@ -23,6 +23,8 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern void RetroStore_Buy();
         [DllImport("__Internal")] private static extern void RetroStore_Restore();
         [DllImport("__Internal")] private static extern void RetroStore_Refresh();
+        [DllImport("__Internal")] private static extern string RetroStore_OriginalTransactionId();
+        [DllImport("__Internal")] private static extern void RetroStore_SetAccountToken(string token);
 #else
         /// <summary>Editor only: pretend the subscription is active (to try the Live screens).</summary>
         public static bool EditorSubscribed;
@@ -117,6 +119,27 @@ namespace CallerRetroBall.Core
             }
         }
 
+        /// <summary>The active subscription's originalTransactionId (what the Live server checks with Apple), or "".</summary>
+        public static string OriginalTransactionId
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return RetroStore_OriginalTransactionId() ?? "";
+#else
+                return "";
+#endif
+            }
+        }
+
+        /// <summary>Tags future purchases with this player's account token (from the Live server).</summary>
+        public static void SetAccountToken(string token)
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            if (!string.IsNullOrEmpty(token)) RetroStore_SetAccountToken(token);
+#endif
+        }
+
         public static void Buy()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -159,6 +182,12 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern int RetroLive_Send(byte[] data, int length);
         [DllImport("__Internal")] private static extern int RetroLive_NextLength();
         [DllImport("__Internal")] private static extern int RetroLive_Receive(byte[] buffer, int capacity);
+        [DllImport("__Internal")] private static extern void RetroLive_FetchIdentity();
+        [DllImport("__Internal")] private static extern int RetroLive_IdentityState();
+        [DllImport("__Internal")] private static extern string RetroLive_IdentityKeyUrl();
+        [DllImport("__Internal")] private static extern string RetroLive_IdentitySignature();
+        [DllImport("__Internal")] private static extern string RetroLive_IdentitySalt();
+        [DllImport("__Internal")] private static extern double RetroLive_IdentityTimestamp();
         public static bool Supported => true;
 #else
         public static bool Supported => false;
@@ -230,6 +259,70 @@ namespace CallerRetroBall.Core
                 return LiveMode.Seat(RetroLive_LocalId(), RetroLive_OpponentId());
 #else
                 return 0;
+#endif
+            }
+        }
+
+        /// <summary>This player's Game Center teamPlayerID (the id the Live server knows them by).</summary>
+        public static string LocalId
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return RetroLive_LocalId() ?? "";
+#else
+                return "";
+#endif
+            }
+        }
+
+        /// <summary>The opponent's teamPlayerID (connected games only).</summary>
+        public string OpponentId
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return RetroLive_OpponentId() ?? "";
+#else
+                return "";
+#endif
+            }
+        }
+
+        public struct IdentityProof
+        {
+            public string KeyUrl, Signature, Salt;
+            public double Timestamp;
+        }
+
+        /// <summary>Asks Game Center for a signed proof of who this player is (for the Live server). 0 none, 1 working, 2 ready, 3 failed.</summary>
+        public static void FetchIdentity()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            RetroLive_FetchIdentity();
+#endif
+        }
+
+        public static int IdentityState
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return RetroLive_IdentityState();
+#else
+                return 3;
+#endif
+            }
+        }
+
+        public static IdentityProof Identity
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return new IdentityProof { KeyUrl = RetroLive_IdentityKeyUrl(), Signature = RetroLive_IdentitySignature(), Salt = RetroLive_IdentitySalt(), Timestamp = RetroLive_IdentityTimestamp() };
+#else
+                return default;
 #endif
             }
         }

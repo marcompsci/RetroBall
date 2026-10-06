@@ -53,6 +53,15 @@ namespace CallerRetroBall.UI
                 UiKit.Button(column, "SIGN IN TO GAME CENTER", () => { App.SetGameCenter(true); status.text = "Signing in… then tap FIND A GAME."; }, ButtonStyle.Secondary, 100f, 32f);
             }
             UiKit.Button(column, "MANAGE SUBSCRIPTION", () => Application.OpenURL(LiveMode.ManageUrl), ButtonStyle.Ghost, 80f, 28f);
+            if (BackendConfig.Enabled)
+                UiKit.Button(column, "DELETE MY LIVE DATA", () => UiControls.Dialog("DELETE LIVE DATA",
+                    "Erase your Live rating, record and subscription link from the Retro Hoops server? Your subscription stays active.",
+                    ("DELETE", ButtonStyle.Primary, () => BackendClient.DeleteMyData(ok =>
+                    {
+                        if (ok) { live.rating = live.best = LiveMode.StartRating; live.wins = live.losses = live.games = 0; App.SaveCareer(); }
+                        status.text = ok ? "Deleted." : "<color=#FF6B6B>Couldn't reach the server. Try again later.</color>";
+                    })),
+                    ("CANCEL", ButtonStyle.Ghost, null)), ButtonStyle.Ghost, 80f, 28f);
 
             Button find = null;
             UiKit.Button(footer, "BACK", () => { LiveLink.Stop(); ShowPlayMenu(); }, ButtonStyle.Ghost, 130f, 44f);
@@ -69,6 +78,17 @@ namespace CallerRetroBall.UI
                 var link = LiveLink.Find(App.Version);
                 LivePoller.Attach(column, link, offer, status, () => { if (find != null) find.interactable = true; });
             }, ButtonStyle.Primary, 130f);
+
+            // With the Retro Hoops Live server switched on, sign in to it first: it checks the subscription with
+            // Apple and keeps the official ratings. FIND A GAME waits until it says yes.
+            if (BackendConfig.Enabled && LiveLink.Supported && signedIn)
+            {
+                BackendClient.Connect();
+                var watch = column.gameObject.AddComponent<BackendWatcher>();
+                watch.Status = status;
+                watch.Find = find;
+                watch.OnReady = () => ShowLive();
+            }
         }
 
         private void ShowLivePaywall()
@@ -97,6 +117,49 @@ namespace CallerRetroBall.UI
             watcher.Terms = terms;
             watcher.Status = status;
             watcher.OnSubscribed = ShowLive;
+        }
+    }
+
+    /// <summary>Shows the Live server sign-in on the LIVE screen and holds FIND A GAME until it's done.</summary>
+    public sealed class BackendWatcher : MonoBehaviour
+    {
+        public TextMeshProUGUI Status;
+        public Button Find;
+        public Action OnReady;
+        private BackendState _last = (BackendState)(-1);
+        private bool _wasReady;
+
+        private void Start() => _wasReady = BackendClient.Ready;
+
+        private void Update()
+        {
+            var s = BackendClient.State;
+            if (s == _last) return;
+            _last = s;
+            if (GetComponent<LivePoller>() != null) return; // matchmaking owns the status line
+            switch (s)
+            {
+                case BackendState.Connecting:
+                    Status.text = "Signing in to Retro Hoops Live…";
+                    Find.interactable = false;
+                    break;
+                case BackendState.Ready:
+                    if (!BackendClient.SubscriptionActive)
+                    {
+                        Status.text = "<color=#FF6B6B>The Live server couldn't confirm your subscription with Apple. Try RESTORE PURCHASES, then come back.</color>";
+                        Find.interactable = false;
+                    }
+                    else
+                    {
+                        Find.interactable = true;
+                        if (!_wasReady) OnReady?.Invoke(); // redraw with the server's rating
+                    }
+                    break;
+                case BackendState.Failed:
+                    Status.text = "<color=#FF6B6B>" + BackendClient.Error + "</color>";
+                    Find.interactable = false;
+                    break;
+            }
         }
     }
 
@@ -197,6 +260,8 @@ namespace CallerRetroBall.UI
                         return;
                     }
                     LinkMatch.Transport = _link;
+                    LinkMatch.LocalId = LiveLink.LocalId;
+                    LinkMatch.OpponentId = _link.OpponentId;
                     LinkMatch.Seat = _lobby.IsHost ? 0 : 1;
                     LinkMatch.Setup = setup;
                     App.PendingMatch = setup.ToRequest();
