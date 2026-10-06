@@ -99,6 +99,8 @@ namespace CallerRetroBall.Core
         public static int StoryOutroPending { get; set; }
         /// <summary>After a Couch Cup game: open the bracket on the menu.</summary>
         public static bool OpenCouchOnMenu { get; set; }
+        /// <summary>After a Live game: open LIVE on the menu.</summary>
+        public static bool OpenLiveOnMenu { get; set; }
 
         /// <summary>Simulation steps per second: 120 on 120 Hz screens with High Frame Rate on, else 60.</summary>
         public static int SimulationRate { get; private set; } = 60;

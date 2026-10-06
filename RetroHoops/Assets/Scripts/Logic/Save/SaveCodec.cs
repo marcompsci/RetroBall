@@ -118,6 +118,7 @@ namespace CallerRetroBall.Logic
                 ["pass"] = EncodePass(d.pass),
                 ["story"] = EncodeStory(d.story),
                 ["couch"] = EncodeCouch(d.couch),
+                ["live"] = EncodeLive(d.live),
                 ["photos"] = d.photosTaken,
                 ["rival"] = new Dictionary<string, object>
                 {
@@ -553,6 +554,7 @@ namespace CallerRetroBall.Logic
                 d.pass = DecodePass(Obj(o, "pass"));
                 d.story = DecodeStory(Obj(o, "story"));
                 d.couch = DecodeCouch(Obj(o, "couch"));
+                d.live = DecodeLive(Obj(o, "live"));
                 d.photosTaken = Math.Max(0, Int(o, "photos", 0));
                 CourtBuilder.Apply(c, d.courts);
                 CustomTeams.Clamp(d.customTeam, c);

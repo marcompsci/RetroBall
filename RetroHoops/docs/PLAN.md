@@ -489,6 +489,26 @@
   a simulation step costs about 10 µs and the biggest generated texture (Full Court floor) about 5 ms, so
   neither is a battery or load-time problem; drawing is.
 
+### Phase 27: Retro Hoops Live, ship-ready docs, two-phone rematch
+
+- **Retro Hoops Live** (Omari's request: online play for $10.99/month): PLAY ▸ LIVE. The subscription uses
+  StoreKit 2 (`Plugins/iOS/RetroStore.swift`, product `com.phoronomicstudios.retrohoops.live.monthly`). The App
+  Store decides whether it's active, and the career caches the end date. The paywall shows the localised price,
+  terms, Restore, Terms of Use and Privacy Policy (guideline 3.1.2). Matchmaking uses Game Center
+  (`Plugins/iOS/RetroLive.mm`, GKMatchmaker); the player group is derived from the game version. The host is the
+  lower Game Center ID. Each player brings their own team (the Hello message), and the host's team is home.
+  Same lockstep as two phones with an 8-step input delay. Elo rating (1000 start, K 32), tiers ROOKIE to
+  LEGEND, Game Center leaderboard `retrohoops.live.rating`. Quitting after 20 s is a loss; an opponent leaving
+  is a win; a drop or desync counts for nobody. Setup steps in `docs/LIVE.md`.
+- **Ship-ready docs:** `docs/LIVE.md` (subscription, agreements, sandbox testing, review notes), `docs/PRIVACY.md`
+  (hostable policy covering Live and two phones), APP_STORE.md (description sections, age-rating answers,
+  privacy label notes, review notes) and SUBMISSION.md (upload error fix, subscription step).
+- **Two-phone rematch:** after a two-phone game both players tap REMATCH. The same teams play with a new seed
+  and no reconnecting. Hand-shake messages that arrive while the other phone finishes are kept.
+- **Not done this phase (moved to Phase 28):** spectator view, a two-phone Couch Cup, sharing two-phone
+  replays, gameplay depth (fatigue/subs in half court, new plays, AI defence, tuning) and the polish items
+  (crowd sounds, new animation frames, court intro, post-game screen).
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

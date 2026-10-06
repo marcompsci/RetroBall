@@ -29,6 +29,15 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 >
 > On defense, contest, reach for steals, switch onto the ball handler, and box out. Every AI team has its own defense, and the smart ones adjust when you find a weakness.
 >
+> **SUMMER STORY**
+> One summer, eight games, one league title. Run with Nova, win over Big Sal, and take down Kojo Stride's Velvet Hour while Mic Tally calls every big play.
+>
+> **PLAY YOUR FRIENDS**
+> Head to head on one iPhone laid flat between you, on two phones nearby with no internet needed, or in a Couch Cup tournament for up to 8 friends.
+>
+> **RETRO HOOPS LIVE (subscription)**
+> Play people online through Game Center and climb from Rookie to Legend. Retro Hoops Live is an optional monthly subscription. Everything else is free.
+>
 > **FRANCHISE**
 > Be the GM of a league club, season after season. Set the rotation, trade with seven other GMs, re-sign your players, chase free agents under the salary cap, scout prospects, and win the draft lottery. Players age, improve, decline, and retire into the Hall of Fame. Play every game Full Court 5-on-5, or simulate.
 >
@@ -108,11 +117,11 @@ basketball,arcade,retro,pixel,3v3,5v5,hoops,streetball,offline,sports,franchise,
 
 ### Privacy policy text (ready to host)
 
-> Retro Hoops does not collect, store, or share any personal information. The game works fully offline. It has no accounts, advertising, analytics, or tracking. Game progress (your nickname, settings, and career) is saved on your device and, if iCloud Sync is on, in your own iCloud account through Apple's iCloud service, where the developer can't see it. Optional Game Center scores and achievements are handled by Apple's Game Center. Contact: **YOU: your email**.
+The full text is in [`PRIVACY.md`](PRIVACY.md). It covers Live and two-phone play. Host it publicly, add your email, and use that URL here and in `LiveMode.PrivacyPolicyUrl`.
 
 ## App Privacy ("nutrition label")
 
-- **Data collection:** answer **No, we do not collect data from this app.** The result is **Data Not Collected**.
+- **Data collection:** answer **No, we do not collect data from this app.** The result is **Data Not Collected**. Live doesn't change this: matchmaking and purchases go through Apple's Game Center and StoreKit, and the developer receives nothing. A player's Game Center name and rating go only to their opponent's device for that game. Re-read Apple's definitions before you submit, because this is your declaration, not mine.
 - **Tracking:** none. `PrivacyInfo.xcprivacy` (in `Assets/Plugins/iOS`) declares no tracking, no collected data types, and no tracking domains for the game's own code. Unity's engine framework ships its own privacy manifest.
 
 ## Age rating questionnaire
@@ -122,9 +131,10 @@ Answer **None** to everything: violence, sexual content, profanity, drugs, horro
 | Question | Answer |
 |---|---|
 | Unrestricted web access | No |
-| User-generated content | No. The nickname is local only and never shown to anyone else. |
+| User-generated content | No. Typed nicknames are never sent online. Live opponents see only each other's Game Center name. |
+| Online play with other people | Yes, Live (Game Center matchmaking). There's no chat or messaging. |
 | Messaging or chat | No |
-| In-app purchases | No |
+| In-app purchases | **Yes**: Retro Hoops Live, an auto-renewing monthly subscription (see `LIVE.md`) |
 | Advertising | No |
 
 The expected rating is the lowest (4+).
@@ -154,4 +164,4 @@ Only show real gameplay. Don't add device frames that show non-Apple hardware, a
 
 ## App Review notes (paste into "Notes")
 
-> Fully offline game with no login, ads, or purchases. Optional Apple services only: Game Center (Settings ▸ Game Center) and iCloud save sync (Settings ▸ iCloud Sync). All content is original and generated procedurally. To see the main modes quickly: Main menu ▸ PLAY ▸ FRANCHISE (START FRANCHISE, then SIM GAME or PLAY GAME) and PLAY ▸ ALL-STAR CONTESTS ▸ DUNK CONTEST. Rise Mode: Main menu ▸ RISE MODE ▸ PLAY NEXT.
+> No login of our own and no ads. One optional auto-renewing subscription, Retro Hoops Live ($10.99/month), unlocks online head-to-head games through Game Center (PLAY ▸ LIVE; details in the subscription's review notes). Everything else is free and works offline. Optional Apple services only: Game Center (Settings ▸ Game Center) and iCloud save sync (Settings ▸ iCloud Sync). All content is original and generated procedurally. To see the main modes quickly: Main menu ▸ PLAY ▸ FRANCHISE (START FRANCHISE, then SIM GAME or PLAY GAME) and PLAY ▸ ALL-STAR CONTESTS ▸ DUNK CONTEST. Rise Mode: Main menu ▸ RISE MODE ▸ PLAY NEXT.

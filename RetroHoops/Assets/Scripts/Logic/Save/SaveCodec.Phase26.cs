@@ -28,6 +28,30 @@ namespace CallerRetroBall.Logic
             return s;
         }
 
+        private static object EncodeLive(LiveSaveData l)
+        {
+            l = l ?? new LiveSaveData();
+            return new Dictionary<string, object>
+            {
+                ["rating"] = l.rating, ["best"] = l.best, ["wins"] = l.wins, ["losses"] = l.losses, ["games"] = l.games,
+                ["team"] = l.teamId ?? "", ["until"] = l.subscribedUntil,
+            };
+        }
+
+        private static LiveSaveData DecodeLive(Dictionary<string, object> o)
+        {
+            var l = new LiveSaveData();
+            if (o == null) return l;
+            l.rating = Math.Max(100, Math.Min(4000, Int(o, "rating", LiveMode.StartRating)));
+            l.best = Math.Max(l.rating, Math.Min(4000, Int(o, "best", l.rating)));
+            l.wins = Math.Max(0, Int(o, "wins", 0));
+            l.losses = Math.Max(0, Int(o, "losses", 0));
+            l.games = Math.Max(l.wins + l.losses, Int(o, "games", 0));
+            l.teamId = Str(o, "team", "");
+            l.subscribedUntil = o.TryGetValue("until", out var u) && u is double d ? d : 0.0;
+            return l;
+        }
+
         private static object EncodeCouch(CouchCupSaveData c)
         {
             c = c ?? new CouchCupSaveData();

@@ -1,0 +1,226 @@
+using System;
+using CallerRetroBall.Core;
+using CallerRetroBall.Logic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace CallerRetroBall.UI
+{
+    /// <summary>PLAY ▸ LIVE: the Retro Hoops Live subscription screen, and online matchmaking once subscribed.</summary>
+    public sealed partial class MainMenuController
+    {
+        private void ShowLive()
+        {
+            LiveStore.EnsureStarted();
+            if (!LiveStore.Active)
+            {
+                ShowLivePaywall();
+                return;
+            }
+            LiveStore.Remember();
+            var c = App.Catalog;
+            var career = App.Career;
+            var live = career.live ?? (career.live = new LiveSaveData());
+            var teams = c.TeamsInTier(TeamTier.League);
+            int teamIndex = Mathf.Max(0, teams.FindIndex(t => t.id == live.teamId));
+
+            var column = OpenOverlay("LIVE", out var footer);
+            UiKit.Size(UiKit.Label(column, "RATING " + live.rating + "  ·  " + LiveMode.Tier(live.rating), 44f, Theme.Gold, TextAlignmentOptions.Center, true), 70f);
+            UiKit.Size(UiKit.Label(column, "RECORD " + live.wins + "-" + live.losses + "  ·  BEST " + live.best, 30f, Theme.Cream, TextAlignmentOptions.Center, true), 50f);
+            UiKit.Size(UiKit.Label(column, "Play someone online, head to head, one game. Win to climb; leaving a game early counts as a loss.", 28f, Theme.Muted), 90f);
+
+            UiKit.Size(UiKit.Label(column, "YOUR TEAM", 30f, Theme.Gold, TextAlignmentOptions.Center, true), 50f);
+            TextMeshProUGUI teamLabel = null;
+            teamLabel = UiKit.Label(column, teams[teamIndex].FullName.ToUpperInvariant(), 40f, Theme.Cream, TextAlignmentOptions.Center, true);
+            UiKit.Size(teamLabel, 60f);
+            UiKit.Button(column, "CHANGE TEAM", () =>
+            {
+                teamIndex = (teamIndex + 1) % teams.Count;
+                live.teamId = teams[teamIndex].id;
+                teamLabel.text = teams[teamIndex].FullName.ToUpperInvariant();
+                App.SaveCareer();
+            }, ButtonStyle.Ghost, 90f, 34f);
+
+            var status = UiKit.Label(column, "", 30f, Theme.Muted, TextAlignmentOptions.Center);
+            UiKit.Size(status, 130f);
+
+            bool signedIn = App.GameCenter.IsAvailable && App.GameCenter.IsSignedIn;
+            if (!LiveLink.Supported) status.text = "Live games work on the iPhone, iPad and Mac versions of the game.";
+            else if (!signedIn)
+            {
+                status.text = "Live uses Game Center to find opponents. Sign in first.";
+                UiKit.Button(column, "SIGN IN TO GAME CENTER", () => { App.SetGameCenter(true); status.text = "Signing in… then tap FIND A GAME."; }, ButtonStyle.Secondary, 100f, 32f);
+            }
+            UiKit.Button(column, "MANAGE SUBSCRIPTION", () => Application.OpenURL(LiveMode.ManageUrl), ButtonStyle.Ghost, 80f, 28f);
+
+            Button find = null;
+            UiKit.Button(footer, "BACK", () => { LiveLink.Stop(); ShowPlayMenu(); }, ButtonStyle.Ghost, 130f, 44f);
+            find = UiKit.Button(footer, "FIND A GAME", () =>
+            {
+                if (!LiveLink.Supported) return;
+                live.teamId = teams[teamIndex].id;
+                App.SaveCareer();
+                find.interactable = false;
+                var team = teams[teamIndex];
+                string me = LiveLink.LocalName;
+                if (string.IsNullOrEmpty(me)) me = "Player"; // only the Game Center name is shown to opponents (no typed names online)
+                var offer = new LiveOffer { AppVersion = App.Version, Name = me, Rating = live.rating, TeamData = LinkTeams.Write(c, team), CourtId = team.homeCourtId };
+                var link = LiveLink.Find(App.Version);
+                LivePoller.Attach(column, link, offer, status, () => { if (find != null) find.interactable = true; });
+            }, ButtonStyle.Primary, 130f);
+        }
+
+        private void ShowLivePaywall()
+        {
+            var column = OpenOverlay("RETRO HOOPS LIVE", out var footer);
+            UiKit.Size(UiKit.Label(column,
+                "• Play real people online, head to head\n• A Live rating with tiers, from ROOKIE to LEGEND, and a Game Center leaderboard\n• Bring any league team; opponents are matched on the same game version\n• Everything else in Retro Hoops stays free and offline",
+                30f, Theme.Cream), 260f);
+            var price = UiKit.Label(column, LiveStore.Price + " / MONTH", 48f, Theme.Gold, TextAlignmentOptions.Center, true);
+            UiKit.Size(price, 80f);
+            var status = UiKit.Label(column, "", 28f, Theme.Muted, TextAlignmentOptions.Center);
+            UiKit.Size(status, 90f);
+            var terms = UiKit.Label(column, LiveMode.Terms(LiveStore.Price), 22f, Theme.Muted);
+            UiKit.Size(terms, 220f);
+            var links = UiKit.Row(column, 16f, "Links");
+            UiKit.Size(links, 90f);
+            UiKit.Button(links, "TERMS OF USE", () => Application.OpenURL(LiveMode.TermsOfUseUrl), ButtonStyle.Ghost, 80f, 26f);
+            UiKit.Button(links, "PRIVACY POLICY", () => Application.OpenURL(LiveMode.PrivacyPolicyUrl), ButtonStyle.Ghost, 80f, 26f);
+            UiKit.Button(column, "RESTORE PURCHASES", () => { LiveStore.Restore(); status.text = "Checking with the App Store…"; }, ButtonStyle.Ghost, 90f, 30f);
+
+            UiKit.Button(footer, "BACK", ShowPlayMenu, ButtonStyle.Ghost, 130f, 44f);
+            UiKit.Button(footer, "SUBSCRIBE", () => { LiveStore.Buy(); status.text = "Opening the App Store…"; }, ButtonStyle.Primary, 130f);
+
+            var watcher = column.gameObject.AddComponent<PaywallWatcher>();
+            watcher.Price = price;
+            watcher.Terms = terms;
+            watcher.Status = status;
+            watcher.OnSubscribed = ShowLive;
+        }
+    }
+
+    /// <summary>Keeps the paywall in step with the App Store (price, purchase progress) and moves on once subscribed.</summary>
+    public sealed class PaywallWatcher : MonoBehaviour
+    {
+        public TextMeshProUGUI Price, Terms, Status;
+        public Action OnSubscribed;
+        private string _lastPrice;
+        private StoreState _last = (StoreState)(-1);
+        private bool _done;
+
+        private void Update()
+        {
+            if (_done) return;
+            string p = LiveStore.Price;
+            if (p != _lastPrice)
+            {
+                _lastPrice = p;
+                Price.text = p + " / MONTH";
+                Terms.text = LiveMode.Terms(p);
+            }
+            var s = LiveStore.State;
+            if (s == _last) return;
+            _last = s;
+            switch (s)
+            {
+                case StoreState.Subscribed:
+                    _done = true;
+                    LiveStore.Remember();
+                    OnSubscribed?.Invoke();
+                    break;
+                case StoreState.Purchasing: Status.text = "Waiting for the App Store…"; break;
+                case StoreState.Pending: Status.text = "Waiting for approval (Ask to Buy). Live opens as soon as it's approved."; break;
+                case StoreState.Failed: Status.text = "<color=#FF6B6B>" + (string.IsNullOrEmpty(LiveStore.Error) ? "The purchase didn't go through." : LiveStore.Error) + "</color>"; break;
+                case StoreState.NotSubscribed: if (Status.text.StartsWith("Checking", StringComparison.Ordinal)) Status.text = "No active subscription found on this Apple Account."; break;
+            }
+        }
+    }
+
+    /// <summary>Runs Live matchmaking and the hand-shake while the LIVE screen is open; starts the game when ready.</summary>
+    public sealed class LivePoller : MonoBehaviour
+    {
+        private LiveLink _link;
+        private LiveOffer _offer;
+        private LinkLobby _lobby;
+        private TextMeshProUGUI _status;
+        private Action _onFail;
+        private bool _started;
+        private float _since;
+
+        public static LivePoller Attach(Transform host, LiveLink link, LiveOffer offer, TextMeshProUGUI status, Action onFail)
+        {
+            var old = host.GetComponent<LivePoller>();
+            if (old != null) Destroy(old);
+            var p = host.gameObject.AddComponent<LivePoller>();
+            p._link = link;
+            p._offer = offer;
+            p._status = status;
+            p._onFail = onFail;
+            p._since = Time.unscaledTime;
+            status.text = "Finding an opponent on Game Center…";
+            return p;
+        }
+
+        private void Update()
+        {
+            if (_started || _link == null) return;
+            PowerMonitor.Wake();
+            var state = _link.State;
+            if (state == LinkState.Lost)
+            {
+                Fail(string.IsNullOrEmpty(_link.Error) ? "Matchmaking stopped. Try again." : _link.Error);
+                return;
+            }
+            if (state == LinkState.Searching || state == LinkState.Idle)
+            {
+                int secs = (int)(Time.unscaledTime - _since);
+                _status.text = "Finding an opponent on Game Center… " + secs + "s\n<size=22>BACK to stop looking.</size>";
+                return;
+            }
+            // Connected: the hand-shake picks who hosts and swaps teams.
+            if (_lobby == null)
+            {
+                int seat = _link.Seat;
+                _lobby = new LinkLobby(seat == 0, _offer, (uint)Environment.TickCount | 1u, LinkProtocol.ContentFingerprint(App.Catalog), App.Catalog);
+                _status.text = "Found " + _link.PeerName + "! Getting ready…";
+            }
+            _lobby.Update(_link);
+            switch (_lobby.Status)
+            {
+                case LobbyStatus.Started:
+                    _started = true;
+                    var setup = _lobby.Setup;
+                    if (!setup.Register(App.Catalog))
+                    {
+                        Fail("Couldn't set up the teams.");
+                        return;
+                    }
+                    LinkMatch.Transport = _link;
+                    LinkMatch.Seat = _lobby.IsHost ? 0 : 1;
+                    LinkMatch.Setup = setup;
+                    App.PendingMatch = setup.ToRequest();
+                    _status.text = "TIP OFF vs " + (_lobby.IsHost ? setup.GuestName : setup.HostName) + "!";
+                    SceneFlow.GoTo(SceneNames.Game);
+                    break;
+                case LobbyStatus.Rejected:
+                case LobbyStatus.Lost:
+                    Fail(_lobby.Error ?? "Lost the connection.");
+                    break;
+            }
+        }
+
+        private void Fail(string why)
+        {
+            _status.text = "<color=#FF6B6B>" + why + "</color>";
+            LiveLink.Stop();
+            _link = null;
+            _onFail?.Invoke();
+        }
+
+        private void OnDestroy()
+        {
+            if (!_started && _link != null) LiveLink.Stop();
+        }
+    }
+}

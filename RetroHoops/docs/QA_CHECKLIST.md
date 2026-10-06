@@ -181,3 +181,16 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Menus: leave a menu untouched for a few seconds with SHOW FPS on; the game stays responsive when you touch it again. Gameplay stays smooth at 60/120.
 - [ ] Build size: compare the .ipa size with build 2 (stripping and size-optimised code).
 
+## Phase 27
+- [ ] PLAY ▸ LIVE without a subscription: the paywall shows the App Store price (not "$10.99" if your store uses another currency), the terms, RESTORE PURCHASES, TERMS OF USE and PRIVACY POLICY (both links open).
+- [ ] Sandbox tester: SUBSCRIBE; the App Store sheet appears; after paying, the LIVE lobby opens. Relaunch: LIVE opens straight away. After ~5 minutes the sandbox renews; after it lapses (or you cancel) LIVE shows the paywall again.
+- [ ] Ask to Buy (child account): "Waiting for approval".
+- [ ] RESTORE PURCHASES on a reinstall brings Live back.
+- [ ] Not signed in to Game Center: LIVE says to sign in and SIGN IN TO GAME CENTER works.
+- [ ] Two devices, two Game Center accounts, both subscribed, same build: FIND A GAME on both, they match within a minute, each plays their own team, scores match on both screens.
+- [ ] Live result: winner's rating goes up, loser's down by the same amount for equal ratings (±16); record and tier update; leaderboard shows the best rating.
+- [ ] Live: HOME mid-game after 20 s counts a loss for you and a win ("... LEFT") for the opponent. Airplane mode mid-game: CONNECTION LOST, no rating change.
+- [ ] Live: BACK while searching stops the search.
+- [ ] Two phones: after the final, both tap REMATCH → a new game starts on both with the same teams. One taps HOME instead → the other sees "YOUR FRIEND LEFT".
+- [ ] Xcode build: RetroStore.swift compiles (Swift) and the In-App Purchase capability is present.
+

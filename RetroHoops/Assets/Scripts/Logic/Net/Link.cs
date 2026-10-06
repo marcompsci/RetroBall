@@ -20,7 +20,14 @@ namespace CallerRetroBall.Logic
         bool TryReceive(out byte[] message);
     }
 
-    public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7 }
+    public enum LinkMessage : byte { Setup = 1, Ready = 2, Reject = 3, Start = 4, Inputs = 5, Hash = 6, Bye = 7, /** Live: the guest's team, name and rating. */ Hello = 8 }
+
+    /// <summary>What a player brings to a Live game: their team (as text), their name and rating.</summary>
+    public sealed class LiveOffer
+    {
+        public string AppVersion = "", Name = "", TeamData = "", CourtId = "";
+        public int Rating = LiveMode.StartRating;
+    }
 
     /// <summary>What the host picked; both phones build the same match from it.</summary>
     public sealed class LinkSetup
@@ -33,6 +40,12 @@ namespace CallerRetroBall.Logic
         public string HomeTeamId = "", AwayTeamId = "", CourtId = "", RulesId = "", DifficultyId = "";
         /// <summary>Both teams written out in full (names, colours, rosters, ratings), so the guest plays the host's exact teams.</summary>
         public string HomeTeamData = "", AwayTeamData = "";
+        /// <summary>Input delay in steps (two phones nearby: 4; Live over the internet: <see cref="LiveMode.InputDelay"/>).</summary>
+        public int Delay = Lockstep.DefaultDelay;
+        /// <summary>Live only: both players' names and ratings (0 = not a Live game).</summary>
+        public string GuestName = "";
+        public int HostRating, GuestRating;
+        public bool IsLive => HostRating > 0 && GuestRating > 0;
 
         public const string HomeId = "team.link.home", AwayId = "team.link.away";
 
@@ -53,6 +66,14 @@ namespace CallerRetroBall.Logic
                 HomeTeamData = LinkTeams.Write(c, c.Team(homeTeamId)),
                 AwayTeamData = LinkTeams.Write(c, c.Team(awayTeamId)),
             };
+        }
+
+        /// <summary>The same game again with a new seed (two-phone rematch).</summary>
+        public LinkSetup Again(uint seed)
+        {
+            var s = (LinkSetup)MemberwiseClone();
+            s.Seed = seed == 0 ? 1u : seed;
+            return s;
         }
 
         /// <summary>Adds the two link teams to <paramref name="c"/> (replacing earlier copies). False if the data is bad.</summary>
@@ -189,9 +210,24 @@ namespace CallerRetroBall.Logic
             Kv("court", s.CourtId);
             Kv("rules", s.RulesId);
             Kv("difficulty", s.DifficultyId);
+            Kv("delay", s.Delay.ToString());
+            Kv("guest", s.GuestName);
+            Kv("hostrating", s.HostRating.ToString());
+            Kv("guestrating", s.GuestRating.ToString());
             Kv("homedata", s.HomeTeamData);
             Kv("awaydata", s.AwayTeamData);
             return Text(LinkMessage.Setup, sb.ToString());
+        }
+
+        public static byte[] HelloMessage(LiveOffer o) =>
+            Text(LinkMessage.Hello, (o.AppVersion ?? "").Replace('\n', ' ') + "\n" + (o.Name ?? "").Replace('\n', ' ') + "\n" + o.Rating + "\n" + (o.TeamData ?? "").Replace('\n', ' '));
+
+        public static LiveOffer ReadHello(byte[] m)
+        {
+            if (m == null || m.Length < 1 || m[0] != (byte)LinkMessage.Hello) return null;
+            var parts = ReadText(m).Split('\n');
+            if (parts.Length < 4) return null;
+            return new LiveOffer { AppVersion = parts[0], Name = parts[1], Rating = int.TryParse(parts[2], out int r) ? r : LiveMode.StartRating, TeamData = parts[3] };
         }
 
         public static LinkSetup ReadSetup(byte[] m)
@@ -215,6 +251,10 @@ namespace CallerRetroBall.Logic
                     case "court": s.CourtId = v; break;
                     case "rules": s.RulesId = v; break;
                     case "difficulty": s.DifficultyId = v; break;
+                    case "delay": s.Delay = int.TryParse(v, out int dl) ? Math.Max(1, Math.Min(30, dl)) : Lockstep.DefaultDelay; break;
+                    case "guest": s.GuestName = v; break;
+                    case "hostrating": s.HostRating = int.TryParse(v, out int hr) ? hr : 0; break;
+                    case "guestrating": s.GuestRating = int.TryParse(v, out int gr) ? gr : 0; break;
                     case "homedata": s.HomeTeamData = v; break;
                     case "awaydata": s.AwayTeamData = v; break;
                 }
@@ -377,7 +417,10 @@ namespace CallerRetroBall.Logic
         public LobbyStatus Status { get; private set; }
         public LinkSetup Setup { get; private set; }
         public string Error { get; private set; }
-        private bool _sentSetup;
+        private bool _sentSetup, _sentHello;
+        /// <summary>Live: this player's offer (team, name, rating); the host builds the setup once the guest's arrives.</summary>
+        private readonly LiveOffer _live;
+        private readonly uint _liveSeed;
         private readonly string _appVersion;
         private readonly uint _content;
         private readonly ContentCatalog _catalog;
@@ -387,6 +430,17 @@ namespace CallerRetroBall.Logic
             IsHost = host;
             Setup = host ? hostSetup : null;
             _appVersion = appVersion;
+            _content = content;
+            _catalog = catalog;
+        }
+
+        /// <summary>A Live lobby: each player brings their own team; the host's is home and picks the court.</summary>
+        public LinkLobby(bool host, LiveOffer mine, uint seed, uint content, ContentCatalog catalog)
+        {
+            IsHost = host;
+            _live = mine;
+            _liveSeed = seed == 0 ? 1u : seed;
+            _appVersion = mine.AppVersion;
             _content = content;
             _catalog = catalog;
         }
@@ -401,10 +455,15 @@ namespace CallerRetroBall.Logic
                 return;
             }
             if (t.State != LinkState.Connected) return;
-            if (IsHost && !_sentSetup)
+            if (IsHost && !_sentSetup && _live == null)
             {
                 t.Send(LinkProtocol.SetupMessage(Setup));
                 _sentSetup = true;
+            }
+            if (!IsHost && _live != null && !_sentHello)
+            {
+                t.Send(LinkProtocol.HelloMessage(_live));
+                _sentHello = true;
             }
             while (Status == LobbyStatus.Waiting && t.TryReceive(out var m))
             {
@@ -425,6 +484,29 @@ namespace CallerRetroBall.Logic
                             Setup = s;
                             t.Send(LinkProtocol.Simple(LinkMessage.Ready));
                         }
+                        break;
+                    case LinkMessage.Hello when IsHost && _live != null && !_sentSetup:
+                        var guest = LinkProtocol.ReadHello(m);
+                        string bad = guest == null ? "Couldn't read the other player's team."
+                                   : guest.AppVersion != _appVersion ? "You and your opponent have different versions of Retro Hoops. Update from the App Store and try again."
+                                   : LinkTeams.Read(null, guest.TeamData, LinkSetup.AwayId, "x.") == null ? "Couldn't read the other player's team." : null;
+                        if (bad != null)
+                        {
+                            t.Send(LinkProtocol.Text(LinkMessage.Reject, bad));
+                            Error = bad;
+                            Status = LobbyStatus.Rejected;
+                            break;
+                        }
+                        Setup = new LinkSetup
+                        {
+                            AppVersion = _appVersion, Content = _content, Seed = _liveSeed, HostName = _live.Name, GuestName = guest.Name,
+                            HomeTeamId = "live.host", AwayTeamId = "live.guest", CourtId = _live.CourtId,
+                            RulesId = DefaultContent.DefaultRulesId, DifficultyId = LiveMode.DifficultyId,
+                            HomeTeamData = _live.TeamData, AwayTeamData = guest.TeamData,
+                            Delay = LiveMode.InputDelay, HostRating = Math.Max(1, _live.Rating), GuestRating = Math.Max(1, guest.Rating),
+                        };
+                        t.Send(LinkProtocol.SetupMessage(Setup));
+                        _sentSetup = true;
                         break;
                     case LinkMessage.Ready when IsHost:
                         t.Send(LinkProtocol.Simple(LinkMessage.Start));
@@ -547,8 +629,19 @@ namespace CallerRetroBall.Logic
                 case LinkMessage.Bye:
                     RemoteLeft = true;
                     break;
+                case LinkMessage.Setup:
+                case LinkMessage.Ready:
+                case LinkMessage.Start:
+                case LinkMessage.Reject:
+                case LinkMessage.Hello:
+                    // Hand-shake messages for the next game (a rematch) can arrive while this one finishes: keep them.
+                    Control.Enqueue(m);
+                    break;
             }
         }
+
+        /// <summary>Hand-shake messages received during the game, in order (for a rematch lobby).</summary>
+        public readonly Queue<byte[]> Control = new Queue<byte[]>();
 
         /// <summary>True if both inputs for <see cref="NextTick"/> are here: returns them (team A, team B) and moves on.</summary>
         public bool TryStep(out PlayerInput teamA, out PlayerInput teamB)
@@ -585,6 +678,22 @@ namespace CallerRetroBall.Logic
                 Desynced = true;
                 DesyncTick = tick;
             }
+        }
+    }
+
+    /// <summary>A transport that first hands back messages saved earlier (see <see cref="Lockstep.Control"/>), then reads the real one.</summary>
+    public sealed class ReplayWire : ILinkTransport
+    {
+        private readonly ILinkTransport _inner;
+        private readonly Queue<byte[]> _saved;
+        public ReplayWire(ILinkTransport inner, Queue<byte[]> saved) { _inner = inner; _saved = saved; }
+        public LinkState State => _inner.State;
+        public string PeerName => _inner.PeerName;
+        public void Send(byte[] message) => _inner.Send(message);
+        public bool TryReceive(out byte[] message)
+        {
+            if (_saved != null && _saved.Count > 0) { message = _saved.Dequeue(); return true; }
+            return _inner.TryReceive(out message);
         }
     }
 
