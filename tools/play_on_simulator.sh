@@ -33,6 +33,9 @@ fi
 if ! xcode-select -p >/dev/null 2>&1; then note "STOPPED: Xcode command line tools not set up. Run: sudo xcode-select -s /Applications/Xcode.app"; exit 1; fi
 
 echo "1/3  Unity: writing the Xcode project (a few minutes)..."
+# A marker for "made by this run": an Xcode project or app left over from an earlier build doesn't count.
+STAMP="$LOGS/.simulator_build_started"
+touch "$STAMP"
 "$UNITY" -batchmode -quit -nographics -buildTarget iOS -projectPath "$PROJECT" \
   -executeMethod CallerRetroBall.EditorTools.ReleaseTools.BuildSimulator -logFile "$LOGS/unity_build_simulator.log"
 XCPROJ="$PROJECT/iOSBuild/Simulator/Unity-iPhone.xcodeproj"
@@ -42,9 +45,9 @@ Unity processes:
 $(ps -axo pid=,args= | grep 'Unity.app/Contents/MacOS/Unity' | grep -v grep | cut -c1-200)"
   exit 1
 fi
-if [[ ! -d "$XCPROJ" ]]; then
+if [[ ! -d "$XCPROJ" || ! "$XCPROJ/project.pbxproj" -nt "$STAMP" ]] || grep -q "Build Finished, Result: Failure\|iOS build Failed" "$LOGS/unity_build_simulator.log" 2>/dev/null; then
   note "FAILED at step 1 (Unity build). Errors:
-$(grep -E 'error|Error|Exception|aborting|another Unity' "$LOGS/unity_build_simulator.log" | grep -v 'Licensing' | head -25)
+$(grep -E 'error CS|iOS build Failed|^  - |Exception|aborting|another Unity' "$LOGS/unity_build_simulator.log" | grep -v 'Licensing' | head -25)
 Last lines of the Unity log:
 $(tail -15 "$LOGS/unity_build_simulator.log")"
   exit 1
@@ -55,6 +58,8 @@ DERIVED="$PROJECT/iOSBuild/Simulator/DerivedData"
 xcodebuild -project "$XCPROJ" -scheme Unity-iPhone -configuration Release -sdk iphonesimulator \
   -derivedDataPath "$DERIVED" CODE_SIGNING_ALLOWED=NO build > "$LOGS/xcodebuild_simulator.log" 2>&1
 APP="$(find "$DERIVED/Build/Products" -maxdepth 2 -name '*.app' -type d | head -1)"
+# Only an app this run built counts (something inside it is newer than the start marker).
+if [[ -n "$APP" && -z "$(find "$APP" -type f -newer "$STAMP" | head -1)" ]]; then APP=""; fi
 if [[ -z "$APP" ]]; then
   note "FAILED at step 2 (xcodebuild). Errors:
 $(grep -E 'error:|BUILD FAILED' "$LOGS/xcodebuild_simulator.log" | head -25)"
