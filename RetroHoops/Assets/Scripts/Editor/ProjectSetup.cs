@@ -107,6 +107,54 @@ namespace CallerRetroBall.EditorTools
                 EditorUtility.DisplayDialog("Retro Hoops", "Project setup finished. See the Console for details.\n\nPress Play in BootScene to start.", "OK");
         }
 
+        // ------------------------------------------------------------------ settings rebuild
+
+        /// <summary>
+        /// Batch mode (tools/Restore Project Settings.command): when the ProjectSettings folder has been lost, Unity
+        /// recreates it with defaults on launch; this puts back everything Retro Hoops depends on. It's the same
+        /// settings Project Setup and the release builds apply, plus what the earlier builds show they used:
+        /// - the new Input System only (the old compile defines had ENABLE_INPUT_SYSTEM and no legacy input);
+        /// - the bundle ID com.phoronomicstudios.retrohoops and team X6LZQ3FS36 (-teamId on the command line);
+        /// - version 1.0.0 build 2 (the last archive), iOS 15, iPhone + iPad, the six scenes in Build Settings;
+        /// - the built-in renderer (no pipeline asset was ever assigned).
+        /// </summary>
+        public static void RestoreSettingsBatch()
+        {
+            var log = new List<string>();
+            EnsureFolders();
+            log.Add(ConfigurePlayerSettings());
+            log.Add(ReleaseTools.ApplyReleaseSettings());
+            ReleaseTools.EnsureSizeSettings();
+            var ios = UnityEditor.Build.NamedBuildTarget.iOS;
+            if (PlayerSettings.GetApplicationIdentifier(ios) != ReleaseTools.DefaultBundleId)
+                PlayerSettings.SetApplicationIdentifier(ios, ReleaseTools.DefaultBundleId);
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-teamId" && ReleaseTools.IsTeamId(args[i + 1])) PlayerSettings.iOS.appleDeveloperTeamID = args[i + 1];
+            if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int build) || build < 2) PlayerSettings.iOS.buildNumber = "2";
+            PlayerSettings.SetScriptingBackend(ios, ScriptingImplementation.IL2CPP);
+            log.Add(SetInputSystemOnly());
+            ConfigureBuildSettings();
+            log.Add(CheckRenderPipeline());
+            AssetDatabase.SaveAssets();
+            Debug.Log("[CallerRetroBall] Project settings restored:\n  • " + string.Join("\n  • ", log) +
+                      "\n  • Bundle ID " + PlayerSettings.GetApplicationIdentifier(ios) + ", team " + PlayerSettings.iOS.appleDeveloperTeamID +
+                      ", build " + PlayerSettings.iOS.buildNumber);
+        }
+
+        /// <summary>Player Settings ▸ Active Input Handling = Input System Package (New).</summary>
+        private static string SetInputSystemOnly()
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
+            if (assets == null || assets.Length == 0) return "Input handling: couldn't open ProjectSettings.asset (set it in Player Settings)";
+            var so = new SerializedObject(assets[0]);
+            var prop = so.FindProperty("activeInputHandler");
+            if (prop == null) return "Input handling: setting not found (set it in Player Settings)";
+            prop.intValue = 1;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return "Input handling: Input System Package (New)";
+        }
+
         // ------------------------------------------------------------------ folders
 
         private static void EnsureFolders()

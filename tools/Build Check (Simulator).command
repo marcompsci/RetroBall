@@ -12,6 +12,10 @@ exec > >(tee "$OUT") 2>&1
 echo "=== $(date '+%Y-%m-%d %H:%M:%S')  Build check (Simulator)"
 echo "Repo: $(git log --oneline -1 2>/dev/null)"
 
+# Old logs would be read as this run's errors if this run stops early: keep them as *.prev.log.
+for f in unity_build_simulator xcodebuild_simulator; do
+  [[ -f "$LOGS/$f.log" ]] && mv -f "$LOGS/$f.log" "$LOGS/$f.prev.log"
+done
 bash tools/play_on_simulator.sh "$PROJECT"
 RESULT=$?
 
