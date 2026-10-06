@@ -12,9 +12,11 @@ set -uo pipefail
 
 PROJECT="${PROJECT:-$( [[ -d $HOME/RetroHoops ]] && echo $HOME/RetroHoops || echo $HOME/RetroBall )}"
 UPLOAD=1
+REUSE=0
 for a in "$@"; do
   case "$a" in
     --export-only) UPLOAD=0 ;;
+    --upload-only) REUSE=1 ;;
     /*) PROJECT="$a" ;;
   esac
 done
@@ -52,6 +54,12 @@ OUT="$PROJECT/iOSBuild/AppStore"
 ARCHIVE="$PROJECT/iOSBuild/RetroHoops.xcarchive"
 EXPORT="$PROJECT/iOSBuild/Export"
 
+if [[ $REUSE -eq 1 && -d "$ARCHIVE" ]]; then
+  # --upload-only: the last archive built fine; just export and upload it again (no Unity, no new build number).
+  BUILD="$(awk '/^  buildNumber:/{f=1;next} f&&/iPhone:/{print $2;exit}' "$PROJECT/ProjectSettings/ProjectSettings.asset")"
+  echo "1/3  Reusing the last archive (build $BUILD)."
+  echo "2/3  (skipped)"
+else
 echo "1/3  Unity: App Store build (raises the build number; a few minutes)..."
 STAMP="$LOGS/.ship_started"
 touch "$STAMP"
@@ -76,6 +84,7 @@ if [[ ! -d "$ARCHIVE" ]]; then
 $(grep -E 'error:|requires a provisioning|No Account|No profiles' "$LOGS/xcodebuild_archive.log" | sort -u | head -15)
 If it mentions signing or accounts: Xcode ▸ Settings ▸ Accounts, select your Apple ID, make sure your paid team is listed (not only \"Personal Team\")."
   exit 1
+fi
 fi
 
 if [[ $UPLOAD -eq 1 ]]; then DEST="upload"; echo "3/3  Uploading to App Store Connect..."; else DEST="export"; echo "3/3  Exporting the .ipa (no upload)..."; fi
@@ -102,6 +111,10 @@ if [[ $STATUS -ne 0 ]]; then
   HINT=""
   if grep -qiE "no suitable application records|Cannot determine the Apple ID|app record" "$LOGS/xcodebuild_export.log"; then
     HINT="App Store Connect has no app with bundle ID com.phoronomicstudios.retrohoops yet. Create it first (docs/SUBMISSION.md, step 1), then run this again."
+  elif grep -qiE "Error Downloading App Information" "$LOGS/xcodebuild_export.log"; then
+    HINT="Xcode couldn't read the app from App Store Connect. Check: (1) App Store Connect ▸ Retro Hoops ▸ App Information shows Bundle ID com.phoronomicstudios.retrohoops;
+(2) App Store Connect ▸ Business (Agreements) has nothing waiting to be accepted; (3) Xcode ▸ Settings ▸ Accounts shows your Apple ID signed in (remove and re-add it).
+Then run again with the archive already built:  bash ~/RetroHoops-push/tools/ship_testflight.sh --upload-only"
   elif grep -qiE "bundle version must be higher|has already been uploaded|redundant binary" "$LOGS/xcodebuild_export.log"; then
     HINT="That build number was already uploaded. Just run this again: it raises the build number every time."
   fi
