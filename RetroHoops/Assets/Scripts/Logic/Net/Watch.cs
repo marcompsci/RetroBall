@@ -150,6 +150,9 @@ namespace CallerRetroBall.Logic
             }
         }
 
+        /// <summary>Phase 36 replay theater: start again from the tip-off (the steps already received are kept).</summary>
+        public void Rewind() => NextTick = 0;
+
         public bool TryStep(out PlayerInput teamA, out PlayerInput teamB)
         {
             teamA = teamB = default;

@@ -76,6 +76,8 @@ namespace CallerRetroBall.Logic
         public bool FullCourt;
         /// <summary>Phase 35 COACH MODE: your players are all AI and you call plays, defence and subs.</summary>
         public bool Coach;
+        /// <summary>Phase 36: SPOT SPECIALIST bonuses for your player (per chart spot), set by App.PrepareRequest.</summary>
+        public float[] SpotBonus;
         /// <summary>Half-court players a side (2, 3 or 4); 0 = the usual 3.</summary>
         public int TeamSize;
         /// <summary>Street rules: sharp crossovers can break a defender's ankles.</summary>

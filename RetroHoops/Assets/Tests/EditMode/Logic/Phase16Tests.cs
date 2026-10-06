@@ -122,8 +122,9 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual(DefaultContent.Rival5CrewId, RivalEngine.RivalFor(5));
             Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(6), "Phase 31: six rivals");
             Assert.AreEqual(DefaultContent.Rival7CrewId, RivalEngine.RivalFor(7), "Phase 34: seven rivals");
-            Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(8));
-            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(9));
+            Assert.AreEqual(DefaultContent.Rival8CrewId, RivalEngine.RivalFor(8), "Phase 36: eight rivals");
+            Assert.AreEqual(DefaultContent.RivalCrewId, RivalEngine.RivalFor(9));
+            Assert.AreEqual(DefaultContent.Rival2CrewId, RivalEngine.RivalFor(10));
         }
 
         [Test]

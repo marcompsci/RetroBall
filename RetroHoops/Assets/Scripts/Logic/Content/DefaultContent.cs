@@ -38,6 +38,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 7 rival (every seventh Rise season).</summary>
         public const string Rival7CrewId = "crew.comet_couriers";
         public const string Rival7LeaderId = "player.cmc.okoro";
+        /// <summary>Season 8 rival (every eighth Rise season).</summary>
+        public const string Rival8CrewId = "crew.night_lanterns";
+        public const string Rival8LeaderId = "player.nln.akande";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -143,6 +146,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 8 courts.
+            c.Courts.Add(Court("court.night_market", "Night Market", CourtCircuit.Blacktop,
+                "Between the food stalls after closing. Paper lanterns for floodlights.",
+                "#2B2D42", "#FCBF49", "#D62828", "#1D1A31", "#F77F00", 0.4f));
+            c.Courts.Add(Court("court.lantern_steps", "Lantern Steps", CourtCircuit.Blacktop,
+                "A half court at the top of the old stone steps, strung with lights.",
+                "#3C2F2F", "#FFF3E0", "#FCBF49", "#1D1A31", "#D62828", 0.5f));
 
             // Season 7 courts.
             c.Courts.Add(Court("court.tram_yard", "Tram Yard", CourtCircuit.Blacktop,
@@ -295,6 +306,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 8 rival: every eighth Rise season. A night-market crew: a sagging zone and lobs over the top.
+            AddTeam(c, Rival8CrewId, "", "Night Lanterns", "NLN", TeamTier.Rival,
+                "#D62828", "#1D1A31", "#FCBF49", LogoShape.Hexagon, LogoMotif.Lantern, TeamPattern.Rings,
+                "court.night_market", "Lights up at closing time.", false,
+                P("akande", "Juno", "Akande", 8, Archetype.Playmaker, 4),
+                P("lindqvist", "Mae", "Lindqvist", 33, Archetype.PostAnchor, 4),
+                P("ferreira", "Tavi", "Ferreira", 17, Archetype.StretchForward, 4));
+
             // Season 7 rival: every seventh Rise season. Bike couriers: fast breaks, all game.
             AddTeam(c, Rival7CrewId, "", "Comet Couriers", "CMC", TeamTier.Rival,
                 "#FB5607", "#1B1B1E", "#FFBE0B", LogoShape.Circle, LogoMotif.Comet, TeamPattern.Chevrons,
@@ -443,6 +462,7 @@ namespace CallerRetroBall.Logic
             S(Rival5CrewId, DefenseScheme.Zone);
             S(Rival6CrewId, DefenseScheme.Pressure);
             S(Rival7CrewId, DefenseScheme.ManToMan);
+            S(Rival8CrewId, DefenseScheme.Zone);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -760,6 +780,14 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.fog_runners", "Fog Runners", CosmeticSlot.Shoes, "#CAD2C5", "#52796F"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.banner.lighthouse_beam", "Lighthouse Beam", CosmeticSlot.CourtBanner, "#FFD60A", "#0B2545"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            // Phase 36 LIVE SEASONS: the banner for finishing a month ALL-STAR or better (not sold, not in the pass).
+            c.Cosmetics.Add(PassGear(LiveSeason.StarBannerId, "Live Season Star", CosmeticSlot.CourtBanner, "#FFD166", "#3A0CA3"));
+            // Season 8 pass set (the night market), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.lantern", "Lantern", CosmeticSlot.JerseyPalette, "#D62828", "#FCBF49"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.paper_soles", "Paper Soles", CosmeticSlot.Shoes, "#FFF3E0", "#D62828"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.glow_row", "Glow Row", CosmeticSlot.CourtBanner, "#FCBF49", "#1D1A31"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.lantern_release", "Lantern Release", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.lantern_red", "Lantern Red", CosmeticSlot.JerseyPalette, 350, 1600, false, "#D62828", "#FFF3E0"));
             // Season 7 pass set (the couriers), topped by a pass-only celebration.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.courier", "Courier", CosmeticSlot.JerseyPalette, "#FB5607", "#1B1B1E"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.spoke_runners", "Spoke Runners", CosmeticSlot.Shoes, "#FFBE0B", "#3A0CA3"));

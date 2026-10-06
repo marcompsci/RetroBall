@@ -74,6 +74,14 @@ namespace CallerRetroBall.Logic
         public int Count => _count;
         public int Capacity => _ring.Length;
 
+        /// <summary>Phase 36: forget everything (the replay theater jumped, so the last few seconds aren't continuous).</summary>
+        public void Reset()
+        {
+            _count = 0;
+            _next = 0;
+            BestPlay = null;
+        }
+
         /// <summary>Call after every simulation step.</summary>
         public void Capture(MatchSimulation m)
         {

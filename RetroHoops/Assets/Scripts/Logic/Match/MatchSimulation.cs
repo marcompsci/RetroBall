@@ -68,6 +68,8 @@ namespace CallerRetroBall.Logic
         public bool Demo;
         /// <summary>Phase 35 coach mode: the human's team is all AI and takes the coach's calls (see <see cref="MatchSimulation.Coaching"/>).</summary>
         public bool Coach;
+        /// <summary>Phase 36 SPOT SPECIALIST: make-chance bonus per chart spot for player 1 (null = none).</summary>
+        public float[] HumanSpotBonus;
         /// <summary>Secret code: the human's player starts the game heated up.</summary>
         public bool HumanStartsHeated;
         /// <summary>1-on-1: only slot 0 of each team plays; the others sit out.</summary>
@@ -118,6 +120,7 @@ namespace CallerRetroBall.Logic
                 ChemistryBonus = request.ChemistryBonus,
                 Demo = request.Mode == GameMode.Demo,
                 Coach = request.Coach && request.Mode != GameMode.Versus && request.Mode != GameMode.Demo,
+                HumanSpotBonus = request.SpotBonus != null && request.SpotBonus.Length == ShotZones.SpotCount ? (float[])request.SpotBonus.Clone() : null,
                 HumanStartsHeated = request.StartHeated,
                 OneOnOne = request.Mode == GameMode.OneOnOne,
             };
@@ -437,8 +440,8 @@ namespace CallerRetroBall.Logic
         public PlayerRuntimeState Holder => Ball.IsHeld ? Players[Ball.HolderIndex] : null;
         public int DefenseTeam => 1 - OffenseTeam;
         public bool IsOver => Phase == MatchPhase.Final;
-        public bool HumanHasBall => Ball.IsHeld && Ball.HolderIndex == ControlledIndex;
-        public bool HumanTeamHasBall => Ball.IsHeld && Players[Ball.HolderIndex].Team == Setup.HumanTeam;
+        public bool HumanHasBall => !NoHuman && Ball.IsHeld && Ball.HolderIndex == ControlledIndex;
+        public bool HumanTeamHasBall => !Setup.Coach && Ball.IsHeld && Players[Ball.HolderIndex].Team == Setup.HumanTeam;
 
         /// <summary>Player index in a half-court 3-on-3 match (tests, drills and the tutorial).</summary>
         public static int IndexOf(int team, int slot) => team * PlayersPerTeam + slot;
@@ -926,6 +929,8 @@ namespace CallerRetroBall.Logic
                 Heated = p.HotStreak >= Setup.Shot.heatThreshold,
                 Stamina01 = p.Stamina,
                 LateGame = Setup.Rules.useGameClock && GameClock <= Setup.Flow.lateGameSeconds,
+                Bonus = Setup.HumanSpotBonus != null && IsHumanControlled(shooter) && shooter == ControlledIndex
+                    ? Setup.HumanSpotBonus[(int)ShotZones.SpotOf(p.Position, court)] : 0f,
             };
         }
 

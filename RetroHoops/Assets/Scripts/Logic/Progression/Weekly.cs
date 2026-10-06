@@ -22,6 +22,8 @@ namespace CallerRetroBall.Logic
         HeatUps = 13,
         /** Season 7 goal (from week <see cref="Weekly.Season7Week"/>): wins in Full Court games (Full Court, Franchise, Legacy, All-Star). */
         FullCourtWins = 14,
+        /** Season 8 goal (from week <see cref="Weekly.Season8Week"/>): corner threes made (from the shot chart). */
+        CornerThrees = 15,
     }
 
     /// <summary>One of the week's three goals. Progress adds up over every counted game that week.</summary>
@@ -50,6 +52,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.AlleyOops: return "Throw or finish " + Target + " alley-oops";
                 case WeeklyGoal.HeatUps: return "Heat up " + Target + " times";
                 case WeeklyGoal.FullCourtWins: return "Win " + Target + " Full Court games";
+                case WeeklyGoal.CornerThrees: return "Make " + Target + " shots from the corners";
                 default: return "Play " + Target + " games";
             }
         }
@@ -84,6 +87,8 @@ namespace CallerRetroBall.Logic
         public const int Season6Week = 1397;
         /// <summary>Week of Monday 9 November 2026: Season 7's goal joins the pool.</summary>
         public const int Season7Week = 1401;
+        /// <summary>Week of Monday 7 December 2026: Season 8's goal joins the pool.</summary>
+        public const int Season8Week = 1405;
 
         public static int WeekOf(int day) => (int)Math.Floor((day - FirstMonday) / 7.0);
 
@@ -96,6 +101,7 @@ namespace CallerRetroBall.Logic
             var pool = new List<WeeklyGoal>((WeeklyGoal[])Enum.GetValues(typeof(WeeklyGoal)));
             if (week < Season6Week) pool.RemoveAll(g => g >= WeeklyGoal.DeepShots);
             else if (week < Season7Week) pool.RemoveAll(g => g >= WeeklyGoal.FullCourtWins);
+            else if (week < Season8Week) pool.RemoveAll(g => g >= WeeklyGoal.CornerThrees);
             var result = new WeeklyChallenge[Goals];
             for (int i = 0; i < Goals; i++)
             {
@@ -125,6 +131,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.AlleyOops: return 3 + rng.Range(0, 3);         // 3..5
                 case WeeklyGoal.HeatUps: return 2 + rng.Range(0, 3);           // 2..4
                 case WeeklyGoal.FullCourtWins: return 2 + rng.Range(0, 2);     // 2..3
+                case WeeklyGoal.CornerThrees: return 4 + rng.Range(0, 3);      // 4..6
                 default: return 8 + 2 * rng.Range(0, 3);                       // 8..12
             }
         }
@@ -167,6 +174,8 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.HeatUps: return line.heatUps;
                 case WeeklyGoal.FullCourtWins:
                     return s.HumanWon && (s.mode == GameMode.FullCourt || s.mode == GameMode.Franchise || s.mode == GameMode.Legacy || s.mode == GameMode.AllStar) ? 1 : 0;
+                case WeeklyGoal.CornerThrees:
+                    return line.chart == null ? 0 : line.chart[ShotSpot.CornerLeft].made + line.chart[ShotSpot.CornerRight].made;
                 default: return 1;
             }
         }
@@ -282,7 +291,12 @@ namespace CallerRetroBall.Logic
             new[] { "cosmetic.pass.jersey.beacon", "cosmetic.pass.shoes.fog_runners", "cosmetic.pass.banner.lighthouse_beam", "cosmetic.pass.celebration.spotlight" },
             // Season 7: the courier set, topped by the Victory Lap celebration.
             new[] { "cosmetic.pass.jersey.courier", "cosmetic.pass.shoes.spoke_runners", "cosmetic.pass.banner.express_lane", "cosmetic.pass.celebration.victory_lap" },
+            // Season 8: the night-market set, topped by the Lantern Release celebration.
+            new[] { "cosmetic.pass.jersey.lantern", "cosmetic.pass.shoes.paper_soles", "cosmetic.pass.banner.glow_row", "cosmetic.pass.celebration.lantern_release" },
         };
+
+        /// <summary>First pass season with six sets (the one starting Monday 11 January 2027): Season 8's set first.</summary>
+        public const int SixSetsFrom = 235;
 
         /// <summary>First pass season with five sets (the one starting Monday 30 November 2026): Season 7's set first.</summary>
         public const int FiveSetsFrom = 234;
@@ -319,7 +333,8 @@ namespace CallerRetroBall.Logic
             if (!IsGearTier(tier)) return null;
             int index = season < FourSetsFrom ? ((season % 3) + 3) % 3
                       : season < FiveSetsFrom ? (3 + (season - FourSetsFrom)) % 4
-                      : (4 + (season - FiveSetsFrom)) % GearSets.Length;
+                      : season < SixSetsFrom ? (4 + (season - FiveSetsFrom)) % 5
+                      : (5 + (season - SixSetsFrom)) % GearSets.Length;
             var set = GearSets[index];
             return set[tier / 5 - 1];
         }

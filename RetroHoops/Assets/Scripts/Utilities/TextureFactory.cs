@@ -32,6 +32,26 @@ namespace CallerRetroBall.Utilities
             return tex;
         }
 
+        /// <summary>Phase 36: like <see cref="ToTexture"/> but keeps the CPU copy (EncodeToPNG needs it).</summary>
+        public static Texture2D ToReadableTexture(PixelCanvas canvas, string name)
+        {
+            var tex = new Texture2D(canvas.Width, canvas.Height, TextureFormat.RGBA32, false)
+            {
+                name = name,
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            var pixels = new Color32[canvas.Pixels.Length];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                var p = canvas.Pixels[i];
+                pixels[i] = new Color32(p.r, p.g, p.b, p.a);
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            return tex;
+        }
+
         /// <summary>Creates a sprite. A non-zero <paramref name="border"/> makes it 9-sliceable.</summary>
         public static Sprite ToSprite(PixelCanvas canvas, string name, float pixelsPerUnit = 100f, Vector4 border = default)
         {

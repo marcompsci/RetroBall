@@ -27,6 +27,12 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(column, "TODAY'S BEST " + (g.bestDay == day ? g.todayBest : 0) + "  ·  ALL-TIME BEST " + g.best + "  ·  RUNS " + g.runs,
                                    28f, Theme.Gold, TextAlignmentOptions.Center, true), 50f);
 
+            // Phase 36: how your friends did (Game Center, friends only).
+            if (App.GameCenter != null && App.GameCenter.IsSignedIn)
+                UiKit.Button(column, "FRIENDS' BEST RUNS", () => App.GameCenter.ShowLeaderboard(Gauntlet.LeaderboardId, true), ButtonStyle.Secondary, 100f, 34f);
+            else
+                UiKit.Size(UiKit.Label(column, "Sign in to Game Center (Settings) to compare runs with friends.", 24f, Theme.Muted, TextAlignmentOptions.Center), 44f);
+
             UiKit.Button(footer, "BACK", CloseOverlay, ButtonStyle.Ghost, 130f, 44f);
             bool inRun = g.day == day && next > 0 && next < Gauntlet.Stations;
             if (inRun)

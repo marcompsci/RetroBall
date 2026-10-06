@@ -14,6 +14,90 @@ namespace CallerRetroBall.Logic
         public double subscribedUntil;
         /// <summary>Phase 33: the month (yyyymm, UTC) of the last Live game, for the monthly leaderboard.</summary>
         public int month;
+        /// <summary>Phase 36 LIVE SEASONS: this month (yyyymm), the best rating reached in it, and Live games played in it.</summary>
+        public int seasonMonth, seasonBest, seasonGames;
+        /// <summary>The last finished season, and the last season already paid out.</summary>
+        public int endedMonth, endedBest, endedGames, rewardedMonth;
+    }
+
+    /// <summary>What a finished Live season paid.</summary>
+    public sealed class LiveSeasonReward
+    {
+        public int Month;
+        public string Tier;
+        public int SignalPoints;
+        /// <summary>A cosmetic unlocked by it (null = none, or already owned).</summary>
+        public string CosmeticId;
+    }
+
+    /// <summary>
+    /// Phase 36 LIVE SEASONS: every calendar month (UTC) is a season. Your best Live rating in it decides a reward when
+    /// it ends (Signal Points by tier; ALL-STAR or better also unlocks the Live Season Star banner). You need
+    /// <see cref="MinGames"/> Live games in the month to qualify. The monthly Game Center board shows the standings.
+    /// </summary>
+    public static class LiveSeason
+    {
+        public const int MinGames = 3;
+        /// <summary>Signal Points for ROOKIE .. LEGEND.</summary>
+        public static readonly int[] TierSp = { 100, 200, 350, 550, 800 };
+        public const int StarTier = 3;
+        public const string StarBannerId = "cosmetic.live.banner.season_star";
+
+        public static int TierIndex(int rating)
+        {
+            int t = 0;
+            for (int i = 0; i < LiveMode.TierFloor.Length; i++) if (rating >= LiveMode.TierFloor[i]) t = i;
+            return t;
+        }
+
+        /// <summary>
+        /// Brings the season up to date for <paramref name="month"/> (call when the Live screen opens and after each
+        /// Live game, with <paramref name="playedGame"/> true then). A new month closes the old season.
+        /// </summary>
+        public static void Observe(LiveSaveData s, int month, bool playedGame)
+        {
+            if (s == null || month <= 0) return;
+            if (s.seasonMonth != month)
+            {
+                if (s.seasonMonth > 0 && s.seasonMonth < month)
+                {
+                    s.endedMonth = s.seasonMonth;
+                    s.endedBest = s.seasonBest;
+                    s.endedGames = s.seasonGames;
+                }
+                s.seasonMonth = month;
+                s.seasonBest = s.rating;
+                s.seasonGames = 0;
+            }
+            s.seasonBest = Math.Max(s.seasonBest, s.rating);
+            if (playedGame) s.seasonGames++;
+        }
+
+        /// <summary>Pays the last finished season once (null when there's nothing to pay).</summary>
+        public static LiveSeasonReward Settle(CareerSaveData d, ContentCatalog c)
+        {
+            var s = d?.live;
+            if (s == null || s.endedMonth <= 0 || s.rewardedMonth >= s.endedMonth) return null;
+            s.rewardedMonth = s.endedMonth;
+            if (s.endedGames < MinGames) return null;
+            int tier = TierIndex(s.endedBest);
+            var r = new LiveSeasonReward { Month = s.endedMonth, Tier = LiveMode.Tiers[tier], SignalPoints = TierSp[tier] };
+            d.signalPoints += r.SignalPoints;
+            if (tier >= StarTier && c?.Find(c.Cosmetics, StarBannerId) != null && !d.ownedCosmetics.Contains(StarBannerId))
+            {
+                d.ownedCosmetics.Add(StarBannerId);
+                r.CosmeticId = StarBannerId;
+            }
+            return r;
+        }
+
+        /// <summary>"OCT 2026".</summary>
+        public static string MonthName(int yyyymm)
+        {
+            string[] m = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+            int mm = yyyymm % 100;
+            return (mm >= 1 && mm <= 12 ? m[mm - 1] : "?") + " " + yyyymm / 100;
+        }
     }
 
     /// <summary>
@@ -126,6 +210,9 @@ namespace CallerRetroBall.Logic
                 teamId = s.teamId ?? "",
                 subscribedUntil = Math.Max(0.0, s.subscribedUntil),
                 month = Math.Max(0, s.month),
+                seasonMonth = Math.Max(0, s.seasonMonth), seasonBest = Math.Max(0, Math.Min(4000, s.seasonBest)), seasonGames = Math.Max(0, s.seasonGames),
+                endedMonth = Math.Max(0, s.endedMonth), endedBest = Math.Max(0, Math.Min(4000, s.endedBest)), endedGames = Math.Max(0, s.endedGames),
+                rewardedMonth = Math.Max(0, s.rewardedMonth),
             };
         }
 

@@ -97,6 +97,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Signal: return Signal;
                 case LogoMotif.Crane: return Crane;
                 case LogoMotif.Lighthouse: return Lighthouse;
+                case LogoMotif.Lantern: return Lantern;
                 default: return Ball;
             }
         }
@@ -116,6 +117,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // A paper lantern on its string: cap, ribbed glowing body, tassel.
+        private static readonly string[] Lantern =
+        {
+            ".....##.....",
+            "....####....",
+            "...######...",
+            "..#+#++#+#..",
+            ".#+#++++#+#.",
+            ".#+#++++#+#.",
+            ".#+#++++#+#.",
+            "..#+#++#+#..",
+            "...######...",
+            "....####....",
+            ".....##.....",
+            ".....#.#....",
         };
 
         // A lighthouse: beams out to both sides from the lamp, striped tower, rocks at the base.

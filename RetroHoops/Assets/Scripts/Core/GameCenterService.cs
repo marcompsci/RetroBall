@@ -20,6 +20,8 @@ namespace CallerRetroBall.Core
         void ReportScore(string leaderboardId, long score);
         void UnlockAchievement(string achievementId);
         void ShowDashboard();
+        /// <summary>Phase 36: one leaderboard, friends only or everyone.</summary>
+        void ShowLeaderboard(string leaderboardId, bool friendsOnly);
     }
 
     /// <summary>No-op implementation for the Editor and non-iOS platforms.</summary>
@@ -31,6 +33,7 @@ namespace CallerRetroBall.Core
         public void ReportScore(string leaderboardId, long score) { }
         public void UnlockAchievement(string achievementId) { }
         public void ShowDashboard() { }
+        public void ShowLeaderboard(string leaderboardId, bool friendsOnly) { }
     }
 
 #if UNITY_IOS && !UNITY_EDITOR
@@ -42,6 +45,7 @@ namespace CallerRetroBall.Core
         [DllImport("__Internal")] private static extern void CallerGC_ReportScore(string leaderboardId, long score);
         [DllImport("__Internal")] private static extern void CallerGC_ReportAchievement(string achievementId, double percent);
         [DllImport("__Internal")] private static extern void CallerGC_ShowDashboard();
+        [DllImport("__Internal")] private static extern void CallerGC_ShowLeaderboard(string leaderboardId, [MarshalAs(UnmanagedType.I1)] bool friendsOnly);
 
         public bool IsAvailable => true;
         public bool IsSignedIn => CallerGC_IsAuthenticated();
@@ -49,6 +53,7 @@ namespace CallerRetroBall.Core
         public void ReportScore(string leaderboardId, long score) => CallerGC_ReportScore(leaderboardId, score);
         public void UnlockAchievement(string achievementId) => CallerGC_ReportAchievement(achievementId, 100.0);
         public void ShowDashboard() => CallerGC_ShowDashboard();
+        public void ShowLeaderboard(string leaderboardId, bool friendsOnly) => CallerGC_ShowLeaderboard(leaderboardId, friendsOnly);
     }
 #endif
 

@@ -136,6 +136,8 @@ namespace CallerRetroBall.Core
             if (Secrets.IsOn(Career.secrets, Secrets.AlwaysHeat) && request.Mode != GameMode.Practice && request.Mode != GameMode.Tutorial
                 && request.Mode != GameMode.Versus && request.Mode != GameMode.Demo)
                 request.StartHeated = true;
+            // Phase 36: SPOT SPECIALIST ranks from your career chart (single-player games only).
+            request.SpotBonus = Specialist.AppliesTo(request) ? Specialist.SpotBonuses(Career.shotChart) : null;
             // Phase 34: Settings ▸ DIFFICULTY BY MODE.
             request.DifficultyId = ModeDifficulty.Resolve(Career.settings, request, Catalog);
             if (request.Mode == GameMode.Rise || request.Mode == GameMode.Rival)

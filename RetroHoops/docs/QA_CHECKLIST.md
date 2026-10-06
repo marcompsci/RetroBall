@@ -274,3 +274,16 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Menus: the wipe changes look between screens; on the way into a game a TIP shows while the screen is covered.
 - [ ] Dunk or hit a deep shot: a few camera flashes pop in the crowd (none with Reduce Motion). A 6-0 run starts the wave; a close finish has the crowd up and bouncing.
 - [ ] Sound: the music dips under the announcer and comes back; a scramble of bounces doesn't get loud; the crowd swells on a big play and in a close finish.
+
+## Phase 36
+- [ ] Unity ▸ Test Runner ▸ PlayMode: Phase36SmokeTests pass (theater jumps, coach game, chart view).
+- [ ] Theater on a long Full Court tape: no freeze when it opens (status shows MARKING n%); jumps show SEEKING… briefly; going back has no screen wipe or tip-off card.
+- [ ] Theater: jump around 30+ times; memory stays flat (Xcode memory gauge).
+- [ ] Theater: hold the scrub bar, swipe home, come back: the tape plays again after RESUME.
+- [ ] Coach mode: no release meter or "YOUR BALL" toasts; slot-0 AI player uses ordinary celebrations; career GAMES doesn't go up after a coached game.
+- [ ] Rise Season 8: Night Lanterns intro, game (they play zone), win scene; badges LIGHTS OUT / EIGHT FOR EIGHT.
+- [ ] Locker Room ▸ SPOT SPECIALIST lists five areas with rank and NEXT; earning a rank shows on the post-game screen.
+- [ ] Live screen: SEASON line; at the start of a new month after 3+ games, the reward line shows once (+SP, Live Season Star at ALL-STAR+); FRIENDS THIS MONTH opens Game Center.
+- [ ] Skills Gauntlet: FRIENDS' BEST RUNS opens Game Center's friends board (signed in), or the sign-in hint (signed out).
+- [ ] Post-game and Locker Room: SHARE SHOT CHART opens the share sheet with a crisp picture card.
+

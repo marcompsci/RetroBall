@@ -16,6 +16,16 @@ namespace CallerRetroBall.Gameplay
         private float[] _fanX;
         private int _bigPlays;
 
+        /// <summary>Phase 36: the replay theater jumped: no flashes, wave or run carried over.</summary>
+        private void ResetArena()
+        {
+            _flashes.Clear();
+            _waveStart = -99f;
+            _run = 0;
+            _runTeam = -1;
+            _crowdMood = CrowdMood.Idle;
+        }
+
         /// <summary>After a basket: maybe flashes, maybe the wave.</summary>
         private void ArenaOnBasket(int team, int points, bool dunk)
         {

@@ -495,6 +495,7 @@ namespace CallerRetroBall.UI
             swatchB.rectTransform.anchoredPosition = new Vector2(94f, 0f);
 
             string status = owned ? (equipped ? "<color=#4CC9F0>EQUIPPED</color>" : "<color=#8D99AE>OWNED</color>")
+                          : check == CosmeticCheck.PassOnly && item.id == LiveSeason.StarBannerId ? "<color=#9B4DFF>LIVE SEASON: FINISH ALL-STAR</color>"
                           : check == CosmeticCheck.PassOnly ? "<color=#9B4DFF>HOOPS PASS TIER " + PassTierOf(item.id) + "</color>"
                           : check == CosmeticCheck.NeedsFans ? "<color=#F72585>Needs " + item.fansRequired + " fans</color>"
                           : "<color=#FFD166>" + item.cost + " SP</color>";
@@ -544,7 +545,15 @@ namespace CallerRetroBall.UI
             Line("CLASSIC TITLES", career.classic.titles.ToString());
             // Phase 35: every shot of your career, by spot.
             if (ShotCharts.Attempts(career.shotChart) > 0)
-                ShotChartView.Build(_content, "CAREER SHOT CHART", career.shotChart, 320f);
+                ShotChartView.Build(_content, "CAREER SHOT CHART", career.shotChart, 320f, "MY CAREER SHOT CHART");
+            // Phase 36: SPOT SPECIALIST ranks.
+            Header("SPOT SPECIALIST");
+            UiKit.Size(UiKit.Label(_content, "Make shots from an area, better than usual, to rank up. Each rank adds a little to your shots from there (not in two-phone or Live games).",
+                                   24f, Theme.Muted, TextAlignmentOptions.Left, false), 70f);
+            for (int g = 0; g < Specialist.Groups; g++)
+                UiKit.Size(UiKit.Label(_content, Specialist.Line(career.shotChart, (SpotGroup)g), 26f,
+                                       Specialist.TierOf(career.shotChart, (SpotGroup)g) == SpecialistTier.Gold ? Theme.Gold : Theme.Cream,
+                                       TextAlignmentOptions.Left, true), 44f);
 
             Header("RECORDS (ONE GAME)");
             var r = career.records;

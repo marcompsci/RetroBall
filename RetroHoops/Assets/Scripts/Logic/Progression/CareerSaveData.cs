@@ -300,6 +300,8 @@ namespace CallerRetroBall.Logic
         public List<SeasonHistoryEntry> seasons = new List<SeasonHistoryEntry>();
         /// <summary>Records broken by the last applied game (not saved; shown on the post-game screen).</summary>
         [NonSerialized] public List<string> lastNewRecords = new List<string>();
+        /// <summary>Phase 36: SPOT SPECIALIST ranks the last game earned (for the post-game line; not saved).</summary>
+        [NonSerialized] public List<string> lastSpecialist = new List<string>();
         /// <summary>Recent match ids already rewarded (guards against double grants).</summary>
         public List<string> appliedMatchIds = new List<string>();
 

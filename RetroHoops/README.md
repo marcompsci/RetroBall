@@ -4,7 +4,7 @@
 
 An original, offline, portrait-first retro arcade basketball game for iPhone, built in Unity. It plays 3v3 on a half court with touch controls, a skill-based shot meter, real defense, play calling, and a season-and-progression loop. All teams, players, courts, logos, art, and audio are original to this project and generated in code.
 
-> **Status: Phases 1–35 implemented.** The engine-free game logic compiles on .NET and passes 738 automated tests, and the Live server (`server/`) passes 23 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–35 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
+> **Status: Phases 1–36 implemented.** The engine-free game logic compiles on .NET and passes 751 automated tests, and the Live server (`server/`) passes 23 more. The Phase 25 code compiled in Unity 6000.6.3f1 and archived in Xcode (App Store build 2, October 2026); the TestFlight upload hasn't gone through yet. The last on-device run was the Phase 18 build. Phases 26–36 have passed the logic tests and a C# compile check against Unity's assemblies, but have not been compiled in Unity or Xcode, or played on a device. The server hasn't been deployed yet. See [Known limitations](#known-limitations).
 
 ![App icon and launch image](docs/images/icon_and_launch.png)
 
@@ -48,6 +48,8 @@ An original, offline, portrait-first retro arcade basketball game for iPhone, bu
 - **First Call Classic:** a four-team knockout. Your First Callers (fourth seed) face three league teams drawn at random; win the semi and the final for the title (+200 SP bonus). Enter a new Classic any time it's over.
 - **Practice Lab:** Free Shoot (60 s), Passing Targets (45 s), Dribble Lane (5 cones, timed). Personal bests are saved. No rewards.
 - **Shot charts:** every game's post-game screen shows where you shot from (nine spots, hot in red, cold in blue). The Locker Room keeps your career chart, Franchise your team's season, Legacy your season and career. The AI looks for its hot spots too.
+- **SPOT SPECIALIST:** your career chart earns BRONZE / SILVER / GOLD in five areas, each adding a little to your shots from there (single-player games only).
+- **Live seasons:** each month pays SP by your best Live tier (and a banner at ALL-STAR+); friends' boards for Live and the Skills Gauntlet; SHARE SHOT CHART.
 - **Franchise coach mode** (GAME DAY ▸ COACH): your players are all AI; you call plays, the offense's focus, the defense and substitutions from the sideline.
 - **Locker Room:** nickname, CREATE your own player (look, number, style of play), STATS (records, season history, recent games), trained ratings, upgrades (Signal Points + a game played between purchases), cosmetics shop and equip, career stats and practice bests.
 - **Settings:** How to Play, accessibility (left-handed, large buttons, tap to shoot, reduce motion), optional Game Center sign-in (see [`docs/GAME_CENTER.md`](docs/GAME_CENTER.md)), music and SFX volume, haptics, screen shake, UI scale, colourblind team patterns, difficulty, reset save (with confirmation), credits and licences.

@@ -122,8 +122,23 @@ namespace CallerRetroBall.Gameplay
             rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
+        /// <summary>Phase 36: while a jump runs, the buttons and scrub bar wait and the status says so (null = done).</summary>
+        public void SetBusy(string text)
+        {
+            bool busy = text != null;
+            if (_group == null && _root != null) _group = _root.AddComponent<CanvasGroup>();
+            if (_group != null) _group.interactable = !busy;
+            _busyText = text;
+            if (busy && _status != null) _status.text = text;
+        }
+
+        private CanvasGroup _group;
+        private string _busyText;
+
         public void SetVisible(bool visible)
         {
+            // The finger can't be lifted on a hidden bar: don't stay stuck "dragging" (Phase 36 fix).
+            if (!visible) _dragging = false;
             if (_root != null && _root.activeSelf != visible) _root.SetActive(visible);
             if (!visible && _list != null) CloseList();
         }
@@ -141,6 +156,8 @@ namespace CallerRetroBall.Gameplay
             int at = _dragging ? t.TickAt(_slider.value) : tick;
             _clock.text = TapeTheater.Clock(at) + " / " + TapeTheater.Clock(t.Steps);
             var next = t.NextMark(tick);
+            if (_busyText != null) { _status.text = _busyText; return; }
+            if (!t.Indexed) cameraNote += "  ·  MARKING " + Mathf.RoundToInt(t.IndexProgress * 100f) + "%";
             _status.text = (t.Paused ? "PAUSED" : t.SpeedLabel) + "  ·  " + cameraNote + (next != null ? "\n<size=20><color=#8D99AE>NEXT: " + next.Label + "</color></size>" : "");
             _play.text = t.Paused ? "PLAY" : "PAUSE";
             if (t.Marks.Count != _marksShown) DrawTicks(t);

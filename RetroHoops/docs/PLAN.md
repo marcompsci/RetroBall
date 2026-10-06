@@ -732,6 +732,38 @@
 - **Still not compiled for real:** the cloud checks pass (logic tests, the Unity API check, Objective-C syntax),
   but no Unity or Xcode build has run since Phase 25.
 
+### Phase 36: pre-ship hardening, Season 8, SPOT SPECIALIST, Live seasons & sharing
+
+- **Hardening** (a review pass over Phases 30–35, then fixes):
+  - **Replay theater:**
+    - The marking pass and every jump now run a slice at a time (about 4 ms and 22 ms a frame) behind "SEEKING…", so long tapes can't freeze an older iPhone.
+    - Going back rebuilds the match in place instead of reloading the scene, so there's no wipe, no tip-off card and the music doesn't restart.
+    - After a jump, only slots whose player changed are redrawn, and player sheets are cached per slot. That fixes a texture leak in jumps and in Full Court subs.
+    - The replay buffer, play of the game, arena effects and commentary reset after a jump.
+    - The scrub bar can't get stuck if the app is backgrounded mid-drag.
+    - The theater holds the same 64 marks a tape does.
+  - **Coach mode:**
+    - `HumanHasBall` and `HumanTeamHasBall` are false in a coached game. Your dribble moves, dunk package, celebration, release meter and timing toast, pass arrow and "YOUR BALL" toasts no longer go to the AI's slot-0 player.
+    - Coached games pay rewards but don't add to your player's career totals.
+  - **New PlayMode smoke tests** (`Tests/PlayMode/Phase36SmokeTests.cs`): theater marking and jumping both ways, a coached Franchise game, and the shot chart view.
+- **Season 8: the Night Lanterns.**
+  - A night-market crew that plays zone and throws lobs; leader Juno Akande.
+  - Lantern logo, story scenes in English and Spanish, and badges LIGHTS OUT and EIGHT FOR EIGHT.
+  - Night Market and Lantern Steps courts, and a Lantern Red store jersey.
+  - A Hoops Pass set (Lantern, Paper Soles, Glow Row, pass-only **Lantern Release** celebration) from the pass season of 11 Jan 2027.
+  - A corner-threes weekly goal (counted from the shot chart) from the week of 7 Dec 2026.
+  - Rivals now rotate every eight seasons; the older rotation tests were updated.
+- **SPOT SPECIALIST** (Locker Room): your career chart earns BRONZE / SILVER / GOLD in five areas (rim, mid-range, corners, wings, top of the key).
+  - A rank needs makes (20 / 60 / 150) and a make rate at or above what that area usually gives up (+0 / +5 / +10 points).
+  - Each rank adds +2 / +4 / +6 points to your own make chance from that area. This applies in single-player games only: never in two-phone, Live or tape games (both phones must simulate the same game), practice, the tutorial or coached games.
+  - New ranks show on the post-game screen. Badge SPECIALIST for any GOLD.
+- **LIVE SEASONS:** each UTC month is a season. Your best Live rating that month pays when it ends: 100–800 SP by tier, plus the **Live Season Star** banner at ALL-STAR or better. You need 3 Live games in the month to qualify.
+  - The Live screen shows the season standing and FRIENDS THIS MONTH (Game Center, friends only).
+- **Sharing and friends:**
+  - SHARE SHOT CHART (post-game and Locker Room) sends a crisp pixel card through the share sheet.
+  - The Skills Gauntlet has FRIENDS' BEST RUNS: `CallerGC_ShowLeaderboard`, a friends-only Game Center board view. It only passed a syntax check against stand-in headers.
+- **ProjectSettings** went missing from `~/RetroHoops` on the Mac: `tools/Restore Project Settings.command` (Time Machine → Unity Version Control → rebuild with `ProjectSetup.RestoreSettingsBatch`), then the Build Check. Not run yet (another session held the Mac's screen).
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

@@ -101,11 +101,14 @@ namespace CallerRetroBall.Logic
             while (data.appliedMatchIds.Count > MaxRememberedMatches) data.appliedMatchIds.RemoveAt(0);
 
             data.lastNewRecords = new List<string>();
+            data.lastSpecialist = new List<string>();
             data.signalPoints += grant.signalPoints;
             data.fans += grant.fans;
             // Practice, tutorial, and local 2-player games don't count toward career stats.
             if (summary.mode == GameMode.Practice || summary.mode == GameMode.Tutorial || summary.mode == GameMode.Versus || summary.mode == GameMode.Demo) return true;
 
+            // Phase 36: a coached Franchise game has no line of yours: it pays, but your career numbers stay yours.
+            if (summary.HumanLine == null && summary.mode == GameMode.Franchise) return true;
             data.lastNewRecords = Records.Update(data, summary);
             data.gamesSinceUpgrade++;
             var t = data.totals;
@@ -126,7 +129,9 @@ namespace CallerRetroBall.Logic
                 t.alleyOops += line.alleyOops + line.alleyOopPasses;
                 t.heatUps += line.heatUps;
                 if (data.shotChart == null) data.shotChart = new ShotChartData();
+                var before = ShotCharts.Copy(data.shotChart);
                 ShotZones.Merge(data.shotChart, line.chart);
+                data.lastSpecialist = Specialist.NewRanks(before, data.shotChart);
             }
             return true;
         }

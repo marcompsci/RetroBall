@@ -35,6 +35,8 @@ namespace CallerRetroBall.Logic
             {
                 ["rating"] = l.rating, ["best"] = l.best, ["wins"] = l.wins, ["losses"] = l.losses, ["games"] = l.games,
                 ["team"] = l.teamId ?? "", ["until"] = l.subscribedUntil, ["month"] = l.month,
+                ["sm"] = l.seasonMonth, ["sb"] = l.seasonBest, ["sg"] = l.seasonGames,
+                ["em"] = l.endedMonth, ["eb"] = l.endedBest, ["eg"] = l.endedGames, ["rm"] = l.rewardedMonth,
             };
         }
 
@@ -50,6 +52,8 @@ namespace CallerRetroBall.Logic
             l.teamId = Str(o, "team", "");
             l.subscribedUntil = o.TryGetValue("until", out var u) && u is double d ? d : 0.0;
             l.month = Math.Max(0, Int(o, "month", 0));
+            l.seasonMonth = Int(o, "sm", 0); l.seasonBest = Int(o, "sb", 0); l.seasonGames = Int(o, "sg", 0);
+            l.endedMonth = Int(o, "em", 0); l.endedBest = Int(o, "eb", 0); l.endedGames = Int(o, "eg", 0); l.rewardedMonth = Int(o, "rm", 0);
             return LiveMode.Sanitize(l);
         }
 

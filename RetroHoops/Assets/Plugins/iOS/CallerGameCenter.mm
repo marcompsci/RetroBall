@@ -59,6 +59,22 @@ void CallerGC_ReportAchievement(const char *achievementId, double percent)
     [GKAchievement reportAchievements:@[a] withCompletionHandler:^(NSError *error) {}];
 }
 
+// Phase 36: one leaderboard (friends only, or everyone), e.g. the Skills Gauntlet or the Live month.
+void CallerGC_ShowLeaderboard(const char *leaderboardId, bool friendsOnly)
+{
+    if (leaderboardId == NULL) return;
+    NSString *board = [NSString stringWithUTF8String:leaderboardId];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (![GKLocalPlayer localPlayer].isAuthenticated) return;
+        if (gCallerGCDelegate == nil) gCallerGCDelegate = [[CallerGCDelegate alloc] init];
+        GKGameCenterViewController *vc = [[GKGameCenterViewController alloc] initWithLeaderboardID:board
+                                                                                       playerScope:(friendsOnly ? GKLeaderboardPlayerScopeFriendsOnly : GKLeaderboardPlayerScopeGlobal)
+                                                                                         timeScope:GKLeaderboardTimeScopeAllTime];
+        vc.gameCenterDelegate = gCallerGCDelegate;
+        [UnityGetGLViewController() presentViewController:vc animated:YES completion:nil];
+    });
+}
+
 void CallerGC_ShowDashboard(void)
 {
     dispatch_async(dispatch_get_main_queue(), ^{

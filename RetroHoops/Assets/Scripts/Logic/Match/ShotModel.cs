@@ -92,6 +92,8 @@ namespace CallerRetroBall.Logic
         /// <summary>1 = fresh, 0 = exhausted.</summary>
         public float Stamina01;
         public bool LateGame;
+        /// <summary>Phase 36: flat make-chance bonus (SPOT SPECIALIST ranks, your own player only).</summary>
+        public float Bonus;
     }
 
     /// <summary>The full breakdown of a shot, useful for UI, tuning, and tests.</summary>
@@ -199,7 +201,7 @@ namespace CallerRetroBall.Logic
             if (c.LateGame) e.ClutchBonus = (RatingScale.Normalized(a.clutch) - 0.5f) * t.clutchSwing;
 
             float chance = e.BaseSkill + e.TimingBonus + e.OpenLookBonus + e.HotStreakBonus + e.ClutchBonus
-                           - e.DistancePenalty - e.ContestPenalty - e.FatiguePenalty;
+                           - e.DistancePenalty - e.ContestPenalty - e.FatiguePenalty + c.Bonus;
             e.MakeChance = Math.Max(t.minChance, Math.Min(t.maxChance, chance));
             e.GuaranteedMake = t.debugGreenAlwaysMakes && e.Grade == TimingGrade.Green;
 

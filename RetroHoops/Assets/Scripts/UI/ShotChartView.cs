@@ -14,7 +14,8 @@ namespace CallerRetroBall.UI
     {
         private Texture2D _texture;
 
-        public static ShotChartView Build(Transform parent, string heading, ShotChartData chart, float chartHeight = 330f)
+        /// <param name="shareTitle">Phase 36: when set, a SHARE button sends the chart as a picture with this title.</param>
+        public static ShotChartView Build(Transform parent, string heading, ShotChartData chart, float chartHeight = 330f, string shareTitle = null)
         {
             var block = UiKit.NewRect("Shot Chart", parent);
             var layout = block.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
@@ -40,9 +41,30 @@ namespace CallerRetroBall.UI
 
             UiKit.Size(UiKit.Label(block, ShotCharts.Summary(chart), 26f, Theme.Cream, TextAlignmentOptions.Center, true), 44f);
             UiKit.Size(UiKit.Label(block, "<color=#FF5448>RED</color> = HOT   <color=#489CFF>BLUE</color> = COLD   BIGGER = MORE SHOTS", 20f, Theme.Muted, TextAlignmentOptions.Center, false), 30f);
-            float total = (string.IsNullOrEmpty(heading) ? 0f : 56f) + chartHeight + 44f + 30f + 18f;
+            if (shareTitle != null)
+                UiKit.Button(block, "SHARE SHOT CHART", () => ShareCard(chart, shareTitle), ButtonStyle.Ghost, 70f, 26f);
+            float total = (string.IsNullOrEmpty(heading) ? 0f : 56f) + chartHeight + 44f + 30f + 18f + (shareTitle != null ? 76f : 0f);
             UiKit.Size(block, total);
             return view;
+        }
+
+        /// <summary>Saves the chart as a picture card and opens the share sheet (Messages, AirDrop, Save Image...).</summary>
+        public static void ShareCard(ShotChartData chart, string title)
+        {
+            try
+            {
+                var card = ShotChartArt.Card(chart, title, ShotCharts.Summary(chart));
+                var tex = TextureFactory.ToReadableTexture(card, "share.shotchart");
+                byte[] png = tex.EncodeToPNG();
+                Destroy(tex);
+                string path = System.IO.Path.Combine(Application.temporaryCachePath, "retro-hoops-shot-chart.png");
+                System.IO.File.WriteAllBytes(path, png);
+                Core.Share.File(path, title + " · Retro Hoops");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[ShotChart] Couldn't share: " + e.Message);
+            }
         }
 
         private void OnDestroy()

@@ -101,6 +101,7 @@ namespace CallerRetroBall.Gameplay
             _liveRated = true;
             var live = App.Career.live ?? (App.Career.live = new LiveSaveData());
             live.month = LiveMode.MonthKey(System.DateTime.UtcNow); // Phase 33: counts for this month's leaderboard
+            LiveSeason.Observe(live, live.month, true); // Phase 36: counts toward this month's Live season
             if (_serverMatchKey != null)
             {
                 // Rated on the Retro Hoops Live server: it changes ratings only when both phones' reports agree.
@@ -116,6 +117,7 @@ namespace CallerRetroBall.Gameplay
             }
             int theirs = _link.Seat == 0 ? _liveSetup.GuestRating : _liveSetup.HostRating;
             int delta = LiveMode.Apply(live, theirs, won);
+            LiveSeason.Observe(live, live.month, false);
             _liveDelta = delta;
             App.SaveCareer();
             App.ReportGameCenter();
@@ -202,16 +204,33 @@ namespace CallerRetroBall.Gameplay
         /// <summary>What each slot wears (kept so a substitute can be drawn in the same kit).</summary>
         private KitLook[] _dress;
 
+        private readonly System.Collections.Generic.Dictionary<string, Sprite[,]> _sheets = new System.Collections.Generic.Dictionary<string, Sprite[,]>();
+
         /// <summary>Full Court substitution: draw the new player in the slot's kit.</summary>
         private void RedrawPlayer(int index)
         {
             if (index < 0 || index >= _playerViews.Length) return;
             var p = _match.Players[index];
-            var frames = _art.PlayerFrames(p.Def, _dress[index]);
+            // Phase 36: one sheet per player per slot, reused when he comes back (subs and theater jumps used to build a new one every time).
+            string key = index + ":" + p.Def.id;
+            if (!_sheets.TryGetValue(key, out var frames))
+            {
+                frames = _art.PlayerFrames(p.Def, _dress[index]);
+                _sheets[key] = frames;
+            }
             _playerViews[index].SetFrames(frames);
             if (App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.BigHeads))
-                _playerViews[index].EnableBigHead(_art.HeadFrames(frames, p.Def.appearance));
+            {
+                if (!_headSheets.TryGetValue(key, out var heads))
+                {
+                    heads = _art.HeadFrames(frames, p.Def.appearance);
+                    _headSheets[key] = heads;
+                }
+                _playerViews[index].EnableBigHead(heads);
+            }
         }
+
+        private readonly System.Collections.Generic.Dictionary<string, Sprite[,]> _headSheets = new System.Collections.Generic.Dictionary<string, Sprite[,]>();
 
         /// <summary>Shown once at tip-off when your Away kit was picked automatically.</summary>
         private string _kitNote;
@@ -1347,7 +1366,7 @@ namespace CallerRetroBall.Gameplay
                             if (_leapType == ShotType.Dunk)
                             {
                                 // Your dunk package for you; the AI throws down what its finishing allows.
-                                _dunkStyle = e.PlayerIndex == _match.ControlledIndex && !Demo
+                                _dunkStyle = Mine(e.PlayerIndex) && !Demo
                                     ? Dunks.ForCosmetic(App.Career?.equippedDunk)
                                     : Dunks.ForAi(_match.Players[e.PlayerIndex].Def.attributes.finishing, Random.value);
                                 // Rise to the rim with the ball (it meets the rim when the simulation's ball does), hang, drop.
@@ -1362,7 +1381,7 @@ namespace CallerRetroBall.Gameplay
                                 _liftAtRimPx = DunkPath.LiftToRim(rimY, floorY, CharacterSpriteGenerator.HandReachPx(_match.Players[e.PlayerIndex].Def.appearance));
                             }
                         }
-                        if (e.PlayerIndex == _match.ControlledIndex)
+                        if (Mine(e.PlayerIndex))
                         {
                             _tooEarly = e.Value == (int)ShotFeedback.TooEarly;
                             _tooLate = e.Value == (int)ShotFeedback.TooLate;
@@ -1396,7 +1415,7 @@ namespace CallerRetroBall.Gameplay
                         }
                         _celebrator = e.PlayerIndex;
                         _celebrateStart = Time.unscaledTime;
-                        _celebration = e.PlayerIndex == _match.ControlledIndex ? _myCelebration : CelebrationKind.FistPump;
+                        _celebration = Mine(e.PlayerIndex) ? _myCelebration : CelebrationKind.FistPump;
                         Sfx(swish ? SfxId.Swish : SfxId.Rim);
                         Sfx(e.Team == human ? SfxId.CrowdCheer : SfxId.CrowdGroan, 0.6f);
                         if (e.Team == human) Haptics.Success();
@@ -1425,7 +1444,7 @@ namespace CallerRetroBall.Gameplay
                         Haptics.Medium();
                         break;
                     case MatchEventType.Jump:
-                        if (e.PlayerIndex == _match.ControlledIndex) Sfx(SfxId.Squeak, 0.5f, 1.3f);
+                        if (Mine(e.PlayerIndex)) Sfx(SfxId.Squeak, 0.5f, 1.3f);
                         break;
                     case MatchEventType.Switch:
                         if (e.Team == human) _hud.Toast("SWITCH", 0.7f);
@@ -1479,7 +1498,7 @@ namespace CallerRetroBall.Gameplay
                         if (e.Team == human) _hud.Toast("SUB: " + _match.Players[e.PlayerIndex].Def.lastName.ToUpperInvariant() + " IN", 1.1f);
                         break;
                     case MatchEventType.CheckBall:
-                        if (!Demo) _hud.Toast(e.Team == human ? (_match.MustInbound && _match.HumanHasBall ? "INBOUND: PASS IT IN" : "YOUR BALL") : "DEFENSE", 0.9f);
+                        if (!Demo && !Coaching && _watch == null) _hud.Toast(e.Team == human ? (_match.MustInbound && _match.HumanHasBall ? "INBOUND: PASS IT IN" : "YOUR BALL") : "DEFENSE", 0.9f);
                         break;
                 }
             }
@@ -1514,7 +1533,7 @@ namespace CallerRetroBall.Gameplay
             {
                 _playerViews[i].ClearOverride();
                 bool shooting = i == _match.ChargingIndex || (i == _lastShooter && now < _shootPoseUntil);
-                var flair = i == _celebrator ? celebrate : (i == _match.ControlledIndex ? move : FlairPose.None);
+                var flair = i == _celebrator ? celebrate : (Mine(i) ? move : FlairPose.None);
                 float jump = _match.JumpHeight01(i);
                 if (i == _leaper)
                 {
@@ -1561,7 +1580,7 @@ namespace CallerRetroBall.Gameplay
             }
 
             // Intended receiver marker.
-            int receiver = _match.Phase == MatchPhase.Live && _match.ChargingIndex < 0 ? _match.PreviewPassTarget(ScreenToCourt(_controls.ScreenStick)) : -1;
+            int receiver = !Coaching && _watch == null && _match.Phase == MatchPhase.Live && _match.ChargingIndex < 0 ? _match.PreviewPassTarget(ScreenToCourt(_controls.ScreenStick)) : -1;
             _receiverArrow.enabled = receiver >= 0;
             if (receiver >= 0)
             {
@@ -2056,6 +2075,12 @@ namespace CallerRetroBall.Gameplay
                 if (badges.Count > 0)
                 {
                     note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "BADGE: " + string.Join(", ", badges.ConvertAll(b => b.Title));
+                    Sfx(SfxId.Fanfare, 0.7f);
+                }
+                var ranks = App.Career.lastSpecialist;
+                if (rewarded && ranks != null && ranks.Count > 0)
+                {
+                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + string.Join(", ", ranks);
                     Sfx(SfxId.Fanfare, 0.7f);
                 }
                 var records = App.Career.lastNewRecords;

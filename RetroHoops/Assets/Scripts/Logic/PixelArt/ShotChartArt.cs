@@ -70,6 +70,51 @@ namespace CallerRetroBall.Logic.PixelArt
             return c;
         }
 
+        /// <summary>
+        /// Phase 36: a card to share: the title on top, the chart, the hot/cold line and the game's name, upscaled by
+        /// <paramref name="upscale"/> so it stays crisp in Messages and Photos.
+        /// </summary>
+        public static PixelCanvas Card(ShotChartData d, string title, string line, int upscale = 6)
+        {
+            var chart = Render(d);
+            int pad = 6;
+            int w = chart.Width + pad * 2, h = chart.Height + 44;
+            var c = new PixelCanvas(w, h);
+            c.Fill(new RgbColor(18, 14, 32));
+            int top = h - 4;
+            PixelFont.DrawCentered(c, Fit(title, w - 4), w / 2, top, HotColor);
+            int chartY = h - 14 - chart.Height;
+            for (int y = 0; y < chart.Height; y++)
+                for (int x = 0; x < chart.Width; x++)
+                    c.Set(pad + x, chartY + y, chart.Get(x, y));
+            PixelFont.DrawCentered(c, Fit(line, w - 4), w / 2, chartY - 4, NeutralColor);
+            PixelFont.DrawCentered(c, "RETRO HOOPS", w / 2, 10, UnknownColor);
+            return Upscale(c, Math.Max(1, upscale));
+        }
+
+        /// <summary>Upper-case text the pixel font can draw, cut to fit <paramref name="maxWidth"/> pixels.</summary>
+        public static string Fit(string text, int maxWidth)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            var sb = new System.Text.StringBuilder();
+            foreach (char ch in text.ToUpperInvariant())
+                sb.Append(ch == ' ' || PixelFont.Has(ch) ? ch : ' ');
+            string s = System.Text.RegularExpressions.Regex.Replace(sb.ToString(), " {2,}", " ").Trim();
+            while (s.Length > 0 && PixelFont.Measure(s) > maxWidth) s = s.Substring(0, s.Length - 1);
+            return s.TrimEnd();
+        }
+
+        /// <summary>Nearest-neighbour upscale (every pixel becomes an n×n block).</summary>
+        public static PixelCanvas Upscale(PixelCanvas src, int n)
+        {
+            if (n <= 1) return src;
+            var dst = new PixelCanvas(src.Width * n, src.Height * n);
+            for (int y = 0; y < dst.Height; y++)
+                for (int x = 0; x < dst.Width; x++)
+                    dst.Pixels[y * dst.Width + x] = src.Pixels[(y / n) * src.Width + x / n];
+            return dst;
+        }
+
         private static float X(float courtX, CourtGeometry court) => (courtX + court.HalfWidth) * Scale;
 
         private static void DrawCourt(PixelCanvas c, CourtGeometry court)

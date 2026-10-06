@@ -43,6 +43,9 @@ namespace CallerRetroBall.Gameplay
             _head.sortingOrder = _body.sortingOrder + 1;
         }
 
+        /// <summary>Phase 36: follow the same slot in a rebuilt match (the replay theater jumping back).</summary>
+        public void Rebind(PlayerRuntimeState state) => _state = state;
+
         public static PlayerView Create(Transform parent, PlayerRuntimeState state, Sprite[,] frames, MatchArt art, Color ringColor)
         {
             var go = new GameObject("Player " + state.Index + " " + state.Def.DisplayName);

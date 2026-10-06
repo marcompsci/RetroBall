@@ -26,7 +26,16 @@ namespace CallerRetroBall.UI
             var teams = c.TeamsInTier(TeamTier.League);
             int teamIndex = Mathf.Max(0, teams.FindIndex(t => t.id == live.teamId));
 
+            // Phase 36 LIVE SEASONS: close last month's season and pay it once.
+            int monthNow = LiveMode.MonthKey(System.DateTime.UtcNow);
+            LiveSeason.Observe(live, monthNow, false);
+            var paid = LiveSeason.Settle(career, c);
+            if (paid != null) App.SaveCareer();
+
             var column = OpenOverlay("LIVE", out var footer);
+            if (paid != null)
+                UiKit.Size(UiKit.Label(column, "SEASON " + LiveSeason.MonthName(paid.Month) + " FINISHED " + paid.Tier + ": +" + paid.SignalPoints + " SP"
+                                               + (paid.CosmeticId != null ? "  ·  LIVE SEASON STAR BANNER" : ""), 30f, Theme.Cyan, TextAlignmentOptions.Center, true), 60f);
             UiKit.Size(UiKit.Label(column, "RATING " + live.rating + "  ·  " + LiveMode.Tier(live.rating), 44f, Theme.Gold, TextAlignmentOptions.Center, true), 70f);
             UiKit.Size(UiKit.Label(column, "RECORD " + live.wins + "-" + live.losses + "  ·  BEST " + live.best, 30f, Theme.Cream, TextAlignmentOptions.Center, true), 50f);
             UiKit.Size(UiKit.Label(column, "Play someone online, head to head, one game. Win to climb; leaving a game early counts as a loss.", 28f, Theme.Muted), 90f);
@@ -53,6 +62,10 @@ namespace CallerRetroBall.UI
                 status.text = "Live uses Game Center to find opponents. Sign in first.";
                 UiKit.Button(column, "SIGN IN TO GAME CENTER", () => { App.SetGameCenter(true); status.text = "Signing in… then tap FIND A GAME."; }, ButtonStyle.Secondary, 100f, 32f);
             }
+            UiKit.Size(UiKit.Label(column, "SEASON " + LiveSeason.MonthName(monthNow) + ": BEST " + live.seasonBest + " (" + LiveMode.Tier(live.seasonBest) + ")  ·  "
+                                           + live.seasonGames + "/" + LiveSeason.MinGames + " GAMES TO QUALIFY", 26f, Theme.Muted, TextAlignmentOptions.Center, true), 44f);
+            if (signedIn)
+                UiKit.Button(column, "FRIENDS THIS MONTH", () => App.GameCenter.ShowLeaderboard(LiveMode.MonthlyLeaderboardId, true), ButtonStyle.Secondary, 90f, 30f);
             UiKit.Button(column, "MANAGE SUBSCRIPTION", () => Application.OpenURL(LiveMode.ManageUrl), ButtonStyle.Ghost, 80f, 28f);
             if (BackendConfig.Enabled)
                 UiKit.Button(column, "DELETE MY LIVE DATA", () => UiControls.Dialog("DELETE LIVE DATA",

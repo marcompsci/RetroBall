@@ -41,7 +41,7 @@ namespace CallerRetroBall.Logic
         public const int LeadIn = 150;
         /// <summary>PREVIOUS from just after a mark goes to the one before it (not the same one again).</summary>
         public const int BackGrace = 90;
-        public const int MaxUserMarks = 24;
+        public const int MaxUserMarks = Tapes.MaxMarks;
 
         public readonly GameTape Tape;
         public readonly List<TapeMark> Marks = new List<TapeMark>();
@@ -145,24 +145,54 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ marks
 
+        private MatchSimulation _indexSim;
+        private int _indexTick;
+
+        /// <summary>How far the marking pass has got (0..1).</summary>
+        public float IndexProgress => Indexed ? 1f : Steps <= 0 ? 0f : _indexTick / (float)Steps;
+
         /// <summary>
         /// Marks every basket, block and steal by simulating the whole tape once with a fresh match built by
-        /// <paramref name="freshMatch"/> (the same setup the screen plays it with).
+        /// <paramref name="freshMatch"/> (the same setup the screen plays it with). All at once: tests and tools.
         /// </summary>
         public void Index(Func<MatchSimulation> freshMatch, float fixedStep)
         {
             if (Indexed || Tape == null || freshMatch == null) return;
-            Indexed = true;
-            var m = freshMatch();
-            for (int i = 0; i < Tape.Steps && !m.IsOver; i++)
+            StartIndex(freshMatch);
+            while (!IndexSome(int.MaxValue, fixedStep)) { }
+        }
+
+        /// <summary>Phase 36: the marking pass a slice at a time (the screen does a few hundred steps a frame, so it never freezes).</summary>
+        public void StartIndex(Func<MatchSimulation> freshMatch)
+        {
+            if (Indexed || _indexSim != null || Tape == null || freshMatch == null) return;
+            _indexSim = freshMatch();
+            _indexTick = 0;
+            if (_indexSim == null) Indexed = true;
+        }
+
+        /// <summary>Simulates up to <paramref name="maxSteps"/> more steps of the marking pass. True once it's finished.</summary>
+        public bool IndexSome(int maxSteps, float fixedStep)
+        {
+            if (Indexed) return true;
+            if (_indexSim == null) return false;
+            var m = _indexSim;
+            for (int n = 0; n < maxSteps && _indexTick < Tape.Steps && !m.IsOver; n++)
             {
-                m.Step(fixedStep, Tape.TeamA[i], Tape.TeamB[i]);
+                m.Step(fixedStep, Tape.TeamA[_indexTick], Tape.TeamB[_indexTick]);
+                _indexTick++;
                 foreach (var e in m.Events)
                 {
                     string label = LabelFor(m, e);
-                    if (label != null) AddMark(i + 1, label, true);
+                    if (label != null) AddMark(_indexTick, label, true);
                 }
             }
+            if (_indexTick >= Tape.Steps || m.IsOver)
+            {
+                Indexed = true;
+                _indexSim = null;
+            }
+            return Indexed;
         }
 
         /// <summary>What a mark for this event says, or null if it isn't worth one.</summary>

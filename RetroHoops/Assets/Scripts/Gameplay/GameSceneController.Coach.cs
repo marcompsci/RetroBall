@@ -9,6 +9,9 @@ namespace CallerRetroBall.Gameplay
 
         private bool Coaching => _match != null && _match.Coaching;
 
+        /// <summary>The player you steer (never anyone in a coached game).</summary>
+        private bool Mine(int index) => _match != null && index == _match.ControlledIndex && !_match.Coaching;
+
         private void StartCoach()
         {
             if (!Coaching) return;

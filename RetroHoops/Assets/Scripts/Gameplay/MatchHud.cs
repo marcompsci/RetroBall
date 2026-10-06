@@ -395,7 +395,8 @@ namespace CallerRetroBall.Gameplay
             var chart = own ? mine.stats.chart : s.TeamTotals(s.humanTeam).chart;
             if (ShotCharts.Attempts(chart) == 0) return;
             string team = (s.humanTeam == 0 ? s.teamAName : s.teamBName) ?? "";
-            ShotChartView.Build(_finalColumn, own ? "YOUR SHOT CHART" : team.ToUpperInvariant() + " SHOT CHART", chart, 300f);
+            string share = (own ? "MY SHOT CHART" : team.ToUpperInvariant()) + "  " + s.scoreA + "-" + s.scoreB;
+            ShotChartView.Build(_finalColumn, own ? "YOUR SHOT CHART" : team.ToUpperInvariant() + " SHOT CHART", chart, 300f, share);
         }
 
         private void BoxScore(MatchSummary s, int team)
@@ -466,6 +467,12 @@ namespace CallerRetroBall.Gameplay
         {
             var canvas = GetComponent<Canvas>();
             if (canvas != null) canvas.enabled = visible;
+        }
+
+        /// <summary>Phase 36: hides the commentary ticker now (the replay theater jumped past what it said).</summary>
+        public void HideMic()
+        {
+            if (_micPanel != null) _micPanel.gameObject.SetActive(false);
         }
 
         /// <summary>Brief centre-screen callout ("STEAL!", "BALL!").</summary>
