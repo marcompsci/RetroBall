@@ -150,7 +150,7 @@ The app uses no encryption beyond what iOS itself provides. The build post-proce
 
 ## Screenshots (made by a script since Phase 37)
 
-After a Build Check, double-click **`tools/App Store Screenshots.command`**. It launches the Simulator build once per screen with `RH_SCREENSHOT=<shot>` (the game opens straight there, with no first-launch dialogs, demo banner or attract mode), sets a 9:41 status bar, and saves 1320×2868 PNGs (6.9") to `~/RetroHoops/AppStoreScreenshots/iPhone-6.9/`. The order is: gameplay, title, Full Court (saved landscape), PLAY menu, CLUTCH, The Park, Locker Room. Add or reorder shots in `Logic/Feel/StoreShots.cs` and in the script's `SHOTS` line. The older hand-picked lists below still work for extra shots taken with ⌘S.
+After a Build Check, double-click **`tools/App Store Screenshots.command`**. It launches the Simulator build once per screen with `RH_SCREENSHOT=<shot>` (the game opens straight there, with no first-launch dialogs, demo banner or attract mode), sets a 9:41 status bar, and saves 1320×2868 PNGs (6.9") to `~/RetroHoops/AppStoreScreenshots/iPhone-6.9/`. The order is: gameplay, title, Full Court, PLAY menu, CLUTCH, The Park, Locker Room. Add or reorder shots in `Logic/Feel/StoreShots.cs` and in the script's `SHOTS` line. The older hand-picked lists below still work for extra shots taken with ⌘S.
 
 ### Hand-picked shots (YOU, optional)
 

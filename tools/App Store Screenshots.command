@@ -46,14 +46,7 @@ shoot_on() {
     sleep "$wait"
     local file="$DIR/$(printf '%02d' $n)-$shot.png"
     if xcrun simctl io "$DEVICE" screenshot --type=png "$file" >/dev/null 2>&1; then
-      # Full Court plays sideways (Unity LandscapeLeft: phone turned counter-clockwise). simctl saves the screen in
-      # the phone's portrait framebuffer, so turn that picture a quarter counter-clockwise to stand it upright.
-      if [[ "$shot" == "fullcourt" ]]; then
-        local w h
-        w="$(sips -g pixelWidth "$file" 2>/dev/null | awk '/pixelWidth/{print $2}')"
-        h="$(sips -g pixelHeight "$file" 2>/dev/null | awk '/pixelHeight/{print $2}')"
-        if [[ -n "$w" && -n "$h" && "$h" -gt "$w" ]]; then sips -r 270 "$file" >/dev/null 2>&1; fi
-      fi
+      # (Phase 38: the Full Court shot is an AI demo game, which stays upright, so no picture is turned any more.)
       echo "  $(basename "$file")  $(sips -g pixelWidth -g pixelHeight "$file" 2>/dev/null | awk '/pixel/{printf "%s ", $2}')"
     else
       echo "  FAILED: screenshot $shot"
