@@ -68,7 +68,28 @@ else
   echo "RESTORED: $restored"
 fi
 
-# The generated assets (scenes, content data, TextMeshPro essentials) come from Retro Hoops' own setup code.
+# TextMeshPro essentials: unpacked straight from the uGUI package's .unitypackage (Unity's own import is asynchronous
+# and never finishes in a batch run). A .unitypackage is a tar.gz of folders holding pathname / asset / asset.meta.
+if [[ ! -d "$PROJECT/Assets/TextMesh Pro/Resources" ]]; then
+  PKG="$(ls -d "$PROJECT"/Library/PackageCache/com.unity.ugui@*/"Package Resources/TMP Essential Resources.unitypackage" 2>/dev/null | head -1)"
+  if [[ -n "$PKG" ]]; then
+    WORK="$(mktemp -d)"
+    tar -xzf "$PKG" -C "$WORK"
+    n=0
+    for d in "$WORK"/*/; do
+      [[ -f "$d/pathname" ]] || continue
+      path="$(head -1 "$d/pathname" | tr -d '\r')"
+      dest="$PROJECT/$path"
+      if [[ -f "$d/asset" ]]; then mkdir -p "$(dirname "$dest")"; cp "$d/asset" "$dest"; n=$((n+1)); else mkdir -p "$dest"; fi
+      [[ -f "$d/asset.meta" ]] && cp "$d/asset.meta" "$dest.meta"
+    done
+    echo "TEXTMESHPRO: unpacked $n files of TMP Essential Resources."
+  else
+    echo "TEXTMESHPRO: the uGUI package isn't in Library/PackageCache yet (open the project once in Unity)."
+  fi
+fi
+
+# The generated assets (scenes, content data) come from Retro Hoops' own setup code.
 if [[ ! -f "$PROJECT/Assets/Scenes/BootScene.unity" || ! -d "$PROJECT/Assets/TextMesh Pro" ]]; then
   if [[ ! -x "$UNITY" ]]; then echo "STOPPED: Unity $VERSION not found at $UNITY."; exit 1; fi
   echo "Scenes or TextMeshPro essentials missing: running Project Setup in Unity (a few minutes)..."
