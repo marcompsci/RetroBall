@@ -176,6 +176,8 @@ namespace CallerRetroBall.Gameplay
         private ReplayRecorder _recorder;
         private ReplayClip _lastHighlight;
         private ReplayClip _replay;
+        /// <summary>Phase 40: clips still to play in the HIGHLIGHTS reel.</summary>
+        private readonly System.Collections.Generic.List<ReplayClip> _replayQueue = new System.Collections.Generic.List<ReplayClip>();
         private float _replayT;
         private readonly BallState _replayBall = new BallState();
         private const float ReplaySpeed = 0.5f;
@@ -386,6 +388,17 @@ namespace CallerRetroBall.Gameplay
             }
             _hud.ReplayRequested += () => StartReplay(_lastHighlight);
             _hud.PlayOfTheGameRequested += () => StartReplay(_recorder.BestPlay);
+            // Phase 40: the HIGHLIGHTS reel (best plays in order) and the shareable result card.
+            _hud.HighlightsRequested += () =>
+            {
+                _replayQueue.Clear();
+                _replayQueue.AddRange(_recorder.Highlights);
+                if (_replayQueue.Count == 0) return;
+                var first = _replayQueue[0];
+                _replayQueue.RemoveAt(0);
+                StartReplay(first);
+            };
+            _hud.ShareResultRequested += ShareResultCard;
             _hud.ShareRequested += ShareHighlight;
             if (settings != null && settings.leftHanded) _hud.SetCallMenuLeft(true);
             _hud.ContinueRequested += Continue;
@@ -1077,6 +1090,7 @@ namespace CallerRetroBall.Gameplay
                 string title = _match.Winner < 0 ? "TIE" : ((_match.Winner == 0 ? home : away).ToUpperInvariant() + " WIN" + (_watch.Setup.IsCup ? "S" : ""));
                 // The full post-game: box scores, PLAY OF THE GAME and SHARE HIGHLIGHT (plus SAVE GAME TAPE when watching live).
                 _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
+                _hud.HighlightCount = _recorder.Highlights.Count;
                 _hud.ShowPostGame(title, MatchSummary.From(_match, _request.Mode, "versus"), default, false,
                                   _watch.IsTape ? "End of tape. REMATCH watches it again." : "Stay here: if they play again, you'll watch that game too.",
                                   null, _watch.IsTape);
@@ -1318,6 +1332,7 @@ namespace CallerRetroBall.Gameplay
             foreach (var e in _match.Events)
             {
                 NoteHighlight(e);
+                if (e.Type == MatchEventType.ShotMade || e.Type == MatchEventType.ShotMissed) NoteScouting();
                 stop = HitStop.Combine(stop, HitStop.For(e, _match.Ball.ShotType, _reduceMotion));
                 switch (e.Type)
                 {
@@ -1829,6 +1844,7 @@ namespace CallerRetroBall.Gameplay
                     App.ReportGameCenter();
                 }
                 _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
+                _hud.HighlightCount = _recorder.Highlights.Count;
                 string winner = _match.Winner < 0 ? "TIE" : (_match.Winner == 0 ? "PLAYER 1 WINS" : "PLAYER 2 WINS");
                 string linkNote = null;
                 if (_link != null)
@@ -2117,6 +2133,7 @@ namespace CallerRetroBall.Gameplay
 
             // Rise and the Classic continue their run instead of offering a rematch.
             _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
+            _hud.HighlightCount = _recorder.Highlights.Count;
             bool run = IsRun;
             _hud.ShowPostGame(title, summary, grant, rewarded, note, run ? "CONTINUE" : null, !run);
         }
@@ -2437,6 +2454,18 @@ namespace CallerRetroBall.Gameplay
         // ------------------------------------------------------------------ replay
 
         /// <summary>Big plays by a person (dunks, greens, blocks, steals) can be replayed.</summary>
+        private ScoutedStyle _scoutShown;
+
+        /// <summary>Phase 40: tell the player once when the defence has worked out how they play.</summary>
+        private void NoteScouting()
+        {
+            if (Demo || _practice != null || _tutorial != null || _horse != null || _match.Setup.Coach) return;
+            var style = _match.ScoutOf(_match.ControlledIndex);
+            if (style == ScoutedStyle.None || style == _scoutShown) return;
+            _scoutShown = style;
+            _hud.Toast(Loc.T(style == ScoutedStyle.Shooter ? "SCOUTED: THEY'RE CROWDING YOUR JUMPER" : "SCOUTED: THEY'RE WALLING OFF THE DRIVE"), 1.6f);
+        }
+
         private void NoteHighlight(MatchEvent e)
         {
             if (_practice != null || _horse != null || _tutorial != null || Demo || e.PlayerIndex < 0) return;
@@ -2514,10 +2543,33 @@ namespace CallerRetroBall.Gameplay
             _cameraRig.Follow(f.BallPosition, dt, false);
         }
 
+        /// <summary>Phase 40 SHARE RESULT: the final score card as a picture through the share sheet.</summary>
+        private void ShareResultCard()
+        {
+            try
+            {
+                var summary = MatchSummary.From(_match, _request.Mode, "share");
+                var setup = _match.Setup;
+                string title = _match.Winner < 0 ? "TIE" : ((_match.Winner == 0 ? setup.TeamA : setup.TeamB)?.FullName ?? "").ToUpperInvariant() + " WIN";
+                var card = Logic.PixelArt.ResultCard.Render(summary, title);
+                var tex = Utilities.TextureFactory.ToReadableTexture(card, "share.result");
+                byte[] png = tex.EncodeToPNG();
+                Destroy(tex);
+                string path = System.IO.Path.Combine(Application.temporaryCachePath, "retro-hoops-result.png");
+                System.IO.File.WriteAllBytes(path, png);
+                Core.Share.File(path, summary.teamAName + " " + summary.scoreA + "-" + summary.scoreB + " " + summary.teamBName + " · Retro Hoops");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[Retro Hoops] Couldn't share the result: " + e.Message);
+            }
+        }
+
         /// <summary>Plays the play of the game once more while recording it, then saves a GIF and opens the share sheet.</summary>
         private void ShareHighlight()
         {
             if (_capturing || _recorder.BestPlay == null) return;
+            _replayQueue.Clear();
             _capturing = true;
             _gifFrames.Clear();
             StartReplay(_recorder.BestPlay);
@@ -2588,6 +2640,14 @@ namespace CallerRetroBall.Gameplay
         private void EndReplay()
         {
             _replay = null;
+            if (_replayQueue.Count > 0 && _finalShown)
+            {
+                // Next play in the HIGHLIGHTS reel.
+                var next = _replayQueue[0];
+                _replayQueue.RemoveAt(0);
+                StartReplay(next);
+                if (_replay != null) return;
+            }
             _accumulator = 0f;
             _hud.ShowReplayOverlay(false);
             if (!_finalShown && !_paused) SetTouchVisible(!_padMode);

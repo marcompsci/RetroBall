@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9, /** Season 7 (pass only). */ VictoryLap = 10, /** Season 8 (pass only). */ LanternRelease = 11, /** Season 9 (pass only). */ SkateGlide = 12, /** Season 10 (pass only). */ TumbleDry = 13, /** Season 11 (pass only). */ KiteRun = 14 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9, /** Season 7 (pass only). */ VictoryLap = 10, /** Season 8 (pass only). */ LanternRelease = 11, /** Season 9 (pass only). */ SkateGlide = 12, /** Season 10 (pass only). */ TumbleDry = 13, /** Season 11 (pass only). */ KiteRun = 14, /** Season 12 (pass only). */ PuttDrop = 15 }
 
     public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
@@ -63,6 +63,7 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.pass.celebration.skate_glide": return CelebrationKind.SkateGlide;
                 case "cosmetic.pass.celebration.tumble_dry": return CelebrationKind.TumbleDry;
                 case "cosmetic.pass.celebration.kite_run": return CelebrationKind.KiteRun;
+                case "cosmetic.pass.celebration.putt_drop": return CelebrationKind.PuttDrop;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -129,6 +130,12 @@ namespace CallerRetroBall.Logic
                     p.Lift = t < 0.2f ? -1 : (t < 0.45f ? Hop(t, 0.2f, 0.25f, 2) : 0);
                     p.ArmsUp = t >= 0.2f && t < 0.5f;
                     p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
+                    break;
+                case CelebrationKind.PuttDrop:
+                    // Crouch to line up the putt, a still beat, then pop up with both arms high as it drops.
+                    if (t < 0.45f) p.Lift = -1;
+                    else if (t < 0.6f) p.Lift = 0;
+                    else { p.ArmsUp = true; p.Lift = t < 0.8f ? 1 : 0; }
                     break;
                 case CelebrationKind.KiteRun:
                     // Jog in place with one arm up holding the string, then both arms up to let the kite climb, then a crouch to watch it.

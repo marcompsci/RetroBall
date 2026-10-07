@@ -62,6 +62,15 @@ namespace CallerRetroBall.Logic
 
         public ReplayClip BestPlay { get; private set; }
 
+        /// <summary>Phase 40: how many plays the post-game HIGHLIGHTS reel keeps.</summary>
+        public const int MaxHighlights = 3;
+        /// <summary>Two plays this close together (seconds) are one moment: only the better one is kept.</summary>
+        public const float SameMoment = 1.5f;
+        private readonly List<ReplayClip> _highlights = new List<ReplayClip>();
+
+        /// <summary>The best plays so far, in the order they happened (at most <see cref="MaxHighlights"/>).</summary>
+        public IReadOnlyList<ReplayClip> Highlights => _highlights;
+
         /// <param name="stepsPerSecond">Simulation rate (60, or 120 with high frame rate on).</param>
         public ReplayRecorder(int players, float seconds = DefaultSeconds, int stepsPerSecond = StepsPerSecond)
         {
@@ -80,6 +89,7 @@ namespace CallerRetroBall.Logic
             _count = 0;
             _next = 0;
             BestPlay = null;
+            _highlights.Clear();
         }
 
         /// <summary>Call after every simulation step.</summary>
@@ -124,12 +134,39 @@ namespace CallerRetroBall.Logic
             return clip;
         }
 
-        /// <summary>Saves the moment as the play of the game if it beats the current one.</summary>
+        /// <summary>
+        /// Saves the moment as the play of the game if it beats the current one, and (Phase 40) offers it to the
+        /// HIGHLIGHTS reel: the top <see cref="MaxHighlights"/> plays, one per moment, kept in time order.
+        /// </summary>
         public bool OfferBestPlay(string label, int score, float seconds = 3.5f)
         {
-            if (score <= 0 || (BestPlay != null && BestPlay.Score >= score)) return false;
-            BestPlay = Snapshot(seconds, label, score);
-            return true;
+            if (score <= 0 || _count == 0) return false;
+            ReplayClip clip = null;
+            bool best = BestPlay == null || score > BestPlay.Score;
+            if (best) BestPlay = clip = Snapshot(seconds, label, score);
+            OfferHighlight(clip, label, score, seconds);
+            return best;
+        }
+
+        private void OfferHighlight(ReplayClip made, string label, int score, float seconds)
+        {
+            float now = _count == 0 ? 0f : _ring[(_next - 1 + _ring.Length) % _ring.Length].Time;
+            // Same moment as one already kept (a block then the steal off it): keep the better one.
+            int same = _highlights.FindIndex(h => h.Frames.Count > 0 && Math.Abs(h.Frames[h.Frames.Count - 1].Time - now) < SameMoment);
+            if (same >= 0)
+            {
+                if (_highlights[same].Score >= score) return;
+                _highlights.RemoveAt(same);
+            }
+            else if (_highlights.Count >= MaxHighlights)
+            {
+                int worst = 0;
+                for (int i = 1; i < _highlights.Count; i++) if (_highlights[i].Score < _highlights[worst].Score) worst = i;
+                if (_highlights[worst].Score >= score) return;
+                _highlights.RemoveAt(worst);
+            }
+            _highlights.Add(made ?? Snapshot(seconds, label, score));
+            _highlights.Sort((a, b) => a.Frames[0].Time.CompareTo(b.Frames[0].Time));
         }
 
         /// <summary>How highlight-worthy a play is (0 = not a highlight).</summary>

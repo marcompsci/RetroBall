@@ -315,3 +315,12 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Open the game on two days in a row (after one game): WELCOME BACK +20 SP, then +30 SP; same day again: nothing.
 - [ ] Settings ► STICK SIZE / STICK DEAD ZONE / HAPTICS STRENGTH: LARGE stick needs a longer push; HIGH dead zone ignores small drift; STRONG buzzes harder (device only).
 - [ ] Rise Season 11: Sky Kites intro (Rin), win scene; badges GROUNDED KITES / ELEVEN STRAIGHT; Kite logo draws.
+
+## Phase 40
+- [ ] Settings ► HELP & SUPPORT and PRIVACY POLICY open the GitHub pages in Safari.
+- [ ] After a game with 2+ big plays: HIGHLIGHTS (n) plays them in order; SHARE RESULT opens the share sheet with a result card image.
+- [ ] Shoot 5+ threes in a game: "SCOUTED: THEY'RE CROWDING YOUR JUMPER"; drive every time instead: "SCOUTED: THEY'RE WALLING OFF THE DRIVE".
+- [ ] Lose three Rise games by 6+: the next game feels a touch easier; Settings ► SMART DIFFICULTY OFF stops it.
+- [ ] Rise Season 12: Putt Club intro (Bex), zone defence; win scene; badges IN THE CUP / FULL DOZEN; Flag logo draws.
+- [ ] Work through APP_STORE_REQUIREMENTS.md ► You before submitting.
+

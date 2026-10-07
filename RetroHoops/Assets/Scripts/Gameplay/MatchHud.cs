@@ -20,6 +20,8 @@ namespace CallerRetroBall.Gameplay
         public event Action<PlayCall> PlayChosen;
         public event Action ReplayRequested;
         public event Action PlayOfTheGameRequested;
+        /// <summary>Phase 40: play the HIGHLIGHTS reel, and share the result card.</summary>
+        public event Action HighlightsRequested, ShareResultRequested;
         /// <summary>Make a GIF of the play of the game and share / save it.</summary>
         public event Action ShareRequested;
         public event Action PhotoRequested;
@@ -306,6 +308,8 @@ namespace CallerRetroBall.Gameplay
         {
             ClearFinal();
             Title(title, scoreLine);
+            if (ShareResultRequested != null)
+                UiKit.Button(_finalColumn, "SHARE RESULT", () => ShareResultRequested?.Invoke(), ButtonStyle.Ghost, 100f, 36f);
             if (SaveTapeRequested != null)
                 UiKit.Button(_finalColumn, "SAVE GAME TAPE", () => SaveTapeRequested?.Invoke(), ButtonStyle.Secondary, 100f, 36f);
             UiKit.Button(_finalColumn, "REMATCH", () => RematchRequested?.Invoke(), ButtonStyle.Primary, 140f);
@@ -344,6 +348,8 @@ namespace CallerRetroBall.Gameplay
             if (PlayOfTheGameRequested != null && HasPlayOfTheGame)
             {
                 UiKit.Button(_finalColumn, "PLAY OF THE GAME", () => PlayOfTheGameRequested?.Invoke(), ButtonStyle.Secondary, 110f, 40f);
+                if (HighlightsRequested != null && HighlightCount >= 2)
+                    UiKit.Button(_finalColumn, Logic.Loc.T("HIGHLIGHTS") + " (" + HighlightCount + ")", () => HighlightsRequested?.Invoke(), ButtonStyle.Secondary, 100f, 36f);
                 if (ShareRequested != null)
                     UiKit.Button(_finalColumn, "SHARE HIGHLIGHT", () => ShareRequested?.Invoke(), ButtonStyle.Ghost, 100f, 36f);
             }
@@ -448,6 +454,8 @@ namespace CallerRetroBall.Gameplay
 
         /// <summary>Set by the match controller when there's a highlight to show on the post-game card.</summary>
         public bool HasPlayOfTheGame { get; set; }
+        /// <summary>Phase 40: plays in the HIGHLIGHTS reel (the button shows when there are 2 or more).</summary>
+        public int HighlightCount { get; set; }
         /// <summary>Phase 31: SAVE GAME TAPE on the end screens (two-phone, Live and watched games).</summary>
         public event System.Action SaveTapeRequested;
 

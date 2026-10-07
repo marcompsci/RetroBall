@@ -86,6 +86,8 @@ namespace CallerRetroBall.Logic
         /// <summary>Phase 37 CLUTCH: the score and game clock the match starts from (0 clock = the rules' own).</summary>
         public int StartScoreA, StartScoreB;
         public float StartClock;
+        /// <summary>Phase 40 SMART DIFFICULTY: added to the opponents' release accuracy.</summary>
+        public float AiEdge;
         public List<PlayerDef> BenchA = new List<PlayerDef>();
         public List<PlayerDef> BenchB = new List<PlayerDef>();
         /// <summary>Finds an archetype by id (bench players coming on).</summary>
@@ -129,6 +131,7 @@ namespace CallerRetroBall.Logic
                 StartScoreA = Math.Max(0, request.StartScoreA),
                 StartScoreB = Math.Max(0, request.StartScoreB),
                 StartClock = Math.Max(0f, request.StartClock),
+                AiEdge = Math.Max(-Adaptive.MaxEdge, Math.Min(Adaptive.MaxEdge, request.AiEdge)),
             };
             if (request.StartWithBall == 0 || request.StartWithBall == 1) setup.StartingOffense = request.StartWithBall;
             // Practice has no opponent: mirror the player crew so the court still has bodies.

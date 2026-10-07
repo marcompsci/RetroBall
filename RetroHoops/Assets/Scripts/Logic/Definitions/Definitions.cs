@@ -138,7 +138,7 @@ namespace CallerRetroBall.Logic
 
     public enum LogoShape { Circle = 0, Shield = 1, Diamond = 2, Hexagon = 3, Badge = 4 }
 
-    public enum LogoMotif { Bolt = 0, Wave = 1, Paw = 2, Tree = 3, Comet = 4, Dune = 5, Owl = 6, Crown = 7, Ball = 8, Signal = 9, Crane = 10, /** Season 6. */ Lighthouse = 11, /** Season 8. */ Lantern = 12, /** Season 9. */ Skate = 13, /** Season 10. */ Bubbles = 14, /** Season 11. */ Kite = 15 }
+    public enum LogoMotif { Bolt = 0, Wave = 1, Paw = 2, Tree = 3, Comet = 4, Dune = 5, Owl = 6, Crown = 7, Ball = 8, Signal = 9, Crane = 10, /** Season 6. */ Lighthouse = 11, /** Season 8. */ Lantern = 12, /** Season 9. */ Skate = 13, /** Season 10. */ Bubbles = 14, /** Season 11. */ Kite = 15, /** Season 12. */ Flag = 16 }
 
     /// <summary>Secondary pattern used on jerseys in colourblind contrast mode.</summary>
     public enum TeamPattern { Solid = 0, Stripes = 1, Dots = 2, Chevrons = 3, Checker = 4, Diagonal = 5, Rings = 6, Cross = 7 }

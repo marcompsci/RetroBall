@@ -201,6 +201,7 @@ namespace CallerRetroBall.Logic
             string opp = summary.humanTeam == 0 ? summary.teamBId : summary.teamAId;
 
             r.energy = Math.Max(MinEnergy, Math.Min(100, r.energy - EnergyPerGame + EnergyRecoveryPerGame));
+            Adaptive.Record(r, summary.Margin);
             if (won) r.chemistry = Math.Min(100, r.chemistry + 3);
 
             // Beating a team unlocks its recruitable players.

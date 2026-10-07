@@ -282,7 +282,7 @@ namespace CallerRetroBall.Tests
         {
             for (int season = 1; season <= 12; season++)
             {
-                string expected = ((season - 1) % 11) switch
+                string expected = ((season - 1) % 12) switch
                 {
                     0 => DefaultContent.RivalCrewId,
                     1 => DefaultContent.Rival2CrewId,
@@ -294,7 +294,8 @@ namespace CallerRetroBall.Tests
                     7 => DefaultContent.Rival8CrewId, // Phase 36
                     8 => DefaultContent.Rival9CrewId, // Phase 37
                     9 => DefaultContent.Rival10CrewId, // Phase 38
-                    _ => DefaultContent.Rival11CrewId, // Phase 39
+                    10 => DefaultContent.Rival11CrewId, // Phase 39
+                    _ => DefaultContent.Rival12CrewId, // Phase 40
                 };
                 Assert.AreEqual(expected, RivalEngine.RivalFor(season), "season " + season);
             }

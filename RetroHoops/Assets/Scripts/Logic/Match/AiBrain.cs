@@ -371,7 +371,9 @@ namespace CallerRetroBall.Logic
         {
             var t = Setup.Shot;
             float gh = ShotModel.GreenHalfWidth(p.Def.attributes.shooting, t);
-            float accuracy = profile.releaseAccuracy + (p.Team == Setup.HumanTeam ? Setup.ChemistryBonus : 0f);
+            float accuracy = profile.releaseAccuracy + (p.Team == Setup.HumanTeam ? Setup.ChemistryBonus : 0f)
+                             // Phase 40 SMART DIFFICULTY (Rise): the other team's shooting eases or sharpens a touch.
+                             + (p.Team != Setup.HumanTeam && !Setup.SecondHuman ? Setup.AiEdge : 0f);
             if (_rng.NextFloat() < accuracy)
                 return t.greenCenter + (_rng.NextFloat() * 2f - 1f) * gh * 0.8f;
             float side = _rng.NextFloat() < 0.5f ? -1f : 1f;
@@ -478,7 +480,7 @@ namespace CallerRetroBall.Logic
                 // On the ball: tight, and closer still when he's rising up to shoot.
                 s.Intent = AiIntent.Guard;
                 var toHoop = court.Hoop - man.Position;
-                float gap = ChargingIndex == man.Index ? 0.7f : SchemeOnBallGap(p.Team);
+                float gap = ChargingIndex == man.Index ? 0.7f : Math.Max(0.6f, SchemeOnBallGap(p.Team) + ScoutGap(p, man, profile));
                 // Full Court: contain the ball in the backcourt (give a cushion) unless pressing.
                 if (Setup.FullCourt && man.Position.y > FullCourt.MidY && _scheme[p.Team] != DefenseScheme.Pressure) gap = Math.Max(gap, 2.2f);
                 s.Target = toHoop.SqrMagnitude > 0.01f ? court.Clamp(man.Position + toHoop.Normalized * gap) : man.Position;

@@ -114,20 +114,20 @@ basketball,arcade,retro,pixel,3v3,5v5,hoops,streetball,offline,sports,franchise,
 
 | Field | Value |
 |---|---|
-| Support URL | **YOU:** required. A simple page with a contact email is enough (for example a GitHub Pages page or the repo's README). |
+| Support URL | `https://github.com/marcompsci/RetroHoops/blob/main/RetroHoops/docs/SUPPORT.md` (Phase 40: public in the repo, contact rodlonbell16@gmail.com) |
 | Marketing URL | Optional |
-| Privacy Policy URL | **YOU:** required for every app. You can host the text below. |
+| Privacy Policy URL | `https://github.com/marcompsci/RetroHoops/blob/main/RetroHoops/docs/PRIVACY.md` (Phase 40: public in the repo; the game's LIVE screen links to the same page) |
 
 ### Privacy policy text (ready to host)
 
-The full text is in [`PRIVACY.md`](PRIVACY.md). It covers Live and two-phone play. Host it publicly, add your email, and use that URL here and in `LiveMode.PrivacyPolicyUrl`.
+The full text is in [`PRIVACY.md`](PRIVACY.md). It covers Live and two-phone play, lists rodlonbell16@gmail.com as the contact, and is public in the GitHub repo; `LiveMode.PrivacyPolicyUrl` and Settings ► PRIVACY POLICY open the same URL (Phase 40).
 
 ## App Privacy ("nutrition label")
 
 - **Data collection depends on whether the Live server is switched on** (`BackendConfig.Url`, see `server/README.md`). Re-read Apple's definitions before you submit, because this is your declaration, not mine.
   - **Server off** (Url empty, Live ratings kept on each phone): nothing reaches the developer. Matchmaking and purchases go through Apple, and a player's Game Center name and rating go only to the opponent's device. That would be **Data Not Collected**, but `PrivacyInfo.xcprivacy` (since Phase 28) declares User ID and Gameplay Content, so for a server-off build either remove those two entries from the manifest or answer as below.
   - **Server on:** answer **Yes**. Collected: **Identifiers ▸ User ID** (the Game Center team player ID) and **Usage Data ▸ Other / Gameplay Content** (Live results and rating). Both are **linked to the user**, **not used for tracking**, and the purpose is **App Functionality**. This matches the manifest. Game Center names on the leaderboard count too; Players can erase their data with LIVE ▸ DELETE MY LIVE DATA.
-- **Tracking:** none. `PrivacyInfo.xcprivacy` (in `Assets/Plugins/iOS`) declares no tracking, no collected data types, and no tracking domains for the game's own code. Unity's engine framework ships its own privacy manifest.
+- **Tracking:** none. `PrivacyInfo.xcprivacy` (in `Assets/Plugins/iOS`) declares no tracking and no tracking domains; it lists User ID and Gameplay Content (Live) as collected, and the System Boot Time API (reason 35F9.1, used for frame timing). Unity's engine framework ships its own privacy manifest.
 
 ## Age rating questionnaire
 
@@ -142,7 +142,7 @@ Answer **None** to everything: violence, sexual content, profanity, drugs, horro
 | In-app purchases | **Yes**: Retro Hoops Live, an auto-renewing monthly subscription (see `LIVE.md`) |
 | Advertising | No |
 
-The expected rating is the lowest (4+).
+The expected rating is the lowest (4+). Apple updated the questionnaire in 2025 (new 13+/16+/18+ tiers and questions about in-app controls and age assurance); answer those as None / No for this game, and re-read each question when you fill it in.
 
 ## Export compliance
 

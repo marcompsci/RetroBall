@@ -223,8 +223,9 @@ namespace CallerRetroBall.Logic
             "before the end of the current period; your account is charged for the next month within 24 hours before it ends. " +
             "Manage or cancel any time in Settings ► your name ► Subscriptions. Everything else in Retro Hoops stays free and works offline.";
 
-        /// <summary>Must be a public page before App Review (docs/PRIVACY.md is the text; host it, e.g. on GitHub Pages, and update this).</summary>
-        public const string PrivacyPolicyUrl = "https://github.com/marcompsci/RetroBall/blob/main/RetroHoops/docs/PRIVACY.md";
+        /// <summary>Public pages (the repo is public): the privacy policy and the support page App Store Connect asks for.</summary>
+        public const string PrivacyPolicyUrl = "https://github.com/marcompsci/RetroHoops/blob/main/RetroHoops/docs/PRIVACY.md";
+        public const string SupportUrl = "https://github.com/marcompsci/RetroHoops/blob/main/RetroHoops/docs/SUPPORT.md";
         public const string TermsOfUseUrl = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
         public const string ManageUrl = "https://apps.apple.com/account/subscriptions";
     }

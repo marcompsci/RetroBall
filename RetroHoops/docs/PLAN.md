@@ -856,6 +856,21 @@
   - NORMAL is exactly the old behaviour.
 - **Tests:** 790 logic tests pass (7 new in `Phase39FeatureTests.cs`). UnityCheck is clean for the editor and iOS, and the text audit shows 0/0.
 
+### Phase 40: Release candidate, App Store requirements, Season 12, highlights, smarter AI
+
+- **App Store requirements** (full list in `APP_STORE_REQUIREMENTS.md`):
+  - `PRIVACY.md` lists rodlonbell16@gmail.com; new `SUPPORT.md` (FAQ and contact). Both are public in the GitHub repo and open from Settings ► HELP & SUPPORT / PRIVACY POLICY and the LIVE screen.
+  - The privacy manifest declares the System Boot Time API (reason 35F9.1).
+  - Four Legacy-mode names that matched real players were renamed.
+  - New `tools/AppStoreAudit/app_store_audit.py`: 35 checks (privacy/support pages and URLs, manifest, Info.plist keys, paywall labels, DEV gating, metadata lengths, real names, icon, screenshots). All pass.
+- **Release candidate:** release tests load old and damaged saves, run every game mode with random input, and time Full Court (< 0.5 ms a step).
+- **Season 12: the Putt Club.** Mini-golf hustlers who play zone; leader Bex Quarrie. Flag logo, EN/ES story, badges IN THE CUP and FULL DOZEN, Hole Eighteen and Clubhouse Roof courts, Fairway Green kit, a pass set from 28 Jun 2027 with the **Putt Drop** celebration, and a PLAYMAKER WINS weekly goal (win with 4+ assists). Rivals rotate every twelve seasons.
+- **Highlights & sharing:** each game keeps its top three plays (one per moment). The post-game shows **HIGHLIGHTS (n)** to play them back to back and **SHARE RESULT**, a pixel-art result card (PNG) for the share sheet.
+- **Smarter AI:**
+  - In-game scouting: after 5+ shots, a player who mostly shoots from deep is closed out tighter, and a driver gets sagged off to wall off the lane. A toast says when the defence adjusts. Smarter difficulties scout harder.
+  - SMART DIFFICULTY (Rise, on by default): three straight losses by 6+ make the AI a little less accurate (up to −5%); three straight blowout wins make it sharper. Settings can turn it off.
+- **Tests:** 802 logic tests pass. UnityCheck is clean for the editor and iOS; the text audit and the App Store audit pass.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

@@ -89,6 +89,8 @@ namespace CallerRetroBall.Logic
         public float StartClock;
         /// <summary>Phase 37: who has the ball first (0 = home, 1 = away; -1 = the mode's usual).</summary>
         public int StartWithBall = -1;
+        /// <summary>Phase 40 SMART DIFFICULTY: added to the opponents' release accuracy (-0.05..+0.05; 0 = off).</summary>
+        public float AiEdge;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

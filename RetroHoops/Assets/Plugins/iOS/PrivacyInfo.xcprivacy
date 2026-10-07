@@ -4,7 +4,8 @@
   Privacy manifest for Retro Hoops' own code (the game scripts and the iOS plugins).
   No tracking. Retro Hoops Live's server (server/, when BackendConfig.Url is set) stores the player's Game Center
   id (User ID) and their Live game results and rating (Gameplay Content), linked to the player, only to run Live.
-  The game's own code uses none of Apple's "required reason" APIs; the Unity engine ships its own manifest.
+  Required-reason APIs in the game's own code: elapsed-time clocks (Environment.TickCount / Stopwatch for random seeds and
+  frame-time budgets), declared below as System Boot Time, reason 35F9.1. The Unity engine ships its own manifest.
 -->
 <plist version="1.0">
 <dict>
@@ -40,6 +41,15 @@
 		</dict>
 	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

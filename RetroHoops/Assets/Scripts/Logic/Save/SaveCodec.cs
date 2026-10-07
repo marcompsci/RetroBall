@@ -141,6 +141,7 @@ namespace CallerRetroBall.Logic
                     ["royalWins"] = (d.rival ?? new RivalSaveData()).royalWins,
                     ["washWins"] = (d.rival ?? new RivalSaveData()).washWins,
                     ["kiteWins"] = (d.rival ?? new RivalSaveData()).kiteWins,
+                    ["puttWins"] = (d.rival ?? new RivalSaveData()).puttWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -424,6 +425,7 @@ namespace CallerRetroBall.Logic
                 ["pendingEventId"] = r.pendingEventId,
                 ["seasonsPlayed"] = r.seasonsPlayed,
                 ["teammates"] = Strings(r.teammates ?? new List<string>()),
+                ["margins"] = Ints(r.recentMargins),
                 ["recruitable"] = Strings(r.recruitable ?? new List<string>()),
                 ["signed"] = Strings(r.signed ?? new List<string>()),
                 ["season"] = r.season == null ? null : new Dictionary<string, object>
@@ -594,6 +596,7 @@ namespace CallerRetroBall.Logic
                     royalWins = Math.Max(0, Int(rv, "royalWins", 0)),
                     washWins = Math.Max(0, Int(rv, "washWins", 0)),
                     kiteWins = Math.Max(0, Int(rv, "kiteWins", 0)),
+                    puttWins = Math.Max(0, Int(rv, "puttWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };
@@ -661,6 +664,7 @@ namespace CallerRetroBall.Logic
             r.chemistry = Math.Max(0, Math.Min(100, Int(o, "chemistry", 50)));
             r.seenEvents = StrList(o, "seenEvents");
             r.pendingEventId = Str(o, "pendingEventId", null);
+            r.recentMargins = Adaptive.Clean(IntList(o, "margins"));
             r.seasonsPlayed = Math.Max(0, Int(o, "seasonsPlayed", 0));
             r.teammates = StrList(o, "teammates");
             r.recruitable = StrList(o, "recruitable");

@@ -59,6 +59,8 @@ namespace CallerRetroBall.Logic
         public bool followSystemText = true;
         /// <summary>Phase 39 controls feel: stick size and dead zone (0 small/low, 1 normal, 2 large/high), haptics strength (0 light, 1 normal, 2 strong).</summary>
         public int stickSize = 1, stickDeadZone = 1, hapticStrength = 1;
+        /// <summary>Phase 40: Rise opponents ease off after a rough run and sharpen up after blowouts.</summary>
+        public bool smartDifficulty = true;
         /// <summary>Phase 34: difficulty per kind of game ("GROUP=difficulty.id", see ModeDifficulty).</summary>
         public System.Collections.Generic.List<string> modeDifficulty = new System.Collections.Generic.List<string>();
         /// <summary>Music Player: menu track (−1 = the menu theme) and match track (−1 = match theme, −2 = shuffle).</summary>
@@ -213,6 +215,8 @@ namespace CallerRetroBall.Logic
         public List<string> seenEvents = new List<string>();
         /// <summary>Your two teammates (player ids). Empty = the original First Callers.</summary>
         public List<string> teammates = new List<string>();
+        /// <summary>Phase 40 SMART DIFFICULTY: your last few Rise margins (newest last).</summary>
+        public List<int> recentMargins = new List<int>();
         /// <summary>Players unlocked for recruiting by beating their team.</summary>
         public List<string> recruitable = new List<string>();
         /// <summary>Players you've paid to sign (swap back in for free).</summary>

@@ -2,7 +2,7 @@
 
 *Last updated: October 2026*
 
-Retro Hoops is made by **Omari Bell** (contact: **YOU: add your support email**).
+Retro Hoops is made by **Omari Bell** (contact: **rodlonbell16@gmail.com**).
 
 **What we collect.** Outside Retro Hoops Live, nothing: there are no accounts of our own, no advertising, no analytics and no tracking. Live's ratings server collects only what's described below.
 

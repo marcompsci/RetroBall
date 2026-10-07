@@ -111,6 +111,7 @@ namespace CallerRetroBall.UI
             UiControls.ChoiceRow(column, "STICK SIZE", ControlFeel.SizeNames, s.stickSize, i => { s.stickSize = i; Save(); });
             UiControls.ChoiceRow(column, "STICK DEAD ZONE", ControlFeel.DeadZoneNames, s.stickDeadZone, i => { s.stickDeadZone = i; Save(); });
             UiControls.ChoiceRow(column, "HAPTICS STRENGTH", ControlFeel.HapticNames, s.hapticStrength, i => { s.hapticStrength = i; Save(); Haptics.Medium(); });
+            UiControls.ToggleRow(column, "SMART DIFFICULTY (RISE)", s.smartDifficulty, v => { s.smartDifficulty = v; Save(); });
             UiKit.Size(UiKit.Label(column, "A larger stick needs a longer push for full speed. A higher dead zone ignores small thumb drift. Strength changes how firm the buzz is.", 28f, Theme.Muted), 90f);
             UiKit.Button(column, "CUSTOMIZE CONTROLS", () => Controls.ControlEditor.Open(), ButtonStyle.Secondary, 100f, 36f);
             UiControls.ToggleRow(column, "LANDSCAPE: ALL GAMES", s.landscapeAll, v => { s.landscapeAll = v; Save(); });
@@ -194,6 +195,10 @@ namespace CallerRetroBall.UI
                     }),
                     ("CANCEL", ButtonStyle.Ghost, null)),
                 ButtonStyle.Ghost, 110f, 40f);
+
+            // Phase 40: support and privacy pages (also the URLs given to App Store Connect).
+            UiKit.Button(column, "HELP & SUPPORT", () => Application.OpenURL(LiveMode.SupportUrl), ButtonStyle.Secondary, 90f, 32f);
+            UiKit.Button(column, "PRIVACY POLICY", () => Application.OpenURL(LiveMode.PrivacyPolicyUrl), ButtonStyle.Ghost, 80f, 26f);
 
 #if UNITY_EDITOR || DEBUG
             UiKit.Button(column, "DEV: UNLOCK ALL", () => App.DevUnlockAll(), ButtonStyle.Ghost, 90f, 30f);

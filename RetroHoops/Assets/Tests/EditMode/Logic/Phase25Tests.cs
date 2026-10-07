@@ -178,7 +178,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(_c.Court("court.night_bus_depot"));
             Assert.IsNotNull(_c.Player(DefaultContent.Rival5LeaderId));
             Assert.AreEqual(DefaultContent.Rival5CrewId, RivalEngine.RivalFor(5));
-            Assert.AreEqual(DefaultContent.Rival5CrewId, RivalEngine.RivalFor(16), "eleven rivals take turns since Phase 39");
+            Assert.AreEqual(DefaultContent.Rival5CrewId, RivalEngine.RivalFor(17), "twelve rivals take turns since Phase 40");
 
             var d = Career.New(_c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);
@@ -201,7 +201,7 @@ namespace CallerRetroBall.Tests
         [Test]
         public void ThirdPassSet_IsPassOnlyGear()
         {
-            Assert.AreEqual(9, HoopsPass.GearSets.Length, "Phase 31 added Season 6's set, then one per season up to Phase 39's Season 11");
+            Assert.AreEqual(10, HoopsPass.GearSets.Length, "Phase 31 added Season 6's set, then one per season up to Phase 40's Season 12");
             foreach (var id in HoopsPass.GearSets[2])
             {
                 var def = _c.Find(_c.Cosmetics, id);

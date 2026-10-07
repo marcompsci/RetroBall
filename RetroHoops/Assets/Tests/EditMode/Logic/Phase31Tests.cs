@@ -314,7 +314,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(_c.Player(DefaultContent.Rival6LeaderId));
             Assert.IsTrue(ContentValidator.Validate(_c).IsValid, ContentValidator.Validate(_c).ToString());
             Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(6));
-            Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(17), "eleven rivals take turns since Phase 39");
+            Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(18), "twelve rivals take turns since Phase 40");
 
             var d = Career.New(_c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);

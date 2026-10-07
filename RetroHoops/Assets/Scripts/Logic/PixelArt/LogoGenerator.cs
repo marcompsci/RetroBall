@@ -101,6 +101,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Skate: return Skate;
                 case LogoMotif.Bubbles: return Bubbles;
                 case LogoMotif.Kite: return Kite;
+                case LogoMotif.Flag: return Flag;
                 default: return Ball;
             }
         }
@@ -120,6 +121,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // A golf flag in the hole: pennant, pole and the cup on a little green.
+        private static readonly string[] Flag =
+        {
+            "...##.......",
+            "...#+##.....",
+            "...#+++##...",
+            "...#++++##..",
+            "...#+++##...",
+            "...#+##.....",
+            "...##.......",
+            "...#........",
+            "...#........",
+            "..###.......",
+            ".##+##+++##.",
+            "..########..",
         };
 
         // A diamond kite with its cross spars and a bowed tail.

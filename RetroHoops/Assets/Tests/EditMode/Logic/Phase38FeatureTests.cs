@@ -22,7 +22,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(c.Player(DefaultContent.Rival10LeaderId));
             Assert.IsNotNull(c.Find(c.Cosmetics, "cosmetic.jersey.rinse_blue"));
             for (int season = 1; season <= 30; season++)
-                Assert.AreEqual(season % 11 == 10, RivalEngine.RivalFor(season) == DefaultContent.Rival10CrewId, "season " + season);
+                Assert.AreEqual(season % 12 == 10, RivalEngine.RivalFor(season) == DefaultContent.Rival10CrewId, "season " + season);
 
             var d = Career.New(c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);

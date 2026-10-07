@@ -296,8 +296,8 @@ namespace CallerRetroBall.Logic
             }
         }
 
-        private static readonly string[] Firsts = { "Jaylen", "Marcus", "Theo", "Andre", "Kobe", "Darius", "Eli", "Malik", "Isaiah", "Ty", "Cam", "Noah", "Jalen", "Reggie", "Omar", "Luis" };
-        private static readonly string[] Lasts = { "Brooks", "Carter", "Diaz", "Ellis", "Fowler", "Grant", "Hayes", "Irving", "Jordan", "Kim", "Lowe", "Moss", "Nash", "Ortiz", "Pryor", "Reyes" };
+        private static readonly string[] Firsts = { "Jaylen", "Marcus", "Theo", "Andre", "Kellan", "Darius", "Eli", "Malik", "Isaiah", "Ty", "Cam", "Noah", "Jalen", "Reggie", "Omar", "Luis" };
+        private static readonly string[] Lasts = { "Brooks", "Carter", "Diaz", "Ellis", "Fowler", "Grant", "Hayes", "Ingram", "Judd", "Kim", "Lowe", "Moss", "Noble", "Ortiz", "Pryor", "Reyes" };
 
         private static PlayerDef MakePlayer(ContentCatalog c, string id, int overall)
         {

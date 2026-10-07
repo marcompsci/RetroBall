@@ -50,6 +50,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 11 rival (every eleventh Rise season).</summary>
         public const string Rival11CrewId = "crew.sky_kites";
         public const string Rival11LeaderId = "player.skt.takahashi";
+        /// <summary>Season 12 rival (every twelfth Rise season).</summary>
+        public const string Rival12CrewId = "crew.putt_club";
+        public const string Rival12LeaderId = "player.ptc.quarrie";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -155,6 +158,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 12 courts.
+            c.Courts.Add(Court("court.hole_eighteen", "Hole 18", CourtCircuit.Blacktop,
+                "A half court built over the last hole of the glow-in-the-dark mini golf. Mind the little bridge.",
+                "#1B4332", "#D8F3DC", "#F72585", "#081C15", "#52B788", 0.5f));
+            c.Courts.Add(Court("court.clubhouse_roof", "Clubhouse Roof", CourtCircuit.Blacktop,
+                "Up on the mini-golf clubhouse, under the giant spinning flag.",
+                "#2D6A4F", "#FFFFFF", "#FFD60A", "#1B263B", "#F72585", 0.45f));
 
             // Season 11 courts.
             c.Courts.Add(Court("court.bluff_top", "Bluff Top", CourtCircuit.Blacktop,
@@ -339,6 +350,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 12 rival: every twelfth Rise season. The mini-golf crew: patient, precise, every shot lined up.
+            AddTeam(c, Rival12CrewId, "", "Putt Club", "PTC", TeamTier.Rival,
+                "#52B788", "#081C15", "#F72585", LogoShape.Circle, LogoMotif.Flag, TeamPattern.Checker,
+                "court.hole_eighteen", "Read the green.", false,
+                P("quarrie", "Bex", "Quarrie", 18, Archetype.ShotCreator, 4),
+                P("penhallow", "Arlo", "Penhallow", 3, Archetype.Playmaker, 4),
+                P("merriweather", "Dot", "Merriweather", 44, Archetype.PostAnchor, 4));
+
             // Season 11 rival: every eleventh Rise season. Cliff-top kite flyers: shooters everywhere, the ball always in the air.
             AddTeam(c, Rival11CrewId, "", "Sky Kites", "SKT", TeamTier.Rival,
                 "#FFB703", "#023047", "#219EBC", LogoShape.Diamond, LogoMotif.Kite, TeamPattern.Diagonal,
@@ -523,6 +542,7 @@ namespace CallerRetroBall.Logic
             S(Rival9CrewId, DefenseScheme.Pressure);
             S(Rival10CrewId, DefenseScheme.PackLine);
             S(Rival11CrewId, DefenseScheme.ManToMan);
+            S(Rival12CrewId, DefenseScheme.Zone);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -850,6 +870,12 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
             // Phase 36 LIVE SEASONS: the banner for finishing a month ALL-STAR or better (not sold, not in the pass).
             c.Cosmetics.Add(PassGear(LiveSeason.StarBannerId, "Live Season Star", CosmeticSlot.CourtBanner, "#FFD166", "#3A0CA3"));
+            // Season 12 pass set (the mini-golf course), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.fairway", "Fairway", CosmeticSlot.JerseyPalette, "#52B788", "#081C15"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.glow_spikes", "Glow Spikes", CosmeticSlot.Shoes, "#F72585", "#D8F3DC"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.hole_in_one", "Hole in One", CosmeticSlot.CourtBanner, "#FFD60A", "#1B4332"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.putt_drop", "Putt Drop", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.fairway_green", "Fairway Green", CosmeticSlot.JerseyPalette, 350, 2000, false, "#2D6A4F", "#FFFFFF"));
             // Season 11 pass set (the kite flyers), topped by a pass-only celebration.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.tailwind", "Tailwind", CosmeticSlot.JerseyPalette, "#FFB703", "#023047"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.updraft", "Updraft", CosmeticSlot.Shoes, "#219EBC", "#FFFFFF"));

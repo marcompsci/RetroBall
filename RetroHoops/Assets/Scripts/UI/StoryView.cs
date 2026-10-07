@@ -123,7 +123,7 @@ namespace CallerRetroBall.UI
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
             var cast = StoryMode.Character(l.Speaker);
-            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6 || l.Speaker == StorySpeaker.Rival7 || l.Speaker == StorySpeaker.Rival8 || l.Speaker == StorySpeaker.Rival9 || l.Speaker == StorySpeaker.Rival10 || l.Speaker == StorySpeaker.Rival11
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6 || l.Speaker == StorySpeaker.Rival7 || l.Speaker == StorySpeaker.Rival8 || l.Speaker == StorySpeaker.Rival9 || l.Speaker == StorySpeaker.Rival10 || l.Speaker == StorySpeaker.Rival11 || l.Speaker == StorySpeaker.Rival12
                          || (cast != null && cast.Right);
             _name.color = cast != null ? ToColor(RgbColor.FromHex(cast.Color))
                         : l.Speaker == StorySpeaker.Rival ? Theme.Cyan
@@ -137,6 +137,7 @@ namespace CallerRetroBall.UI
                         : l.Speaker == StorySpeaker.Rival9 ? (Color)new Color32(0xF7, 0x25, 0x85, 255)
                         : l.Speaker == StorySpeaker.Rival10 ? (Color)new Color32(0x81, 0xB2, 0x9A, 255)
                         : l.Speaker == StorySpeaker.Rival11 ? (Color)new Color32(0xFF, 0xB7, 0x03, 255)
+                        : l.Speaker == StorySpeaker.Rival12 ? (Color)new Color32(0x52, 0xB7, 0x88, 255)
                         : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
             _text.text = l.Text;
             _text.maxVisibleCharacters = 0;
@@ -168,6 +169,7 @@ namespace CallerRetroBall.UI
                 case StorySpeaker.Rival9: return Story.Rival9Name;
                 case StorySpeaker.Rival10: return Story.Rival10Name;
                 case StorySpeaker.Rival11: return Story.Rival11Name;
+                case StorySpeaker.Rival12: return Story.Rival12Name;
                 default: return (App.Career?.nickname ?? "ROOK").ToUpperInvariant();
             }
         }
@@ -202,6 +204,13 @@ namespace CallerRetroBall.UI
                     jersey = rival.primary;
                     trim = rival.secondary;
                     accent = rival.accent;
+                    break;
+                case StorySpeaker.Rival12:
+                    var putt = c.Team(DefaultContent.Rival12CrewId);
+                    look = c.Player(DefaultContent.Rival12LeaderId)?.appearance ?? new AppearanceDef(1, 4, 2, BodyType.Standard, 1);
+                    jersey = putt.primary;
+                    trim = putt.secondary;
+                    accent = putt.accent;
                     break;
                 case StorySpeaker.Rival11:
                     var kites = c.Team(DefaultContent.Rival11CrewId);

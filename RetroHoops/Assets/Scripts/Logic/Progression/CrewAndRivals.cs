@@ -135,6 +135,8 @@ namespace CallerRetroBall.Logic
         public int washWins;
         /// <summary>Wins over the Sky Kites (also counted in <see cref="wins"/>; Season 11).</summary>
         public int kiteWins;
+        /// <summary>Wins over the Putt Club (also counted in <see cref="wins"/>; Season 12).</summary>
+        public int puttWins;
         /// <summary>Rise season of the last Rival Challenge played (0 = none yet).</summary>
         public int lastSeason;
     }
@@ -178,13 +180,14 @@ namespace CallerRetroBall.Logic
         /// <summary>
         /// Which rival crew a Rise season brings. The six rivals take turns: Neon Static (seasons 1, 7, 13...),
         /// the Sundown Syndicate (2, 8, ...), the Midnight Tide (3, 9, ...), the Paper Cranes (4, 10, ...), the Cassette Club (5, 11, ...)
-        /// the Lighthouse Keepers (6, 14, ...), the Comet Couriers (7, 15, ...) the Night Lanterns (8, 18, ...), the Roller Royals (9, 20, ...), the Wash House (10, 21, ...) and the Sky Kites (11, 22, ...); eleven since Phase 39.
+        /// the Lighthouse Keepers (6, 14, ...), the Comet Couriers (7, 15, ...) the Night Lanterns (8, 18, ...), the Roller Royals (9, 20, ...), the Wash House (10, 22, ...), the Sky Kites (11, 23, ...) and the Putt Club (12, 24, ...); twelve since Phase 40.
         /// </summary>
         public static string RivalFor(int seasonNumber)
         {
             if (seasonNumber < 1) return DefaultContent.RivalCrewId;
-            switch ((seasonNumber - 1) % 11)
+            switch ((seasonNumber - 1) % 12)
             {
+                case 11: return DefaultContent.Rival12CrewId;
                 case 10: return DefaultContent.Rival11CrewId;
                 case 9: return DefaultContent.Rival10CrewId;
                 case 8: return DefaultContent.Rival9CrewId;
@@ -201,7 +204,7 @@ namespace CallerRetroBall.Logic
 
         /// <summary>Wins over Neon Static only (the other rivals have their own counters).</summary>
         public static int StaticWins(CareerSaveData d) =>
-            d == null ? 0 : d.rival.wins - d.rival.sundownWins - d.rival.tideWins - d.rival.cranesWins - d.rival.cassetteWins - d.rival.keeperWins - d.rival.courierWins - d.rival.lanternWins - d.rival.royalWins - d.rival.washWins - d.rival.kiteWins;
+            d == null ? 0 : d.rival.wins - d.rival.sundownWins - d.rival.tideWins - d.rival.cranesWins - d.rival.cassetteWins - d.rival.keeperWins - d.rival.courierWins - d.rival.lanternWins - d.rival.royalWins - d.rival.washWins - d.rival.kiteWins - d.rival.puttWins;
 
         /// <summary>Beaten the first five rival crews at least once (the Game Center achievement; see <see cref="BeatAllSix"/>).</summary>
         public static bool BeatEveryRival(CareerSaveData d) =>
@@ -225,6 +228,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Beaten all eleven rival crews at least once (Season 11).</summary>
         public static bool BeatAllEleven(CareerSaveData d) => BeatAllTen(d) && d.rival.kiteWins >= 1;
 
+        /// <summary>Beaten all twelve rival crews at least once (Season 12).</summary>
+        public static bool BeatAllTwelve(CareerSaveData d) => BeatAllEleven(d) && d.rival.puttWins >= 1;
+
         public static RivalOutcome ApplyResult(CareerSaveData d, MatchSummary s)
         {
             if (d == null || s == null || s.mode != GameMode.Rival) return RivalOutcome.None;
@@ -239,6 +245,7 @@ namespace CallerRetroBall.Logic
             bool royals = s.teamAId == DefaultContent.Rival9CrewId || s.teamBId == DefaultContent.Rival9CrewId;
             bool wash = s.teamAId == DefaultContent.Rival10CrewId || s.teamBId == DefaultContent.Rival10CrewId;
             bool kites = s.teamAId == DefaultContent.Rival11CrewId || s.teamBId == DefaultContent.Rival11CrewId;
+            bool putt = s.teamAId == DefaultContent.Rival12CrewId || s.teamBId == DefaultContent.Rival12CrewId;
             if (s.HumanWon)
             {
                 if (sundown) d.rival.sundownWins++;
@@ -251,6 +258,7 @@ namespace CallerRetroBall.Logic
                 if (royals) d.rival.royalWins++;
                 if (wash) d.rival.washWins++;
                 if (kites) d.rival.kiteWins++;
+                if (putt) d.rival.puttWins++;
                 d.rival.wins++;
                 d.signalPoints += WinBonus;
                 d.fans += WinFans;
@@ -318,6 +326,8 @@ namespace CallerRetroBall.Logic
             B("badge.all_ten", "PERFECT TEN", "Beat all ten rival crews.", RivalEngine.BeatAllTen),
             B("badge.kites", "GROUNDED KITES", "Beat the Sky Kites.", d => d.rival.kiteWins >= 1),
             B("badge.all_eleven", "ELEVEN STRAIGHT", "Beat all eleven rival crews.", RivalEngine.BeatAllEleven),
+            B("badge.putt", "IN THE CUP", "Beat the Putt Club.", d => d.rival.puttWins >= 1),
+            B("badge.all_twelve", "FULL DOZEN", "Beat all twelve rival crews.", RivalEngine.BeatAllTwelve),
             B("badge.couch", "COUCH RIVALS", "Play a 2 Player game.", d => d.totals.versusGames >= 1),
             B("badge.four_rings", "FOUR CUPS", "Win The Gold Signal Cup four times.", d => d.totals.championships >= 4),
             B("badge.ladder", "NO CONTINUES NEEDED", "Clear the Arcade Ladder.", d => d.secrets != null && d.secrets.arcade.clears > 0),
@@ -373,7 +383,8 @@ namespace CallerRetroBall.Logic
         /** Juno Akande of the Night Lanterns (chapter 8). */ Rival8 = 13,
         /** Skye Varo of the Roller Royals (chapter 9). */ Rival9 = 14,
         /** Opal Whitaker of the Wash House (chapter 10). */ Rival10 = 15,
-        /** Rin Takahashi of the Sky Kites (chapter 11). */ Rival11 = 16 }
+        /** Rin Takahashi of the Sky Kites (chapter 11). */ Rival11 = 16,
+        /** Bex Quarrie of the Putt Club (chapter 12). */ Rival12 = 17 }
 
     public struct StoryLine
     {
@@ -406,6 +417,7 @@ namespace CallerRetroBall.Logic
         public const string Rival9Name = "SKYE";
         public const string Rival10Name = "OPAL";
         public const string Rival11Name = "RIN";
+        public const string Rival12Name = "BEX";
 
         public const string Intro = "story.intro";
         public const string CircuitCleared = "story.circuit_cleared";
@@ -450,6 +462,9 @@ namespace CallerRetroBall.Logic
         // Chapter 11 (Rise Season 11 and every eleventh season).
         public const string Rival11Intro = "story.rival11_intro";
         public const string Rival11Beaten = "story.rival11_beaten";
+        // Chapter 12 (Rise Season 12 and every twelfth season).
+        public const string Rival12Intro = "story.rival12_intro";
+        public const string Rival12Beaten = "story.rival12_beaten";
 
         public static StoryBeat Beat(string id, string nickname) => Beat(id, nickname, Loc.Language);
 
@@ -470,10 +485,21 @@ namespace CallerRetroBall.Logic
             void X(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival9, t));
             void O(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival10, t));
             void I(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival11, t));
+            void Q(string t) => b.Lines.Add(new StoryLine(StorySpeaker.Rival12, t));
             if (language == Loc.Spanish)
             {
                 switch (id)
                 {
+                    case Rival12Intro:
+                        Q("Aquí cada tiro se mide antes de soltarlo, " + me + ". Como un putt al hoyo 18.");
+                        Q("El Putt Club no corre. Esperamos el tiro perfecto y no fallamos.");
+                        Y("Pues hoy os meto prisa.");
+                        C("Bex no tira hasta que lo tiene claro. Presiona pronto en la posesión y oblígala a decidir.");
+                        break;
+                    case Rival12Beaten:
+                        Q("...Ni un tiro limpio en toda la noche. Bien jugado.");
+                        C("Doce equipos rivales, " + me + ". Una docena entera. Esta ciudad ya es tuya.");
+                        break;
                     case Rival11Intro:
                         I("Arriba en el acantilado sopla siempre, " + me + ". Nosotros tiramos con el viento a favor.");
                         I("Los Sky Kites tiran desde cualquier sitio. Si nos dejas espacio, el balón no baja.");
@@ -641,6 +667,16 @@ namespace CallerRetroBall.Logic
             }
             switch (id)
             {
+                case Rival12Intro:
+                    Q("Every shot here gets measured before it's let go, " + me + ". Like a putt on the eighteenth.");
+                    Q("The Putt Club doesn't run. We wait for the perfect look, and we don't miss it.");
+                    Y("Then tonight I'm rushing you.");
+                    C("Bex won't shoot until it's clean. Pressure early in the possession and make her decide.");
+                    break;
+                case Rival12Beaten:
+                    Q("...Not one clean look all night. Well played.");
+                    C("Twelve rival crews, " + me + ". A full dozen. This city's yours now.");
+                    break;
                 case Rival11Intro:
                     I("It's always windy up on the bluff, " + me + ". We shoot with it at our backs.");
                     I("The Sky Kites shoot from anywhere. Give us room and the ball never comes down.");
@@ -826,7 +862,10 @@ namespace CallerRetroBall.Logic
             bool royalSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival9CrewId;
             bool washSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival10CrewId;
             bool kiteSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival11CrewId;
+            bool puttSeason = RivalEngine.RivalFor(season) == DefaultContent.Rival12CrewId;
             if (season >= 2 && r.stage == RiseStage.Season && !Seen(Season2)) return Season2;
+            if (RivalEngine.ChallengeAvailable(d) && puttSeason && !Seen(Rival12Intro)) return Rival12Intro;
+            if (d.rival.puttWins >= 1 && !Seen(Rival12Beaten)) return Rival12Beaten;
             if (RivalEngine.ChallengeAvailable(d) && kiteSeason && !Seen(Rival11Intro)) return Rival11Intro;
             if (d.rival.kiteWins >= 1 && !Seen(Rival11Beaten)) return Rival11Beaten;
             if (RivalEngine.ChallengeAvailable(d) && washSeason && !Seen(Rival10Intro)) return Rival10Intro;
@@ -845,11 +884,11 @@ namespace CallerRetroBall.Logic
             if (d.rival.cranesWins >= 1 && !Seen(Rival4Beaten)) return Rival4Beaten;
             if (RivalEngine.ChallengeAvailable(d) && tideSeason && !Seen(Rival3Intro)) return Rival3Intro;
             if (d.rival.tideWins >= 1 && !Seen(Rival3Beaten)) return Rival3Beaten;
-            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !keeperSeason && !courierSeason && !lanternSeason && !royalSeason && !washSeason && !kiteSeason && !Seen(RivalIntro)) return RivalIntro;
+            if (RivalEngine.ChallengeAvailable(d) && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !keeperSeason && !courierSeason && !lanternSeason && !royalSeason && !washSeason && !kiteSeason && !puttSeason && !Seen(RivalIntro)) return RivalIntro;
             if (RivalEngine.ChallengeAvailable(d) && sundownSeason && !Seen(Rival2Intro)) return Rival2Intro;
             if (d.rival.sundownWins >= 1 && !Seen(Rival2Beaten)) return Rival2Beaten;
             if (RivalEngine.StaticWins(d) >= 1 && !Seen(RivalBeaten)) return RivalBeaten;
-            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !keeperSeason && !courierSeason && !lanternSeason && !royalSeason && !washSeason && !kiteSeason && !Seen(RivalLost)) return RivalLost;
+            if (d.rival.losses >= 1 && d.rival.wins == 0 && !sundownSeason && !tideSeason && !cranesSeason && !cassetteSeason && !keeperSeason && !courierSeason && !lanternSeason && !royalSeason && !washSeason && !kiteSeason && !puttSeason && !Seen(RivalLost)) return RivalLost;
             if (r.stage == RiseStage.Playoffs && !Seen(Playoffs)) return Playoffs;
             if (d.totals.championships >= 1 && !Seen(Champions)) return Champions;
             if (d.totals.championships >= 2 && !Seen(TwoTime)) return TwoTime;
@@ -869,7 +908,7 @@ namespace CallerRetroBall.Logic
             Season2, Rival2Intro, Rival2Beaten, TwoTime, Welcome, Rival3Intro, Rival3Beaten, ThreePeat,
             Rival4Intro, Rival4Beaten, FourCups, Rival5Intro, Rival5Beaten, Rival6Intro, Rival6Beaten, Rival7Intro, Rival7Beaten, Rival8Intro, Rival8Beaten,
             Rival9Intro, Rival9Beaten, Rival10Intro, Rival10Beaten,
-            Rival11Intro, Rival11Beaten,
+            Rival11Intro, Rival11Beaten, Rival12Intro, Rival12Beaten,
         };
     }
 }

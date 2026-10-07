@@ -146,6 +146,8 @@ namespace CallerRetroBall.Core
             {
                 request.StartingStamina = RiseEngine.StartingStamina(Career.rise);
                 request.ChemistryBonus = Career.rise.chemistry / 100f * 0.1f;
+                // Phase 40 SMART DIFFICULTY (Settings): a small nudge from your last few Rise results.
+                request.AiEdge = Career.settings.smartDifficulty ? Adaptive.EdgeFor(Career.rise.recentMargins) : 0f;
             }
             return request;
         }
