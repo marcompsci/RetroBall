@@ -83,6 +83,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Half-court 3-on-3: the team that scores keeps the ball ("winners' ball").</summary>
         public bool WinnersBall;
         /// <summary>Full Court: two players on each bench (tired AI players sub out at dead balls).</summary>
+        /// <summary>Phase 37 CLUTCH: the score and game clock the match starts from (0 clock = the rules' own).</summary>
+        public int StartScoreA, StartScoreB;
+        public float StartClock;
         public List<PlayerDef> BenchA = new List<PlayerDef>();
         public List<PlayerDef> BenchB = new List<PlayerDef>();
         /// <summary>Finds an archetype by id (bench players coming on).</summary>
@@ -123,7 +126,11 @@ namespace CallerRetroBall.Logic
                 HumanSpotBonus = request.SpotBonus != null && request.SpotBonus.Length == ShotZones.SpotCount ? (float[])request.SpotBonus.Clone() : null,
                 HumanStartsHeated = request.StartHeated,
                 OneOnOne = request.Mode == GameMode.OneOnOne,
+                StartScoreA = Math.Max(0, request.StartScoreA),
+                StartScoreB = Math.Max(0, request.StartScoreB),
+                StartClock = Math.Max(0f, request.StartClock),
             };
+            if (request.StartWithBall == 0 || request.StartWithBall == 1) setup.StartingOffense = request.StartWithBall;
             // Practice has no opponent: mirror the player crew so the court still has bodies.
             if (setup.TeamB == null) setup.TeamB = setup.TeamA;
             if (setup.TeamA == null) throw new InvalidOperationException("Match request has no valid home team.");
@@ -418,7 +425,9 @@ namespace CallerRetroBall.Logic
             InitDefense();
             InitSchemes();
             InitBench();
-            GameClock = setup.Rules.useGameClock ? setup.Rules.gameClockSeconds : 0f;
+            GameClock = setup.Rules.useGameClock ? (setup.StartClock > 0f ? setup.StartClock : setup.Rules.gameClockSeconds) : 0f;
+            Score[0] = Math.Max(0, setup.StartScoreA);
+            Score[1] = Math.Max(0, setup.StartScoreB);
             ShotClock = setup.Rules.shotClockSeconds;
             ControlledIndex = Index(setup.HumanTeam, 0);
             SecondControlledIndex = setup.SecondHuman ? Index(1 - setup.HumanTeam, 0) : -1;

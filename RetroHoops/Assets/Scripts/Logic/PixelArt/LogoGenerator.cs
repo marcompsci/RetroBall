@@ -98,6 +98,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Crane: return Crane;
                 case LogoMotif.Lighthouse: return Lighthouse;
                 case LogoMotif.Lantern: return Lantern;
+                case LogoMotif.Skate: return Skate;
                 default: return Ball;
             }
         }
@@ -117,6 +118,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // A quad roller skate from the side: high boot with laces, plate and two big wheels.
+        private static readonly string[] Skate =
+        {
+            "..####......",
+            "..#++#......",
+            "..#+##......",
+            "..#++#......",
+            "..#+##......",
+            "..#++####...",
+            "..#++++++#..",
+            ".#++++++++#.",
+            ".##########.",
+            "..##....##..",
+            ".#++#..#++#.",
+            "..##....##..",
         };
 
         // A paper lantern on its string: cap, ribbed glowing body, tassel.

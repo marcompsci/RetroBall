@@ -200,7 +200,7 @@ namespace CallerRetroBall.Logic
             ["Your player starts every game heated up."] = "Tu jugador empieza cada partido al rojo vivo.",
             ["Win 3 straight in King of the Court."] = "Gana 3 seguidos en Rey de la Cancha.", ["Reach a 3-day Daily Challenge streak."] = "Logra una racha de 3 días de Reto Diario.",
             ["Clear the Arcade Ladder."] = "Supera la Escalera Arcade.", ["Win 10 games."] = "Gana 10 partidos.", ["Hit 50 green releases."] = "Consigue 50 tiros perfectos.",
-            ["Enter codes in Settings ▸ SECRETS."] = "Introduce códigos en Ajustes ▸ SECRETOS.",
+            ["Enter codes in Settings ► SECRETS."] = "Introduce códigos en Ajustes ► SECRETOS.",
             ["KING STREAK"] = "RACHA DE REY", ["LADDER CLEARS"] = "ESCALERAS SUPERADAS",
 
             // Phase 16: season 2, create-a-team, new modes
@@ -422,6 +422,136 @@ namespace CallerRetroBall.Logic
                 = "Mira en directo en este móvil la partida a dos móviles de dos amigos. Únete cuando quieras: te pondrás al día desde el salto inicial. Nada de lo que hagas aquí afecta a su partida.",
             ["After a two-phone, Live or watched game, tap SAVE GAME TAPE. Tapes replay the whole game exactly, and you can send one to a friend nearby."]
                 = "Después de una partida a dos móviles, Live o vista, toca GUARDAR CINTA. Las cintas repiten el partido entero tal cual, y puedes enviar una a un amigo cercano.",
+
+            // Phase 37: CLUTCH, Season 9, and every menu line the text audit (tools/TextAudit) found without Spanish.
+            ["CLUTCH"] = "CLUTCH", ["CLUTCH GENE"] = "GEN CLUTCH", ["Win every CLUTCH scenario."] = "Gana todos los escenarios CLUTCH.",
+            ["ICE IN THE VEINS"] = "SANGRE FRÍA", ["Earn every CLUTCH star."] = "Consigue todas las estrellas CLUTCH.",
+            ["Late-game situations: the clock is running and the score is set. Stars:"] = "Finales de partido: el reloj corre y el marcador ya está puesto. Estrellas:",
+            ["The game is already on. Take over with the clock running down: win for a star, then go for the goal and the bonus."] =
+                "El partido ya está en marcha. Toma el mando con el reloj en contra: gana para una estrella y luego ve a por el objetivo y el extra.",
+            ["STARS"] = "ESTRELLAS", ["CHAPTER"] = "CAPÍTULO", ["WON"] = "GANADOS", ["AGAIN"] = "OTRA VEZ", ["Locked"] = "Bloqueado",
+            ["more stars to open this chapter."] = "estrellas más para abrir este capítulo.", ["more star to open this chapter."] = "estrella más para abrir este capítulo.", ["GOAL"] = "OBJETIVO", ["BONUS"] = "EXTRA",
+            ["ICE COLD"] = "SANGRE FRÍA", ["NOT THIS TIME"] = "ESTA VEZ NO", ["Win"] = "Gana",
+            ["CRUNCH TIME"] = "MOMENTO DECISIVO", ["LATE-NIGHT LEGENDS"] = "LEYENDAS DE MADRUGADA",
+            ["DOWN TWO"] = "DOS ABAJO", ["Twenty seconds left. A two ties it. Or does it?"] = "Quedan veinte segundos. Un doble empata. ¿O no?",
+            ["HOLD THE FORT"] = "RESISTE", ["Up one, their ball, thirty seconds to survive."] = "Uno arriba, balón suyo, treinta segundos para sobrevivir.",
+            ["ALL SQUARE"] = "TODO IGUALADO", ["Tied at sixteen. Forty seconds. Your ball."] = "Empate a dieciséis. Cuarenta segundos. Tu balón.",
+            ["FOUR-POINT HOLE"] = "CUATRO ABAJO", ["Down four with forty-five seconds. Time to move."] = "Cuatro abajo con cuarenta y cinco segundos. Hay que moverse.",
+            ["GET STOPS"] = "DEFIENDE", ["Down one, their ball, thirty-five seconds."] = "Uno abajo, balón suyo, treinta y cinco segundos.",
+            ["CLOSE IT OUT"] = "CIERRA EL PARTIDO", ["Up two, your ball, a minute left. Don't let it slip."] = "Dos arriba, tu balón, queda un minuto. Que no se escape.",
+            ["NEED A THREE"] = "HACE FALTA UN TRIPLE", ["Down three, eighteen seconds, the length of the floor to go."] = "Tres abajo, dieciocho segundos y toda la cancha por delante.",
+            ["FIVE DOWN, FIFTY TO GO"] = "CINCO ABAJO, CINCUENTA POR JUGAR", ["Down five with fifty seconds. You'll need stops too."] = "Cinco abajo con cincuenta segundos. También harán falta paradas.",
+            ["LAST POSSESSION"] = "ÚLTIMA POSESIÓN", ["Tied, twelve seconds, your ball. One shot."] = "Empate, doce segundos, tu balón. Un tiro.",
+            ["PROTECT THE LEAD"] = "PROTEGE LA VENTAJA", ["Up three, their ball, twenty-five seconds."] = "Tres arriba, balón suyo, veinticinco segundos.",
+            ["SEVEN IN A MINUTE"] = "SIETE EN UN MINUTO", ["Down seven with a minute left. Threes and stops."] = "Siete abajo con un minuto. Triples y paradas.",
+            ["THE DAGGER"] = "LA PUÑALADA", ["Up one, forty seconds, your ball. Put it away."] = "Uno arriba, cuarenta segundos, tu balón. Remátalo.",
+            ["EIGHT DOWN"] = "OCHO ABAJO", ["Down eight with seventy seconds, Full Court. Nobody leaves."] = "Ocho abajo con setenta segundos, cancha completa. Que nadie se vaya.",
+            ["SIX IN THE CAGE"] = "SEIS EN LA JAULA", ["Half court, down six, fifty seconds. Every two counts double."] = "Media cancha, seis abajo, cincuenta segundos. Cada doble vale el doble.",
+            ["THEIR BALL, DOWN TWO"] = "BALÓN SUYO, DOS ABAJO", ["Full Court, down two, their ball, twenty seconds. Get a stop first."] = "Cancha completa, dos abajo, balón suyo, veinte segundos. Primero, una parada.",
+            ["THE COMEBACK"] = "LA REMONTADA", ["Half court, down five, seventy-five seconds. Make them nervous."] = "Media cancha, cinco abajo, setenta y cinco segundos. Ponlos nerviosos.",
+            ["THE WALL"] = "EL MURO", ["Up two, their ball, forty-five seconds, Full Court. No easy ones."] = "Dos arriba, balón suyo, cuarenta y cinco segundos, cancha completa. Nada fácil.",
+            ["BEAT THE BUZZER"] = "SOBRE LA BOCINA", ["Down one, eight seconds, Full Court, your ball. Go."] = "Uno abajo, ocho segundos, cancha completa, tu balón. Vamos.",
+            ["LAST SKATE"] = "ÚLTIMO PATINAJE", ["Beat the Roller Royals."] = "Vence a los Roller Royals.",
+            ["NINE FOR NINE"] = "NUEVE DE NUEVE", ["Beat all nine rival crews."] = "Vence a los nueve equipos rivales.",
+            ["Couples skate is over."] = "Se acabó el patinaje en pareja.",
+            ["The roller rink after the last skate. A hoop at each end of the maple and a mirror ball overhead."] =
+                "La pista de patinaje tras el último turno. Una canasta en cada extremo del parqué y una bola de espejos encima.",
+            ["A hoop bolted above the deep end of an empty skate bowl. Mind the coping."] =
+                "Una canasta atornillada sobre la parte honda de un bowl vacío. Cuidado con el borde.",
+
+            // Menus (the text audit).
+            ["Court. Stick on the left, shoot, pass and defense on the right."] = "Cancha. Stick a la izquierda; tirar, pasar y defender a la derecha.",
+            ["Court. Stick on the right, shoot, pass and defense on the left."] = "Cancha. Stick a la derecha; tirar, pasar y defender a la izquierda.",
+            ["plays offline"] = "se juega sin conexión", ["no ads"] = "sin anuncios",
+            ["+ ADD PLAYER"] = "+ AÑADIR JUGADOR", ["-STAR RECRUIT"] = " ESTRELLAS (RECLUTA)",
+            ["60 seconds against the league's best shooters, then a final."] = "60 segundos contra los mejores tiradores de la liga y luego una final.",
+            ["A knockout for 2 to 8 friends on this iPhone or iPad. Type names, pick teams, then pass the phone: two players at a time, flat on the table between you (or with controllers)."] =
+                "Una eliminatoria para 2 a 8 amigos en este iPhone o iPad. Escribid los nombres, elegid equipos y pasad el móvil: dos jugadores cada vez, con el móvil en la mesa entre vosotros (o con mandos).",
+            ["AWAY at"] = "FUERA en", ["HOME vs"] = "EN CASA contra", ["BACKDOOR"] = "PUERTA ATRÁS", ["POST UP"] = "AL POSTE",
+            ["CANCEL MY SUBS"] = "CANCELAR MIS CAMBIOS", ["CHAMPION"] = "CAMPEÓN", ["CHANGE"] = "CAMBIAR", ["COACH'S TRUST"] = "CONFIANZA DEL ENTRENADOR",
+            ["COUCH CUP  ·  TOURNAMENT FOR 2-8"] = "COUCH CUP  ·  TORNEO PARA 2-8", ["CUSTOMIZE CONTROLS"] = "PERSONALIZAR CONTROLES", ["Cash"] = "Dinero",
+            ["Celebrations, dribble moves and dunk packages change how you look, not your ratings."] = "Las celebraciones, los regates y los paquetes de mates cambian tu aspecto, no tus valoraciones.",
+            ["Change it in ROSTER."] = "Cámbialo en PLANTILLA.",
+            ["Change your look and position in Locker Room ► CREATE first if you like."] = "Si quieres, cambia antes tu aspecto y tu posición en Vestuario ► CREAR.",
+            ["Clear the chapter before to open it"] = "Supera el capítulo anterior para abrirlo",
+            ["DELETE"] = "BORRAR", ["DELETE MY LIVE DATA"] = "BORRAR MIS DATOS DE LIVE", ["DEV: UNLOCK ALL"] = "DEV: DESBLOQUEAR TODO", ["DRAFT STOCK"] = "VALOR EN EL DRAFT",
+            ["DRAG TO MOVE  ·  - / + TO ZOOM"] = "ARRASTRA PARA MOVER  ·  - / + PARA ZOOM",
+            ["Dunk Contest, 3-Point Contest and the All-Star Game."] = "Concurso de Mates, Concurso de Triples y el Partido de las Estrellas.",
+            ["EMPTY"] = "VACÍO",
+            ["Every track is written and played by Retro Hoops' own chip synth. Songs are composed the first time you play them."] =
+                "Cada tema lo compone y lo toca el propio sintetizador chip de Retro Hoops. Las canciones se componen la primera vez que las pones.",
+            ["FANS"] = "FANS", ["FINAL SPOT"] = "PUESTO FINAL", ["FIND A GAME"] = "BUSCAR PARTIDA", ["FRIENDS THIS MONTH"] = "AMIGOS ESTE MES",
+            ["FRIENDS' BEST RUNS"] = "MEJORES INTENTOS DE AMIGOS", ["Find your friend's phone nearby and join their game."] = "Encuentra el móvil de tu amigo cerca y únete a su partida.",
+            ["First to 11 or 90 seconds. Every win adds to your streak and pays a bonus. One loss ends the run."] =
+                "A 11 puntos o 90 segundos. Cada victoria suma a tu racha y paga un extra. Una derrota acaba la racha.",
+            ["Four drills back to back. Every drill's result turns into points. The same four for everyone today; run it as often as you like."] =
+                "Cuatro ejercicios seguidos. El resultado de cada uno se convierte en puntos. Los mismos cuatro para todos hoy; repítelo cuantas veces quieras.",
+            ["Full Court always plays sideways. Turn this on to play every mode sideways (2 Player stays upright)."] =
+                "Cancha completa siempre se juega en horizontal. Actívalo para jugar todos los modos en horizontal (2 Jugadores sigue en vertical).",
+            ["GAME TAPES  ·  WATCH AGAIN, SEND"] = "CINTAS  ·  VOLVER A VER, ENVIAR", ["HOST A GAME"] = "CREAR PARTIDA",
+            ["Head to head on one iPhone, on two phones nearby, or a Couch Cup tournament for up to 8 friends."] =
+                "Mano a mano en un iPhone, en dos móviles cercanos o un torneo Couch Cup para hasta 8 amigos.",
+            ["IF THE SEASON ENDED TODAY"] = "SI LA TEMPORADA ACABARA HOY", ["INVITE A FRIEND"] = "INVITAR A UN AMIGO", ["JOIN A GAME"] = "UNIRSE A PARTIDA",
+            ["KING OF THE PARK: every legend beaten."] = "REY DEL PARQUE: todas las leyendas vencidas.", ["LIVE"] = "LIVE",
+            ["Looking for games nearby…"] = "Buscando partidas cerca…", ["Looking for phones nearby…"] = "Buscando móviles cerca…",
+            ["MANAGE SUBSCRIPTION"] = "GESTIONAR SUSCRIPCIÓN", ["MARKS"] = "MARCAS",
+            ["Make shots from an area, better than usual, to rank up. Each rank adds a little to your shots from there (not in two-phone or Live games)."] =
+                "Anota desde una zona mejor de lo habitual para subir de rango. Cada rango mejora un poco tus tiros desde ahí (no en partidas a dos móviles ni Live).",
+            ["Nickname"] = "Apodo",
+            ["No marks yet. Baskets, blocks and steals are marked by themselves; ADD MARK marks the moment you're watching."] =
+                "Aún no hay marcas. Las canastas, tapones y robos se marcan solos; AÑADIR MARCA marca el momento que estás viendo.",
+            ["No tapes yet."] = "Aún no hay cintas.", ["Nobody on the bench."] = "No hay nadie en el banquillo.",
+            ["On the other phone: 2 PLAYER ► TWO PHONES ► JOIN A GAME. The bracket stays on this phone; after each game, both tap NEXT GAME and pass the phones on. Other friends can WATCH A GAME on their own phones."] =
+                "En el otro móvil: 2 JUGADORES ► DOS MÓVILES ► UNIRSE A PARTIDA. El cuadro se queda en este móvil; tras cada partido, los dos tocan SIGUIENTE PARTIDO y pasan los móviles. Otros amigos pueden VER UN PARTIDO en sus móviles.",
+            ["On your friend's phone: 2 PLAYER ► GAME TAPES ► RECEIVE A TAPE, then tap this phone's name."] =
+                "En el móvil de tu amigo: 2 JUGADORES ► CINTAS DE PARTIDOS ► RECIBIR UNA CINTA, y luego toca el nombre de este móvil.",
+            ["One session = 1 skill point."] = "Una sesión = 1 punto de habilidad.",
+            ["One summer, eight games, one league title. You, Nova, Big Sal, Mic Tally on the mic, and Kojo Stride's Velvet Hour standing in the way."] =
+                "Un verano, ocho partidos, un título de liga. Tú, Nova, Big Sal, Mic Tally al micro y la Velvet Hour de Kojo Stride en el camino.",
+            ["PERFECT!"] = "¡PERFECTO!", ["PHOTO MODE"] = "MODO FOTO", ["PICK"] = "ELECCIÓN", ["PLAYOFF LINE"] = "LÍNEA DE PLAYOFFS", ["PRIVACY POLICY"] = "POLÍTICA DE PRIVACIDAD",
+            ["Pick a dunk, enter its combo, time the slam. Five judges, 50 points a dunk."] = "Elige un mate, haz su combinación y clava el momento. Cinco jueces, 50 puntos por mate.",
+            ["Pick both teams, then wait for your friend to join."] = "Elige los dos equipos y espera a que se una tu amigo.",
+            ["Play head to head, each on your own iPhone or iPad. Both phones need Retro Hoops (the same version) and to be near each other with Wi-Fi or Bluetooth on. No internet, no account."] =
+                "Jugad mano a mano, cada uno en su iPhone o iPad. Los dos necesitan Retro Hoops (la misma versión) y estar cerca con Wi-Fi o Bluetooth activado. Sin internet ni cuenta.",
+            ["Play someone online, head to head, one game. Win to climb; leaving a game early counts as a loss."] =
+                "Juega contra alguien en línea, mano a mano, un partido. Gana para subir; abandonar antes de tiempo cuenta como derrota.",
+            ["RESTORE PURCHASES"] = "RESTAURAR COMPRAS", ["RESULTS"] = "RESULTADOS", ["Reach"] = "Llega a",
+            ["Rook's profile is missing from content."] = "Falta el perfil de Rook en el contenido.", ["SAVE"] = "GUARDAR", ["SCOUTING VISITS LEFT"] = "VISITAS DE OJEO RESTANTES",
+            ["SHARE SHOT CHART"] = "COMPARTIR MAPA DE TIRO", ["SIGN IN TO GAME CENTER"] = "INICIAR SESIÓN EN GAME CENTER", ["SKILL POINTS"] = "PUNTOS DE HABILIDAD",
+            ["SKIP"] = "SALTAR", ["SKIP COLLEGE"] = "SALTARSE LA UNIVERSIDAD", ["SNAP"] = "FOTO", ["START CUP"] = "EMPEZAR COPA", ["STOP"] = "PARAR",
+            ["SUBSCRIBE"] = "SUSCRIBIRSE", ["SUMMER STORY"] = "HISTORIA DE VERANO",
+            ["Saved courts show up in Quick Call's court list and can be your team's home court (Locker Room ► TEAM)."] =
+                "Las canchas guardadas aparecen en la lista de Partido Rápido y pueden ser la cancha local de tu equipo (Vestuario ► EQUIPO).",
+            ["Score"] = "Anota", ["Sign in to Game Center (Settings) to compare runs with friends."] = "Inicia sesión en Game Center (Ajustes) para comparar intentos con amigos.",
+            ["Street rules: first to 15 by 1s and 2s, win by two, make it take it. Cut hard near a defender and you might break their ankles."] =
+                "Reglas de calle: a 15 con canastas de 1 y 2, ganar por dos, quien anota sigue atacando. Corta fuerte cerca de un defensor y puedes romperle los tobillos.",
+            ["Subs go in at the next dead ball. With AUTO SUBS on, tired players also come out by themselves."] =
+                "Los cambios entran en el siguiente balón muerto. Con CAMBIOS AUTO, los jugadores cansados también salen solos.",
+            ["TAP TO SKIP"] = "TOCA PARA SALTAR", ["TAP ►"] = "TOCA ►", ["TEAM STATS"] = "ESTADÍSTICAS DEL EQUIPO", ["TERMS OF USE"] = "CONDICIONES DE USO",
+            ["TIER"] = "NIVEL", ["TOTAL"] = "TOTAL", ["TRADE WITH"] = "TRASPASO CON", ["TRY 2"] = "INTENTO 2", ["TWO PHONES  ·  EACH ON YOUR OWN"] = "DOS MÓVILES  ·  CADA UNO EN EL SUYO",
+            ["Tap a team to change it. The order is shuffled when the cup starts. Ties are played again."] = "Toca un equipo para cambiarlo. El orden se sortea al empezar la copa. Los empates se repiten.",
+            ["Team Sunrise vs Team Moonlight, Full Court. You start."] = "Team Sunrise contra Team Moonlight, cancha completa. Empiezas tú.",
+            ["The first time, iOS asks to find devices on your local network: tap Allow on both phones."] = "La primera vez, iOS pide buscar dispositivos en tu red local: toca Permitir en los dos móviles.",
+            ["Touch: stick + SHOOT / PASS / DUNK / LAYUP / CALL\nKeyboard: WASD move · K shoot (hold) · J pass · U dunk · I layup · L steal · C call"] =
+                "Táctil: stick + TIRAR / PASAR / MATE / BANDEJA / JUGADA\nTeclado: WASD mover · K tirar (mantén) · J pasar · U mate · I bandeja · L robar · C jugada",
+            ["Two dunks totalling"] = "Dos mates que sumen", ["Two-phone play works on iPhone, iPad and Mac builds of the game."] = "El juego a dos móviles funciona en las versiones del juego para iPhone, iPad y Mac.",
+            ["USED"] = "USADO", ["WAIT FOR FRIEND"] = "ESPERAR AL AMIGO", ["WAIT FOR PHONE"] = "ESPERAR AL MÓVIL", ["WEEK"] = "SEMANA",
+            ["WEEKLY & HOOPS PASS"] = "SEMANALES Y HOOPS PASS", ["WEEKLY CHALLENGES"] = "RETOS SEMANALES", ["WINS THE"] = "GANA EL",
+            ["Waiting for your friend…"] = "Esperando a tu amigo…", ["Watch two friends' game live on this phone (up to 3 watchers)."] = "Mira en directo la partida de dos amigos en este móvil (hasta 3 espectadores).",
+            ["With Larger Text on in iOS Settings, menus grow to match (up to the biggest UI SCALE). VoiceOver reads the menus' buttons and titles."] =
+                "Con Texto más grande en Ajustes de iOS, los menús crecen a la par (hasta la ESCALA DE INTERFAZ más grande). VoiceOver lee los botones y títulos de los menús.",
+            ["YOU (PLAYER 1)"] = "TÚ (JUGADOR 1)", ["YOU WIN THE"] = "GANAS EL", ["YOU'RE ON THE CLOCK"] = "TE TOCA ELEGIR", ["YOUR FRIEND (PLAYER 2)"] = "TU AMIGO (JUGADOR 2)",
+            ["You control"] = "Controlas a", ["You play as"] = "Juegas como",
+            ["Your First Callers vs three league teams. Win two in a row for the title."] = "Tus First Callers contra tres equipos de la liga. Gana dos seguidos para el título.",
+            ["Your player stars in Rise Mode, the First Call Classic, Practice, and How to Play."] = "Tu jugador protagoniza el Modo Ascenso, el First Call Classic, el Laboratorio y Cómo Jugar.",
+            ["a season"] = "por temporada", ["always fit"] = "siempre caben", ["asks"] = "pide", ["dead money"] = "dinero muerto", ["done"] = "hechos",
+            ["each visit narrows a prospect's rating"] = "cada visita afina la valoración de un prospecto", ["fans"] = "fans", ["make the final."] = "para llegar a la final.", ["to make the final."] = "para llegar a la final.", ["to win it."] = "para ganarlo.",
+            ["minimum deals"] = "los contratos mínimos", ["moves"] = "movimientos", ["payroll"] = "masa salarial", ["players"] = "jugadores",
+            ["projected pick"] = "elección prevista", ["projected: undrafted"] = "previsto: sin draft", ["record"] = "balance", ["rep to find them"] = "de reputación para encontrarlos",
+            ["scouted"] = "ojeado", ["so far"] = "por ahora", ["teams"] = "equipos", ["teams picked"] = "equipos elegidos", ["their view"] = "su visión", ["titles"] = "títulos",
+            ["win it."] = "para ganarlo.",
+            ["• Play real people online, head to head\n• A Live rating with tiers, from ROOKIE to LEGEND, and a Game Center leaderboard\n• Bring any league team; opponents are matched on the same game version\n• Everything else in Retro Hoops stays free and offline"] =
+                "• Juega en línea contra gente real, mano a mano\n• Una puntuación Live con niveles, de NOVATO a LEYENDA, y una clasificación en Game Center\n• Lleva cualquier equipo de la liga; los rivales juegan con la misma versión del juego\n• Todo lo demás en Retro Hoops sigue siendo gratis y sin conexión",
         };
 
         /// <summary>Phrases translated inside longer composite lines (longest first).</summary>

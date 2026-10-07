@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>PLAY ▸ LIVE: the Retro Hoops Live subscription screen, and online matchmaking once subscribed.</summary>
+    /// <summary>PLAY ► LIVE: the Retro Hoops Live subscription screen, and online matchmaking once subscribed.</summary>
     public sealed partial class MainMenuController
     {
         private void ShowLive()

@@ -221,7 +221,7 @@ namespace CallerRetroBall.Logic
             "Retro Hoops Live is a monthly auto-renewing subscription for " + (string.IsNullOrEmpty(price) ? PriceFallback : price) + " a month. " +
             "Payment is charged to your Apple Account when you confirm. It renews automatically unless you turn off auto-renew at least 24 hours " +
             "before the end of the current period; your account is charged for the next month within 24 hours before it ends. " +
-            "Manage or cancel any time in Settings ▸ your name ▸ Subscriptions. Everything else in Retro Hoops stays free and works offline.";
+            "Manage or cancel any time in Settings ► your name ► Subscriptions. Everything else in Retro Hoops stays free and works offline.";
 
         /// <summary>Must be a public page before App Review (docs/PRIVACY.md is the text; host it, e.g. on GitHub Pages, and update this).</summary>
         public const string PrivacyPolicyUrl = "https://github.com/marcompsci/RetroBall/blob/main/RetroHoops/docs/PRIVACY.md";

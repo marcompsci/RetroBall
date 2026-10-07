@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// Locker Room ▸ COURT: the Court Builder. Three court slots; floor style and colour, lines, paint,
+    /// Locker Room ► COURT: the Court Builder. Three court slots; floor style and colour, lines, paint,
     /// what's behind the baseline, sky, crowd and a centre-court logo, with a live preview drawn by the
     /// real court generator. SAVE puts the court in Quick Call and the home-court list; PLAY HERE starts
     /// a Quick Call on it.
@@ -111,7 +111,7 @@ namespace CallerRetroBall.UI
                     }),
                     ("KEEP", ButtonStyle.Ghost, null)), ButtonStyle.Ghost, 90f, 32f);
             }
-            UiKit.Size(UiKit.Label(_content, "Saved courts show up in Quick Call's court list and can be your team's home court (Locker Room ▸ TEAM).",
+            UiKit.Size(UiKit.Label(_content, "Saved courts show up in Quick Call's court list and can be your team's home court (Locker Room ► TEAM).",
                                    26f, Theme.Muted), 80f);
         }
 

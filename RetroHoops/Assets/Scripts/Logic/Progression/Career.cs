@@ -109,7 +109,8 @@ namespace CallerRetroBall.Logic
 
             // Phase 36: a coached Franchise game has no line of yours: it pays, but your career numbers stay yours.
             if (summary.HumanLine == null && summary.mode == GameMode.Franchise) return true;
-            data.lastNewRecords = Records.Update(data, summary);
+            // Phase 37: CLUTCH games start from a set score, so they don't set game records (margins, points).
+            if (summary.mode != GameMode.Clutch) data.lastNewRecords = Records.Update(data, summary);
             data.gamesSinceUpgrade++;
             var t = data.totals;
             t.games++;

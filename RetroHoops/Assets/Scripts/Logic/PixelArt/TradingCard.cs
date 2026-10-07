@@ -20,7 +20,7 @@ namespace CallerRetroBall.Logic.PixelArt
     }
 
     /// <summary>
-    /// A shareable pixel-art trading card of your player in your kit (Locker Room ▸ KIT ▸ TRADING CARD):
+    /// A shareable pixel-art trading card of your player in your kit (Locker Room ► KIT ► TRADING CARD):
     /// kit-coloured frame, your player large in the window, OVR badge, team logo, name, role and stats.
     /// Original art, drawn entirely in code.
     /// </summary>

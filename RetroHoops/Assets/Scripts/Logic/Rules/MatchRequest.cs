@@ -37,6 +37,8 @@ namespace CallerRetroBall.Logic
         Street = 17,
         /// <summary>A tournament you built in the Tournament Builder.</summary>
         CustomCup = 18,
+        /// <summary>Phase 37 CLUTCH: a late-game scenario that starts from a set score and clock.</summary>
+        Clutch = 19,
     }
 
     /// <summary>
@@ -82,6 +84,11 @@ namespace CallerRetroBall.Logic
         public int TeamSize;
         /// <summary>Street rules: sharp crossovers can break a defender's ankles.</summary>
         public bool StreetRules;
+        /// <summary>Phase 37 CLUTCH: the score and game clock the match starts from (0 clock = the rules' own).</summary>
+        public int StartScoreA, StartScoreB;
+        public float StartClock;
+        /// <summary>Phase 37: who has the ball first (0 = home, 1 = away; -1 = the mode's usual).</summary>
+        public int StartWithBall = -1;
 
         public static MatchRequest QuickCallDefault(ContentCatalog c)
         {

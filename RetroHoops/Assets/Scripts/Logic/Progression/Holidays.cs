@@ -13,7 +13,7 @@ namespace CallerRetroBall.Logic
     }
 
     /// <summary>
-    /// Holiday Games (Play ▸ HOLIDAY GAMES): a Christmas, Halloween, Easter and Fourth of July game, each on
+    /// Holiday Games (Play ► HOLIDAY GAMES): a Christmas, Halloween, Easter and Fourth of July game, each on
     /// its own decorated court. All four are always playable; the one in season gets a banner on the main
     /// menu (all of October, December 1–26, Easter week, July 1–7).
     /// </summary>

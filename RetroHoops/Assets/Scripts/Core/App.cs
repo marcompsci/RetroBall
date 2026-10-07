@@ -34,7 +34,7 @@ namespace CallerRetroBall.Core
         /// <summary>Game Center on iOS builds, a no-op elsewhere. Only used after the player opts in.</summary>
         public static readonly IGameCenterService GameCenter = GameCenterSync.Create();
 
-        /// <summary>Settings ▸ Game Center toggle: signs in when turned on.</summary>
+        /// <summary>Settings ► Game Center toggle: signs in when turned on.</summary>
         public static void SetGameCenter(bool on)
         {
             if (Career == null) return;
@@ -93,6 +93,8 @@ namespace CallerRetroBall.Core
         /// <summary>After a street challenge or a Tournament Builder game: open those again on the menu.</summary>
         public static bool OpenParkOnMenu { get; set; }
         public static bool OpenCustomCupOnMenu { get; set; }
+        /// <summary>Phase 37: after a CLUTCH scenario, open the scenario list again.</summary>
+        public static bool OpenClutchOnMenu { get; set; }
 
         /// <summary>After a Summer Story game: open the story on the menu (and play chapter N's closing scene if it was just cleared).</summary>
         public static bool OpenStoryOnMenu { get; set; }
@@ -138,7 +140,7 @@ namespace CallerRetroBall.Core
                 request.StartHeated = true;
             // Phase 36: SPOT SPECIALIST ranks from your career chart (single-player games only).
             request.SpotBonus = Specialist.AppliesTo(request) ? Specialist.SpotBonuses(Career.shotChart) : null;
-            // Phase 34: Settings ▸ DIFFICULTY BY MODE.
+            // Phase 34: Settings ► DIFFICULTY BY MODE.
             request.DifficultyId = ModeDifficulty.Resolve(Career.settings, request, Catalog);
             if (request.Mode == GameMode.Rise || request.Mode == GameMode.Rival)
             {
@@ -171,7 +173,7 @@ namespace CallerRetroBall.Core
             ApplySettings();
         }
 
-        /// <summary>Settings ▸ Reset: wipes the save and starts a fresh career.</summary>
+        /// <summary>Settings ► Reset: wipes the save and starts a fresh career.</summary>
         public static void ResetCareer()
         {
             SaveStore.Delete();
@@ -236,7 +238,7 @@ namespace CallerRetroBall.Core
             {
                 Debug.LogWarning("[CallerRetroBall] Using built-in default content for: " +
                                  string.Join(", ", Content.FallbackKinds) +
-                                 ". Run 'Retro Hoops ▸ Run Project Setup' to generate editable assets.");
+                                 ". Run 'Retro Hoops ► Run Project Setup' to generate editable assets.");
             }
 
 #if UNITY_EDITOR || DEBUG

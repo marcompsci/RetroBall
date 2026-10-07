@@ -633,7 +633,7 @@ namespace CallerRetroBall.UI
                              : "<color=#8D99AE>" + Loc.T(code.HintCondition) + "</color>";
                 Line(found || hint ? Loc.T(code.Name) : "???", value);
             }
-            UiKit.Size(UiKit.Label(_content, "Enter codes in Settings ▸ SECRETS.", 28f, Theme.Muted), 44f);
+            UiKit.Size(UiKit.Label(_content, "Enter codes in Settings ► SECRETS.", 28f, Theme.Muted), 44f);
 
             Header("BADGES  " + Badges.EarnedCount(career) + "/" + Badges.All.Count);
             foreach (var b in Badges.All)
@@ -671,6 +671,7 @@ namespace CallerRetroBall.UI
                 case GameMode.Arcade: return "ARCADE";
                 case GameMode.OneOnOne: return "1-ON-1";
                 case GameMode.Cup: return "CUP";
+                case GameMode.Clutch: return "CLUTCH";
                 default: return "QUICK";
             }
         }

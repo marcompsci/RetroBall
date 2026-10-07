@@ -287,3 +287,15 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Skills Gauntlet: FRIENDS' BEST RUNS opens Game Center's friends board (signed in), or the sign-in hint (signed out).
 - [ ] Post-game and Locker Room: SHARE SHOT CHART opens the share sheet with a crisp picture card.
 
+## Phase 37
+- [ ] Unity ► Test Runner ► PlayMode: Phase37SmokeTests pass (CLUTCH game, store-shot launch).
+- [ ] PLAY ► CLUTCH: chapter 1 open, chapters 2 and 3 locked with "N more stars"; each card shows teams, situation, goal and bonus.
+- [ ] A CLUTCH game starts from the card's score and clock with the right team in possession; the post-game shows ●○○ stars, √/× per goal and +SP for new stars; REMATCH replays it; back on the menu CLUTCH reopens.
+- [ ] Win all of chapter 1 with some extra stars: chapter 2 opens at 8 stars.
+- [ ] No empty boxes anywhere: menus with ► (Locker Room ► CREATE...), √ on finished Weekly/Daily/Story lines, × on CLUTCH misses.
+- [ ] Main menu footer reads "v1.0.0 · plays offline · no ads".
+- [ ] Rise Season 9: Roller Royals intro (Skye), they press full court; win scene; badges LAST SKATE / NINE FOR NINE; Skate logo draws.
+- [ ] Settings ► ESPAÑOL: PLAY menu, CLUTCH, Live, two-phone, tapes, Franchise and Legacy screens have no English left except names.
+- [ ] VoiceOver on, in a game: the court hint says stick on the left (right with left-handed controls), in the chosen language.
+- [ ] 120 Hz iPhone with SHOW FPS: smooth games stay at ~120; a struggling device shows "(steady 60)".
+- [ ] Run "App Store Screenshots.command" after a Build Check: 7 PNGs per device in ~/RetroHoops/AppStoreScreenshots; the fullcourt one is upright and 2868 × 1320.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CallerRetroBall.Logic
 {
-    /// <summary>Your own team (Locker Room ▸ TEAM): name, colours, kit, logo, home court.</summary>
+    /// <summary>Your own team (Locker Room ► TEAM): name, colours, kit, logo, home court.</summary>
     [Serializable]
     public class CustomTeamData
     {

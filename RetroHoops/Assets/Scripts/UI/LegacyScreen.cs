@@ -153,7 +153,7 @@ namespace CallerRetroBall.UI
                  "Grades and XP, a skill tree, contracts and sponsors, story choices, awards and a Hall of Fame vote. Every game is Full Court with you starting.",
                  Theme.Cream, 30f, 240f);
             Line(Loc.T("You play as") + " <b>" + App.Career.nickname.ToUpperInvariant() + "</b>  ·  " + (C.ArchetypeById(me.archetypeId)?.displayName ?? "")
-                 + "\n<size=22><color=#8D99AE>" + Loc.T("Change your look and position in Locker Room ▸ CREATE first if you like.") + "</color></size>", Theme.Gold, 32f, 110f);
+                 + "\n<size=22><color=#8D99AE>" + Loc.T("Change your look and position in Locker Room ► CREATE first if you like.") + "</color></size>", Theme.Gold, 32f, 110f);
             Big("START LEGACY", () =>
             {
                 App.Career.legacy = Legacy.Start(C, (uint)System.Environment.TickCount | 1u);

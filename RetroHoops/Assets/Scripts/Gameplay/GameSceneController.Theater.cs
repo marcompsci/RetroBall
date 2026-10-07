@@ -142,7 +142,11 @@ namespace CallerRetroBall.Gameplay
             _match = new MatchSimulation(MatchSetup.FromRequest(_request, App.Catalog));
             _watch.Rewind();
             for (int i = 0; i < _playerViews.Length && i < _match.Players.Length; i++) _playerViews[i].Rebind(_match.Players[i]);
-            if (_mic != null) _mic = new Commentary(_match.Setup.TeamA.nickname, _match.Setup.TeamB.nickname, _request.Seed);
+            if (_mic != null)
+            {
+                _mic = new Commentary(_match.Setup.TeamA.nickname, _match.Setup.TeamB.nickname, _request.Seed);
+                _mic.StartFrom(_match.Setup.StartScoreA, _match.Setup.StartScoreB);
+            }
         }
 
         /// <summary>After a jump: redraw any slot whose player changed, and drop what belonged to the skipped moments.</summary>

@@ -14,7 +14,7 @@ namespace CallerRetroBall.Controls
     /// you touch). Right thumb: an arc of ring buttons in the corner, each with an icon and a label:
     /// SHOOT (hold/release) on the outside, PASS beside it (it reads OOP when a lob is on), DUNK above,
     /// LAYUP on the diagonal and CALL further in. On defence the same buttons turn into BLOCK, SWITCH
-    /// and STEAL. Positions and sizes come from <see cref="ControlLayout"/> (Settings ▸ CUSTOMIZE
+    /// and STEAL. Positions and sizes come from <see cref="ControlLayout"/> (Settings ► CUSTOMIZE
     /// CONTROLS). Presses go into an <see cref="InputBuffer"/> so slightly early taps still count.
     /// </summary>
     public sealed class TouchControls : MonoBehaviour
@@ -69,7 +69,7 @@ namespace CallerRetroBall.Controls
 
         /// <param name="leftHanded">Mirror the layout: stick on the right, buttons on the left.</param>
         /// <param name="largeButtons">Action buttons 25% bigger (accessibility).</param>
-        /// <param name="layout">Saved layout string (Settings ▸ CUSTOMIZE CONTROLS); empty = the default arc.</param>
+        /// <param name="layout">Saved layout string (Settings ► CUSTOMIZE CONTROLS); empty = the default arc.</param>
         public static TouchControls Create(InputBuffer buffer, bool leftHanded = false, bool largeButtons = false, Seat seat = Seat.Full,
                                            string layout = null)
         {

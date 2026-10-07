@@ -62,9 +62,9 @@ namespace CallerRetroBall.Logic
     public enum CodeResult { Wrong = 0, Unlocked = 1, Toggled = 2 }
 
     /// <summary>
-    /// Old-school secret codes. Enter four symbols in Settings ▸ SECRET CODES. Some codes unlock
+    /// Old-school secret codes. Enter four symbols in Settings ► SECRET CODES. Some codes unlock
     /// hidden teams and courts; others switch on fun modes (big heads, rainbow ball, always hot).
-    /// Hints for each code are earned by playing (they show in Locker Room ▸ TROPHY).
+    /// Hints for each code are earned by playing (they show in Locker Room ► TROPHY).
     /// </summary>
     public static class Secrets
     {

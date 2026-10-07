@@ -10,8 +10,8 @@ using UnityEngine.UI;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// Settings ▸ SECRET CODES: tap four symbols. Right codes unlock hidden content or switch a
-    /// fun mode on/off; wrong ones just buzz. Hints are earned by playing (Locker Room ▸ TROPHY).
+    /// Settings ► SECRET CODES: tap four symbols. Right codes unlock hidden content or switch a
+    /// fun mode on/off; wrong ones just buzz. Hints are earned by playing (Locker Room ► TROPHY).
     /// </summary>
     public static class SecretCodeScreen
     {

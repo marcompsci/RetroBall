@@ -111,4 +111,4 @@ phones themselves: Apple wants app footage only.
 
 ## 6. Press blurb (copy and paste)
 
-> **Retro Hoops** is an original pixel-art 3v3 street basketball game for iPhone. Heat up after three straight buckets, throw alley-oops, climb a six-stage Arcade Ladder to a secret boss, and build your own team's colours, kit and logo. It's fully offline, with no ads, no purchases and no tracking. English and Spanish, touch or controller.
+> **Retro Hoops** is an original pixel-art 3v3 street basketball game for iPhone. Heat up after three straight buckets, throw alley-oops, climb a six-stage Arcade Ladder to a secret boss, and build your own team's colours, kit and logo. It plays fully offline with no ads and no tracking; the only purchase is the optional Retro Hoops Live subscription for online games. English and Spanish, touch or controller.

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace CallerRetroBall.Logic
 {
     /// <summary>
-    /// Phase 34: a difficulty per kind of game (Settings ▸ DIFFICULTY BY MODE), e.g. Legend in Rise but Rookie in The Park.
+    /// Phase 34: a difficulty per kind of game (Settings ► DIFFICULTY BY MODE), e.g. Legend in Rise but Rookie in The Park.
     /// "DEFAULT" uses the main DIFFICULTY. Saved as "GROUP=difficulty.id" lines in <see cref="SettingsData.modeDifficulty"/>.
     /// </summary>
     public static class ModeDifficulty
@@ -20,7 +20,7 @@ namespace CallerRetroBall.Logic
                 case GameMode.Rise: case GameMode.Rival: return "RISE";
                 case GameMode.Franchise: return "FRANCHISE";
                 case GameMode.Street: return "THE PARK";
-                case GameMode.Tournament: case GameMode.King: case GameMode.Arcade: case GameMode.Cup: case GameMode.CustomCup: return "EVENTS";
+                case GameMode.Tournament: case GameMode.King: case GameMode.Arcade: case GameMode.Cup: case GameMode.CustomCup: case GameMode.Clutch: return "EVENTS";
                 case GameMode.Legacy: return "LEGACY";
                 default: return null;
             }

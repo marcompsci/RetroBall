@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace CallerRetroBall.Controls
 {
     /// <summary>
-    /// Settings ▸ CUSTOMIZE CONTROLS: the real match buttons over an empty court. Drag a button to move
+    /// Settings ► CUSTOMIZE CONTROLS: the real match buttons over an empty court. Drag a button to move
     /// it, tap one and use − / + to resize it, RESET for the default arc, SAVE to keep it (saved in the
     /// career, so it follows iCloud sync). The same layout is used in portrait and landscape.
     /// </summary>

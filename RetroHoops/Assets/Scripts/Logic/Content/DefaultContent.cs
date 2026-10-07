@@ -41,6 +41,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 8 rival (every eighth Rise season).</summary>
         public const string Rival8CrewId = "crew.night_lanterns";
         public const string Rival8LeaderId = "player.nln.akande";
+        /// <summary>Season 9 rival (every ninth Rise season).</summary>
+        public const string Rival9CrewId = "crew.roller_royals";
+        public const string Rival9LeaderId = "player.rry.varo";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -146,6 +149,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 9 courts.
+            c.Courts.Add(Court("court.starlight_rink", "Starlight Rink", CourtCircuit.Blacktop,
+                "The roller rink after the last skate. A hoop at each end of the maple and a mirror ball overhead.",
+                "#2D1B4E", "#F72585", "#4CC9F0", "#14082B", "#FFD166", 0.45f));
+            c.Courts.Add(Court("court.skate_bowl", "Skate Bowl", CourtCircuit.Blacktop,
+                "A hoop bolted above the deep end of an empty skate bowl. Mind the coping.",
+                "#5C677D", "#F1FAEE", "#F72585", "#1B263B", "#4CC9F0", 0.55f));
 
             // Season 8 courts.
             c.Courts.Add(Court("court.night_market", "Night Market", CourtCircuit.Blacktop,
@@ -306,6 +317,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 9 rival: every ninth Rise season. A roller-rink crew: full-court pressure and quick hands.
+            AddTeam(c, Rival9CrewId, "", "Roller Royals", "RRY", TeamTier.Rival,
+                "#7209B7", "#F72585", "#4CC9F0", LogoShape.Shield, LogoMotif.Skate, TeamPattern.Stripes,
+                "court.starlight_rink", "Couples skate is over.", false,
+                P("varo", "Skye", "Varo", 7, Archetype.HustleGuard, 4),
+                P("lindell", "Bree", "Lindell", 21, Archetype.RimRunner, 4),
+                P("salas", "Lu", "Salas", 30, Archetype.DeepShooter, 4));
+
             // Season 8 rival: every eighth Rise season. A night-market crew: a sagging zone and lobs over the top.
             AddTeam(c, Rival8CrewId, "", "Night Lanterns", "NLN", TeamTier.Rival,
                 "#D62828", "#1D1A31", "#FCBF49", LogoShape.Hexagon, LogoMotif.Lantern, TeamPattern.Rings,
@@ -463,6 +482,7 @@ namespace CallerRetroBall.Logic
             S(Rival6CrewId, DefenseScheme.Pressure);
             S(Rival7CrewId, DefenseScheme.ManToMan);
             S(Rival8CrewId, DefenseScheme.Zone);
+            S(Rival9CrewId, DefenseScheme.Pressure);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -617,6 +637,14 @@ namespace CallerRetroBall.Logic
                 targetScore = 11,
                 useGameClock = true,
                 gameClockSeconds = 120f,
+            });
+            c.Rules.Add(new GameRulesDef
+            {
+                // Phase 37 CLUTCH (half court): the clock decides it; a tie at the horn goes to sudden death.
+                id = Clutch.RulesId,
+                targetScore = 99,
+                useGameClock = true,
+                gameClockSeconds = 60f,
             });
             c.Rules.Add(new GameRulesDef
             {
@@ -782,6 +810,12 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
             // Phase 36 LIVE SEASONS: the banner for finishing a month ALL-STAR or better (not sold, not in the pass).
             c.Cosmetics.Add(PassGear(LiveSeason.StarBannerId, "Live Season Star", CosmeticSlot.CourtBanner, "#FFD166", "#3A0CA3"));
+            // Season 9 pass set (the roller rink), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.rink", "Rink", CosmeticSlot.JerseyPalette, "#7209B7", "#4CC9F0"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.quad_glide", "Quad Glide", CosmeticSlot.Shoes, "#F72585", "#FFFFFF"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.mirror_ball", "Mirror Ball", CosmeticSlot.CourtBanner, "#E0E1DD", "#7209B7"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.skate_glide", "Skate Glide", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.rink_violet", "Rink Violet", CosmeticSlot.JerseyPalette, 350, 1700, false, "#7209B7", "#F1FAEE"));
             // Season 8 pass set (the night market), topped by a pass-only celebration.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.lantern", "Lantern", CosmeticSlot.JerseyPalette, "#D62828", "#FCBF49"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.paper_soles", "Paper Soles", CosmeticSlot.Shoes, "#FFF3E0", "#D62828"));

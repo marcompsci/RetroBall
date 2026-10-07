@@ -6,8 +6,8 @@ using UnityEngine;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// Settings ▸ CAPTIONS: the announcer's calls ("HEATING UP!", "ALLEY-OOP!") as text near the
-    /// bottom of the screen. Also on when iOS Settings ▸ Accessibility ▸ Subtitles &amp; Captioning ▸
+    /// Settings ► CAPTIONS: the announcer's calls ("HEATING UP!", "ALLEY-OOP!") as text near the
+    /// bottom of the screen. Also on when iOS Settings ► Accessibility ► Subtitles &amp; Captioning ►
     /// Closed Captions is on. One persistent overlay canvas that never blocks touches.
     /// </summary>
     public sealed class Captions : MonoBehaviour

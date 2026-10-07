@@ -34,6 +34,67 @@ namespace CallerRetroBall.Logic
         }
     }
 
+    /// <summary>
+    /// Phase 37: notices when a phone can't keep up with 120 Hz during play. If at least a quarter of the frames in
+    /// a four-second window run long (more than 1.5× the frame budget), it reports <see cref="Struggling"/> and the
+    /// game drops to a steady 60 fps, which looks smoother than an uneven 120. After a minute at 60 with no long
+    /// frames it tries 120 again, once; if the phone struggles a second time it stays at 60 until the app restarts.
+    /// </summary>
+    public sealed class FrameBudget
+    {
+        public const float WindowSeconds = 4f;
+        public const float LongFactor = 1.5f;
+        public const float LongShare = 0.25f;
+        public const float RetrySeconds = 60f;
+        public const int MaxStrikes = 2;
+
+        private float _windowTime;
+        private int _frames, _long;
+        private float _calmTime;
+
+        public bool Struggling { get; private set; }
+        /// <summary>Times it has dropped to 60 this session.</summary>
+        public int Strikes { get; private set; }
+
+        /// <summary>Adds one frame (<paramref name="seconds"/> long, asked for at <paramref name="targetFps"/>). Returns true when <see cref="Struggling"/> changed.</summary>
+        public bool Observe(float seconds, int targetFps, bool gameplay)
+        {
+            if (!gameplay) { ResetWindow(); return false; } // menus don't count, and a new game starts a fresh window
+            if (seconds <= 0f || seconds > 0.5f || targetFps <= 0) return false; // pauses and hitches from loading don't count
+            float budget = 1f / targetFps;
+            if (!Struggling)
+            {
+                if (targetFps < 100) return false; // only 120 Hz can be too much
+                _windowTime += seconds;
+                _frames++;
+                if (seconds > budget * LongFactor) _long++;
+                if (_windowTime < WindowSeconds) return false;
+                bool tooSlow = _long >= _frames * LongShare;
+                ResetWindow();
+                if (!tooSlow) return false;
+                Struggling = true;
+                Strikes++;
+                _calmTime = 0f;
+                return true;
+            }
+            // At 60: count calm time; any long frame at 60 restarts the wait.
+            if (Strikes >= MaxStrikes) return false;
+            if (seconds > budget * LongFactor) _calmTime = 0f;
+            else _calmTime += seconds;
+            if (_calmTime < RetrySeconds) return false;
+            Struggling = false;
+            ResetWindow();
+            return true;
+        }
+
+        private void ResetWindow()
+        {
+            _windowTime = 0f;
+            _frames = 0;
+            _long = 0;
+        }
+    }
+
     /// <summary>Rolling frame-time statistics for the optional SHOW FPS readout (no allocations).</summary>
     public sealed class FrameStats
     {

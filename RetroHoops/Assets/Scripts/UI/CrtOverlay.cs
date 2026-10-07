@@ -7,7 +7,7 @@ namespace CallerRetroBall.UI
 {
     /// <summary>
     /// Optional CRT look over every screen: scanlines plus (on Strong) a vignette. Generated
-    /// textures, one persistent overlay canvas that never blocks touches. Settings ▸ CRT FILTER.
+    /// textures, one persistent overlay canvas that never blocks touches. Settings ► CRT FILTER.
     /// </summary>
     public sealed class CrtOverlay : MonoBehaviour
     {

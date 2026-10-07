@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>Weekly Challenges and the free Hoops Pass track, opened from PLAY ▸ EVENTS.</summary>
+    /// <summary>Weekly Challenges and the free Hoops Pass track, opened from PLAY ► EVENTS.</summary>
     public sealed partial class MainMenuController
     {
         private static readonly Color PassPurple = new Color32(0x9B, 0x4D, 0xFF, 255);
@@ -33,7 +33,7 @@ namespace CallerRetroBall.UI
             {
                 bool done = career.weekly.done[i];
                 int have = career.weekly.progress[i];
-                UiKit.Size(UiKit.Label(column, (done ? "<color=#4CC9F0>✓ </color>" : "") + goals[i].Describe().ToUpperInvariant()
+                UiKit.Size(UiKit.Label(column, (done ? "<color=#4CC9F0>√ </color>" : "") + goals[i].Describe().ToUpperInvariant()
                                        + "  <color=#8D99AE>" + have + "/" + goals[i].Target + "</color>",
                                        32f, done ? Theme.Cyan : Theme.Cream, TextAlignmentOptions.Left, true), 52f);
                 Bar(column, goals[i].Target > 0 ? have / (float)goals[i].Target : 0f, done ? Theme.Cyan : Theme.Pink);
@@ -43,7 +43,7 @@ namespace CallerRetroBall.UI
             var p = career.pass;
             int tier = HoopsPass.Tier(p.xp);
             UiKit.Size(UiKit.Label(column, "HOOPS PASS  ·  SEASON " + (p.season + 1), 40f, PassPurple, TextAlignmentOptions.Center, true), 76f);
-            UiKit.Size(UiKit.Label(column, "Free. No purchases, ever. Play games, finish Weekly and Daily Challenges, climb " + HoopsPass.Tiers
+            UiKit.Size(UiKit.Label(column, "Free: nothing to buy. Play games, finish Weekly and Daily Challenges, climb " + HoopsPass.Tiers
                                    + " tiers. Gear on tiers 5, 10, 15 and 20 is only found here, and comes round again next season.",
                                    26f, Theme.Muted), 100f);
             int daysLeft = HoopsPass.DaysLeft(day);
@@ -60,7 +60,7 @@ namespace CallerRetroBall.UI
                 bool got = t <= p.granted;
                 bool gear = r.CosmeticId != null;
                 bool owned = gear && career.ownedCosmetics.Contains(r.CosmeticId);
-                string mark = got ? "<color=#4CC9F0>✓</color>" : (t == tier + 1 ? "<color=#FFD166>></color>" : "  ");
+                string mark = got ? "<color=#4CC9F0>√</color>" : (t == tier + 1 ? "<color=#FFD166>></color>" : "  ");
                 string label = gear ? "<color=#9B4DFF>" + r.Label.ToUpperInvariant() + "</color>" + (owned && !got ? "  <size=22><color=#8D99AE>(owned: +" + HoopsPass.OwnedGearSp + " SP)</color></size>" : "")
                                     : r.Label;
                 UiKit.Size(UiKit.Label(column, mark + "  TIER " + t + "   " + label, gear ? 32f : 28f, got ? Theme.Muted : Theme.Cream, TextAlignmentOptions.Left, gear), gear ? 56f : 44f);

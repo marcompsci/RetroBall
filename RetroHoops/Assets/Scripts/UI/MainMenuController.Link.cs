@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>2 PLAYER ▸ TWO PHONES: host a game or join a friend's nearby (no internet needed).</summary>
+    /// <summary>2 PLAYER ► TWO PHONES: host a game or join a friend's nearby (no internet needed).</summary>
     public sealed partial class MainMenuController
     {
         private static string LinkName()
@@ -72,7 +72,7 @@ namespace CallerRetroBall.UI
                 var setup = LinkSetup.From(c, home.id, teams[_linkAway].id, home.homeCourtId, App.Career.settings.difficultyId, seed, App.Version, LinkName());
                 var link = NearbyLink.Start(true, LinkName());
                 var lobby = new LinkLobby(true, setup, App.Version, LinkProtocol.ContentFingerprint(c), c);
-                LinkPoller.Attach(column, link, lobby, status, "Waiting for your friend to join…\nOn their phone: 2 PLAYER ▸ TWO PHONES ▸ JOIN A GAME.", 0);
+                LinkPoller.Attach(column, link, lobby, status, "Waiting for your friend to join…\nOn their phone: 2 PLAYER ► TWO PHONES ► JOIN A GAME.", 0);
             }, ButtonStyle.Primary, 130f);
 
             int Next(int current, int other)
@@ -133,7 +133,7 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(column, CouchCup.RoundName(cup, next.round), 30f, Theme.Gold, TextAlignmentOptions.Center, true), 50f);
             UiKit.Size(UiKit.Label(column, "<color=#FFD166>" + cup.names[next.a].ToUpperInvariant() + "</color> plays on THIS phone\n<color=#4CC9F0>"
                                    + cup.names[next.b].ToUpperInvariant() + "</color> plays on the OTHER phone", 36f, Theme.Cream, TextAlignmentOptions.Center, true), 120f);
-            UiKit.Size(UiKit.Label(column, "On the other phone: 2 PLAYER ▸ TWO PHONES ▸ JOIN A GAME. The bracket stays on this phone; after each game, both tap NEXT GAME and pass the phones on. Other friends can WATCH A GAME on their own phones.", 26f, Theme.Muted, TextAlignmentOptions.Center), 170f);
+            UiKit.Size(UiKit.Label(column, "On the other phone: 2 PLAYER ► TWO PHONES ► JOIN A GAME. The bracket stays on this phone; after each game, both tap NEXT GAME and pass the phones on. Other friends can WATCH A GAME on their own phones.", 26f, Theme.Muted, TextAlignmentOptions.Center), 170f);
             var status = UiKit.Label(column, "", 32f, Theme.Muted, TextAlignmentOptions.Center);
             UiKit.Size(status, 120f);
             Button hostButton = null;
@@ -229,7 +229,7 @@ namespace CallerRetroBall.UI
             }
             else if (state == LinkState.Lost)
             {
-                _status.text = "<color=#FF6B6B>Couldn't use the local network. Check Settings ▸ Privacy ▸ Local Network ▸ Retro Hoops is on, then try again.</color>";
+                _status.text = "<color=#FF6B6B>Couldn't use the local network. Check Settings ► Privacy ► Local Network ► Retro Hoops is on, then try again.</color>";
             }
             else if (_seat == 1 && HostList != null && Time.unscaledTime >= _nextList)
             {
@@ -294,7 +294,7 @@ namespace CallerRetroBall.UI
             _shown.AddRange(found);
             foreach (Transform child in HostList) Destroy(child.gameObject);
             _status.text = found.Count == 0 ? (_watch != null ? "Looking for games nearby…\nGames can be watched once both players are in."
-                                                              : "Looking for games nearby…\nOn your friend's phone: 2 PLAYER ▸ TWO PHONES ▸ HOST A GAME.")
+                                                              : "Looking for games nearby…\nOn your friend's phone: 2 PLAYER ► TWO PHONES ► HOST A GAME.")
                                             : (_joining ? "Joining…" : _watch != null ? "Tap a game to watch it:" : "Tap your friend's game to join:");
             for (int i = 0; i < found.Count; i++)
             {

@@ -65,7 +65,7 @@ namespace CallerRetroBall.Gameplay
         private readonly InputBuffer _buffer2 = new InputBuffer();
         private bool Versus => _request != null && _request.Mode == GameMode.Versus;
 
-        // Two-phone play (2 PLAYER ▸ TWO PHONES): lockstep with the other phone; null otherwise.
+        // Two-phone play (2 PLAYER ► TWO PHONES): lockstep with the other phone; null otherwise.
         private Lockstep _link;
         private ILinkTransport _wire;
         private PlayerInput _linkCarry;
@@ -372,9 +372,10 @@ namespace CallerRetroBall.Gameplay
                 }
                 _hud.ShowIntro(court != null ? court.displayName : "THE COURT", setup.TeamA, setup.TeamB, startersA, startersB);
             }
-            // Mic Tally on the call (Settings ▸ COMMENTARY), except in practice and the tutorial.
+            // Mic Tally on the call (Settings ► COMMENTARY), except in practice and the tutorial.
             if ((settings == null || settings.commentary) && _request.Mode != GameMode.Practice && _request.Mode != GameMode.Tutorial)
                 _mic = new Commentary(setup.TeamA.nickname, setup.TeamB.nickname, _request.Seed);
+                _mic.StartFrom(setup.StartScoreA, setup.StartScoreB);
             _recorder = new ReplayRecorder(_match.Players.Length, ReplayRecorder.DefaultSeconds, rate);
             _rainbowBall = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.RainbowBall);
             _skyHigh = App.Career != null && Secrets.IsOn(App.Career.secrets, Secrets.SkyHigh);
@@ -407,7 +408,7 @@ namespace CallerRetroBall.Gameplay
             StartCoach();
             SyncViews(0f, snapCamera: true);
             if (!Demo) Sfx(SfxId.TipOff, 0.7f);
-            _hud.Toast(_tutorial != null ? "HOW TO PLAY"
+            if (!(Demo && StoreShots.Active)) _hud.Toast(_tutorial != null ? "HOW TO PLAY"
                      : _daily != null ? "DAILY: " + _daily.Describe().ToUpperInvariant()
                      : Versus ? "PLAYER 1  VS  PLAYER 2"
                      : FullCourtGame ? "FULL COURT  5 ON 5"
@@ -1746,7 +1747,7 @@ namespace CallerRetroBall.Gameplay
                 return time + _practice.ResultText().ToUpperInvariant();
             }
             // On a computer, show the keyboard controls for the first seconds of a match.
-            if (Demo) return "DEMO PLAY  ·  TAP OR PRESS ANY BUTTON";
+            if (Demo) return StoreShots.Active ? "" : "DEMO PLAY  ·  TAP OR PRESS ANY BUTTON";
             if (_padMode && !_keyMode && _match.Time < 8f)
                 return "STICK MOVE · A SHOOT (HOLD) · X PASS · RB DUNK · LB LAYUP · B STEAL · Y CALL";
             if ((_keyMode || !Application.isMobilePlatform || Core.DeviceInfo.IsMac) && _match.Time < 8f)
@@ -1983,6 +1984,16 @@ namespace CallerRetroBall.Gameplay
                     note = (rep >= 0 ? "+" : "") + rep + " REP  ·  " + Street.RepNames[Street.RepLevel(App.Career.street.rep)]
                            + (ankles > 0 ? "  ·  " + ankles + " ANKLE BREAKER" + (ankles == 1 ? "" : "S") : "");
                 }
+                var clutch = _request.Mode == GameMode.Clutch ? Logic.Clutch.FromContext(_request.ContextId) : null;
+                if (rewarded && clutch != null)
+                {
+                    var cd = App.Career.clutch ?? (App.Career.clutch = new ClutchSaveData());
+                    var outcome = Logic.Clutch.ApplyResult(cd, clutch, summary, App.Career, out int stars, out int newStars);
+                    App.OpenClutchOnMenu = true;
+                    title = outcome == ClutchOutcome.Won ? (stars == Logic.Clutch.StarsPerScenario ? "ICE COLD" : "CLUTCH") : "NOT THIS TIME";
+                    note = ClutchNote(clutch, summary, stars, newStars);
+                    if (outcome == ClutchOutcome.Won && newStars > 0) Sfx(SfxId.Fanfare);
+                }
                 var storyChapter = StoryMode.FromContext(_request.ContextId);
                 if (rewarded && storyChapter != null)
                 {
@@ -2064,11 +2075,11 @@ namespace CallerRetroBall.Gameplay
                     }
                 }
                 if (App.Career.rise.recruitable.Count > recruitsBefore)
-                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "New players can join your crew (Rise hub ▸ YOUR CREW).";
+                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "New players can join your crew (Rise hub ► YOUR CREW).";
                 var hints = Secrets.RevealHints(App.Career);
                 if (hints.Count > 0)
                 {
-                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "SECRET CODE HINT FOUND! (Locker Room ▸ TROPHY)";
+                    note = (string.IsNullOrEmpty(note) ? "" : note + "\n") + "SECRET CODE HINT FOUND! (Locker Room ► TROPHY)";
                     Sfx(SfxId.Coin, 0.8f);
                 }
                 var badges = Badges.TakeNew(App.Career);
@@ -2101,6 +2112,18 @@ namespace CallerRetroBall.Gameplay
             _hud.HasPlayOfTheGame = _recorder.BestPlay != null;
             bool run = IsRun;
             _hud.ShowPostGame(title, summary, grant, rewarded, note, run ? "CONTINUE" : null, !run);
+        }
+
+        /// <summary>Phase 37: the CLUTCH result line: stars, then which goals were met.</summary>
+        private static string ClutchNote(ClutchScenario s, MatchSummary m, int stars, int newStars)
+        {
+            string Mark(bool ok) => ok ? "<color=#06D6A0>√</color> " : "<color=#8D99AE>×</color> ";
+            bool won = m.HumanWon;
+            string line = "<color=#FFD166>" + new string('●', stars) + "</color><color=#5C6378>" + new string('○', Logic.Clutch.StarsPerScenario - stars) + "</color>"
+                          + (newStars > 0 ? "  +" + newStars * Logic.Clutch.SpPerNewStar + " SP" : "");
+            line += "\n" + Mark(won) + Loc.T("Win") + "   " + Mark(won && Logic.Clutch.Met(s, s.Goal, s.GoalValue, m)) + Loc.T(Logic.Clutch.GoalText(s.Goal, s.GoalValue))
+                    + "   " + Mark(won && Logic.Clutch.Met(s, s.Bonus, s.BonusValue, m)) + Loc.T(Logic.Clutch.GoalText(s.Bonus, s.BonusValue));
+            return line;
         }
 
         private static string OutcomeText(RiseOutcome o)
@@ -2819,7 +2842,7 @@ namespace CallerRetroBall.Gameplay
             SceneFlow.GoTo(SceneNames.Game);
         }
 
-        /// <summary>SAVE GAME TAPE: the whole game (setup + both inputs every step) goes to 2 PLAYER ▸ GAME TAPES.</summary>
+        /// <summary>SAVE GAME TAPE: the whole game (setup + both inputs every step) goes to 2 PLAYER ► GAME TAPES.</summary>
         private void SaveTape()
         {
             if (_tapeSaved) { _hud.Toast("ALREADY SAVED", 1.2f); return; }
@@ -2830,7 +2853,7 @@ namespace CallerRetroBall.Gameplay
             var tape = Tapes.From(setup, a, b, Tapes.TitleFor(setup, _match.Setup.TeamA.FullName, _match.Setup.TeamB.FullName),
                                   System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(), _match.Score[0], _match.Score[1]);
             _tapeSaved = TapeStore.Save(tape);
-            _hud.Toast(_tapeSaved ? "TAPE SAVED: 2 PLAYER ▸ GAME TAPES" : "COULDN'T SAVE THE TAPE", 2f);
+            _hud.Toast(_tapeSaved ? "TAPE SAVED: 2 PLAYER ► GAME TAPES" : "COULDN'T SAVE THE TAPE", 2f);
         }
 
         /// <summary>Couch Cup on two phones: the host records the game in its bracket; both say what's next.</summary>

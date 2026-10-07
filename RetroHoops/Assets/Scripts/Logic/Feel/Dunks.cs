@@ -6,7 +6,7 @@ namespace CallerRetroBall.Logic
 
     /// <summary>
     /// Dunk packages: how a dunk looks (pose, hang time, callout). Presentation only; the simulation
-    /// decides make/miss. Your equipped package (Locker Room ▸ DUNK PACKAGE) is used for your dunks;
+    /// decides make/miss. Your equipped package (Locker Room ► DUNK PACKAGE) is used for your dunks;
     /// the AI picks by finishing rating (big finishers throw down the fancy ones).
     /// </summary>
     public static class Dunks

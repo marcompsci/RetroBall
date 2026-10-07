@@ -12,7 +12,7 @@ namespace CallerRetroBall.Logic
     }
 
     /// <summary>
-    /// iCloud save sync (Settings ▸ iCloud Sync), engine-free and testable. The career is stored as one
+    /// iCloud save sync (Settings ► iCloud Sync), engine-free and testable. The career is stored as one
     /// value in the player's own iCloud key-value storage, wrapped with a little metadata. Conflict rule:
     /// the career that's further along wins (more games played, then more story, badges and codes), so a
     /// device that was offline can't roll your progress back. This device's settings always stay.

@@ -27,7 +27,7 @@ namespace CallerRetroBall.Logic
         public bool leftHanded;
         /// <summary>Action buttons 25% bigger.</summary>
         public bool largeButtons;
-        /// <summary>Settings ▸ CUSTOMIZE CONTROLS: button positions and sizes (<see cref="ControlLayout"/>); empty = default.</summary>
+        /// <summary>Settings ► CUSTOMIZE CONTROLS: button positions and sizes (<see cref="ControlLayout"/>); empty = default.</summary>
         public string controlLayout = "";
         /// <summary>Play every mode in landscape, not only Full Court (2 Player and the demo stay portrait).</summary>
         public bool landscapeAll;
@@ -55,7 +55,7 @@ namespace CallerRetroBall.Logic
         public bool captions;
         /// <summary>Keep the career in sync through the player's own iCloud (iOS key-value storage).</summary>
         public bool icloudSync = true;
-        /// <summary>Phase 31: menus grow with the iPhone's text size (Settings ▸ Accessibility ▸ Larger Text), up to the largest UI scale.</summary>
+        /// <summary>Phase 31: menus grow with the iPhone's text size (Settings ► Accessibility ► Larger Text), up to the largest UI scale.</summary>
         public bool followSystemText = true;
         /// <summary>Phase 34: difficulty per kind of game ("GROUP=difficulty.id", see ModeDifficulty).</summary>
         public System.Collections.Generic.List<string> modeDifficulty = new System.Collections.Generic.List<string>();
@@ -64,7 +64,7 @@ namespace CallerRetroBall.Logic
         public int musicGame = -1;
     }
 
-    /// <summary>Your own player (Locker Room ▸ CREATE). Until created, the game uses Rook.</summary>
+    /// <summary>Your own player (Locker Room ► CREATE). Until created, the game uses Rook.</summary>
     [Serializable]
     public class CustomPlayerData
     {
@@ -267,6 +267,8 @@ namespace CallerRetroBall.Logic
         public LegacySaveData legacy = new LegacySaveData();
         /// <summary>The Park: street rep and who you've beaten.</summary>
         public StreetSaveData street = new StreetSaveData();
+        /// <summary>Phase 37 CLUTCH scenarios: best stars.</summary>
+        public ClutchSaveData clutch = new ClutchSaveData();
         /// <summary>Tournament Builder: the tournament in progress and titles.</summary>
         public CustomCupSaveData customCup = new CustomCupSaveData();
         /// <summary>This week's Weekly Challenges progress.</summary>

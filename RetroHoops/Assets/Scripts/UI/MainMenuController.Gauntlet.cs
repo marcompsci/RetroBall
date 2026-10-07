@@ -4,7 +4,7 @@ using TMPro;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>EVENTS ▸ SKILLS GAUNTLET (Phase 34): today's four drills, your run so far, and your bests.</summary>
+    /// <summary>EVENTS ► SKILLS GAUNTLET (Phase 34): today's four drills, your run so far, and your bests.</summary>
     public sealed partial class MainMenuController
     {
         private void ShowGauntlet()

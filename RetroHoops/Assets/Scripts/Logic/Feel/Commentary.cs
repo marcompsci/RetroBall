@@ -7,7 +7,7 @@ namespace CallerRetroBall.Logic
     /// MIC TALLY, the voice of the blacktop: short text commentary on the big moments (runs, lead
     /// changes, dunks, alley-oops, blocks, broken ankles, game point, buzzer beaters). At most one
     /// line every few seconds, never the same line twice in a row, and quiet during routine play.
-    /// Settings ▸ COMMENTARY turns it off. All lines are original.
+    /// Settings ► COMMENTARY turns it off. All lines are original.
     /// </summary>
     public sealed class Commentary
     {
@@ -24,6 +24,9 @@ namespace CallerRetroBall.Logic
         private int _leader = -1;
         private bool _gamePointCalled;
         private readonly Dictionary<string, int> _used = new Dictionary<string, int>();
+
+        /// <summary>Phase 37: a game that starts from a set score (CLUTCH): the team ahead is the one a lead change would overtake.</summary>
+        public void StartFrom(int scoreA, int scoreB) => _leader = scoreA == scoreB ? -1 : (scoreA > scoreB ? 0 : 1);
 
         public Commentary(string teamA, string teamB, uint seed)
         {

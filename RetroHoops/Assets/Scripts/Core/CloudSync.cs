@@ -7,7 +7,7 @@ using UnityEngine;
 namespace CallerRetroBall.Core
 {
     /// <summary>
-    /// iCloud save sync (Settings ▸ ICLOUD SYNC, on by default). The career goes to the player's own
+    /// iCloud save sync (Settings ► ICLOUD SYNC, on by default). The career goes to the player's own
     /// iCloud key-value storage a few seconds after each save, unless iCloud already holds a career
     /// that's further along (then the main menu asks which one to keep, so nothing is overwritten
     /// silently). A fresh install picks up the iCloud career at launch. Editor and other platforms: no-op.
@@ -106,7 +106,7 @@ namespace CallerRetroBall.Core
             if (Enabled && SignedIn()) Set(CloudSave.Wrap(App.Career, System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(), SystemInfo.deviceModel));
         }
 
-        /// <summary>Settings ▸ Reset: the iCloud copy goes too (otherwise it would come back).</summary>
+        /// <summary>Settings ► Reset: the iCloud copy goes too (otherwise it would come back).</summary>
         public static void Erase()
         {
             CloudAhead = false;

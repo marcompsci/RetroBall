@@ -3,7 +3,7 @@
 ## Vision
 A 90-second-to-fun, one-more-game retro arcade 3v3 half-court basketball game for iPhone.
 The player is a *caller*: they call plays, call their shot, read the defense, and build a crew's legacy
-from street courts to the league championship. Fully offline, no ads, no purchases.
+from street courts to the league championship. Fully offline, no ads; the only purchase is the optional Live subscription (Phase 33).
 
 ## Core loop
 Pick a matchup → play a fast 3v3 game (first to 21 or 2:00) → earn Signal Points and Fans →

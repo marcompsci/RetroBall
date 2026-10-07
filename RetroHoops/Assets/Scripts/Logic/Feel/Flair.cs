@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9, /** Season 7 (pass only). */ VictoryLap = 10, /** Season 8 (pass only). */ LanternRelease = 11 }
+    public enum CelebrationKind { FistPump = 0, CallIt = 1, ShimmyStep = 2, RaiseTheRoof = 3, PixelWave = 4, TakeABow = 5, ShoulderBrush = 6, PaperPlane = 7, ChestThump = 8, /** Season 6 (pass only). */ Spotlight = 9, /** Season 7 (pass only). */ VictoryLap = 10, /** Season 8 (pass only). */ LanternRelease = 11, /** Season 9 (pass only). */ SkateGlide = 12 }
 
     public enum DribbleMoveKind { Crossover = 0, HesiHop = 1, SpinCycle = 2, BehindTheBack = 3, DoubleCross = 4, StepBack = 5, RockerStep = 6, SnatchBack = 7 }
 
@@ -60,6 +60,7 @@ namespace CallerRetroBall.Logic
                 case "cosmetic.pass.celebration.spotlight": return CelebrationKind.Spotlight;
                 case "cosmetic.pass.celebration.victory_lap": return CelebrationKind.VictoryLap;
                 case "cosmetic.pass.celebration.lantern_release": return CelebrationKind.LanternRelease;
+                case "cosmetic.pass.celebration.skate_glide": return CelebrationKind.SkateGlide;
                 default: return CelebrationKind.FistPump;
             }
         }
@@ -126,6 +127,12 @@ namespace CallerRetroBall.Logic
                     p.Lift = t < 0.2f ? -1 : (t < 0.45f ? Hop(t, 0.2f, 0.25f, 2) : 0);
                     p.ArmsUp = t >= 0.2f && t < 0.5f;
                     p.OffsetX = t >= 0.2f && t < 0.5f ? 1 : 0;
+                    break;
+                case CelebrationKind.SkateGlide:
+                    // Push off twice, then glide low on one skate with an arm out, and pop up with both arms high.
+                    if (t < 0.35f) { p.Lift = ((int)(t / 0.0875f) % 2 == 0) ? 0 : 1; }
+                    else if (t < 0.75f) p.Lift = -1;
+                    else { p.ArmsUp = true; p.Lift = 1; }
                     break;
                 case CelebrationKind.LanternRelease:
                     // Crouch and cup a lantern low, rise slowly lifting it, let it go with arms up, then watch it float away.

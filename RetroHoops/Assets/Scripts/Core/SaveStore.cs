@@ -75,7 +75,7 @@ namespace CallerRetroBall.Core
             }
         }
 
-        /// <summary>Deletes the save (Settings ▸ Reset). The next load starts a fresh career.</summary>
+        /// <summary>Deletes the save (Settings ► Reset). The next load starts a fresh career.</summary>
         public static void Delete()
         {
             try

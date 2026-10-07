@@ -11,7 +11,7 @@ using UnityEngine.UI;
 namespace CallerRetroBall.UI
 {
     /// <summary>
-    /// Locker Room ▸ KIT: design your team's Home, Away and Alt kits — jersey cut, collar, stripes, chest,
+    /// Locker Room ► KIT: design your team's Home, Away and Alt kits — jersey cut, collar, stripes, chest,
     /// pattern; shorts length, stripe and waistband; shoe height, sole, laces and stripe; any colour from
     /// the 64-colour palette or RGB sliders. A live preview loops your player through idle, run and jump
     /// poses. RANDOMIZE, UNDO, presets from your shop items, share codes / QR and a trading card.

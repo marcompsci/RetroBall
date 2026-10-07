@@ -2,7 +2,7 @@ using System;
 
 namespace CallerRetroBall.Logic
 {
-    /// <summary>Settings ▸ COLOR FILTER: which colour-vision deficiency the game's colour cues are tuned for.</summary>
+    /// <summary>Settings ► COLOR FILTER: which colour-vision deficiency the game's colour cues are tuned for.</summary>
     public enum ColorFilter
     {
         Off = 0,

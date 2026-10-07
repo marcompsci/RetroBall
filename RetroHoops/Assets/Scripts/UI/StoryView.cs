@@ -69,7 +69,7 @@ namespace CallerRetroBall.UI
             _text.rectTransform.offsetMax = new Vector2(-36f, -100f);
             _text.characterSpacing = 1f;
 
-            var hint = UiKit.Label(box.transform, "TAP ▶", 30f, Theme.Muted, TextAlignmentOptions.BottomRight, true, "Hint");
+            var hint = UiKit.Label(box.transform, "TAP ►", 30f, Theme.Muted, TextAlignmentOptions.BottomRight, true, "Hint");
             UiKit.Stretch(hint.rectTransform, 30f);
 
             var skip = UiKit.Button(safe, "SKIP", Finish, ButtonStyle.Ghost, 90f, 34f);
@@ -123,7 +123,7 @@ namespace CallerRetroBall.UI
             var l = _beat.Lines[_line];
             _name.text = SpeakerName(l.Speaker);
             var cast = StoryMode.Character(l.Speaker);
-            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6 || l.Speaker == StorySpeaker.Rival7 || l.Speaker == StorySpeaker.Rival8
+            bool rival = l.Speaker == StorySpeaker.Rival || l.Speaker == StorySpeaker.Rival2 || l.Speaker == StorySpeaker.Rival3 || l.Speaker == StorySpeaker.Rival4 || l.Speaker == StorySpeaker.Rival5 || l.Speaker == StorySpeaker.Rival6 || l.Speaker == StorySpeaker.Rival7 || l.Speaker == StorySpeaker.Rival8 || l.Speaker == StorySpeaker.Rival9
                          || (cast != null && cast.Right);
             _name.color = cast != null ? ToColor(RgbColor.FromHex(cast.Color))
                         : l.Speaker == StorySpeaker.Rival ? Theme.Cyan
@@ -134,6 +134,7 @@ namespace CallerRetroBall.UI
                         : l.Speaker == StorySpeaker.Rival6 ? (Color)new Color32(0xFF, 0xD6, 0x0A, 255)
                         : l.Speaker == StorySpeaker.Rival7 ? (Color)new Color32(0xFB, 0x56, 0x07, 255)
                         : l.Speaker == StorySpeaker.Rival8 ? (Color)new Color32(0xFC, 0xBF, 0x49, 255)
+                        : l.Speaker == StorySpeaker.Rival9 ? (Color)new Color32(0xF7, 0x25, 0x85, 255)
                         : (l.Speaker == StorySpeaker.You ? Theme.Pink : Theme.Gold);
             _text.text = l.Text;
             _text.maxVisibleCharacters = 0;
@@ -162,6 +163,7 @@ namespace CallerRetroBall.UI
                 case StorySpeaker.Rival6: return Story.Rival6Name;
                 case StorySpeaker.Rival7: return Story.Rival7Name;
                 case StorySpeaker.Rival8: return Story.Rival8Name;
+                case StorySpeaker.Rival9: return Story.Rival9Name;
                 default: return (App.Career?.nickname ?? "ROOK").ToUpperInvariant();
             }
         }
@@ -196,6 +198,13 @@ namespace CallerRetroBall.UI
                     jersey = rival.primary;
                     trim = rival.secondary;
                     accent = rival.accent;
+                    break;
+                case StorySpeaker.Rival9:
+                    var royals = c.Team(DefaultContent.Rival9CrewId);
+                    look = c.Player(DefaultContent.Rival9LeaderId)?.appearance ?? new AppearanceDef(2, 1, 3, BodyType.Slim, 1);
+                    jersey = royals.primary;
+                    trim = royals.secondary;
+                    accent = royals.accent;
                     break;
                 case StorySpeaker.Rival8:
                     var lanterns = c.Team(DefaultContent.Rival8CrewId);

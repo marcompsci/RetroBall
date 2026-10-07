@@ -27,10 +27,11 @@ namespace CallerRetroBall.Core
         private float _nextCheck;
         private bool _saving;
         private readonly FrameStats _stats = new FrameStats(60);
+        private readonly FrameBudget _budget = new FrameBudget();
         private GUIStyle _style;
 
         /// <summary>True while the game is saving power (Low Power Mode or a hot phone).</summary>
-        public static bool SavingPower => _instance != null && _instance._saving;
+        public static bool SavingPower => _instance != null && (_instance._saving || _instance._budget.Struggling);
         public static FrameStats Stats => _instance != null ? _instance._stats : null;
 
         /// <summary>Set by the game scene while a match (or replay, or the attract demo) is moving: draw every frame.</summary>
@@ -86,6 +87,11 @@ namespace CallerRetroBall.Core
             float now = Time.unscaledTime;
             if (AnyInput() || SceneFlow.IsTransitioning) _lastInput = now;
             int target = Application.targetFrameRate > 0 ? Application.targetFrameRate : 60;
+            if (_budget.Observe(Time.unscaledDeltaTime, target, Gameplay))
+            {
+                App.ApplyFrameRate();
+                Debug.Log("[Retro Hoops] " + (_budget.Struggling ? "Can't hold 120 fps here: playing at a steady 60." : "Trying 120 fps again."));
+            }
             int interval = PowerPolicy.RenderInterval(target, Gameplay, now - _lastInput, _saving);
             if (OnDemandRendering.renderFrameInterval != interval) OnDemandRendering.renderFrameInterval = interval;
             if (now < _nextCheck) return;
@@ -109,7 +115,7 @@ namespace CallerRetroBall.Core
             if (_style == null) _style = new GUIStyle(GUI.skin.label) { fontSize = Mathf.Max(18, Screen.height / 60) };
             _style.normal.textColor = _stats.Fps >= 55 ? Color.green : Color.yellow;
             GUI.Label(new Rect(12, Screen.height - Screen.safeArea.yMax + 12, 700, 60),
-                      _stats.Fps + " fps  avg " + _stats.AverageMs.ToString("0.0") + " ms  worst " + _stats.WorstMs.ToString("0.0") + " ms" + (_saving ? "  (saving power)" : ""), _style);
+                      _stats.Fps + " fps  avg " + _stats.AverageMs.ToString("0.0") + " ms  worst " + _stats.WorstMs.ToString("0.0") + " ms" + (_saving ? "  (saving power)" : _budget.Struggling ? "  (steady 60)" : ""), _style);
         }
 
         private void OnDestroy()

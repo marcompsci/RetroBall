@@ -16,7 +16,7 @@ namespace CallerRetroBall.Logic
                 if (ch == '<') { inTag = true; continue; }
                 if (ch == '>' && inTag) { inTag = false; continue; }
                 if (inTag) continue;
-                if (ch == '\n' || ch == '·' || ch == '▸' || ch == '•') { sb.Append(", "); continue; }
+                if (ch == '\n' || ch == '·' || ch == '►' || ch == '•') { sb.Append(", "); continue; }
                 sb.Append(ch);
             }
             // Collapse runs of spaces and stray commas.

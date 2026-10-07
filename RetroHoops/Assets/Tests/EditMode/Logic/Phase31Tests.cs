@@ -314,7 +314,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(_c.Player(DefaultContent.Rival6LeaderId));
             Assert.IsTrue(ContentValidator.Validate(_c).IsValid, ContentValidator.Validate(_c).ToString());
             Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(6));
-            Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(14), "eight rivals take turns since Phase 36");
+            Assert.AreEqual(DefaultContent.Rival6CrewId, RivalEngine.RivalFor(15), "nine rivals take turns since Phase 37");
 
             var d = Career.New(_c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);
@@ -433,7 +433,7 @@ namespace CallerRetroBall.Tests
         {
             Assert.AreEqual("GAME TAPES, WATCH AGAIN, SEND", ScreenReaderText.Plain("GAME TAPES  ·  WATCH AGAIN, SEND"));
             Assert.AreEqual("PLAYER OF THE GAME NOVA 22 PTS", ScreenReaderText.Plain("PLAYER OF THE GAME  <color=#FFD166>NOVA</color>  22 PTS"));
-            Assert.AreEqual("2 PLAYER, TWO PHONES", ScreenReaderText.Plain("2 PLAYER ▸ TWO PHONES"));
+            Assert.AreEqual("2 PLAYER, TWO PHONES", ScreenReaderText.Plain("2 PLAYER ► TWO PHONES"));
             Assert.AreEqual("Line one, line two", ScreenReaderText.Plain("Line one\nline two"));
             Assert.AreEqual("", ScreenReaderText.Plain(null));
             Assert.AreEqual("BACK", ScreenReaderText.FromName("Button BACK"));

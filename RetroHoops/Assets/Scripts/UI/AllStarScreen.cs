@@ -186,8 +186,8 @@ namespace CallerRetroBall.UI
                 Finish(col, footer, s);
                 return;
             }
-            Text(col, (s.round == 1 ? Loc.T("ROUND ONE") : Loc.T("THE FINAL")) + "\n" + Loc.T("Score") + " " + AllStar.Target(s) + " " + Loc.T("to") +
-                 (s.round == 1 ? " " + Loc.T("make the final.") : " " + Loc.T("win it.")), 34f, Theme.Gold, 110f, true);
+            Text(col, (s.round == 1 ? Loc.T("ROUND ONE") : Loc.T("THE FINAL")) + "\n" + Loc.T("Score") + " " + AllStar.Target(s) + " "
+                 + (s.round == 1 ? Loc.T("to make the final.") : Loc.T("to win it.")), 34f, Theme.Gold, 110f, true);
             Text(col, "60 seconds of threes. Shots from the gold spot are money balls: 2 points.", 28f, Theme.Muted, 80f);
             UiKit.Button(footer, "BACK", ShowHub, ButtonStyle.Ghost, 120f, 44f);
             UiKit.Button(footer, "SHOOT", () =>

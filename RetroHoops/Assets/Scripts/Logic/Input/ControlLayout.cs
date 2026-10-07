@@ -27,7 +27,7 @@ namespace CallerRetroBall.Logic
     /// <summary>
     /// The touch button layout: a thumb arc in the lower-right corner (SHOOT biggest on the outside,
     /// PASS beside it, DUNK above, LAYUP on the diagonal, CALL further in), and the player's own
-    /// arrangement from Settings ▸ CUSTOMIZE CONTROLS, saved as a short string.
+    /// arrangement from Settings ► CUSTOMIZE CONTROLS, saved as a short string.
     /// </summary>
     public static class ControlLayout
     {

@@ -769,6 +769,35 @@
   - `RetroStore.swift`: the Swift 6 warning about NSLock in async code is fixed (synchronous helpers). Not compiled here, since there's no Swift toolchain in the cloud.
   - The Build Check now ignores Xcode projects and apps left over from earlier runs and stops when Unity reports a failed build.
 
+### Phase 37: CLUTCH scenarios, Season 9, device-ready polish, Spanish everywhere
+
+- **CLUTCH** (PLAY ► CLUTCH, `Logic/Progression/Clutch.cs`): 18 late-game situations in three chapters (CRUNCH TIME, ICE IN THE VEINS, LATE-NIGHT LEGENDS).
+  - You take over a Caller League team with the score and clock already set, e.g. down two with 20 seconds left, or up one with their ball. Chapter 1 is half court; chapters 2 and 3 are mostly Full Court.
+  - A win earns one star. The scenario's goal (win by N, hold them to N, score N yourself, threes, assists, steals, blocks, no turnovers) earns the second, and its bonus the third.
+  - Each new star pays 25 SP. Stars open chapter 2 (8 stars) and chapter 3 (20 stars).
+  - Badges: CLUTCH GENE (win every scenario) and ICE IN THE VEINS (all 54 stars).
+  - `MatchRequest`/`MatchSetup` gained `StartScoreA/B`, `StartClock` and `StartWithBall`. Every other mode keeps its defaults, and the simulation stays deterministic.
+  - CLUTCH games don't set game records or count toward Big Wins weeklies, since they start from a set score. Base rewards are a quarter of a normal game's.
+  - The commentator knows who was ahead at the start, so a comeback's lead change gets called.
+- **Season 9: the Roller Royals.**
+  - A roller-rink crew that presses full court; leader Skye Varo.
+  - Skate logo, story scenes in English and Spanish, and badges LAST SKATE and NINE FOR NINE.
+  - Starlight Rink and Skate Bowl courts, and a Rink Violet store jersey.
+  - A Hoops Pass set (Rink, Quad Glide, Mirror Ball, pass-only **Skate Glide** celebration) from the pass season of 22 Feb 2027.
+  - A "win N CLUTCH scenarios" weekly goal from the week of 4 Jan 2027.
+  - Rivals rotate every nine seasons. As in Phase 36, a career already in season 9 or later sees its rival order shift.
+- **Device-ready polish** (from the first Simulator run with text):
+  - **Glyphs:** the TextMesh Pro font (LiberationSans) has no ▸ ✓ ✗ ✕ ▶, so those drew as empty boxes on the iPhone. They are now ► √ × throughout.
+  - **Text audit:** `tools/TextAudit/text_audit.py` checks every runtime string against the font's code points and lists literal UI text without Spanish. Both are now 0.
+  - **Footer:** the main-menu footer said "no purchases", but Live is a subscription (App Review 2.3.1). It now says "plays offline · no ads". LAUNCH_KIT and DESIGN were fixed too.
+  - **FrameBudget** (`Logic/Feel/Power.cs`): if a ProMotion phone can't hold 120 fps in play (a quarter of the frames over 1.5× budget across 4 s), the game drops to a steady 60. After a calm minute it tries 120 again, but only once per session.
+  - **App Store screenshots:**
+    - `tools/App Store Screenshots.command` launches the Simulator build once per shot with `RH_SCREENSHOT=<shot>`.
+    - `StoreShots` and the menu open that screen with no first-launch dialogs, attract demo or DEMO PLAY banner.
+    - Shots are saved for the 6.9" iPhone (and the 13" iPad if one is installed) with a 9:41 status bar.
+- **Spanish:** about 210 new entries cover every menu line the audit found, the CLUTCH and Season 9 text, and the VoiceOver court hint. That hint now also follows left-handed controls. Weekly goals are now translated too. Spanish is now complete for literal UI text; lines built from pieces are spot-checked.
+- **Tests:** 770 logic tests pass (19 new in `Phase37FeatureTests.cs`), and there are new PlayMode smoke tests (`Phase37SmokeTests.cs`: a CLUTCH game, a store-shot launch). UnityCheck is clean for both the editor and iOS.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

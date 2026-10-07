@@ -19,7 +19,7 @@ namespace CallerRetroBall.UI
             var column = OpenOverlay("SUMMER STORY", out var footer);
             UiKit.Size(UiKit.Label(column, "One summer, eight games, one league title. You, Nova, Big Sal, Mic Tally on the mic, and Kojo Stride's Velvet Hour standing in the way.",
                                    28f, Theme.Cream), 120f);
-            UiKit.Size(UiKit.Label(column, s.finished ? "SUNBURST CHAMPIONS ✓" : "CHAPTERS CLEARED: " + s.cleared + "/" + StoryMode.Chapters,
+            UiKit.Size(UiKit.Label(column, s.finished ? "SUNBURST CHAMPIONS √" : "CHAPTERS CLEARED: " + s.cleared + "/" + StoryMode.Chapters,
                                    32f, Theme.Gold, TextAlignmentOptions.Center, true), 56f);
 
             foreach (var ch in StoryMode.All)
@@ -116,7 +116,7 @@ namespace CallerRetroBall.UI
                 UiKit.Size(teamButton, 90f, 170f);
                 if (_couchNames.Count > CouchCup.MinPlayers)
                 {
-                    var remove = UiKit.Button(row, "✕", () =>
+                    var remove = UiKit.Button(row, "×", () =>
                     {
                         _couchNames.RemoveAt(index);
                         _couchTeams.RemoveAt(index);

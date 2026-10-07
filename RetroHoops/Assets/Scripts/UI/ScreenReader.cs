@@ -117,7 +117,10 @@ namespace CallerRetroBall.UI
             if (playing)
             {
                 // The court: touches go straight to the game so the stick and buttons work.
-                var court = h.AddNode("Court. Stick on the left, shoot, pass and defense on the right.", null);
+                // Phase 37: in Spanish too, and the right way round for left-handed controls.
+                bool lefty = Core.App.Career != null && Core.App.Career.settings.leftHanded;
+                var court = h.AddNode(Logic.Loc.T(lefty ? "Court. Stick on the right, shoot, pass and defense on the left."
+                                                        : "Court. Stick on the left, shoot, pass and defense on the right."), null);
                 court.frameGetter = () => new Rect(0f, 0f, Screen.width, Screen.height);
                 court.allowsDirectInteraction = true;
                 if (first == null) first = court;

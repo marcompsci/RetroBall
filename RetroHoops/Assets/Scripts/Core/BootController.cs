@@ -37,6 +37,8 @@ namespace CallerRetroBall.Core
             yield return null;
             float initStart = Time.realtimeSinceStartup;
             App.EnsureInitialized();
+            // Phase 37: an App Store screenshot launch (tools/App Store Screenshots.command) names its screen here.
+            StoreShots.Current = StoreShots.Parse(System.Environment.GetEnvironmentVariable(StoreShots.Variable));
             UiKit.CheckTextMeshProReady();
             // Start listening to the App Store early (renewals and purchases from other devices arrive any time).
             LiveStore.EnsureStarted();

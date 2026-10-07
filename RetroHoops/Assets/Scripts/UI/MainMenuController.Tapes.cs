@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace CallerRetroBall.UI
 {
-    /// <summary>2 PLAYER ▸ GAME TAPES: watch saved two-phone, Live and watched games again, or send one to a friend nearby.</summary>
+    /// <summary>2 PLAYER ► GAME TAPES: watch saved two-phone, Live and watched games again, or send one to a friend nearby.</summary>
     public sealed partial class MainMenuController
     {
         private void ShowTapes()
@@ -46,7 +46,7 @@ namespace CallerRetroBall.UI
         {
             var column = OpenOverlay("SEND A TAPE", out var footer);
             UiKit.Size(UiKit.Label(column, Tapes.Line(tape), 32f, Theme.Gold, TextAlignmentOptions.Center, true), 70f);
-            UiKit.Size(UiKit.Label(column, "On your friend's phone: 2 PLAYER ▸ GAME TAPES ▸ RECEIVE A TAPE, then tap this phone's name.", 28f, Theme.Cream, TextAlignmentOptions.Center), 120f);
+            UiKit.Size(UiKit.Label(column, "On your friend's phone: 2 PLAYER ► GAME TAPES ► RECEIVE A TAPE, then tap this phone's name.", 28f, Theme.Cream, TextAlignmentOptions.Center), 120f);
             var status = UiKit.Label(column, "Waiting for your friend…", 32f, Theme.Muted, TextAlignmentOptions.Center);
             UiKit.Size(status, 120f);
             var link = NearbyLink.Start(true, LinkName());
@@ -124,7 +124,7 @@ namespace CallerRetroBall.UI
             }
             else if (_link.State == LinkState.Lost)
             {
-                _status.text = "<color=#FF6B6B>Couldn't use the local network. Check Settings ▸ Privacy ▸ Local Network ▸ Retro Hoops, then try again.</color>";
+                _status.text = "<color=#FF6B6B>Couldn't use the local network. Check Settings ► Privacy ► Local Network ► Retro Hoops, then try again.</color>";
             }
             else if (_list != null && Time.unscaledTime >= _nextList)
             {
@@ -136,7 +136,7 @@ namespace CallerRetroBall.UI
                 _shown.Clear();
                 _shown.AddRange(found);
                 foreach (Transform child in _list) Destroy(child.gameObject);
-                _status.text = found.Count == 0 ? "Looking for phones nearby…\nOn your friend's phone: GAME TAPES ▸ SEND." : (_joining ? "Connecting…" : "Tap your friend's phone:");
+                _status.text = found.Count == 0 ? "Looking for phones nearby…\nOn your friend's phone: GAME TAPES ► SEND." : (_joining ? "Connecting…" : "Tap your friend's phone:");
                 for (int i = 0; i < found.Count; i++)
                 {
                     int index = i;

@@ -77,8 +77,12 @@ namespace CallerRetroBall.UI
 
             BuildLogoStrip();
 
-            var footer = UiKit.Label(Body, "v" + App.Version + "  ·  offline  ·  no ads  ·  no purchases", 28f, Theme.Muted);
+            // Phase 37: LIVE is an optional subscription, so the footer no longer says "no purchases" (App Review 2.3.1).
+            var footer = UiKit.Label(Body, "v" + App.Version + "  ·  " + Loc.T("plays offline") + "  ·  " + Loc.T("no ads"), 28f, Theme.Muted);
             UiKit.Band(footer.rectTransform, 0.005f, 0.045f, 24f);
+
+            // Phase 37: an App Store screenshot launch opens its screen and skips the first-launch dialogs.
+            if (RunStoreShot()) return;
 
             if (App.OpenClassicOnMenu)
             {
@@ -124,6 +128,11 @@ namespace CallerRetroBall.UI
             {
                 App.OpenGauntletOnMenu = false;
                 ShowGauntlet();
+            }
+            else if (App.OpenClutchOnMenu)
+            {
+                App.OpenClutchOnMenu = false;
+                ShowClutch();
             }
             else if (App.OpenParkOnMenu)
             {
@@ -213,7 +222,7 @@ namespace CallerRetroBall.UI
 
             if (AnyInput()) _idleSince = now;
             bool idle = _overlay == null && GameObject.Find("DialogCanvas") == null && !SceneFlow.IsTransitioning;
-            if (App.Career != null && App.Career.settings.attractMode && idle && now - _idleSince > AttractAfter)
+            if (App.Career != null && App.Career.settings.attractMode && !StoreShots.Active && idle && now - _idleSince > AttractAfter)
             {
                 _idleSince = now + 999f;
                 StartDemo();
@@ -421,6 +430,8 @@ namespace CallerRetroBall.UI
             Mode(column, "FULL COURT", "5 on 5, both baskets, 2s and 3s. Four minutes.", ShowFullCourt, ButtonStyle.Secondary);
             Mode(column, "THE PARK", "Call out street legends, 1-on-1 to 4-on-4. Break ankles. Rep: " + Street.RepNames[Street.RepLevel(career.street.rep)], ShowPark, ButtonStyle.Secondary);
             Mode(column, "1-ON-1", "Just you and their best. First to 11.", ShowOneOnOne, ButtonStyle.Secondary);
+            Mode(column, "CLUTCH", Loc.T("Late-game situations: the clock is running and the score is set. Stars:") + " "
+                 + Clutch.TotalStars(career.clutch) + " / " + Clutch.MaxStars, ShowClutch, ButtonStyle.Secondary);
             Mode(column, "HOLIDAY GAMES", "Christmas, Halloween, Easter and Fourth of July courts.", () => ShowHolidays(), ButtonStyle.Secondary);
 
             Section(column, "CAREERS");
@@ -444,7 +455,7 @@ namespace CallerRetroBall.UI
             var today = DailyChallenges.For(App.Today, App.Catalog);
             bool done = DailyChallenges.CompletedToday(career.daily, App.Today);
             int streak = DailyChallenges.LiveStreak(career.daily, App.Today);
-            Mode(column, "DAILY CHALLENGE", (done ? "Done for today ✓" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
+            Mode(column, "DAILY CHALLENGE", (done ? "Done for today √" : today.Describe()) + "  ·  streak " + streak, ShowDaily, ButtonStyle.Secondary);
             var g = career.gauntlet ?? (career.gauntlet = new GauntletSaveData());
             Mode(column, "SKILLS GAUNTLET", "4 drills back to back, new every day  ·  best " + g.best, ShowGauntlet, ButtonStyle.Secondary);
             career.weekly = career.weekly ?? new WeeklySaveData();

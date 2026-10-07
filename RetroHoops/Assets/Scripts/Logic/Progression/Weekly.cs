@@ -24,6 +24,8 @@ namespace CallerRetroBall.Logic
         FullCourtWins = 14,
         /** Season 8 goal (from week <see cref="Weekly.Season8Week"/>): corner threes made (from the shot chart). */
         CornerThrees = 15,
+        /** Season 9 goal (from week <see cref="Weekly.Season9Week"/>): CLUTCH scenarios won. */
+        ClutchWins = 16,
     }
 
     /// <summary>One of the week's three goals. Progress adds up over every counted game that week.</summary>
@@ -36,24 +38,50 @@ namespace CallerRetroBall.Logic
 
         public string Describe()
         {
+            int n = Target;
+            if (Loc.Language == Loc.Spanish)
+            {
+                // Phase 37: the weekly goals in Spanish.
+                switch (Goal)
+                {
+                    case WeeklyGoal.Wins: return "Gana " + n + " partidos";
+                    case WeeklyGoal.Points: return "Anota " + n + " puntos";
+                    case WeeklyGoal.Greens: return "Consigue " + n + " tiros perfectos";
+                    case WeeklyGoal.Steals: return "Consigue " + n + " robos";
+                    case WeeklyGoal.Assists: return "Da " + n + " asistencias";
+                    case WeeklyGoal.Rebounds: return "Captura " + n + " rebotes";
+                    case WeeklyGoal.Blocks: return "Pon " + n + " tapones";
+                    case WeeklyGoal.ParkWins: return "Gana " + n + " partidos en The Park";
+                    case WeeklyGoal.AnkleBreakers: return "Rompe " + n + " tobillos";
+                    case WeeklyGoal.BigWins: return "Gana " + n + " partidos por " + Weekly.BigWinMargin + "+";
+                    case WeeklyGoal.DeepShots: return "Mete " + n + " tiros lejanos";
+                    case WeeklyGoal.AlleyOops: return "Pasa o remata " + n + " alley-oops";
+                    case WeeklyGoal.HeatUps: return "Ponte al rojo vivo " + n + " veces";
+                    case WeeklyGoal.FullCourtWins: return "Gana " + n + " partidos de cancha completa";
+                    case WeeklyGoal.CornerThrees: return "Mete " + n + " tiros desde las esquinas";
+                    case WeeklyGoal.ClutchWins: return "Gana " + n + " escenarios CLUTCH";
+                    default: return "Juega " + n + " partidos";
+                }
+            }
             switch (Goal)
             {
-                case WeeklyGoal.Wins: return "Win " + Target + " games";
-                case WeeklyGoal.Points: return "Score " + Target + " points";
-                case WeeklyGoal.Greens: return "Hit " + Target + " GREEN releases";
-                case WeeklyGoal.Steals: return "Get " + Target + " steals";
-                case WeeklyGoal.Assists: return "Dish " + Target + " assists";
-                case WeeklyGoal.Rebounds: return "Grab " + Target + " rebounds";
-                case WeeklyGoal.Blocks: return "Block " + Target + " shots";
-                case WeeklyGoal.ParkWins: return "Win " + Target + " games at The Park";
-                case WeeklyGoal.AnkleBreakers: return "Break " + Target + " ankles";
-                case WeeklyGoal.BigWins: return "Win " + Target + " games by " + Weekly.BigWinMargin + "+";
-                case WeeklyGoal.DeepShots: return "Make " + Target + " deep shots";
-                case WeeklyGoal.AlleyOops: return "Throw or finish " + Target + " alley-oops";
-                case WeeklyGoal.HeatUps: return "Heat up " + Target + " times";
-                case WeeklyGoal.FullCourtWins: return "Win " + Target + " Full Court games";
-                case WeeklyGoal.CornerThrees: return "Make " + Target + " shots from the corners";
-                default: return "Play " + Target + " games";
+                case WeeklyGoal.Wins: return "Win " + n + " games";
+                case WeeklyGoal.Points: return "Score " + n + " points";
+                case WeeklyGoal.Greens: return "Hit " + n + " GREEN releases";
+                case WeeklyGoal.Steals: return "Get " + n + " steals";
+                case WeeklyGoal.Assists: return "Dish " + n + " assists";
+                case WeeklyGoal.Rebounds: return "Grab " + n + " rebounds";
+                case WeeklyGoal.Blocks: return "Block " + n + " shots";
+                case WeeklyGoal.ParkWins: return "Win " + n + " games at The Park";
+                case WeeklyGoal.AnkleBreakers: return "Break " + n + " ankles";
+                case WeeklyGoal.BigWins: return "Win " + n + " games by " + Weekly.BigWinMargin + "+";
+                case WeeklyGoal.DeepShots: return "Make " + n + " deep shots";
+                case WeeklyGoal.AlleyOops: return "Throw or finish " + n + " alley-oops";
+                case WeeklyGoal.HeatUps: return "Heat up " + n + " times";
+                case WeeklyGoal.FullCourtWins: return "Win " + n + " Full Court games";
+                case WeeklyGoal.CornerThrees: return "Make " + n + " shots from the corners";
+                case WeeklyGoal.ClutchWins: return "Win " + n + " CLUTCH scenarios";
+                default: return "Play " + n + " games";
             }
         }
     }
@@ -89,6 +117,8 @@ namespace CallerRetroBall.Logic
         public const int Season7Week = 1401;
         /// <summary>Week of Monday 7 December 2026: Season 8's goal joins the pool.</summary>
         public const int Season8Week = 1405;
+        /// <summary>Week of Monday 4 January 2027: Season 9's goal joins the pool.</summary>
+        public const int Season9Week = 1409;
 
         public static int WeekOf(int day) => (int)Math.Floor((day - FirstMonday) / 7.0);
 
@@ -102,6 +132,7 @@ namespace CallerRetroBall.Logic
             if (week < Season6Week) pool.RemoveAll(g => g >= WeeklyGoal.DeepShots);
             else if (week < Season7Week) pool.RemoveAll(g => g >= WeeklyGoal.FullCourtWins);
             else if (week < Season8Week) pool.RemoveAll(g => g >= WeeklyGoal.CornerThrees);
+            else if (week < Season9Week) pool.RemoveAll(g => g >= WeeklyGoal.ClutchWins);
             var result = new WeeklyChallenge[Goals];
             for (int i = 0; i < Goals; i++)
             {
@@ -132,6 +163,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.HeatUps: return 2 + rng.Range(0, 3);           // 2..4
                 case WeeklyGoal.FullCourtWins: return 2 + rng.Range(0, 2);     // 2..3
                 case WeeklyGoal.CornerThrees: return 4 + rng.Range(0, 3);      // 4..6
+                case WeeklyGoal.ClutchWins: return 2 + rng.Range(0, 3);        // 2..4
                 default: return 8 + 2 * rng.Range(0, 3);                       // 8..12
             }
         }
@@ -168,7 +200,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.Blocks: return line.blocks;
                 case WeeklyGoal.ParkWins: return parkGame && s.HumanWon ? 1 : 0;
                 case WeeklyGoal.AnkleBreakers: return line.ankleBreakers;
-                case WeeklyGoal.BigWins: return s.HumanWon && s.Margin >= BigWinMargin ? 1 : 0;
+                case WeeklyGoal.BigWins: return s.HumanWon && s.Margin >= BigWinMargin && s.mode != GameMode.Clutch ? 1 : 0; // CLUTCH starts from a set score
                 case WeeklyGoal.DeepShots: return line.arcMade;
                 case WeeklyGoal.AlleyOops: return line.alleyOops + line.alleyOopPasses;
                 case WeeklyGoal.HeatUps: return line.heatUps;
@@ -176,6 +208,7 @@ namespace CallerRetroBall.Logic
                     return s.HumanWon && (s.mode == GameMode.FullCourt || s.mode == GameMode.Franchise || s.mode == GameMode.Legacy || s.mode == GameMode.AllStar) ? 1 : 0;
                 case WeeklyGoal.CornerThrees:
                     return line.chart == null ? 0 : line.chart[ShotSpot.CornerLeft].made + line.chart[ShotSpot.CornerRight].made;
+                case WeeklyGoal.ClutchWins: return s.mode == GameMode.Clutch && s.HumanWon ? 1 : 0;
                 default: return 1;
             }
         }
@@ -293,7 +326,12 @@ namespace CallerRetroBall.Logic
             new[] { "cosmetic.pass.jersey.courier", "cosmetic.pass.shoes.spoke_runners", "cosmetic.pass.banner.express_lane", "cosmetic.pass.celebration.victory_lap" },
             // Season 8: the night-market set, topped by the Lantern Release celebration.
             new[] { "cosmetic.pass.jersey.lantern", "cosmetic.pass.shoes.paper_soles", "cosmetic.pass.banner.glow_row", "cosmetic.pass.celebration.lantern_release" },
+            // Season 9: the roller-rink set, topped by the Skate Glide celebration.
+            new[] { "cosmetic.pass.jersey.rink", "cosmetic.pass.shoes.quad_glide", "cosmetic.pass.banner.mirror_ball", "cosmetic.pass.celebration.skate_glide" },
         };
+
+        /// <summary>First pass season with seven sets (the one starting Monday 22 February 2027): Season 9's set first.</summary>
+        public const int SevenSetsFrom = 236;
 
         /// <summary>First pass season with six sets (the one starting Monday 11 January 2027): Season 8's set first.</summary>
         public const int SixSetsFrom = 235;
@@ -334,7 +372,8 @@ namespace CallerRetroBall.Logic
             int index = season < FourSetsFrom ? ((season % 3) + 3) % 3
                       : season < FiveSetsFrom ? (3 + (season - FourSetsFrom)) % 4
                       : season < SixSetsFrom ? (4 + (season - FiveSetsFrom)) % 5
-                      : (5 + (season - SixSetsFrom)) % GearSets.Length;
+                      : season < SevenSetsFrom ? (5 + (season - SixSetsFrom)) % 6
+                      : (6 + (season - SevenSetsFrom)) % GearSets.Length;
             var set = GearSets[index];
             return set[tier / 5 - 1];
         }

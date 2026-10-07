@@ -13,7 +13,7 @@ namespace CallerRetroBall.Tests
 {
     /// <summary>
     /// Phase 36: smoke tests for Phase 35's scene features (replay theater jumps, coach mode, shot chart views). Unity
-    /// fails a test on any Debug.LogError or exception. Run in Unity: Window ▸ General ▸ Test Runner ▸ PlayMode.
+    /// fails a test on any Debug.LogError or exception. Run in Unity: Window ► General ► Test Runner ► PlayMode.
     /// </summary>
     public class Phase36SmokeTests
     {

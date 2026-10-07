@@ -12,7 +12,7 @@ namespace CallerRetroBall.Gameplay
     public sealed class ShotMeterView : MonoBehaviour
     {
         private static readonly Color FillColor = new Color32(0xF4, 0xF1, 0xDE, 255);
-        // Settings ▸ COLOR FILTER picks these (green / amber / pink with no filter).
+        // Settings ► COLOR FILTER picks these (green / amber / pink with no filter).
         private static Color GreenColor = new Color32(0x3D, 0xDC, 0x84, 255);
         private static Color EarlyLateColor = new Color32(0xFF, 0xB0, 0x3B, 255);
         private static Color BadColor = new Color32(0xF7, 0x25, 0x85, 255);

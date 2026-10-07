@@ -12,7 +12,7 @@ namespace CallerRetroBall.Tests
 {
     /// <summary>
     /// Phase 34: smoke tests for the screens and scene paths added in Phases 26-34 that the logic tests can't reach
-    /// (Unity fails a test on any Debug.LogError or exception). Run in Unity: Window ▸ General ▸ Test Runner ▸ PlayMode.
+    /// (Unity fails a test on any Debug.LogError or exception). Run in Unity: Window ► General ► Test Runner ► PlayMode.
     /// </summary>
     public class NewModesSmokeTests
     {
