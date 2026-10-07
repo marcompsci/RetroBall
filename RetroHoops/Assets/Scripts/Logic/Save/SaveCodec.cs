@@ -116,6 +116,8 @@ namespace CallerRetroBall.Logic
                 ["legacy"] = EncodeLegacy(d.legacy),
                 ["street"] = EncodeStreet(d.street),
                 ["clutch"] = EncodeClutch(d.clutch),
+                ["login"] = EncodeLogin(d),
+                ["feel"] = EncodeFeel(d.settings),
                 ["customCup"] = EncodeCustomCup(d.customCup),
                 ["weekly"] = EncodeWeekly(d.weekly),
                 ["pass"] = EncodePass(d.pass),
@@ -138,6 +140,7 @@ namespace CallerRetroBall.Logic
                     ["lanternWins"] = (d.rival ?? new RivalSaveData()).lanternWins,
                     ["royalWins"] = (d.rival ?? new RivalSaveData()).royalWins,
                     ["washWins"] = (d.rival ?? new RivalSaveData()).washWins,
+                    ["kiteWins"] = (d.rival ?? new RivalSaveData()).kiteWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -563,6 +566,8 @@ namespace CallerRetroBall.Logic
                 d.legacy = DecodeLegacy(Obj(o, "legacy"));
                 d.street = DecodeStreet(Obj(o, "street"));
                 d.clutch = DecodeClutch(Obj(o, "clutch"));
+                DecodeLogin(d, Obj(o, "login"));
+                DecodeFeel(d.settings, Obj(o, "feel"));
                 d.customCup = DecodeCustomCup(Obj(o, "customCup"));
                 d.weekly = DecodeWeekly(Obj(o, "weekly"));
                 d.pass = DecodePass(Obj(o, "pass"));
@@ -588,6 +593,7 @@ namespace CallerRetroBall.Logic
                     lanternWins = Math.Max(0, Int(rv, "lanternWins", 0)),
                     royalWins = Math.Max(0, Int(rv, "royalWins", 0)),
                     washWins = Math.Max(0, Int(rv, "washWins", 0)),
+                    kiteWins = Math.Max(0, Int(rv, "kiteWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

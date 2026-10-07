@@ -57,6 +57,8 @@ namespace CallerRetroBall.Logic
         public bool icloudSync = true;
         /// <summary>Phase 31: menus grow with the iPhone's text size (Settings ► Accessibility ► Larger Text), up to the largest UI scale.</summary>
         public bool followSystemText = true;
+        /// <summary>Phase 39 controls feel: stick size and dead zone (0 small/low, 1 normal, 2 large/high), haptics strength (0 light, 1 normal, 2 strong).</summary>
+        public int stickSize = 1, stickDeadZone = 1, hapticStrength = 1;
         /// <summary>Phase 34: difficulty per kind of game ("GROUP=difficulty.id", see ModeDifficulty).</summary>
         public System.Collections.Generic.List<string> modeDifficulty = new System.Collections.Generic.List<string>();
         /// <summary>Music Player: menu track (−1 = the menu theme) and match track (−1 = match theme, −2 = shuffle).</summary>
@@ -269,6 +271,8 @@ namespace CallerRetroBall.Logic
         public StreetSaveData street = new StreetSaveData();
         /// <summary>Phase 37 CLUTCH scenarios: best stars.</summary>
         public ClutchSaveData clutch = new ClutchSaveData();
+        /// <summary>Phase 39 welcome-back bonus: last day claimed, days in a row, best run.</summary>
+        public int loginDay = -1, loginStreak, loginBest;
         /// <summary>Tournament Builder: the tournament in progress and titles.</summary>
         public CustomCupSaveData customCup = new CustomCupSaveData();
         /// <summary>This week's Weekly Challenges progress.</summary>

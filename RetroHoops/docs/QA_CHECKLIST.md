@@ -308,3 +308,10 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] Charge a shot open, then with a defender closing: the meter frame goes white → half pink → pink.
 - [ ] Rise Season 10: Wash House intro (Opal), they play pack line; win scene; badges SPIN CYCLE / PERFECT TEN; Bubbles logo draws.
 - [ ] Game Center (after creating retrohoops.lb.clutch in App Store Connect): CLUTCH Stars posts your total.
+
+## Phase 39
+- [ ] Fresh install: the first dialog has PLAY TUTORIAL / JUST PLAY / MAYBE LATER; JUST PLAY starts a Rookie Quick Call.
+- [ ] Main menu shows "NEXT ► …" under the title; tapping it opens that mode; it changes as you play (Rise, then CLUTCH, then DAILY CLUTCH…).
+- [ ] Open the game on two days in a row (after one game): WELCOME BACK +20 SP, then +30 SP; same day again: nothing.
+- [ ] Settings ► STICK SIZE / STICK DEAD ZONE / HAPTICS STRENGTH: LARGE stick needs a longer push; HIGH dead zone ignores small drift; STRONG buzzes harder (device only).
+- [ ] Rise Season 11: Sky Kites intro (Rin), win scene; badges GROUNDED KITES / ELEVEN STRAIGHT; Kite logo draws.

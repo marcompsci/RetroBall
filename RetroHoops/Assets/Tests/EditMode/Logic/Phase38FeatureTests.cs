@@ -22,7 +22,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(c.Player(DefaultContent.Rival10LeaderId));
             Assert.IsNotNull(c.Find(c.Cosmetics, "cosmetic.jersey.rinse_blue"));
             for (int season = 1; season <= 30; season++)
-                Assert.AreEqual(season % 10 == 0, RivalEngine.RivalFor(season) == DefaultContent.Rival10CrewId, "season " + season);
+                Assert.AreEqual(season % 11 == 10, RivalEngine.RivalFor(season) == DefaultContent.Rival10CrewId, "season " + season);
 
             var d = Career.New(c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);
@@ -70,7 +70,7 @@ namespace CallerRetroBall.Tests
             Assert.AreEqual("cosmetic.pass.jersey.rink", HoopsPass.GearFor(HoopsPass.SevenSetsFrom, 5), "Season 9's season is unchanged");
             Assert.AreEqual("cosmetic.pass.jersey.fresh_press", HoopsPass.GearFor(HoopsPass.EightSetsFrom, 5));
             Assert.AreEqual("cosmetic.pass.celebration.tumble_dry", HoopsPass.GearFor(HoopsPass.EightSetsFrom, 20));
-            Assert.AreEqual("cosmetic.pass.jersey.vapor_court", HoopsPass.GearFor(HoopsPass.EightSetsFrom + 1, 5), "then the eight sets rotate");
+            Assert.AreEqual("cosmetic.pass.jersey.tailwind", HoopsPass.GearFor(HoopsPass.EightSetsFrom + 1, 5), "Phase 39: Season 11's set comes next");
             Assert.AreEqual(HoopsPass.EightSetsFrom, HoopsPass.SeasonOf(DailyChallenges.DayNumber(new System.DateTime(2027, 4, 5))));
             Assert.AreEqual(Weekly.Season10Week, Weekly.WeekOf(DailyChallenges.DayNumber(new System.DateTime(2027, 2, 1))));
             Assert.AreEqual(CelebrationKind.TumbleDry, Flair.CelebrationFor("cosmetic.pass.celebration.tumble_dry"));

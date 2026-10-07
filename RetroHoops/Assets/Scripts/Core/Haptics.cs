@@ -38,6 +38,8 @@ namespace CallerRetroBall.Core
         private static void Impact(int style)
         {
             if (!Enabled) return;
+            // Phase 39: Settings ► HAPTICS STRENGTH plays everything a step softer or firmer.
+            style = Logic.ControlFeel.ImpactStyle(style, App.Career?.settings?.hapticStrength ?? 1);
 #if UNITY_IOS && !UNITY_EDITOR
             CallerHaptics_Impact(style);
 #endif

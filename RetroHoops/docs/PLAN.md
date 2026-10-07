@@ -830,6 +830,32 @@
 - **Review fixes:** custom games no longer pay rewards; the daily run shows as broken after a missed day; COPY refuses same-team scenarios; codes with stray high bits are rejected; codes are read with the live catalog.
 - **Tests:** 783 logic tests pass (13 new in `Phase38FeatureTests.cs`). UnityCheck is clean for the editor and iOS, and the text audit shows 0/0.
 
+### Phase 39: TestFlight push, onboarding & retention, Season 11, controls feel
+
+- **TestFlight:**
+  - The ship pipeline (`tools/Ship Retro Hoops.command`: Unity App Store build, Xcode archive with automatic signing, export and upload) is unchanged. It raises the build number each run (the restored settings start at build 2, so the next upload is build 3).
+  - Claude couldn't start it this phase: another Claude session held the Mac's screen. The last upload error ("Error Downloading App Information", 5 Oct) came before the bundle ID was fixed in App Store Connect.
+  - App Store Connect leaderboards: Claude opened App Store Connect in the browser pane, but it needs Omari to sign in with his Apple ID. Leaderboards to create: `retrohoops.lb.clutch`, `retrohoops.lb.gauntlet`, `retrohoops.live.monthly` (recurring).
+- **Onboarding & retention** (`Logic/Progression/Onboarding.cs`):
+  - **JUST PLAY:** on first launch, the tutorial offer has a third button that starts a Quick Call on Rookie right away.
+  - **NEXT ►** line under the title: one suggestion based on the career.
+    - For a new player it walks through tutorial → first game → Rise → CLUTCH.
+    - After that it points at what's waiting today: DAILY CLUTCH, the Daily Challenge, unfinished weeklies, then The Park and Franchise.
+  - **Welcome back:** the first open each day (after your first game) pays 20, 30 … 80 SP over a run of days, plus 100 on every 7th day. Moving the clock back can't pay twice. No notifications are used.
+- **Season 11: the Sky Kites.**
+  - Cliff-top kite flyers who shoot from anywhere and play man-to-man; leader Rin Takahashi.
+  - Kite logo, story scenes in English and Spanish, and badges GROUNDED KITES and ELEVEN STRAIGHT.
+  - Bluff Top and Pinwheel Lot courts, and a Gust Yellow jersey.
+  - A pass set (Tailwind, Updraft, Kite String, pass-only **Kite Run** celebration) from 17 May 2027.
+  - A CLEAN WINS weekly goal (win without a turnover of your own) from 1 Mar 2027.
+  - Rivals rotate every eleven seasons.
+- **Controls & feel** (Settings, `Logic/Input/ControlFeel.cs`):
+  - STICK SIZE (small / normal / large: 100 / 130 / 165 travel).
+  - STICK DEAD ZONE (low / normal / high: 0.06 / 0.12 / 0.20).
+  - HAPTICS STRENGTH (light / normal / strong: every buzz one step softer or firmer).
+  - NORMAL is exactly the old behaviour.
+- **Tests:** 790 logic tests pass (7 new in `Phase39FeatureTests.cs`). UnityCheck is clean for the editor and iOS, and the text audit shows 0/0.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

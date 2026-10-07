@@ -107,6 +107,11 @@ namespace CallerRetroBall.UI
             UiKit.Size(UiKit.Label(column, "Captions show the announcer's calls on screen. They're also on when Closed Captions is on in iOS Settings. VoiceOver reads the menus.", 28f, Theme.Muted), 90f);
             UiControls.ToggleRow(column, "LEFT-HANDED", s.leftHanded, v => { s.leftHanded = v; Save(); });
             UiControls.ToggleRow(column, "LARGE BUTTONS", s.largeButtons, v => { s.largeButtons = v; Save(); });
+            // Phase 39: how the stick and haptics feel.
+            UiControls.ChoiceRow(column, "STICK SIZE", ControlFeel.SizeNames, s.stickSize, i => { s.stickSize = i; Save(); });
+            UiControls.ChoiceRow(column, "STICK DEAD ZONE", ControlFeel.DeadZoneNames, s.stickDeadZone, i => { s.stickDeadZone = i; Save(); });
+            UiControls.ChoiceRow(column, "HAPTICS STRENGTH", ControlFeel.HapticNames, s.hapticStrength, i => { s.hapticStrength = i; Save(); Haptics.Medium(); });
+            UiKit.Size(UiKit.Label(column, "A larger stick needs a longer push for full speed. A higher dead zone ignores small thumb drift. Strength changes how firm the buzz is.", 28f, Theme.Muted), 90f);
             UiKit.Button(column, "CUSTOMIZE CONTROLS", () => Controls.ControlEditor.Open(), ButtonStyle.Secondary, 100f, 36f);
             UiControls.ToggleRow(column, "LANDSCAPE: ALL GAMES", s.landscapeAll, v => { s.landscapeAll = v; Save(); });
             UiControls.ToggleRow(column, "COMMENTARY (MIC TALLY)", s.commentary, v => { s.commentary = v; Save(); });

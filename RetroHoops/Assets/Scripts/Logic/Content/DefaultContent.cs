@@ -47,6 +47,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 10 rival (every tenth Rise season).</summary>
         public const string Rival10CrewId = "crew.wash_house";
         public const string Rival10LeaderId = "player.wsh.whitaker";
+        /// <summary>Season 11 rival (every eleventh Rise season).</summary>
+        public const string Rival11CrewId = "crew.sky_kites";
+        public const string Rival11LeaderId = "player.skt.takahashi";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -152,6 +155,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 11 courts.
+            c.Courts.Add(Court("court.bluff_top", "Bluff Top", CourtCircuit.Blacktop,
+                "A court on the sea cliff where the kite flyers meet. The wind takes every long shot somewhere new.",
+                "#4A6FA5", "#F7F7FF", "#FFB703", "#023047", "#FB8500", 0.5f));
+            c.Courts.Add(Court("court.pinwheel_lot", "Pinwheel Lot", CourtCircuit.Blacktop,
+                "A parking lot by the boardwalk, fenced with spinning pinwheels.",
+                "#5E6472", "#FFFFFF", "#219EBC", "#22223B", "#FFB703", 0.45f));
 
             // Season 10 courts.
             c.Courts.Add(Court("court.suds_alley", "Suds Alley", CourtCircuit.Blacktop,
@@ -328,6 +339,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 11 rival: every eleventh Rise season. Cliff-top kite flyers: shooters everywhere, the ball always in the air.
+            AddTeam(c, Rival11CrewId, "", "Sky Kites", "SKT", TeamTier.Rival,
+                "#FFB703", "#023047", "#219EBC", LogoShape.Diamond, LogoMotif.Kite, TeamPattern.Diagonal,
+                "court.bluff_top", "Catch the wind.", false,
+                P("takahashi", "Rin", "Takahashi", 9, Archetype.DeepShooter, 4),
+                P("abernathy", "Sunny", "Abernathy", 22, Archetype.TwoWaySpark, 4),
+                P("ostrowski", "Kalani", "Ostrowski", 50, Archetype.RimRunner, 4));
+
             // Season 10 rival: every tenth Rise season. The all-night laundromat crew: the ball never stops moving.
             AddTeam(c, Rival10CrewId, "", "Wash House", "WSH", TeamTier.Rival,
                 "#81B29A", "#22223B", "#F2CC8F", LogoShape.Badge, LogoMotif.Bubbles, TeamPattern.Dots,
@@ -503,6 +522,7 @@ namespace CallerRetroBall.Logic
             S(Rival8CrewId, DefenseScheme.Zone);
             S(Rival9CrewId, DefenseScheme.Pressure);
             S(Rival10CrewId, DefenseScheme.PackLine);
+            S(Rival11CrewId, DefenseScheme.ManToMan);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -830,6 +850,12 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
             // Phase 36 LIVE SEASONS: the banner for finishing a month ALL-STAR or better (not sold, not in the pass).
             c.Cosmetics.Add(PassGear(LiveSeason.StarBannerId, "Live Season Star", CosmeticSlot.CourtBanner, "#FFD166", "#3A0CA3"));
+            // Season 11 pass set (the kite flyers), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.tailwind", "Tailwind", CosmeticSlot.JerseyPalette, "#FFB703", "#023047"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.updraft", "Updraft", CosmeticSlot.Shoes, "#219EBC", "#FFFFFF"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.kite_string", "Kite String", CosmeticSlot.CourtBanner, "#FB8500", "#4A6FA5"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.kite_run", "Kite Run", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.gust_yellow", "Gust Yellow", CosmeticSlot.JerseyPalette, 350, 1900, false, "#FFB703", "#023047"));
             // Season 10 pass set (the laundromat), topped by a pass-only celebration.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.fresh_press", "Fresh Press", CosmeticSlot.JerseyPalette, "#81B29A", "#F4F1DE"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.tumble_treads", "Tumble Treads", CosmeticSlot.Shoes, "#F2CC8F", "#22223B"));

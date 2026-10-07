@@ -100,6 +100,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Lantern: return Lantern;
                 case LogoMotif.Skate: return Skate;
                 case LogoMotif.Bubbles: return Bubbles;
+                case LogoMotif.Kite: return Kite;
                 default: return Ball;
             }
         }
@@ -119,6 +120,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // A diamond kite with its cross spars and a bowed tail.
+        private static readonly string[] Kite =
+        {
+            ".....##.....",
+            "....#++#....",
+            "...#++#+#...",
+            "..#++##++#..",
+            ".##########.",
+            "..#++##++#..",
+            "...#+#++#...",
+            "....#++#....",
+            ".....##.....",
+            "......#.....",
+            ".....#.##...",
+            "....#....#..",
         };
 
         // Soap bubbles rising: one big, two medium, two small, each with a shine.

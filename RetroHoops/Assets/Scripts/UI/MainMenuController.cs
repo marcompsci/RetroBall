@@ -76,6 +76,7 @@ namespace CallerRetroBall.UI
             UiKit.Button(column, "SETTINGS", () => SceneFlow.GoTo(SceneNames.Settings), ButtonStyle.Ghost, 104f, 46f);
 
             BuildLogoStrip();
+            BuildNextStep();
 
             // Phase 37: LIVE is an optional subscription, so the footer no longer says "no purchases" (App Review 2.3.1).
             var footer = UiKit.Label(Body, "v" + App.Version + "  ·  " + Loc.T("plays offline") + "  ·  " + Loc.T("no ads"), 28f, Theme.Muted);
@@ -159,8 +160,10 @@ namespace CallerRetroBall.UI
             if (!App.Career.tutorialDone && App.Career.totals.games == 0 && !_tutorialOffered && _overlay == null)
             {
                 _tutorialOffered = true;
-                void Offer() => UiControls.Dialog("NEW TO RETRO HOOPS?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend.",
+                // Phase 39: JUST PLAY drops you straight into a winnable first game.
+                void Offer() => UiControls.Dialog("NEW TO RETRO HOOPS?", "Learn the controls in about two minutes: move, shoot, pass, call plays, and defend. Or jump straight into a game.",
                                                   ("PLAY TUTORIAL", ButtonStyle.Primary, StartTutorial),
+                                                  ("JUST PLAY", ButtonStyle.Secondary, StartFirstGame),
                                                   ("MAYBE LATER", ButtonStyle.Ghost, null));
                 if (!App.Career.storySeen.Contains(Story.Welcome)) StoryView.Show(Story.Beat(Story.Welcome, App.Career.nickname), Offer);
                 else Offer();
@@ -193,6 +196,19 @@ namespace CallerRetroBall.UI
                 _editNoticeShown = true;
                 UiControls.Dialog("SAVE FILE CHANGED", "Your save file was changed outside Retro Hoops. Your career is still here (with its numbers checked), but its scores won't go to Game Center leaderboards any more. A copy of the changed file was kept.",
                                   ("OK", ButtonStyle.Primary, null));
+            }
+
+            // Phase 39: the first open of each day pays a small welcome-back bonus (not on the very first launch).
+            if ((App.Career.totals?.games ?? 0) > 0 && _overlay == null)
+            {
+                int bonus = Onboarding.ClaimLogin(App.Career, App.Today);
+                if (bonus > 0)
+                {
+                    App.SaveCareer();
+                    UiControls.Dialog("WELCOME BACK", Loc.T("Day") + " " + App.Career.loginStreak + " " + Loc.T("in a row") + ":  +" + bonus + " SP"
+                                      + (App.Career.loginStreak % Onboarding.LoginMaxDay == 0 ? "\n" + Loc.T("A full week! Bonus included.") : ""),
+                                      ("NICE", ButtonStyle.Primary, null));
+                }
             }
 
             if (App.CareerLoadStatus == LoadStatus.Recovered)

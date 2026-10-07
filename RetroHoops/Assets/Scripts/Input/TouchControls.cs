@@ -136,6 +136,10 @@ namespace CallerRetroBall.Controls
 
             Joystick = zone.gameObject.AddComponent<VirtualJoystick>();
             Joystick.Init(zone, baseRing.rectTransform, knob.rectTransform);
+            // Phase 39: Settings ► STICK SIZE and STICK DEAD ZONE.
+            var settings = Core.App.Career?.settings;
+            Joystick.Radius = ControlFeel.RadiusFor(settings);
+            Joystick.DeadZone = ControlFeel.DeadZoneFor(settings);
             Joystick.Moved += active => _stickRest.gameObject.SetActive(!active);
 
             var hint = UiKit.Label(_stickRest, "MOVE", 30f, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Center, true);
