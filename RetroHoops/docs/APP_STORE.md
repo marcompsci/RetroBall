@@ -47,8 +47,11 @@ Draft metadata and answers for App Store Connect. Character counts are checked a
 > **THE PARK**
 > Call out twelve street legends, 1-on-1 up to 4-on-4. Street rules, make it take it, and crossovers that break ankles.
 >
+> **CLUTCH**
+> Eighteen late-game situations: down two with twenty seconds left, up one and they have the ball. Win for a star, then go for the goal and the bonus. A new DAILY CLUTCH every day, and an editor to make your own and send the code to a friend.
+>
 > **RISE MODE**
-> Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, six rotating rival crews and story scenes. Halfway through, it's the All-Star Weekend.
+> Beat the street crews of The Blacktop Circuit, then play a season in The Caller League with event cards, crew chemistry, recruits, ten rotating rival crews and story scenes. Halfway through, it's the All-Star Weekend.
 >
 > **ALL-STAR WEEKEND**
 > • Dunk Contest: pick a dunk, enter its combo in the air, time the slam, and face five judges
@@ -145,7 +148,11 @@ The expected rating is the lowest (4+).
 
 The app uses no encryption beyond what iOS itself provides. The build post-processor sets `ITSAppUsesNonExemptEncryption = NO` in Info.plist, so App Store Connect won't ask about encryption on each upload.
 
-## Screenshots (YOU, after a device or simulator build)
+## Screenshots (made by a script since Phase 37)
+
+After a Build Check, double-click **`tools/App Store Screenshots.command`**. It launches the Simulator build once per screen with `RH_SCREENSHOT=<shot>` (the game opens straight there, with no first-launch dialogs, demo banner or attract mode), sets a 9:41 status bar, and saves 1320×2868 PNGs (6.9") to `~/RetroHoops/AppStoreScreenshots/iPhone-6.9/`. The order is: gameplay, title, Full Court (saved landscape), PLAY menu, CLUTCH, The Park, Locker Room. Add or reorder shots in `Logic/Feel/StoreShots.cs` and in the script's `SHOTS` line. The older hand-picked lists below still work for extra shots taken with ⌘S.
+
+### Hand-picked shots (YOU, optional)
 
 The 6.9" iPhone screenshots are required; App Store Connect scales them down for smaller iPhones. Take them on an iPhone Pro Max–class simulator with **⌘S**. Use portrait 1320×2868 (6.9"), or 1290×2796 (6.7") if Apple still accepts that size for your submission. Suggested set:
 

@@ -113,7 +113,7 @@ namespace CallerRetroBall.Tests
             Assert.IsNotNull(c.Court("court.lantern_steps"));
             Assert.IsNotNull(c.Player(DefaultContent.Rival8LeaderId));
             for (int season = 1; season <= 24; season++)
-                Assert.AreEqual(season % 9 == 8, RivalEngine.RivalFor(season) == DefaultContent.Rival8CrewId, "season " + season);
+                Assert.AreEqual(season % 10 == 8, RivalEngine.RivalFor(season) == DefaultContent.Rival8CrewId, "season " + season);
 
             var d = Career.New(c);
             foreach (var id in new[] { Story.Intro, Story.CircuitCleared, Story.Season2 }) Story.MarkSeen(d, id);

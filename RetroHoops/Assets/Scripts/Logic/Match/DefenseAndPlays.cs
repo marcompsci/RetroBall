@@ -198,6 +198,22 @@ namespace CallerRetroBall.Logic
 
         // ------------------------------------------------------------------ blocks & contests
 
+        /// <summary>
+        /// Phase 38: how contested a shot from <paramref name="shooterIndex"/> would be right now, 0 (open) to 1 (a top
+        /// defender in your face), on the same scale as the shot model's contest penalty. Read-only (no random draws),
+        /// so the shot meter can show it while you charge.
+        /// </summary>
+        public float ContestLevel(int shooterIndex)
+        {
+            if (shooterIndex < 0 || shooterIndex >= Players.Length) return 0f;
+            ContestFor(Players[shooterIndex], out float distance, out int defense);
+            var t = Setup.Shot;
+            if (t == null || t.contestRadius <= 0f || distance >= t.contestRadius) return 0f;
+            float closeness = 1f - distance / t.contestRadius;
+            float d = 0.5f + 0.5f * RatingScale.Normalized(defense);
+            return Math.Max(0f, Math.Min(1f, closeness * d));
+        }
+
         /// <summary>Best contesting defender for a shot (jumping defenders count as closer).</summary>
         private void ContestFor(PlayerRuntimeState shooter, out float effectiveDistance, out int defense)
         {

@@ -99,6 +99,7 @@ namespace CallerRetroBall.Logic.PixelArt
                 case LogoMotif.Lighthouse: return Lighthouse;
                 case LogoMotif.Lantern: return Lantern;
                 case LogoMotif.Skate: return Skate;
+                case LogoMotif.Bubbles: return Bubbles;
                 default: return Ball;
             }
         }
@@ -118,6 +119,23 @@ namespace CallerRetroBall.Logic.PixelArt
             "..##........",
             ".#..........",
             "............",
+        };
+
+        // Soap bubbles rising: one big, two medium, two small, each with a shine.
+        private static readonly string[] Bubbles =
+        {
+            "......##....",
+            ".....#++#...",
+            "..##..##....",
+            ".#++#....##.",
+            ".#+##...#++#",
+            "..##....#+##",
+            "....####.##.",
+            "...#+++##...",
+            "..#++++++#..",
+            "..#+++++##..",
+            "...#+++##...",
+            "....####....",
         };
 
         // A quad roller skate from the side: high boot with laces, plate and two big wheels.

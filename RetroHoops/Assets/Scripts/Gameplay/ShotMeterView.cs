@@ -60,15 +60,26 @@ namespace CallerRetroBall.Gameplay
             return sr;
         }
 
-        /// <summary>Shows the meter while the human is charging; <paramref name="meter"/> 0..1+.</summary>
-        public void ShowCharging(Vector3 shooterWorld, float meter, int shootingRating, ShotTuning t)
+        /// <summary>
+        /// Shows the meter while the human is charging; <paramref name="meter"/> 0..1+. Phase 38: the frame turns from white
+        /// toward the "bad" colour as a defender closes out (<paramref name="contest"/> 0..1), so you can see a contest coming.
+        /// </summary>
+        public void ShowCharging(Vector3 shooterWorld, float meter, int shootingRating, ShotTuning t, float contest = 0f)
         {
+            _frame.color = ContestTint(contest);
             SetVisible(true);
             PlaceBeside(shooterWorld);
             float gh = ShotModel.GreenHalfWidth(shootingRating, t);
             SetBand(t.greenCenter - gh, t.greenCenter + gh);
             var grade = ShotModel.Grade(Mathf.Min(meter, 1f), shootingRating, t);
             SetFill(meter, grade == TimingGrade.Green ? GreenColor : FillColor);
+        }
+
+        /// <summary>White when open; blends toward the bad colour above a light contest (in two steps, so it reads at a glance).</summary>
+        public static Color ContestTint(float contest)
+        {
+            float k = Logic.ShotFeel.ContestStep(contest);
+            return Color.Lerp(Color.white, BadColor, k);
         }
 
         /// <summary>Freezes the meter at the release point, coloured by grade.</summary>

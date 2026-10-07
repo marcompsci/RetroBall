@@ -299,3 +299,12 @@ Device: ______  iOS: ______  Build: ______  Date: ______
 - [ ] VoiceOver on, in a game: the court hint says stick on the left (right with left-handed controls), in the chosen language.
 - [ ] 120 Hz iPhone with SHOW FPS: smooth games stay at ~120; a struggling device shows "(steady 60)".
 - [ ] Run "App Store Screenshots.command" after a Build Check: 7 PNGs per device in ~/RetroHoops/AppStoreScreenshots; the fullcourt one is upright and 2868 × 1320.
+
+## Phase 38
+- [ ] Run "App Store Screenshots.command": 01-game and 03-fullcourt show a live game (not the title), 07-locker shows the Locker Room; the Full Court shot is upright; iPad shots appear or the log says SKIPPED.
+- [ ] CLUTCH ► DAILY CLUTCH: win it, +60 SP and RUN 1; play it again: no second bonus; next day RUN 2.
+- [ ] CLUTCH ► MAKE YOUR OWN: steppers change values without the list jumping back to the top; the code line updates; COPY CODE then ENTER A CODE reloads the same scenario; same team on both sides shows "Pick two different teams."
+- [ ] A custom game: post-game shows stars plus "Custom scenario: stars aren't saved."; SP, career GAMES and weekly progress don't change.
+- [ ] Charge a shot open, then with a defender closing: the meter frame goes white → half pink → pink.
+- [ ] Rise Season 10: Wash House intro (Opal), they play pack line; win scene; badges SPIN CYCLE / PERFECT TEN; Bubbles logo draws.
+- [ ] Game Center (after creating retrohoops.lb.clutch in App Store Connect): CLUTCH Stars posts your total.

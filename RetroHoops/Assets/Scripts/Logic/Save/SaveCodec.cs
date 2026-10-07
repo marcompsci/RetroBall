@@ -137,6 +137,7 @@ namespace CallerRetroBall.Logic
                     ["courierWins"] = (d.rival ?? new RivalSaveData()).courierWins,
                     ["lanternWins"] = (d.rival ?? new RivalSaveData()).lanternWins,
                     ["royalWins"] = (d.rival ?? new RivalSaveData()).royalWins,
+                    ["washWins"] = (d.rival ?? new RivalSaveData()).washWins,
                     ["losses"] = (d.rival ?? new RivalSaveData()).losses,
                     ["lastSeason"] = (d.rival ?? new RivalSaveData()).lastSeason,
                 },
@@ -586,6 +587,7 @@ namespace CallerRetroBall.Logic
                     courierWins = Math.Max(0, Int(rv, "courierWins", 0)),
                     lanternWins = Math.Max(0, Int(rv, "lanternWins", 0)),
                     royalWins = Math.Max(0, Int(rv, "royalWins", 0)),
+                    washWins = Math.Max(0, Int(rv, "washWins", 0)),
                     losses = Math.Max(0, Int(rv, "losses", 0)),
                     lastSeason = Math.Max(0, Int(rv, "lastSeason", 0)),
                 };

@@ -264,6 +264,7 @@ namespace CallerRetroBall.Logic
             L(LiveMode.LeaderboardId, "Live Rating (best)", false, "Integer", d => d.live != null && d.live.games > 0 ? d.live.best : 0),
             L(Gauntlet.LeaderboardId, "Skills Gauntlet (best)", false, "Integer", d => d.gauntlet?.best ?? 0),
             L(LiveMode.MonthlyLeaderboardId, "Live Rating (this month)", false, "Integer", d => LiveMode.MonthlyScore(d.live, DateTime.UtcNow)),
+            L(Clutch.LeaderboardId, "CLUTCH Stars", false, "Integer", d => Clutch.TotalStars(d.clutch)),
         };
 
         public static readonly string[] AllAchievements = All.ConvertAll(a => a.Id).ToArray();

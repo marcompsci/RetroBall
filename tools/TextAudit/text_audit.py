@@ -19,7 +19,7 @@ SCRIPTS = os.path.join(HERE, "..", "..", "RetroHoops", "Assets", "Scripts")
 
 STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
 CHAR = re.compile(r"'((?:[^'\\\n]|\\.))'")
-UI_CALL = re.compile(r'(?:Loc\.T\(|UiKit\.(?:Label|Button)\([^,"()]*,\s*|\bMode\(\w+,\s*)"((?:[^"\\]|\\.)*)"(?=\s*[,)])(?:\s*,\s*"((?:[^"\\]|\\.)*)"(?=\s*[,)]))?')
+UI_CALL = re.compile(r'(?:Loc\.T\(|UiKit\.(?:Label|Button)\([^,"()]*,\s*|\bMode\(\w+,\s*|UiControls\.(?:ChoiceRow|ToggleRow|SliderRow|Stat)\(\w+,\s*|\bStepper\(\w+,\s*|\bOpenOverlay\()"((?:[^"\\]|\\.)*)"(?=\s*[,)])(?:\s*,\s*"((?:[^"\\]|\\.)*)"(?=\s*[,)]))?')
 NEEDS_WORDS = re.compile(r"[A-Za-z]{3}")
 SKIP_TEXT = re.compile(r"^[A-Z0-9 .:/+\-·•]*$")  # numbers / codes only
 

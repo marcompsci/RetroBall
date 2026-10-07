@@ -798,6 +798,38 @@
 - **Spanish:** about 210 new entries cover every menu line the audit found, the CLUTCH and Season 9 text, and the VoiceOver court hint. That hint now also follows left-handed controls. Weekly goals are now translated too. Spanish is now complete for literal UI text; lines built from pieces are spot-checked.
 - **Tests:** 770 logic tests pass (19 new in `Phase37FeatureTests.cs`), and there are new PlayMode smoke tests (`Phase37SmokeTests.cs`: a CLUTCH game, a store-shot launch). UnityCheck is clean for both the editor and iOS.
 
+### Phase 38: ship-readiness, gameplay feel, Season 10, CLUTCH expansion
+
+- **Ship-readiness:**
+  - Phase 37's Build Check PASSED (Unity, Xcode IL2CPP/ObjC/Swift, Simulator launch), and GitHub has b6ddd72.
+  - **App Store screenshots:** the first run made 7 iPhone 6.9" shots at 1320×2868, plus a 2868×1320 Full Court shot.
+    - PLAY, CLUTCH and The Park opened correctly.
+    - The gameplay, Full Court and Locker Room shots showed the title screen instead. Their scene change was being ignored during the menu's entrance transition; it now waits for the transition (`StoreShotTick`).
+    - The 13" iPad run hung while booting; the script now gives up on a device after 3 minutes.
+  - **Store listing:** `APP_STORE.md` has a CLUTCH section, "ten rotating rival crews" and the screenshot script. `GAME_CENTER.md` has the new `retrohoops.lb.clutch` board (**YOU:** create it in App Store Connect).
+  - **Text audit:** it now also checks ChoiceRow, ToggleRow, SliderRow, Stat, steppers and overlay titles, which found 17 more untranslated lines (all done).
+- **Gameplay feel:**
+  - **CLUTCH balance:** each scenario was played by the AI for both teams at Caller (24 seeds).
+    - PROTECT THE LEAD was 96% and EIGHT DOWN 0%. Six scenarios were retuned (scores, clocks, stories, Spanish).
+    - Chapter win rates are now about 49% / 43% / 35%. `Phase38ClutchBalanceTests` keeps the chapters getting harder.
+  - **Contest you can see:** while you charge a shot, the meter frame turns half-tinted when a defender is near and fully tinted when you're well contested.
+    - It uses `MatchSimulation.ContestLevel`, which reads the same contest the shot model uses and draws no random numbers; a test checks it doesn't change the game.
+- **Season 10: the Wash House.**
+  - An all-night laundromat crew (pack-line defense, the ball never stops moving); leader Opal Whitaker.
+  - Bubbles logo, story scenes in English and Spanish, and badges SPIN CYCLE and PERFECT TEN.
+  - Suds Alley and Coin-Op Court, and a Rinse Blue jersey.
+  - A pass set (Fresh Press, Tumble Treads, Open All Night, pass-only **Tumble Dry** celebration) from 5 Apr 2027.
+  - A Stops weekly goal (steals plus blocks) from 1 Feb 2027.
+  - Rivals now rotate every ten seasons.
+- **CLUTCH expansion:**
+  - **DAILY CLUTCH:** one of the 18 scenarios each day, the same for everyone that day. The first win pays 60 SP, and a run of days is tracked (the best run too). Moving the phone's clock back and forth can't pay twice.
+  - **MAKE YOUR OWN:** set both league teams, half or full court, clock (5–155 s), both scores, possession, goal and bonus.
+    - Each scenario gets a 13-character code (XXXXX-XXXXX-XXX) with a checksum. COPY CODE puts it on the clipboard, and ENTER A CODE reads a copied code.
+    - Editor games pay nothing and keep no stars, records or weekly progress.
+  - Game Center board **CLUTCH Stars** (`retrohoops.lb.clutch`).
+- **Review fixes:** custom games no longer pay rewards; the daily run shows as broken after a missed day; COPY refuses same-team scenarios; codes with stray high bits are rejected; codes are read with the live catalog.
+- **Tests:** 783 logic tests pass (13 new in `Phase38FeatureTests.cs`). UnityCheck is clean for the editor and iOS, and the text audit shows 0/0.
+
 ## Deviations from the brief (deliberate)
 
 - "Oakland Voltage" → **Eastbay Voltage** (real city + electric branding sat too close to real pro-sports naming).

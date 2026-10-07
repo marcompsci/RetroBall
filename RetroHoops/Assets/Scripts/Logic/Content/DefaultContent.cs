@@ -44,6 +44,9 @@ namespace CallerRetroBall.Logic
         /// <summary>Season 9 rival (every ninth Rise season).</summary>
         public const string Rival9CrewId = "crew.roller_royals";
         public const string Rival9LeaderId = "player.rry.varo";
+        /// <summary>Season 10 rival (every tenth Rise season).</summary>
+        public const string Rival10CrewId = "crew.wash_house";
+        public const string Rival10LeaderId = "player.wsh.whitaker";
         public const string DefaultRulesId = "rules.default";
         public const string DefaultDifficultyId = "difficulty.caller";
         public const string PracticeCourtId = "court.practice_lab";
@@ -149,6 +152,14 @@ namespace CallerRetroBall.Logic
             c.Courts.Add(Court("court.night_bus_depot", "Night Bus Depot", CourtCircuit.Blacktop,
                 "Under the depot lights, between the last bus and the first.",
                 "#2F3E46", "#CAD2C5", "#F4A261", "#0B132B", "#3A506B", 0.3f));
+
+            // Season 10 courts.
+            c.Courts.Add(Court("court.suds_alley", "Suds Alley", CourtCircuit.Blacktop,
+                "Behind the all-night laundromat. Steam from the dryer vents rolls across the key.",
+                "#3D405B", "#F4F1DE", "#81B29A", "#22223B", "#F2CC8F", 0.45f));
+            c.Courts.Add(Court("court.coin_op", "Coin-Op Court", CourtCircuit.Blacktop,
+                "A half court painted on the laundromat roof, under a buzzing OPEN 24 HOURS sign.",
+                "#2B2D42", "#EDF2F4", "#EF233C", "#14213D", "#8ECAE6", 0.5f));
 
             // Season 9 courts.
             c.Courts.Add(Court("court.starlight_rink", "Starlight Rink", CourtCircuit.Blacktop,
@@ -317,6 +328,14 @@ namespace CallerRetroBall.Logic
 
         private static void AddCircuitCrews(ContentCatalog c)
         {
+            // Season 10 rival: every tenth Rise season. The all-night laundromat crew: the ball never stops moving.
+            AddTeam(c, Rival10CrewId, "", "Wash House", "WSH", TeamTier.Rival,
+                "#81B29A", "#22223B", "#F2CC8F", LogoShape.Badge, LogoMotif.Bubbles, TeamPattern.Dots,
+                "court.suds_alley", "Open all night.", false,
+                P("whitaker", "Opal", "Whitaker", 4, Archetype.FloorGeneral, 4),
+                P("haldane", "Dmitri", "Haldane", 12, Archetype.QuickCutter, 4),
+                P("corrigan", "June", "Corrigan", 41, Archetype.GlassCleaner, 4));
+
             // Season 9 rival: every ninth Rise season. A roller-rink crew: full-court pressure and quick hands.
             AddTeam(c, Rival9CrewId, "", "Roller Royals", "RRY", TeamTier.Rival,
                 "#7209B7", "#F72585", "#4CC9F0", LogoShape.Shield, LogoMotif.Skate, TeamPattern.Stripes,
@@ -483,6 +502,7 @@ namespace CallerRetroBall.Logic
             S(Rival7CrewId, DefenseScheme.ManToMan);
             S(Rival8CrewId, DefenseScheme.Zone);
             S(Rival9CrewId, DefenseScheme.Pressure);
+            S(Rival10CrewId, DefenseScheme.PackLine);
             S(BossTeamId, DefenseScheme.Pressure);
             S(SecretCrewId, DefenseScheme.Zone);
         }
@@ -810,6 +830,12 @@ namespace CallerRetroBall.Logic
             c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.spotlight", "Spotlight", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
             // Phase 36 LIVE SEASONS: the banner for finishing a month ALL-STAR or better (not sold, not in the pass).
             c.Cosmetics.Add(PassGear(LiveSeason.StarBannerId, "Live Season Star", CosmeticSlot.CourtBanner, "#FFD166", "#3A0CA3"));
+            // Season 10 pass set (the laundromat), topped by a pass-only celebration.
+            c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.fresh_press", "Fresh Press", CosmeticSlot.JerseyPalette, "#81B29A", "#F4F1DE"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.tumble_treads", "Tumble Treads", CosmeticSlot.Shoes, "#F2CC8F", "#22223B"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.banner.open_all_night", "Open All Night", CosmeticSlot.CourtBanner, "#EF233C", "#14213D"));
+            c.Cosmetics.Add(PassGear("cosmetic.pass.celebration.tumble_dry", "Tumble Dry", CosmeticSlot.Celebration, "#FFFFFF", "#FFFFFF"));
+            c.Cosmetics.Add(Cosmetic("cosmetic.jersey.rinse_blue", "Rinse Blue", CosmeticSlot.JerseyPalette, 350, 1800, false, "#8ECAE6", "#22223B"));
             // Season 9 pass set (the roller rink), topped by a pass-only celebration.
             c.Cosmetics.Add(PassGear("cosmetic.pass.jersey.rink", "Rink", CosmeticSlot.JerseyPalette, "#7209B7", "#4CC9F0"));
             c.Cosmetics.Add(PassGear("cosmetic.pass.shoes.quad_glide", "Quad Glide", CosmeticSlot.Shoes, "#F72585", "#FFFFFF"));

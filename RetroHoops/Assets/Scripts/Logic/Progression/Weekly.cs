@@ -26,6 +26,8 @@ namespace CallerRetroBall.Logic
         CornerThrees = 15,
         /** Season 9 goal (from week <see cref="Weekly.Season9Week"/>): CLUTCH scenarios won. */
         ClutchWins = 16,
+        /** Season 10 goal (from week <see cref="Weekly.Season10Week"/>): stops (steals plus blocks). */
+        Stops = 17,
     }
 
     /// <summary>One of the week's three goals. Progress adds up over every counted game that week.</summary>
@@ -60,6 +62,7 @@ namespace CallerRetroBall.Logic
                     case WeeklyGoal.FullCourtWins: return "Gana " + n + " partidos de cancha completa";
                     case WeeklyGoal.CornerThrees: return "Mete " + n + " tiros desde las esquinas";
                     case WeeklyGoal.ClutchWins: return "Gana " + n + " escenarios CLUTCH";
+                    case WeeklyGoal.Stops: return "Consigue " + n + " paradas (robos o tapones)";
                     default: return "Juega " + n + " partidos";
                 }
             }
@@ -81,6 +84,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.FullCourtWins: return "Win " + n + " Full Court games";
                 case WeeklyGoal.CornerThrees: return "Make " + n + " shots from the corners";
                 case WeeklyGoal.ClutchWins: return "Win " + n + " CLUTCH scenarios";
+                case WeeklyGoal.Stops: return "Get " + n + " stops (steals or blocks)";
                 default: return "Play " + n + " games";
             }
         }
@@ -119,6 +123,8 @@ namespace CallerRetroBall.Logic
         public const int Season8Week = 1405;
         /// <summary>Week of Monday 4 January 2027: Season 9's goal joins the pool.</summary>
         public const int Season9Week = 1409;
+        /// <summary>Week of Monday 1 February 2027: Season 10's goal joins the pool.</summary>
+        public const int Season10Week = 1413;
 
         public static int WeekOf(int day) => (int)Math.Floor((day - FirstMonday) / 7.0);
 
@@ -133,6 +139,7 @@ namespace CallerRetroBall.Logic
             else if (week < Season7Week) pool.RemoveAll(g => g >= WeeklyGoal.FullCourtWins);
             else if (week < Season8Week) pool.RemoveAll(g => g >= WeeklyGoal.CornerThrees);
             else if (week < Season9Week) pool.RemoveAll(g => g >= WeeklyGoal.ClutchWins);
+            else if (week < Season10Week) pool.RemoveAll(g => g >= WeeklyGoal.Stops);
             var result = new WeeklyChallenge[Goals];
             for (int i = 0; i < Goals; i++)
             {
@@ -164,6 +171,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.FullCourtWins: return 2 + rng.Range(0, 2);     // 2..3
                 case WeeklyGoal.CornerThrees: return 4 + rng.Range(0, 3);      // 4..6
                 case WeeklyGoal.ClutchWins: return 2 + rng.Range(0, 3);        // 2..4
+                case WeeklyGoal.Stops: return 10 + 2 * rng.Range(0, 4);        // 10..16
                 default: return 8 + 2 * rng.Range(0, 3);                       // 8..12
             }
         }
@@ -209,6 +217,7 @@ namespace CallerRetroBall.Logic
                 case WeeklyGoal.CornerThrees:
                     return line.chart == null ? 0 : line.chart[ShotSpot.CornerLeft].made + line.chart[ShotSpot.CornerRight].made;
                 case WeeklyGoal.ClutchWins: return s.mode == GameMode.Clutch && s.HumanWon ? 1 : 0;
+                case WeeklyGoal.Stops: return line.steals + line.blocks;
                 default: return 1;
             }
         }
@@ -328,7 +337,12 @@ namespace CallerRetroBall.Logic
             new[] { "cosmetic.pass.jersey.lantern", "cosmetic.pass.shoes.paper_soles", "cosmetic.pass.banner.glow_row", "cosmetic.pass.celebration.lantern_release" },
             // Season 9: the roller-rink set, topped by the Skate Glide celebration.
             new[] { "cosmetic.pass.jersey.rink", "cosmetic.pass.shoes.quad_glide", "cosmetic.pass.banner.mirror_ball", "cosmetic.pass.celebration.skate_glide" },
+            // Season 10: the laundromat set, topped by the Tumble Dry celebration.
+            new[] { "cosmetic.pass.jersey.fresh_press", "cosmetic.pass.shoes.tumble_treads", "cosmetic.pass.banner.open_all_night", "cosmetic.pass.celebration.tumble_dry" },
         };
+
+        /// <summary>First pass season with eight sets (the one starting Monday 5 April 2027): Season 10's set first.</summary>
+        public const int EightSetsFrom = 237;
 
         /// <summary>First pass season with seven sets (the one starting Monday 22 February 2027): Season 9's set first.</summary>
         public const int SevenSetsFrom = 236;
@@ -373,7 +387,8 @@ namespace CallerRetroBall.Logic
                       : season < FiveSetsFrom ? (3 + (season - FourSetsFrom)) % 4
                       : season < SixSetsFrom ? (4 + (season - FiveSetsFrom)) % 5
                       : season < SevenSetsFrom ? (5 + (season - SixSetsFrom)) % 6
-                      : (6 + (season - SevenSetsFrom)) % GearSets.Length;
+                      : season < EightSetsFrom ? (6 + (season - SevenSetsFrom)) % 7
+                      : (7 + (season - EightSetsFrom)) % GearSets.Length;
             var set = GearSets[index];
             return set[tier / 5 - 1];
         }

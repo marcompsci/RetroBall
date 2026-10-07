@@ -1573,7 +1573,7 @@ namespace CallerRetroBall.Gameplay
             {
                 var shooter = _match.Players[_match.ChargingIndex];
                 _meter.ShowCharging(CourtSpace.ToWorld(shooter.Position), _match.ChargeMeter,
-                                    shooter.Def.attributes.shooting, _match.Setup.Shot);
+                                    shooter.Def.attributes.shooting, _match.Setup.Shot, _match.ContestLevel(_match.ChargingIndex));
             }
             else
             {
@@ -1856,14 +1856,16 @@ namespace CallerRetroBall.Gameplay
             summary.day = App.Today;
             summary.isPlayoff = _request.Round >= 1;
             summary.isFinal = _request.Round >= 2;
-            var grant = Rewards.For(summary, App.Rewards);
+            // Phase 38: a scenario from the CLUTCH editor is for fun: no SP, fans, career totals, records or weekly progress.
+            bool customClutch = _request.Mode == GameMode.Clutch && Logic.Clutch.IsCustomContext(_request.ContextId);
+            var grant = customClutch ? default : Rewards.For(summary, App.Rewards);
 
             string note = null;
             bool rewarded = false;
             if (App.Career != null && !_resultApplied)
             {
                 _resultApplied = true;
-                rewarded = Career.ApplyMatch(App.Career, summary, grant);
+                rewarded = !customClutch && Career.ApplyMatch(App.Career, summary, grant);
                 int recruitsBefore = App.Career.rise.recruitable.Count;
                 if (rewarded && _request.Mode == GameMode.Rival)
                 {
@@ -1984,15 +1986,20 @@ namespace CallerRetroBall.Gameplay
                     note = (rep >= 0 ? "+" : "") + rep + " REP  ·  " + Street.RepNames[Street.RepLevel(App.Career.street.rep)]
                            + (ankles > 0 ? "  ·  " + ankles + " ANKLE BREAKER" + (ankles == 1 ? "" : "S") : "");
                 }
-                var clutch = _request.Mode == GameMode.Clutch ? Logic.Clutch.FromContext(_request.ContextId) : null;
-                if (rewarded && clutch != null)
+                var clutch = _request.Mode == GameMode.Clutch ? Logic.Clutch.FromContext(_request.ContextId, App.Catalog) : null;
+                if ((rewarded || customClutch) && clutch != null)
                 {
                     var cd = App.Career.clutch ?? (App.Career.clutch = new ClutchSaveData());
                     var outcome = Logic.Clutch.ApplyResult(cd, clutch, summary, App.Career, out int stars, out int newStars);
                     App.OpenClutchOnMenu = true;
                     title = outcome == ClutchOutcome.Won ? (stars == Logic.Clutch.StarsPerScenario ? "ICE COLD" : "CLUTCH") : "NOT THIS TIME";
                     note = ClutchNote(clutch, summary, stars, newStars);
-                    if (outcome == ClutchOutcome.Won && newStars > 0) Sfx(SfxId.Fanfare);
+                    // Phase 38: DAILY CLUTCH bonus and run of days; editor scenarios keep no stars.
+                    int dailyDay = Logic.Clutch.DailyDayOf(_request.ContextId);
+                    int dailyBonus = Logic.Clutch.ApplyDaily(cd, dailyDay, App.Today, outcome == ClutchOutcome.Won, App.Career);
+                    if (dailyBonus > 0) note += "\n" + Loc.T("DAILY CLUTCH") + "  +" + dailyBonus + " SP  ·  " + Loc.T("RUN") + " " + cd.dailyStreak;
+                    if (clutch.Custom) note += "\n<size=22><color=#8D99AE>" + Loc.T("Custom scenario: stars aren't saved.") + "</color></size>";
+                    if (outcome == ClutchOutcome.Won && (newStars > 0 || dailyBonus > 0)) Sfx(SfxId.Fanfare);
                 }
                 var storyChapter = StoryMode.FromContext(_request.ContextId);
                 if (rewarded && storyChapter != null)

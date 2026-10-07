@@ -32,6 +32,7 @@ In App Store Connect, open **App ▸ Features ▸ Game Center**. The IDs must ma
 | `retroball.lb.legacy_points` | Legacy Points | High to low | Integer |
 | `retrohoops.live.rating` | Live Rating (best) | High to low | Integer |
 | `retrohoops.lb.gauntlet` | Skills Gauntlet (best) | High to low | Integer |
+| `retrohoops.lb.clutch` | CLUTCH Stars | High to low | Integer (Phase 38: total CLUTCH stars, 0–54) |
 
 ### Leaderboard (Recurring, Phase 33)
 

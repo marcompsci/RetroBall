@@ -26,7 +26,13 @@ shoot_on() {
   mkdir -p "$DIR"
   echo "--- $NAME ($DEVICE)"
   xcrun simctl boot "$DEVICE" >/dev/null 2>&1
-  xcrun simctl bootstatus "$DEVICE" -b >/dev/null 2>&1
+  # Wait for it to boot, but never forever (a first boot of a new runtime can stall): 3 minutes at most.
+  local waited=0
+  until xcrun simctl list devices | grep "$DEVICE" | grep -q Booted; do
+    sleep 5; waited=$((waited + 5))
+    if [[ $waited -ge 180 ]]; then echo "  SKIPPED: $NAME didn't finish booting in 3 minutes"; return 1; fi
+  done
+  sleep 10  # let SpringBoard settle
   open -a Simulator --args -CurrentDeviceUDID "$DEVICE" >/dev/null 2>&1
   # A tidy status bar: 9:41, full battery and signal.
   xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 \
